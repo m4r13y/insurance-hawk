@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -49,6 +49,21 @@ export default function DashboardPage() {
     const [currentPlan, setCurrentPlan] = useState<{id: string, label: string} | null>(null);
     const [tempProvider, setTempProvider] = useState("");
     const [tempPlanName, setTempPlanName] = useState("");
+    const [userName, setUserName] = useState("Sarah");
+
+    useEffect(() => {
+        const updateName = () => {
+            const storedName = localStorage.getItem("userFirstName");
+            if (storedName) {
+                setUserName(storedName);
+            }
+        };
+        updateName();
+        window.addEventListener("storage", updateName);
+        return () => {
+            window.removeEventListener("storage", updateName);
+        };
+    }, []);
 
     const handleSwitchChange = (planId: string, planLabel: string, checked: boolean) => {
         if (checked) {
@@ -79,7 +94,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 md:space-y-12">
       <div className="max-w-4xl">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Welcome Back, Sarah!</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Welcome Back, {userName}!</h1>
         <p className="mt-2 text-lg text-slate-600 leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
       </div>
 

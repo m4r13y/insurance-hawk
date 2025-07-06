@@ -10,8 +10,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Separator } from "@/components/ui/separator"
-import { User, Bell, Shield } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState, useEffect, useRef } from "react"
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -37,6 +37,8 @@ const securityFormSchema = z.object({
 
 export default function SettingsPage() {
     const { toast } = useToast()
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
 
     const profileForm = useForm<z.infer<typeof profileFormSchema>>({
         resolver: zodResolver(profileFormSchema),
@@ -65,8 +67,26 @@ export default function SettingsPage() {
         },
     })
 
+    useEffect(() => {
+        const storedFirstName = localStorage.getItem("userFirstName")
+        if (storedFirstName) {
+            profileForm.setValue("firstName", storedFirstName)
+        }
+        const storedLastName = localStorage.getItem("userLastName")
+        if (storedLastName) {
+            profileForm.setValue("lastName", storedLastName)
+        }
+        const storedImage = localStorage.getItem("userProfilePicture")
+        if (storedImage) {
+            setImagePreview(storedImage)
+        }
+    }, [profileForm])
+
     const onProfileSubmit = (values: z.infer<typeof profileFormSchema>) => {
         console.log(values)
+        localStorage.setItem("userFirstName", values.firstName)
+        localStorage.setItem("userLastName", values.lastName)
+        window.dispatchEvent(new Event("storage")) // To notify other tabs/components
         toast({ title: "Profile Updated", description: "Your personal information has been saved." })
     }
 
@@ -80,6 +100,21 @@ export default function SettingsPage() {
         toast({ title: "Password Changed", description: "Your password has been successfully updated." })
         securityForm.reset();
     }
+    
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                setImagePreview(dataUrl);
+                localStorage.setItem("userProfilePicture", dataUrl);
+                window.dispatchEvent(new Event("storage")); // To notify other tabs/components
+                toast({ title: "Profile Picture Updated" })
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
 
   return (
@@ -91,8 +126,26 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Profile Information</CardTitle>
-          <CardDescription>Update your personal details here.</CardDescription>
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20">
+                <AvatarImage src={imagePreview || "https://placehold.co/80x80.png"} alt="User avatar" data-ai-hint="person portrait"/>
+                <AvatarFallback>SC</AvatarFallback>
+            </Avatar>
+            <div className="space-y-2">
+                <CardTitle className="text-xl">Profile Information</CardTitle>
+                <CardDescription>Update your personal details here.</CardDescription>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                />
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    Upload Photo
+                </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
            <Form {...profileForm}>

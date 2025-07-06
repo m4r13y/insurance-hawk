@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,24 +14,55 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreditCard, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
 export function UserNav() {
+  const [userName, setUserName] = useState("Sarah Connor");
+  const [userEmail, setUserEmail] = useState("s.connor@email.com");
+  const [userImage, setUserImage] = useState("https://placehold.co/40x40.png");
+
+  useEffect(() => {
+    const updateUserData = () => {
+        const storedFirstName = localStorage.getItem("userFirstName");
+        const storedLastName = localStorage.getItem("userLastName");
+        const storedImage = localStorage.getItem("userProfilePicture");
+
+        if (storedFirstName && storedLastName) {
+            setUserName(`${storedFirstName} ${storedLastName}`);
+        } else if (storedFirstName) {
+            setUserName(storedFirstName);
+        }
+
+        if (storedImage) {
+            setUserImage(storedImage);
+        }
+    };
+
+    updateUserData();
+    window.addEventListener('storage', updateUserData);
+    return () => {
+        window.removeEventListener('storage', updateUserData);
+    };
+  }, []);
+
+  const fallback = userName ? userName.split(" ").map(n => n[0]).join("") : "SC";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src="https://placehold.co/40x40.png" alt="User avatar" data-ai-hint="person portrait" />
-            <AvatarFallback>SC</AvatarFallback>
+            <AvatarImage src={userImage} alt="User avatar" data-ai-hint="person portrait" />
+            <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-slate-900">Sarah Connor</p>
+            <p className="text-sm font-medium leading-none text-slate-900">{userName}</p>
             <p className="text-xs leading-none text-slate-500">
-              s.connor@email.com
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>

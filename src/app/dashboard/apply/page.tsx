@@ -457,7 +457,7 @@ export default function ApplyPage() {
                     <Button type="button" variant="outline" onClick={handlePrev}>Back</Button>
                 ) : <div />}
                 
-                <Button type="button" onClick={handleNext} className={step === steps.length ? 'bg-accent hover:bg-accent/90' : ''}>
+                <Button type="button" onClick={handleNext}>
                     {step === steps.length ? 'Submit Application' : 'Next Step'}
                     <ArrowRight className="ml-2 h-4 w-4"/>
                 </Button>
