@@ -25,9 +25,9 @@ import {
   Settings,
   LogOut,
   Search,
-  Sparkles,
   BookOpen,
   FileDigit,
+  PiggyBank,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,8 +56,8 @@ export default function DashboardLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Guided Plans">
-                    <Link href="/dashboard/recommendations"><Sparkles /><span>Guided Plans</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Financial Plan">
+                    <Link href="/dashboard/recommendations"><PiggyBank /><span>Financial Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>

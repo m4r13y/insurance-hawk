@@ -112,18 +112,18 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-3">
          <Card className="flex flex-col">
             <CardHeader>
-              <CardTitle>Find the Perfect Plan</CardTitle>
-              <CardDescription>Our AI can help you find a plan that fits your needs.</CardDescription>
+              <CardTitle>Create Your Financial Plan</CardTitle>
+              <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
-                    <Sparkles className="h-8 w-8" />
+                    <PiggyBank className="h-8 w-8" />
                 </div>
-                <p className="mb-4 text-muted-foreground">Answer a few questions and we'll provide a personalized recommendation with a detailed explanation.</p>
+                <p className="mb-4 text-muted-foreground">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
             </CardContent>
              <CardFooter>
                  <Button className="w-full bg-accent hover:bg-accent/90" asChild>
-                    <Link href="/dashboard/recommendations">Get Recommendation <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                  </Button>
              </CardFooter>
          </Card>
