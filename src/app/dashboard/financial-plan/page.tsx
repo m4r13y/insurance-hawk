@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useTransition, useRef } from "react"
+import { useState, useTransition, useRef, useEffect } from "react"
 import { useForm, type FieldPath } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -149,18 +149,33 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
     const resultsRef = useRef<HTMLDivElement>(null);
 
     const handleDownload = () => {
-        if (!resultsRef.current) return;
+        const input = resultsRef.current;
+        if (!input) return;
 
-        html2canvas(resultsRef.current, { scale: 2 }).then((canvas) => {
+        html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'px', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
-            const ratio = canvasWidth / pdfWidth;
-            const pdfHeight = canvasHeight / ratio;
             
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const ratio = canvasWidth / pdfWidth;
+            const imgHeight = canvasHeight / ratio;
+            
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
             pdf.save(`${name.replace(' ', '_')}_RetirementPlan.pdf`);
         });
     };
@@ -176,19 +191,22 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                     <CardDescription>Here is your personalized plan, {name}.</CardDescription>
                 </CardHeader>
                 <CardContent ref={resultsRef} className="px-10 py-8 bg-background">
-                    <div className="prose prose-lg max-w-none">
+                    <div className="prose prose-lg max-w-none text-card-foreground">
                         {plan.split('\n').map((line, index) => {
                             const trimmedLine = line.trim();
                             if (trimmedLine.startsWith('## ')) {
-                                return <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2 text-card-foreground">{trimmedLine.substring(3)}</h3>;
+                                return <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2 flex items-center gap-2">{trimmedLine.substring(3)}</h3>;
                             }
                             if (trimmedLine.startsWith('* ')) {
                                 return <li key={index} className="ml-5 list-disc">{trimmedLine.substring(2)}</li>;
                             }
+                             if (trimmedLine.startsWith('### ')) {
+                                return <h4 key={index} className="font-headline text-lg font-semibold mt-4 mb-1">{trimmedLine.substring(4)}</h4>;
+                            }
                             if (trimmedLine === '') {
                                 return null;
                             }
-                            return <p key={index}>{trimmedLine}</p>;
+                            return <p key={index} className="text-muted-foreground">{trimmedLine}</p>;
                         })}
                     </div>
                 </CardContent>
@@ -263,6 +281,17 @@ export default function RetirementPlanPage() {
     const watchHasLifeInsurance = form.watch("hasLifeInsurance");
     const watchHasLTC = form.watch("hasLTC");
     const watchHasEmergencyFund = form.watch("hasEmergencyFund");
+
+    const { watch, setValue } = form;
+    const incomeSources = watch([
+        "socialSecurityIncome", "pensionIncome", "rmdIncome", 
+        "annuityIncome", "workIncome", "rentalIncome"
+    ]);
+
+    useEffect(() => {
+        const total = incomeSources.reduce((sum, current) => sum + (Number(current) || 0), 0);
+        setValue("totalMonthlyIncome", total);
+    }, [incomeSources, setValue]);
     
     async function onSubmit(values: FormSchemaType) {
         setError(null);
@@ -564,7 +593,7 @@ export default function RetirementPlanPage() {
                             <div>
                               <h4 className="font-semibold mb-4">Monthly Totals ($)</h4>
                               <div className="grid grid-cols-2 gap-4">
-                                  <FormField control={form.control} name="totalMonthlyIncome" render={({ field }) => <FormItem><FormLabel>Total Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="totalMonthlyIncome" render={({ field }) => <FormItem><FormLabel>Total Income</FormLabel><FormControl><Input type="number" {...field} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="totalMonthlyExpenses" render={({ field }) => <FormItem><FormLabel>Total Expenses</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
                               </div>
                             </div>
