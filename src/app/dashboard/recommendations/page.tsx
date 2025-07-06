@@ -585,7 +585,7 @@ function RetirementPlanForm() {
                               <FormItem>
                                   <FormLabel>Where is your money currently?</FormLabel>
                                   <FormDescription>Select all that apply.</FormDescription>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-2">
                                       {assetTypeOptions.map((item) => (
                                           <FormField key={item.id} control={form.control} name="assetTypes" render={({ field }) => (
                                               <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
@@ -625,7 +625,7 @@ function RetirementPlanForm() {
                           )}
                           <div>
                               <h4 className="font-semibold mb-4">Monthly Income Sources ($)</h4>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                   <FormField control={form.control} name="socialSecurityIncome" render={({ field }) => <FormItem><FormLabel>Social Security</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="pensionIncome" render={({ field }) => <FormItem><FormLabel>Pensions</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="rmdIncome" render={({ field }) => <FormItem><FormLabel>RMDs</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
