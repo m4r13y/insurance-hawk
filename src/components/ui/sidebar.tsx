@@ -450,7 +450,7 @@ const SidebarMenuButton = React.forwardRef<
           hidden={(state !== "collapsed" && !isMobile) || !spanElement}
           {...tooltip}
         >
-          { (spanElement as React.ReactElement).props.children }
+          {spanElement && (spanElement as React.ReactElement).props.children}
         </TooltipContent>
       </Tooltip>
     )
