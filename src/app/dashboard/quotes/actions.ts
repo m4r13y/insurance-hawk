@@ -3,13 +3,6 @@
 
 import type { Quote, QuoteRequestValues } from "@/types";
 
-type ApiResponse = {
-    quotes: Quote[];
-} | {
-    error: string;
-    message?: string;
-};
-
 export async function getQuotes(values: QuoteRequestValues) {
   try {
     const params = new URLSearchParams({
@@ -36,15 +29,32 @@ export async function getQuotes(values: QuoteRequestValues) {
         throw new Error(errorData.message || `API request failed with status ${response.status}`);
     }
     
-    const data: ApiResponse = await response.json();
+    const data: unknown = await response.json();
 
-    if ('error' in data) {
-        throw new Error(data.message || data.error);
+    // The API might return an array of quotes directly.
+    if (Array.isArray(data)) {
+        return { quotes: data };
     }
 
-    if ('quotes' in data) {
-        return { quotes: data.quotes };
+    if (data && typeof data === 'object') {
+        // It might be an object with an 'error' property.
+        if ('error' in data) {
+            const apiError = data as { error: string, message?: string };
+            throw new Error(apiError.message || apiError.error);
+        }
+
+        // It might be an object with a 'quotes' property.
+        if ('quotes' in data) {
+            const apiResponse = data as { quotes: Quote[] };
+            return { quotes: apiResponse.quotes || [] };
+        }
+
+        // If no quotes are found, the API might return an empty object.
+        if (Object.keys(data).length === 0) {
+            return { quotes: [] };
+        }
     }
+
 
     return { error: 'Unexpected response format from API.' };
 
