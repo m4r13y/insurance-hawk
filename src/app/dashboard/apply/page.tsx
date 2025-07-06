@@ -165,7 +165,31 @@ function MedicareSupplementApplication() {
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(medSupplementSchema),
-        defaultValues: { planId: planId || (quotedPlan ? quotedPlanId : ''), wantsAgentContact: "yes" }
+        defaultValues: {
+            planId: planId || (quotedPlan ? quotedPlanId : ''),
+            wantsAgentContact: "yes",
+            firstName: "",
+            lastName: "",
+            dob: "",
+            address: "",
+            city: "",
+            state: "",
+            zip: "",
+            phone: "",
+            email: "",
+            medicareClaimNumber: "",
+            partAEffectiveDate: "",
+            partBEffectiveDate: "",
+            signature: "",
+            agreesToTerms: false,
+            majorIllnessDetails: "",
+            prescriptionList: "",
+            wantsDental: false,
+            wantsCancer: false,
+            wantsLifeInsurance: false,
+            wantsFinancialPlanning: false,
+            wantsDrugPlan: false,
+        }
     });
 
     const steps = [
@@ -305,7 +329,21 @@ function DentalApplication() {
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(dentalSchema),
-        defaultValues: { planId: planName || '', wantsAgentContact: "yes" }
+        defaultValues: {
+            planId: planName || '',
+            wantsAgentContact: "yes",
+            firstName: "",
+            lastName: "",
+            dob: "",
+            address: "",
+            city: "",
+            state: "",
+            zip: "",
+            phone: "",
+            email: "",
+            signature: "",
+            agreesToTerms: false,
+        }
     });
 
     function onSubmit(values: FormSchema) {
@@ -498,3 +536,5 @@ export default function ApplyPage() {
     </Suspense>
   )
 }
+
+    
