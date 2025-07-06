@@ -174,7 +174,7 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="md:hidden" />
-                <div className="relative hidden lg:block">
+                <div className="relative hidden sm:block">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <Input placeholder="Search..." className="w-full rounded-lg bg-white pl-10 h-10 md:w-[200px] lg:w-[336px]" />
                 </div>
@@ -190,7 +190,7 @@ export default function DashboardLayout({
               )}
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-12">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
             {children}
           </main>
         </div>

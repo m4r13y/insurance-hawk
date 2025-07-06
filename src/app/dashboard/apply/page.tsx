@@ -209,7 +209,7 @@ function MedicareSupplementApplication() {
     
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-start gap-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold">Medicare Supplement Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
@@ -318,7 +318,7 @@ function DentalApplication() {
     
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-start gap-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold">Dental Insurance Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Secure your smile with this quick application.</p>
@@ -371,7 +371,7 @@ function GenericApplication({ title, icon: Icon }: { title: string, icon: React.
     
     return (
         <div className="space-y-8">
-             <div className="flex justify-between items-start gap-8">
+             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold">{title}</h1>
                     <p className="text-base text-muted-foreground mt-1">This application is simplified for this demo.</p>

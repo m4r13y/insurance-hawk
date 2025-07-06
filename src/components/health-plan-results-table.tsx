@@ -121,9 +121,9 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                     <TableHeader>
                         <TableRow>
                         <TableHead>Plan Details</TableHead>
-                        <TableHead>Monthly Premium</TableHead>
-                        <TableHead>Deductible</TableHead>
-                        <TableHead>Max Out-of-Pocket</TableHead>
+                        <TableHead className="hidden sm:table-cell">Monthly Premium</TableHead>
+                        <TableHead className="hidden md:table-cell">Deductible</TableHead>
+                        <TableHead className="hidden lg:table-cell">Max Out-of-Pocket</TableHead>
                         <TableHead className="text-right"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -134,12 +134,16 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                                 {plan.isBestMatch && <Badge className="mb-2 bg-accent text-accent-foreground">Best Match</Badge>}
                                 <p className="font-bold text-base">{plan.provider}</p>
                                 <p className="text-muted-foreground">{plan.name}</p>
-                                <div className="flex gap-2 text-xs mt-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-xs mt-2 text-muted-foreground">
                                     <span>{plan.network}</span>
                                     {plan.hsa_eligible && <><span>•</span><span>HSA Eligible</span></>}
                                 </div>
+                                <div className="mt-4 sm:hidden">
+                                     <p className="font-bold text-lg">${plan.premium.toFixed(2)}</p>
+                                    {plan.taxCredit > 0 && <p className="text-xs text-green-600 whitespace-nowrap">after ${plan.taxCredit.toFixed(2)} credit</p>}
+                                </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                                 <p className="font-bold text-xl">${plan.premium.toFixed(2)}</p>
                                 {plan.taxCredit > 0 && (
                                     <TooltipProvider>
@@ -159,8 +163,8 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                                     </TooltipProvider>
                                 )}
                             </TableCell>
-                            <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
-                            <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>
+                            <TableCell className="font-medium hidden md:table-cell">${plan.deductible.toLocaleString()}</TableCell>
+                            <TableCell className="font-medium hidden lg:table-cell">${plan.outOfPocketMax.toLocaleString()}</TableCell>
                             <TableCell className="text-right">
                                 <Button asChild><Link href={`/dashboard/apply?type=health-insurance&planName=${encodeURIComponent(plan.name)}&provider=${encodeURIComponent(plan.provider)}&premium=${plan.premium}`}>Select Plan</Link></Button>
                             </TableCell>

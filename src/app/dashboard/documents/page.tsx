@@ -313,20 +313,20 @@ export default function DocumentsPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>File Name</TableHead>
-                                <TableHead>Upload Date</TableHead>
-                                <TableHead>Size</TableHead>
+                                <TableHead className="hidden sm:table-cell">Upload Date</TableHead>
+                                <TableHead className="hidden sm:table-cell">Size</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {files.map((doc) => (
                                 <TableRow key={doc.id}>
-                                    <TableCell className="font-medium flex items-center gap-3">
-                                        <File className="h-5 w-5 text-muted-foreground" />
-                                        {doc.name}
+                                    <TableCell className="font-medium flex items-center gap-3 max-w-xs sm:max-w-md">
+                                        <File className="h-5 w-5 text-muted-foreground shrink-0" />
+                                        <span className="truncate">{doc.name}</span>
                                     </TableCell>
-                                    <TableCell>{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
-                                    <TableCell>{doc.size}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{doc.size}</TableCell>
                                     <TableCell className="text-right">
                                         <Button asChild variant="ghost" size="icon">
                                             <a href={doc.dataUrl} download={doc.name}>
