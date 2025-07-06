@@ -1,7 +1,6 @@
-
 "use server";
 
-import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, HospitalIndemnityQuote, HospitalIndemnityQuoteRequestValues } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, HospitalIndemnityQuote, HospitalIndemnityQuoteRequestValues, CsgDiscount, HospitalIndemnityRider } from "@/types";
 
 // The raw response from the Medigap csgapi
 type CsgQuote = {
@@ -14,7 +13,8 @@ type CsgQuote = {
         ambest_rating: string;
     };
     plan: string;
-    discounts: any[];
+    discounts: CsgDiscount[];
+    rate_type?: string;
 };
 
 export async function getMedigapQuotes(values: QuoteRequestValues) {
@@ -77,6 +77,7 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
         plan_type: q.plan,
         discounts: q.discounts,
         am_best_rating: q.company_base.ambest_rating,
+        rate_type: q.rate_type,
     }));
     
     return { quotes };
@@ -101,6 +102,8 @@ type CsgDentalQuote = {
             amount: string;
             quantifier: string;
         }[];
+        benefit_notes?: string;
+        limitation_notes?: string;
     }[];
 };
 
@@ -143,7 +146,8 @@ export async function getDentalQuotes(values: DentalQuoteRequestValues) {
         const csgQuotes = data as CsgDentalQuote[];
 
         const quotes: DentalQuote[] = csgQuotes.map(q => {
-            const firstBenefit = q.base_plans?.[0]?.benefits?.[0];
+            const firstBasePlan = q.base_plans?.[0];
+            const firstBenefit = firstBasePlan?.benefits?.[0];
             return {
                 id: q.key,
                 plan_name: q.plan_name,
@@ -155,6 +159,8 @@ export async function getDentalQuotes(values: DentalQuoteRequestValues) {
                 am_best_rating: q.company_base.ambest_rating,
                 benefit_amount: firstBenefit?.amount ?? 'N/A',
                 benefit_quantifier: firstBenefit?.quantifier ?? 'N/A',
+                benefit_notes: firstBasePlan?.benefit_notes,
+                limitation_notes: firstBasePlan?.limitation_notes,
             };
         });
 
@@ -180,6 +186,7 @@ type CsgHospitalIndemnityQuote = {
             quantifier: string;
         }[];
     }[];
+    riders: HospitalIndemnityRider[];
 };
 
 export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteRequestValues) {
@@ -232,6 +239,7 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
                 monthly_premium: benefit.rate,
                 benefit_amount: benefit.amount,
                 benefit_quantifier: benefit.quantifier,
+                riders: q.riders,
             }));
         });
 

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Terminal, FileDigit, Star, Info } from "lucide-react";
+import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown } from "lucide-react";
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
 import type { Quote, DentalQuote, HospitalIndemnityQuote } from "@/types";
 import Link from "next/link";
@@ -98,6 +98,14 @@ export default function QuotesPage() {
   const [hospitalIndemnityQuotes, setHospitalIndemnityQuotes] = useState<HospitalIndemnityQuote[] | null>(null);
   const [hospitalIndemnityError, setHospitalIndemnityError] = useState<string | null>(null);
 
+  const [openRows, setOpenRows] = useState<string[]>([]);
+
+  const toggleRow = (id: string) => {
+    setOpenRows(prev => 
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    );
+  };
+
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
     defaultValues: {
@@ -144,6 +152,7 @@ export default function QuotesPage() {
   function onMedigapSubmit(values: z.infer<typeof medigapFormSchema>) {
     setMedigapError(null);
     setMedigapQuotes(null);
+    setOpenRows([]);
     startMedigapTransition(async () => {
       const result = await getMedigapQuotes({
         ...values,
@@ -161,6 +170,7 @@ export default function QuotesPage() {
   function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
     setDentalError(null);
     setDentalQuotes(null);
+    setOpenRows([]);
     startDentalTransition(async () => {
       const result = await getDentalQuotes(values);
       if (result.error) {
@@ -175,6 +185,7 @@ export default function QuotesPage() {
   function onHospitalIndemnitySubmit(values: z.infer<typeof hospitalIndemnityFormSchema>) {
     setHospitalIndemnityError(null);
     setHospitalIndemnityQuotes(null);
+    setOpenRows([]);
     startHospitalIndemnityTransition(async () => {
         const result = await getHospitalIndemnityQuotes(values);
         if (result.error) {
@@ -318,27 +329,55 @@ export default function QuotesPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead className="w-[50px]"></TableHead>
                                             <TableHead>Carrier</TableHead>
                                             <TableHead>Plan</TableHead>
                                             <TableHead>Rating</TableHead>
                                             <TableHead className="text-right">Monthly Premium</TableHead>
-                                            <TableHead className="text-right"></TableHead>
+                                            <TableHead className="w-[120px] text-right"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {medigapQuotes.map((quote, index) => (
-                                            <TableRow key={`${quote.id}-${index}`}>
-                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                <TableCell>{quote.plan_name}</TableCell>
-                                                <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
-                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button asChild>
-                                                        <Link href="/dashboard/apply">Select Plan</Link>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {medigapQuotes.map((quote, index) => {
+                                            const key = `${quote.id}-${index}`;
+                                            const isOpen = openRows.includes(key);
+                                            return (
+                                                <React.Fragment key={key}>
+                                                    <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
+                                                        <TableCell>
+                                                            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                        <TableCell>{quote.plan_name}</TableCell>
+                                                        <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
+                                                        <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button asChild onClick={(e) => e.stopPropagation()}>
+                                                                <Link href="/dashboard/apply">Select Plan</Link>
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {isOpen && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="p-0">
+                                                                <div className="p-4 bg-muted/50 text-sm">
+                                                                    <h4 className="font-semibold mb-2">Plan Details</h4>
+                                                                    <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
+                                                                    {quote.discounts?.length > 0 && (
+                                                                        <div className="mt-2">
+                                                                            <p className="font-semibold text-muted-foreground">Available Discounts:</p>
+                                                                            <ul className="list-disc pl-5">
+                                                                                {quote.discounts.map((d, i) => <li key={i} className="capitalize">{d.name}: {d.value * 100}%</li>)}
+                                                                            </ul>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </React.Fragment>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
                             ) : (
@@ -434,30 +473,56 @@ export default function QuotesPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead className="w-[50px]"></TableHead>
                                             <TableHead>Carrier</TableHead>
                                             <TableHead>Plan Name</TableHead>
                                             <TableHead>Benefit</TableHead>
                                             <TableHead className="text-right">Monthly Premium</TableHead>
-                                            <TableHead className="text-right"></TableHead>
+                                            <TableHead className="w-[120px] text-right"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {dentalQuotes.map((quote, index) => (
-                                            <TableRow key={`${quote.id}-${index}`}>
-                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                <TableCell>{quote.plan_name}</TableCell>
-                                                <TableCell>
-                                                    <div className="font-medium">{quote.benefit_amount !== 'N/A' ? `$${new Intl.NumberFormat().format(Number(quote.benefit_amount))}` : 'N/A'}</div>
-                                                    <div className="text-xs text-muted-foreground">{quote.benefit_quantifier}</div>
-                                                </TableCell>
-                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button asChild>
-                                                        <Link href="/dashboard/apply">Select Plan</Link>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {dentalQuotes.map((quote, index) => {
+                                            const key = `${quote.id}-${index}`;
+                                            const isOpen = openRows.includes(key);
+                                            return (
+                                                <React.Fragment key={key}>
+                                                    <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
+                                                        <TableCell>
+                                                            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                        <TableCell>{quote.plan_name}</TableCell>
+                                                        <TableCell>
+                                                            <div className="font-medium">{quote.benefit_amount !== 'N/A' ? `$${new Intl.NumberFormat().format(Number(quote.benefit_amount))}` : 'N/A'}</div>
+                                                            <div className="text-xs text-muted-foreground">{quote.benefit_quantifier}</div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button asChild onClick={(e) => e.stopPropagation()}>
+                                                                <Link href="/dashboard/apply">Select Plan</Link>
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {isOpen && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="p-0">
+                                                                <div className="p-4 bg-muted/50 text-sm space-y-2">
+                                                                    <div>
+                                                                        <h4 className="font-semibold text-muted-foreground">Benefit Notes</h4>
+                                                                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.benefit_notes || 'N/A' }} />
+                                                                    </div>
+                                                                     <div>
+                                                                        <h4 className="font-semibold text-muted-foreground">Limitation Notes</h4>
+                                                                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.limitation_notes || 'N/A' }} />
+                                                                    </div>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </React.Fragment>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
                             ) : (
@@ -574,28 +639,58 @@ export default function QuotesPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead className="w-[50px]"></TableHead>
                                             <TableHead>Carrier</TableHead>
                                             <TableHead>Plan Name</TableHead>
                                             <TableHead>Benefit</TableHead>
                                             <TableHead className="text-right">Monthly Premium</TableHead>
-                                            <TableHead className="text-right"></TableHead>
+                                            <TableHead className="w-[120px] text-right"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {hospitalIndemnityQuotes.map((quote) => (
-                                            <TableRow key={quote.id}>
-                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                <TableCell>{quote.plan_name}</TableCell>
-                                                <TableCell>
-                                                    <div className="font-medium">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</div>
-                                                    <div className="text-xs text-muted-foreground">per {quote.benefit_quantifier}</div>
-                                                </TableCell>
-                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button asChild><Link href="/dashboard/apply">Select Plan</Link></Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {hospitalIndemnityQuotes.map((quote, index) => {
+                                            const key = `${quote.id}-${index}`;
+                                            const isOpen = openRows.includes(key);
+                                            return (
+                                                <React.Fragment key={key}>
+                                                    <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
+                                                        <TableCell>
+                                                            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                        <TableCell>{quote.plan_name}</TableCell>
+                                                        <TableCell>
+                                                            <div className="font-medium">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</div>
+                                                            <div className="text-xs text-muted-foreground">per {quote.benefit_quantifier}</div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button asChild onClick={(e) => e.stopPropagation()}><Link href="/dashboard/apply">Select Plan</Link></Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {isOpen && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="p-0">
+                                                                <div className="p-4 bg-muted/50 text-sm">
+                                                                    <h4 className="font-semibold mb-2">Available Riders</h4>
+                                                                    {quote.riders?.length > 0 ? (
+                                                                        <ul className="list-disc pl-5 space-y-1">
+                                                                            {quote.riders.map((rider, i) => (
+                                                                                <li key={i}>
+                                                                                    <strong>{rider.name}:</strong> {rider.note || 'No additional details.'}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    ) : (
+                                                                        <p>No riders available for this plan.</p>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </React.Fragment>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
                             ) : (
