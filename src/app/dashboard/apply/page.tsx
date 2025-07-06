@@ -62,7 +62,7 @@ const medSupplementSchema = personalInfoSchema.merge(medicareInfoSchema).merge(s
   wantsDental: z.boolean().default(false).optional(),
   wantsCancer: z.boolean().default(false).optional(),
   wantsLifeInsurance: z.boolean().default(false).optional(),
-  wantsFinancialPlanning: z.boolean().default(false).optional(),
+  wantsRetirementPlanning: z.boolean().default(false).optional(),
   wantsDrugPlan: z.boolean().default(false).optional(),
 });
 
@@ -187,7 +187,7 @@ function MedicareSupplementApplication() {
             wantsDental: false,
             wantsCancer: false,
             wantsLifeInsurance: false,
-            wantsFinancialPlanning: false,
+            wantsRetirementPlanning: false,
             wantsDrugPlan: false,
         }
     });
@@ -293,7 +293,7 @@ function MedicareSupplementApplication() {
                                     <FormField control={form.control} name="wantsDental" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Dental Coverage</FormLabel></div></FormItem>} />
                                     <FormField control={form.control} name="wantsCancer" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Cancer Coverage</FormLabel></div></FormItem>} />
                                     <FormField control={form.control} name="wantsLifeInsurance" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Life Insurance</FormLabel></div></FormItem>} />
-                                    <FormField control={form.control} name="wantsFinancialPlanning" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Financial Planning</FormLabel></div></FormItem>} />
+                                    <FormField control={form.control} name="wantsRetirementPlanning" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Retirement Planning</FormLabel></div></FormItem>} />
                                     <FormField control={form.control} name="wantsDrugPlan" render={({ field }) => <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Prescription Drug Plan (Part D)</FormLabel></div></FormItem>} />
                                 </div>
                             </div>
@@ -482,21 +482,23 @@ function ApplicationSelectionGrid() {
         <h1 className="text-2xl font-semibold">Submit an Application</h1>
         <p className="text-base text-muted-foreground mt-1">Select the type of application you would like to start.</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {applicationTypes.map((app) => {
-            const Icon = app.icon
-            return (
-              <Link key={app.type} href={`/dashboard/apply?type=${app.type}`} passHref>
-                <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
-                    <Icon className="h-8 w-8" />
-                  </div>
-                  <h3 className="font-semibold text-lg">{app.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
-                </Card>
-              </Link>
-            )
-        })}
+      <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {applicationTypes.map((app) => {
+                const Icon = app.icon
+                return (
+                  <Link key={app.type} href={`/dashboard/apply?type=${app.type}`} passHref>
+                    <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+                        <Icon className="h-8 w-8" />
+                      </div>
+                      <h3 className="font-semibold text-lg">{app.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
+                    </Card>
+                  </Link>
+                )
+            })}
+        </div>
       </div>
     </div>
   );

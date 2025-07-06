@@ -51,7 +51,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                     <Link href="/dashboard/recommendations">
                         <PiggyBank className="mr-3 h-6 w-6 text-primary" />
                         <span className="flex flex-col">
-                            <span className="font-semibold">Create a Financial Plan</span>
+                            <span className="font-semibold">Create a Retirement Plan</span>
                             <span className="text-xs text-muted-foreground">Get personalized retirement advice.</span>
                         </span>
                     </Link>
@@ -187,11 +187,11 @@ export default function DashboardPage() {
                 )}
             </div>
             
-            {/* Card 2: Financial Plan */}
+            {/* Card 2: Retirement Plan */}
             <div className="w-full lg:w-1/3">
                 <Card className="h-full flex flex-col bg-slate-100/70">
                     <CardHeader>
-                      <CardTitle>Create Your Financial Plan</CardTitle>
+                      <CardTitle>Create Your Retirement Plan</CardTitle>
                       <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col items-center justify-center text-center">

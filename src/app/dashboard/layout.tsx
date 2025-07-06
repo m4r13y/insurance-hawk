@@ -59,9 +59,9 @@ function DashboardLayoutComponent({
   
   const applicationType = searchParams.get('type');
   const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
-  const isFinancialPlanPage = pathname === '/dashboard/recommendations';
+  const isRetirementPlanPage = pathname === '/dashboard/recommendations';
 
-  const isFullScreenForm = isApplyFormPage || isFinancialPlanPage;
+  const isFullScreenForm = isApplyFormPage || isRetirementPlanPage;
 
   const isActive = (path: string) => pathname === path;
   
@@ -144,8 +144,8 @@ function DashboardLayoutComponent({
                   </SidebarMenuItem>
                 )}
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Financial Plan">
-                    <Link href="/dashboard/recommendations"><PiggyBank /><span>Financial Plan</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Retirement Plan">
+                    <Link href="/dashboard/recommendations"><PiggyBank /><span>Retirement Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>

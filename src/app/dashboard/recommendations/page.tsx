@@ -241,6 +241,17 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                             if (trimmedLine.startsWith('* ')) {
                                 return <li key={index} className="ml-6 list-disc">{trimmedLine.substring(2)}</li>;
                             }
+                            if (trimmedLine.startsWith('**Disclaimer:**')) {
+                                return (
+                                    <div key={index} className="mt-8 p-4 rounded-lg border border-amber-300 bg-amber-50/50 text-amber-800">
+                                        <div className="flex items-center gap-3">
+                                            <AlertTriangle className="h-5 w-5 shrink-0" />
+                                            <span className="font-semibold text-base">Important Disclaimer</span>
+                                        </div>
+                                        <p className="mt-2 text-sm">{trimmedLine.replace('**Disclaimer:**', '').trim()}</p>
+                                    </div>
+                                );
+                            }
                             if (trimmedLine === '') {
                                 return null;
                             }
@@ -320,13 +331,21 @@ function RetirementPlanForm() {
             otherGoals: "", signature: "",
         },
     })
+    
+    const { watch, setValue } = form;
+    const watchTaxStatus = watch("taxFilingStatus");
+
+    useEffect(() => {
+        if (watchTaxStatus === "married_jointly" || watchTaxStatus === "married_separately") {
+            setValue("hasSpouse", "yes");
+        }
+    }, [watchTaxStatus, setValue]);
 
     const watchHasSpouse = form.watch("hasSpouse");
     const watchHasLifeInsurance = form.watch("hasLifeInsurance");
     const watchHasLTC = form.watch("hasLTC");
     const watchHasEmergencyFund = form.watch("hasEmergencyFund");
 
-    const { watch, setValue } = form;
     const incomeSources = watch([
         "socialSecurityIncome", "pensionIncome", "rmdIncome", 
         "annuityIncome", "workIncome", "rentalIncome"
@@ -741,11 +760,11 @@ function RetirementPlanForm() {
 }
 
 // --- Main Page Component --- //
-export default function FinancialPlanPage() {
+export default function RetirementPlanPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Financial Plan</h1>
+        <h1 className="text-2xl font-semibold">Retirement Plan</h1>
         <p className="text-base text-muted-foreground mt-1">
           Use our AI tool to create a personalized retirement strategy.
         </p>
