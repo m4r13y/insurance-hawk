@@ -124,125 +124,130 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
 
   return (
     <div className="space-y-8">
+      <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Refine Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="space-y-4">
+                <Label>Monthly Premium</Label>
+                <Slider defaultValue={[0, 1500]} max={1500} step={50} onValueChange={setPremium} />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>${premium[0]}</span>
+                  <span>${premium[1] >= 1500 ? '1500+' : premium[1]}</span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <Label>Annual Deductible</Label>
+                <Slider defaultValue={[0, 15000]} max={15000} step={500} onValueChange={setDeductible} />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>${deductible[0]}</span>
+                  <span>${deductible[1] >= 15000 ? '15k+' : deductible[1]}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                  <Label>My Doctors</Label>
+                  <Combobox options={doctorOptions} value={doctorQuery} onSelect={handleAddDoctor} onInputChange={handleDoctorSearch} placeholder="Search for a doctor..." />
+                  <div className="flex flex-wrap gap-2 pt-2">
+                      {selectedDoctors.map(doc => <FilterTag key={doc.id} item={doc} onRemove={(id) => setSelectedDoctors(prev => prev.filter(d => d.id !== id))} />)}
+                  </div>
+              </div>
+
+              <div className="space-y-2">
+                  <Label>My Prescriptions</Label>
+                  <Combobox options={drugOptions} value={drugQuery} onSelect={handleAddDrug} onInputChange={handleDrugSearch} placeholder="Search for a medication..." />
+                  <div className="flex flex-wrap gap-2 pt-2">
+                      {selectedDrugs.map(drug => <FilterTag key={drug.id} item={drug} onRemove={(id) => setSelectedDrugs(prev => prev.filter(d => d.id !== id))} />)}
+                  </div>
+              </div>
+            </div>
+            
+            <Separator className="my-6" />
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center space-x-2">
+                    <Switch checked={isHsa} onCheckedChange={setIsHsa} id="hsa-filter"/>
+                    <Label htmlFor="hsa-filter">HSA Eligible Plans Only</Label>
+                </div>
+                <Button onClick={handleRefineSearch} className="w-full sm:w-auto" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Apply Filters
+                </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">Your Health Plan Results</h2>
+          <h2 className="text-xl font-semibold">Your Health Plan Results</h2>
           <p className="text-base text-muted-foreground mt-1">Found {plans.length} plans. Use the filters to refine your search.</p>
         </div>
         <Button variant="outline" onClick={onBack}>New Search</Button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        <Card className="lg:col-span-1 lg:sticky lg:top-24">
-          <CardHeader><CardTitle className="text-xl">Refine Results</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <Label>Monthly Premium</Label>
-              <Slider defaultValue={[0, 1500]} max={1500} step={50} onValueChange={setPremium} />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>${premium[0]}</span>
-                <span>${premium[1] >= 1500 ? '1500+' : premium[1]}</span>
-              </div>
-            </div>
-             <div className="space-y-4">
-              <Label>Annual Deductible</Label>
-              <Slider defaultValue={[0, 15000]} max={15000} step={500} onValueChange={setDeductible} />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>${deductible[0]}</span>
-                <span>${deductible[1] >= 15000 ? '15k+' : deductible[1]}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-                <Label>HSA Eligible</Label>
-                <Switch checked={isHsa} onCheckedChange={setIsHsa} />
-            </div>
 
-            <Separator />
-            
-            <div className="space-y-2">
-                <Label>My Doctors</Label>
-                <Combobox options={doctorOptions} value={doctorQuery} onSelect={handleAddDoctor} onInputChange={handleDoctorSearch} placeholder="Search for a doctor..." />
-                <div className="flex flex-wrap gap-2 pt-2">
-                    {selectedDoctors.map(doc => <FilterTag key={doc.id} item={doc} onRemove={(id) => setSelectedDoctors(prev => prev.filter(d => d.id !== id))} />)}
-                </div>
-            </div>
-
-             <div className="space-y-2">
-                <Label>My Prescriptions</Label>
-                <Combobox options={drugOptions} value={drugQuery} onSelect={handleAddDrug} onInputChange={handleDrugSearch} placeholder="Search for a medication..." />
-                <div className="flex flex-wrap gap-2 pt-2">
-                    {selectedDrugs.map(drug => <FilterTag key={drug.id} item={drug} onRemove={(id) => setSelectedDrugs(prev => prev.filter(d => d.id !== id))} />)}
-                </div>
-            </div>
-            
-            <Button onClick={handleRefineSearch} className="w-full" disabled={isPending}>
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-              Apply Filters
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="lg:col-span-3">
-            {plans.length > 0 ? (
-                <Card>
-                    <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead className="min-w-[24rem]">Plan Details</TableHead>
-                        <TableHead className="min-w-[12rem]">Monthly Premium</TableHead>
-                        <TableHead className="min-w-[10rem]">Deductible</TableHead>
-                        <TableHead className="min-w-[12rem]">Max Out-of-Pocket</TableHead>
-                        <TableHead className="text-right"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {plans.map(plan => (
-                        <TableRow key={plan.id} className={plan.isBestMatch ? 'bg-sky-50' : ''}>
-                            <TableCell>
-                                {plan.isBestMatch && <Badge className="mb-2 bg-accent text-accent-foreground">Best Match</Badge>}
-                                <p className="font-bold text-base">{plan.provider}</p>
-                                <p className="text-muted-foreground">{plan.name}</p>
-                                <div className="flex gap-2 text-xs mt-2 text-muted-foreground">
-                                    <span>{plan.network}</span>
-                                    {plan.hsa_eligible && <><span>•</span><span>HSA Eligible</span></>}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <p className="font-bold text-xl">${plan.premium.toFixed(2)}</p>
-                                {plan.taxCredit > 0 && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-1 cursor-help">
-                                          <p className="text-xs text-green-600 whitespace-nowrap">after ${plan.taxCredit.toFixed(2)} est. tax credit</p>
-                                          <Info className="h-3 w-3 text-muted-foreground" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="max-w-xs text-sm">
-                                          This is an estimated Advanced Premium Tax Credit (APTC) based on your income. It lowers your monthly health insurance payment.
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                            </TableCell>
-                            <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
-                            <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>
-                            <TableCell className="text-right">
-                                <Button>Select Plan</Button>
-                            </TableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                    </Table>
-                </Card>
-            ) : (
-                <Card className="flex flex-col items-center justify-center text-center p-12">
-                     <h3 className="text-xl font-semibold">No Plans Found</h3>
-                    <p className="text-muted-foreground mt-2">Try adjusting your filters or starting a new search.</p>
-                </Card>
-            )}
-        </div>
+      <div>
+          {plans.length > 0 ? (
+              <Card>
+                  <Table>
+                  <TableHeader>
+                      <TableRow>
+                      <TableHead className="min-w-[24rem]">Plan Details</TableHead>
+                      <TableHead className="min-w-[12rem]">Monthly Premium</TableHead>
+                      <TableHead className="min-w-[10rem]">Deductible</TableHead>
+                      <TableHead className="min-w-[12rem]">Max Out-of-Pocket</TableHead>
+                      <TableHead className="text-right"></TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {plans.map(plan => (
+                      <TableRow key={plan.id} className={plan.isBestMatch ? 'bg-sky-50' : ''}>
+                          <TableCell>
+                              {plan.isBestMatch && <Badge className="mb-2 bg-accent text-accent-foreground">Best Match</Badge>}
+                              <p className="font-bold text-base">{plan.provider}</p>
+                              <p className="text-muted-foreground">{plan.name}</p>
+                              <div className="flex gap-2 text-xs mt-2 text-muted-foreground">
+                                  <span>{plan.network}</span>
+                                  {plan.hsa_eligible && <><span>•</span><span>HSA Eligible</span></>}
+                              </div>
+                          </TableCell>
+                          <TableCell>
+                              <p className="font-bold text-xl">${plan.premium.toFixed(2)}</p>
+                              {plan.taxCredit > 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center gap-1 cursor-help">
+                                        <p className="text-xs text-green-600 whitespace-nowrap">after ${plan.taxCredit.toFixed(2)} est. tax credit</p>
+                                        <Info className="h-3 w-3 text-muted-foreground" />
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs text-sm">
+                                        This is an estimated Advanced Premium Tax Credit (APTC) based on your income. It lowers your monthly health insurance payment.
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                          </TableCell>
+                          <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
+                          <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                              <Button>Select Plan</Button>
+                          </TableCell>
+                      </TableRow>
+                      ))}
+                  </TableBody>
+                  </Table>
+              </Card>
+          ) : (
+              <Card className="flex flex-col items-center justify-center text-center p-12">
+                   <h3 className="text-xl font-semibold">No Plans Found</h3>
+                  <p className="text-muted-foreground mt-2">Try adjusting your filters or starting a new search.</p>
+              </Card>
+          )}
       </div>
     </div>
   );
