@@ -10,13 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
 import { Combobox, ComboboxOption } from './ui/combobox';
-import { X, Loader2, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Loader2, RefreshCw, Info } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getHealthQuotes, searchDrugs, searchProviders } from '@/app/dashboard/health-quotes/actions';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 type FormValues = z.infer<typeof healthQuoterFormSchema>;
 interface HealthPlanResultsTableProps {
@@ -125,14 +126,14 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="font-headline text-3xl font-bold">Your Health Plan Results</h2>
-          <p className="text-muted-foreground mt-1">Found {plans.length} plans. Use the filters to refine your search.</p>
+          <h2 className="text-2xl font-semibold">Your Health Plan Results</h2>
+          <p className="text-base text-muted-foreground mt-1">Found {plans.length} plans. Use the filters to refine your search.</p>
         </div>
         <Button variant="outline" onClick={onBack}>New Search</Button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <Card className="lg:col-span-1 lg:sticky lg:top-24">
-          <CardHeader><CardTitle>Refine Results</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-xl">Refine Results</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <Label>Monthly Premium</Label>
@@ -159,7 +160,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
             
             <div className="space-y-2">
                 <Label>My Doctors</Label>
-                <Combobox options={doctorOptions} value={doctorQuery} onChange={handleAddDoctor} onInputChange={handleDoctorSearch} placeholder="Search for a doctor..." />
+                <Combobox options={doctorOptions} value={doctorQuery} onSelect={handleAddDoctor} onInputChange={handleDoctorSearch} placeholder="Search for a doctor..." />
                 <div className="flex flex-wrap gap-2 pt-2">
                     {selectedDoctors.map(doc => <FilterTag key={doc.id} item={doc} onRemove={(id) => setSelectedDoctors(prev => prev.filter(d => d.id !== id))} />)}
                 </div>
@@ -167,7 +168,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
 
              <div className="space-y-2">
                 <Label>My Prescriptions</Label>
-                <Combobox options={drugOptions} value={drugQuery} onChange={handleAddDrug} onInputChange={handleDrugSearch} placeholder="Search for a medication..." />
+                <Combobox options={drugOptions} value={drugQuery} onSelect={handleAddDrug} onInputChange={handleDrugSearch} placeholder="Search for a medication..." />
                 <div className="flex flex-wrap gap-2 pt-2">
                     {selectedDrugs.map(drug => <FilterTag key={drug.id} item={drug} onRemove={(id) => setSelectedDrugs(prev => prev.filter(d => d.id !== id))} />)}
                 </div>
@@ -207,7 +208,23 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                             </TableCell>
                             <TableCell>
                                 <p className="font-bold text-xl">${plan.premium.toFixed(2)}</p>
-                                {plan.taxCredit > 0 && <p className="text-xs text-green-600">after ${plan.taxCredit.toFixed(2)} credit</p>}
+                                {plan.taxCredit > 0 && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1 cursor-help">
+                                          <p className="text-xs text-green-600">after ${plan.taxCredit.toFixed(2)} est. tax credit</p>
+                                          <Info className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs text-sm">
+                                          This is an estimated Advanced Premium Tax Credit (APTC) based on your income. It lowers your monthly health insurance payment.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
                             </TableCell>
                             <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
                             <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>

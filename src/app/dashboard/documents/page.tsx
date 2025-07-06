@@ -130,16 +130,16 @@ export default function DocumentsPage() {
     };
 
   return (
-    <div className="space-y-8 md:space-y-12">
+    <div className="space-y-8">
        <div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Policies & Documents</h1>
-        <p className="text-muted-foreground mt-2 text-lg">Manage your policies and upload related documents securely.</p>
+        <h1 className="text-2xl font-semibold">Policies & Documents</h1>
+        <p className="text-base text-muted-foreground mt-1">Manage your policies and upload related documents securely.</p>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row justify-between items-start">
             <div>
-                <CardTitle className="text-2xl">My Policies</CardTitle>
+                <CardTitle className="text-xl">My Policies</CardTitle>
                 <CardDescription>Here are the policies you've added to your nest.</CardDescription>
             </div>
             <Button size="icon" variant="outline" onClick={() => setIsDialogOpen(true)}>
@@ -153,7 +153,7 @@ export default function DocumentsPage() {
                     const Icon = policy.icon;
                     return (
                         <Card key={policy.id} className="flex flex-col">
-                            <CardHeader className="flex-row items-center gap-4 space-y-0 p-6">
+                            <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600 shrink-0">
                                     <Icon className="h-6 w-6" />
                                 </div>
@@ -161,11 +161,11 @@ export default function DocumentsPage() {
                                     <CardTitle className="text-lg">{policy.label}</CardTitle>
                                 </div>
                             </CardHeader>
-                            <CardContent className="flex-1 space-y-2 text-sm p-6 pt-0">
+                            <CardContent className="flex-1 space-y-2 text-sm p-4 pt-0">
                                 <p><span className="font-semibold">Provider:</span> {policy.provider}</p>
                                 <p><span className="font-semibold">Plan:</span> {policy.planName}</p>
                             </CardContent>
-                            <CardFooter className="p-6 pt-0">
+                            <CardFooter className="p-4 pt-0">
                                 <Button variant="outline" className="w-full">
                                     <UploadCloud className="mr-2 h-4 w-4" />
                                     Upload Documents
@@ -180,7 +180,7 @@ export default function DocumentsPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Document Upload</CardTitle>
+          <CardTitle className="text-xl">Document Upload</CardTitle>
           <CardDescription>Drag and drop files here or click to browse. You can also upload from your policy cards above.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,7 +204,7 @@ export default function DocumentsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Your Uploaded Documents</CardTitle>
+          <CardTitle className="text-xl">Your Uploaded Documents</CardTitle>
         </CardHeader>
         <CardContent>
             <div className="w-full overflow-x-auto">

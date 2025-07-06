@@ -250,8 +250,8 @@ export default function QuotesPage() {
   return (
     <div className="space-y-8 md:space-y-12">
       <div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Get Supplemental Quotes</h1>
-        <p className="text-muted-foreground mt-2 text-lg">
+        <h1 className="text-2xl font-semibold">Get Supplemental Quotes</h1>
+        <p className="text-base text-muted-foreground mt-1">
           Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
         </p>
       </div>
@@ -259,11 +259,11 @@ export default function QuotesPage() {
        <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-6">
         <AccordionItem value="medigap" className="border-b-0">
           <Card>
-            <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+            <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
               Medicare Supplement (Medigap)
             </AccordionTrigger>
-            <AccordionContent className="px-6 sm:px-8 pb-8">
-               <CardDescription className="mb-8">All fields are required to get your instant Medigap quotes.</CardDescription>
+            <AccordionContent className="px-6 pb-6">
+               <CardDescription className="mb-6">All fields are required to get your instant Medigap quotes.</CardDescription>
                 <Form {...medigapForm}>
                     <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -386,11 +386,11 @@ export default function QuotesPage() {
             
         <AccordionItem value="dental" className="border-b-0">
             <Card>
-                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Dental Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-6 sm:px-8 pb-8">
-                    <CardDescription className="mb-8">Fill out the fields below to get instant dental quotes.</CardDescription>
+                <AccordionContent className="px-6 pb-6">
+                    <CardDescription className="mb-6">Fill out the fields below to get instant dental quotes.</CardDescription>
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -475,11 +475,11 @@ export default function QuotesPage() {
             
         <AccordionItem value="hospital-indemnity" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Hospital Indemnity
                 </AccordionTrigger>
-                <AccordionContent className="px-6 sm:px-8 pb-8">
-                    <CardDescription className="mb-8">
+                <AccordionContent className="px-6 pb-6">
+                    <CardDescription className="mb-6">
                         Fill out the fields below to get instant quotes. Customize your plan with optional riders.
                     </CardDescription>
                    <Form {...hospitalIndemnityForm}>
@@ -545,12 +545,12 @@ export default function QuotesPage() {
                     <div className="mt-12">
                         {featuredQuote ? (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <Card className="lg:col-span-2 p-8">
-                                    <CardHeader className="p-0">
+                                <Card className="lg:col-span-2">
+                                    <CardHeader>
                                         <CardTitle className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</CardTitle>
                                         <CardDescription>{featuredQuote.plan_name}</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="p-0 mt-8 space-y-8">
+                                    <CardContent className="mt-8 space-y-8">
                                         <div>
                                             <Label htmlFor="base-benefit-select" className="text-base font-semibold">Hospital Confinement Benefit</Label>
                                             <Select
@@ -650,7 +650,7 @@ export default function QuotesPage() {
                                         </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6 mt-8 -mx-8 -mb-8 rounded-b-3xl">
+                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6 mt-8">
                                         <div className="flex justify-between items-center">
                                             <p className="font-semibold text-lg">Total Monthly Premium</p>
                                             <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
@@ -703,10 +703,10 @@ export default function QuotesPage() {
 
         <AccordionItem value="life-insurance" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Life Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-6 sm:px-8 pb-8">
+                <AccordionContent className="px-6 pb-6">
                     <CardDescription className="mb-6">
                         An agent will prepare a personalized quote for you.
                     </CardDescription>
@@ -727,6 +727,3 @@ export default function QuotesPage() {
     </div>
   );
 }
-
-    
-    

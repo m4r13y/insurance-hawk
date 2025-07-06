@@ -33,19 +33,19 @@ export default function PlansPage() {
   return (
     <div className="space-y-8 md:space-y-12">
        <div className="max-w-4xl">
-        <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">Browse Plans</h1>
-        <p className="mt-4 text-lg text-slate-600 leading-relaxed">Compare and find the best plan for you.</p>
+        <h1 className="text-2xl font-semibold">Browse Plans</h1>
+        <p className="text-base text-muted-foreground mt-1">Compare and find the best plan for you.</p>
       </div>
 
-      <Card className="p-6 sm:p-8">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input placeholder="Search by plan or provider..." className="pl-12 h-12 text-base" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <Input placeholder="Search by plan or provider..." className="pl-12 h-11 text-base" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:flex gap-4">
                 <Select value={planCategory} onValueChange={setPlanCategory}>
-                    <SelectTrigger className="w-full md:w-[200px] h-12 text-base">
+                    <SelectTrigger className="w-full md:w-[200px] h-11 text-base">
                         <Filter className="h-4 w-4 mr-2" />
                         <SelectValue placeholder="Filter by type" />
                     </SelectTrigger>
@@ -61,7 +61,7 @@ export default function PlansPage() {
                     </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full md:w-[180px] h-12 text-base">
+                    <SelectTrigger className="w-full md:w-[180px] h-11 text-base">
                         <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>

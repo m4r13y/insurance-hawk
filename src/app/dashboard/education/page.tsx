@@ -95,7 +95,7 @@ function Chatbot() {
         <Card className="h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle className="text-2xl">Medicare Assistant</CardTitle>
+                    <CardTitle className="text-xl">Medicare Assistant</CardTitle>
                     <CardDescription>Your AI-powered guide to Medicare questions.</CardDescription>
                 </div>
                 <Button asChild variant="outline">
@@ -191,10 +191,10 @@ function Chatbot() {
 // Main page component
 export default function EducationPage() {
   return (
-    <div className="space-y-8 h-[calc(100vh-10rem)] flex flex-col">
+    <div className="space-y-8 h-[calc(100vh-8rem)] flex flex-col">
       <div>
-        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Medicare Education Center</h1>
-        <p className="text-muted-foreground mt-2 text-lg">Understand your Medicare options with our AI-powered chatbot.</p>
+        <h1 className="text-2xl font-semibold">Medicare Education Center</h1>
+        <p className="text-base text-muted-foreground mt-1">Understand your Medicare options with our AI-powered chatbot.</p>
       </div>
       <div className="flex-1 min-h-0">
         <Chatbot />

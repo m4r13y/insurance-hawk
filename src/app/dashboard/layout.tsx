@@ -117,12 +117,12 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="lg:hidden" />
                 <div className="relative hidden lg:block">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                    <Input placeholder="Search..." className="w-full rounded-lg bg-white pl-10 h-11 md:w-[200px] lg:w-[336px]" />
+                    <Input placeholder="Search..." className="w-full rounded-lg bg-white pl-10 h-10 md:w-[200px] lg:w-[336px]" />
                 </div>
             </div>
             <div className="flex items-center gap-4">

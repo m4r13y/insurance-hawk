@@ -738,8 +738,8 @@ export default function FinancialPlanPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Financial Plan</h1>
-        <p className="text-muted-foreground mt-2 text-lg">
+        <h1 className="text-2xl font-semibold">Financial Plan</h1>
+        <p className="text-base text-muted-foreground mt-1">
           Use our AI tool to create a personalized retirement strategy.
         </p>
       </div>

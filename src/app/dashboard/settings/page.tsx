@@ -85,13 +85,13 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-2 text-lg">Manage your account settings and preferences.</p>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl md:text-2xl">Profile Information</CardTitle>
+          <CardTitle className="text-xl">Profile Information</CardTitle>
           <CardDescription>Update your personal details here.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-           <CardTitle className="text-xl md:text-2xl">Notification Settings</CardTitle>
+           <CardTitle className="text-xl">Notification Settings</CardTitle>
           <CardDescription>Choose how you want to be notified.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -173,7 +173,7 @@ export default function SettingsPage() {
       
       <Card>
         <CardHeader>
-            <CardTitle className="text-xl md:text-2xl">Change Password</CardTitle>
+            <CardTitle className="text-xl">Change Password</CardTitle>
           <CardDescription>For your security, we recommend using a strong password that you don't use elsewhere.</CardDescription>
         </CardHeader>
         <CardContent>
