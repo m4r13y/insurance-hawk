@@ -21,3 +21,26 @@ export type Document = {
   uploadDate: string;
   size: string;
 };
+
+export type QuoteRequestValues = {
+  zipCode: string;
+  age: number;
+  gender: 'female' | 'male';
+  tobacco: 'false' | 'true';
+  plan: 'A' | 'F' | 'G' | 'N';
+  effectiveDate?: string;
+};
+
+export type Quote = {
+    id: string;
+    premium: number;
+    monthly_premium: number;
+    carrier: {
+        name: string;
+        logo_url: string | null;
+    };
+    plan_name: string;
+    plan_type: string;
+    discounts: any[];
+    am_best_rating: string;
+};

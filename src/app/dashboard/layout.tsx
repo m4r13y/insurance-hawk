@@ -26,6 +26,7 @@ import {
   Search,
   Sparkles,
   BookOpen,
+  FileDigit,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -61,6 +62,11 @@ export default function DashboardLayout({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/plans")} tooltip="Browse Plans">
                     <Link href="/dashboard/plans"><ShieldCheck /><span>Browse Plans</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/quotes")} tooltip="Get Quotes">
+                    <Link href="/dashboard/quotes"><FileDigit /><span>Get Quotes</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
