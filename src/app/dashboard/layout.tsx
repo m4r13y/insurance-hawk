@@ -1,6 +1,9 @@
 
 "use client"
 
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +32,10 @@ import {
   FileDigit,
   PiggyBank,
   Heart,
+  UserPlus,
+  LogIn
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+
 
 export default function DashboardLayout({
   children,
@@ -39,7 +43,28 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = (path: string) => pathname === path;
+  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Since this is a client component, we can safely check localStorage.
+    const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
+    setIsLoggedIn(loggedInStatus);
+    setIsLoading(false);
+  }, [pathname]); // Rerun on path change to ensure state is up-to-date
+
+  const handleLogout = () => {
+    localStorage.removeItem("hawk-auth");
+    setIsLoggedIn(false);
+    router.push("/");
+  };
+  
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
 
   return (
     <SidebarProvider>
@@ -52,11 +77,13 @@ export default function DashboardLayout({
                 <Logo />
               </SidebarHeader>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Dashboard">
-                    <Link href="/dashboard"><LayoutDashboard /><span>Dashboard</span></Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {isLoggedIn && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Dashboard">
+                      <Link href="/dashboard"><LayoutDashboard /><span>Dashboard</span></Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Financial Plan">
                     <Link href="/dashboard/recommendations"><PiggyBank /><span>Financial Plan</span></Link>
@@ -82,11 +109,13 @@ export default function DashboardLayout({
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="Documents">
-                    <Link href="/dashboard/documents"><UploadCloud /><span>Documents</span></Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {isLoggedIn && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="Documents">
+                      <Link href="/dashboard/documents"><UploadCloud /><span>Documents</span></Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/education")} tooltip="Education">
                     <Link href="/dashboard/education"><BookOpen /><span>Education</span></Link>
@@ -96,28 +125,49 @@ export default function DashboardLayout({
             </div>
             <SidebarFooter className="flex flex-col gap-2">
                <SidebarMenu>
-                <SidebarMenuItem>
-                   <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")} tooltip="Settings">
-                    <Link href="/dashboard/settings">
-                      <Settings />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Log Out">
-                     <Link href="/">
-                      <LogOut />
-                      <span>Log Out</span>
-                     </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {isLoggedIn ? (
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")} tooltip="Settings">
+                        <Link href="/dashboard/settings">
+                          <Settings />
+                          <span>Settings</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
+                          <LogOut />
+                          <span>Log Out</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <SidebarMenuItem>
+                       <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Login">
+                        <Link href="/">
+                          <LogIn />
+                          <span>Login</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                       <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Sign Up">
+                        <Link href="/">
+                          <UserPlus />
+                          <span>Sign Up</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
               </SidebarMenu>
             </SidebarFooter>
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
+          <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="lg:hidden" />
                 <div className="relative hidden lg:block">
@@ -126,7 +176,14 @@ export default function DashboardLayout({
                 </div>
             </div>
             <div className="flex items-center gap-4">
-              <UserNav />
+              {isLoggedIn ? (
+                <UserNav />
+              ) : (
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" asChild><Link href="/">Login</Link></Button>
+                    <Button asChild><Link href="/">Sign Up</Link></Button>
+                </div>
+              )}
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-12">

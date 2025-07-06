@@ -9,10 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, UserPlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 
 type PolicyInfo = {
     provider: string;
@@ -34,8 +33,69 @@ const planTypes = [
     { id: 'financial', label: 'Retirement Plan', icon: PiggyBank }
 ];
 
+const GuestDashboard = () => (
+    <div className="space-y-8 md:space-y-12">
+        <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h1>
+            <p className="mt-4 text-lg text-slate-600 leading-relaxed">Welcome to HawkNest. Compare plans from top carriers, get personalized recommendations, and securely manage your insurance and financial plans from one convenient place.</p>
+             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button size="lg" asChild><Link href="/">Create Your Account <UserPlus className="ml-2 h-4 w-4"/></Link></Button>
+                <Button size="lg" variant="outline" asChild><Link href="/dashboard/plans">Browse Plans</Link></Button>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+                <CardHeader className="flex-row items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600 shrink-0"><Heart className="h-6 w-6"/></div>
+                    <CardTitle>Health Insurance Quotes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <CardDescription>Find affordable health coverage for individuals and families under 65.</CardDescription>
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+             <Card>
+                <CardHeader className="flex-row items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-100 text-teal-600 shrink-0"><FileDigit className="h-6 w-6"/></div>
+                    <CardTitle>Supplemental Quotes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <CardDescription>Get instant quotes for Medigap, Dental, and other supplemental plans.</CardDescription>
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link href="/dashboard/quotes">Get Supplemental Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+            <Card>
+                <CardHeader className="flex-row items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 text-amber-600 shrink-0"><BookOpen className="h-6 w-6"/></div>
+                    <CardTitle>Education Center</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <CardDescription>Understand your options with our AI-powered educational resources.</CardDescription>
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link href="/dashboard/education">Learn More <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    </div>
+);
+
 
 export default function DashboardPage() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [policies, setPolicies] = useState<Record<string, PolicyInfo | null>>({
         health: { provider: "Blue Shield", planName: "Secure PPO" },
         dental: null,
@@ -52,17 +112,25 @@ export default function DashboardPage() {
     const [userName, setUserName] = useState("Sarah");
 
     useEffect(() => {
-        const updateName = () => {
-            const storedName = localStorage.getItem("userFirstName");
-            if (storedName) {
-                setUserName(storedName);
-            }
-        };
-        updateName();
-        window.addEventListener("storage", updateName);
-        return () => {
-            window.removeEventListener("storage", updateName);
-        };
+        const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
+        setIsLoggedIn(loggedInStatus);
+
+        if (loggedInStatus) {
+            const updateName = () => {
+                const storedName = localStorage.getItem("userFirstName");
+                if (storedName) {
+                    setUserName(storedName);
+                }
+            };
+            updateName();
+            window.addEventListener("storage", updateName);
+            setIsLoading(false);
+            return () => {
+                window.removeEventListener("storage", updateName);
+            };
+        } else {
+            setIsLoading(false);
+        }
     }, []);
 
     const handleSwitchChange = (planId: string, planLabel: string, checked: boolean) => {
@@ -87,6 +155,14 @@ export default function DashboardPage() {
         }
     };
 
+    if (isLoading) {
+        return null; // Or a loading spinner
+    }
+
+    if (!isLoggedIn) {
+        return <GuestDashboard />;
+    }
+
     const ownedPlanCount = Object.values(policies).filter(p => p !== null).length;
     const retirementScore = Math.round((ownedPlanCount / planTypes.length) * 100);
     const missingPlans = planTypes.filter(p => !policies[p.id]);
@@ -101,7 +177,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Your Current Plan</CardTitle>
+            <CardTitle>Your Current Plan</CardTitle>
             <CardDescription>Blue Shield Secure PPO</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -129,7 +205,7 @@ export default function DashboardPage() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Next Steps</CardTitle>
+            <CardTitle>Next Steps</CardTitle>
             <CardDescription>Complete these items for your coverage.</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 space-y-4">
@@ -161,7 +237,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:gap-8 lg:gap-10 lg:grid-cols-3">
          <Card className="flex flex-col bg-slate-100/70">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold">Create Your Financial Plan</CardTitle>
+              <CardTitle>Create Your Financial Plan</CardTitle>
               <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
@@ -179,7 +255,7 @@ export default function DashboardPage() {
         
         <Card className="lg:col-span-2">
             <CardHeader>
-                <CardTitle className="text-xl font-semibold">Your Retirement Readiness Score</CardTitle>
+                <CardTitle>Your Retirement Readiness Score</CardTitle>
                 <CardDescription>Based on your current coverage and financial planning.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">

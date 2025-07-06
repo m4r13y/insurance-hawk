@@ -22,6 +22,7 @@ export default function LoginPage() {
     e.preventDefault()
     // Simple mock authentication
     if (email === "s.connor@email.com" && password.length > 0) {
+      localStorage.setItem("hawk-auth", "true");
       router.push("/dashboard")
     } else {
       toast({
@@ -105,7 +106,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-slate-600">
               Don't have an account?{" "}
               <Link href="#" className="font-medium text-sky-600 hover:underline" prefetch={false}>
-                  Contact us
+                  Sign Up
               </Link>
           </p>
         </div>
