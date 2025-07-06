@@ -29,13 +29,13 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    --sidebar-background: 231 48% 30%;
+    --sidebar-background: 231 48% 25%;
     --sidebar-foreground: 231 20% 90%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 231 48% 30%;
-    --sidebar-accent: 231 48% 40%;
+    --sidebar-primary-foreground: 231 48% 25%;
+    --sidebar-accent: 231 48% 35%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 231 48% 40%;
+    --sidebar-border: 231 48% 35%;
     --sidebar-ring: 231 40% 70%;
   }
 
@@ -60,13 +60,13 @@
     --input: 240 4% 18%;
     --ring: 220 50% 65%;
 
-    --sidebar-background: 231 48% 30%;
+    --sidebar-background: 231 48% 25%;
     --sidebar-foreground: 231 20% 90%;
     --sidebar-primary: 0 14% 97%; /* #faf8f8 */
-    --sidebar-primary-foreground: 231 48% 30%;
-    --sidebar-accent: 231 48% 40%;
+    --sidebar-primary-foreground: 231 48% 25%;
+    --sidebar-accent: 231 48% 35%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 231 48% 40%;
+    --sidebar-border: 231 48% 35%;
     --sidebar-ring: 210 40% 98%;
   }
 }
