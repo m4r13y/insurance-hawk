@@ -211,10 +211,32 @@ export default function QuotesPage() {
             setHospitalIndemnityError(result.error);
         }
         if (result.quotes && result.quotes.length > 0) {
-            setHospitalIndemnityQuotes(result.quotes);
-            setFeaturedQuote(result.quotes[0]);
+            const processedQuotes = result.quotes.map(quote => {
+                const uniqueBaseBenefits = quote.baseBenefits.reduce((acc, current) => {
+                    if (!acc.find(item => item.amount === current.amount)) {
+                        acc.push(current);
+                    }
+                    return acc;
+                }, [] as HospitalIndemnityBenefit[]);
+
+                const processedRiders = quote.riders.map(rider => ({
+                    ...rider,
+                    benefits: rider.benefits.reduce((acc, current) => {
+                        if (!acc.find(item => item.amount === current.amount)) {
+                            acc.push(current);
+                        }
+                        return acc;
+                    }, [] as HospitalIndemnityBenefit[]),
+                }));
+
+                return { ...quote, baseBenefits: uniqueBaseBenefits, riders: processedRiders };
+            });
+
+            setHospitalIndemnityQuotes(processedQuotes);
+            setFeaturedQuote(processedQuotes[0]);
         } else {
             setHospitalIndemnityQuotes([]);
+            setFeaturedQuote(null);
         }
     });
   }
@@ -846,3 +868,5 @@ export default function QuotesPage() {
     </div>
   );
 }
+
+    
