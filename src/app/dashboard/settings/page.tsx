@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
-import { useAuthState } from "react-firebase-hooks/auth"
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import { updateProfile } from "firebase/auth"
@@ -46,7 +46,7 @@ const defaultHawkImage = "https://placehold.co/80x80.png";
 export default function SettingsPage() {
     const { toast } = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [user, loading] = useAuthState(auth || undefined);
+    const [user, loading] = useFirebaseAuth();
     const [imagePreview, setImagePreview] = useState<string | null>(null)
 
     const profileForm = useForm<z.infer<typeof profileFormSchema>>({

@@ -35,8 +35,8 @@ import {
   UserPlus,
   LogIn
 } from "lucide-react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, isFirebaseConfigured } from "@/lib/firebase";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 
 
@@ -49,7 +49,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
   
-  const [user, loading, error] = useAuthState(auth || undefined);
+  const [user, loading, error] = useFirebaseAuth();
   const isLoggedIn = !!user;
 
   useEffect(() => {

@@ -10,8 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Combobox } from '@/components/ui/combobox';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { db, isFirebaseConfigured } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { FirebaseNotConfigured } from '@/components/firebase-not-configured';
 import Link from 'next/link';
@@ -60,7 +60,7 @@ const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, op
 }));
 
 export default function DocumentsPage() {
-    const [user, loading] = useAuthState(auth || undefined);
+    const [user, loading] = useFirebaseAuth();
     const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);

@@ -19,7 +19,7 @@ import {
   updateProfile
 } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
-import { useAuthState } from "react-firebase-hooks/auth"
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
 
 
@@ -35,7 +35,7 @@ function AuthFlow() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading, error] = useFirebaseAuth();
 
   useEffect(() => {
     if (searchParams.get('mode') === 'signup') {

@@ -9,8 +9,8 @@ import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy
 import Image from "next/image";
 import Link from "next/link";
 import type { Policy } from "@/types";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { db, isFirebaseConfigured } from "@/lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { GuestDashboard } from "@/components/guest-dashboard";
 
@@ -98,7 +98,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
 
 
 export default function DashboardPage() {
-    const [user, loading] = useAuthState(auth || undefined);
+    const [user, loading] = useFirebaseAuth();
     const [isNewUser, setIsNewUser] = useState(false);
     const [policies, setPolicies] = useState<Policy[]>([]);
     
