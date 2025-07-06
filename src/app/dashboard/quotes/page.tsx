@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import {
   Form,
@@ -40,13 +41,15 @@ import {
 } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown } from "lucide-react";
+import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown, Check, Building, PlusCircle } from "lucide-react";
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
-import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider } from "@/types";
+import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit } from "@/types";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 
 const medigapFormSchema = z.object({
@@ -98,12 +101,12 @@ export default function QuotesPage() {
   const [isHospitalIndemnityPending, startHospitalIndemnityTransition] = useTransition();
   const [hospitalIndemnityQuotes, setHospitalIndemnityQuotes] = useState<HospitalIndemnityQuote[] | null>(null);
   const [hospitalIndemnityError, setHospitalIndemnityError] = useState<string | null>(null);
+  const [featuredQuote, setFeaturedQuote] = useState<HospitalIndemnityQuote | null>(null);
+  const [selectedBaseBenefit, setSelectedBaseBenefit] = useState<HospitalIndemnityBenefit | null>(null);
+  const [selectedRiders, setSelectedRiders] = useState<Record<string, HospitalIndemnityBenefit>>({});
 
   const [openRows, setOpenRows] = useState<string[]>([]);
-
-  // State for hospital indemnity riders
-  const [selectedRiders, setSelectedRiders] = useState<Record<string, Record<string, { rate: number; amount: string }>>>({});
-
+  
   const toggleRow = (id: string) => {
     setOpenRows(prev => 
       prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
@@ -143,7 +146,6 @@ export default function QuotesPage() {
     },
   });
 
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get('plan');
@@ -152,6 +154,17 @@ export default function QuotesPage() {
         medigapForm.setValue('plan', planParam.toUpperCase() as z.infer<typeof medigapFormSchema>['plan']);
     }
   }, [medigapForm]);
+
+  useEffect(() => {
+    if (featuredQuote?.baseBenefits && featuredQuote.baseBenefits.length > 0) {
+        const sortedBenefits = [...featuredQuote.baseBenefits].sort((a, b) => a.rate - b.rate);
+        setSelectedBaseBenefit(sortedBenefits[0]);
+    } else {
+        setSelectedBaseBenefit(null);
+    }
+    setSelectedRiders({});
+  }, [featuredQuote]);
+
 
   function onMedigapSubmit(values: z.infer<typeof medigapFormSchema>) {
     setMedigapError(null);
@@ -189,53 +202,60 @@ export default function QuotesPage() {
   function onHospitalIndemnitySubmit(values: z.infer<typeof hospitalIndemnityFormSchema>) {
     setHospitalIndemnityError(null);
     setHospitalIndemnityQuotes(null);
-    setOpenRows([]);
+    setFeaturedQuote(null);
+    setSelectedBaseBenefit(null);
     setSelectedRiders({});
     startHospitalIndemnityTransition(async () => {
         const result = await getHospitalIndemnityQuotes(values);
         if (result.error) {
             setHospitalIndemnityError(result.error);
         }
-        if (result.quotes) {
+        if (result.quotes && result.quotes.length > 0) {
             setHospitalIndemnityQuotes(result.quotes);
+            setFeaturedQuote(result.quotes[0]);
+        } else {
+            setHospitalIndemnityQuotes([]);
         }
     });
   }
 
-  const handleRiderToggle = (quoteId: string, rider: HospitalIndemnityRider) => {
-    const riderBenefit = rider.benefits[0];
-    if (!riderBenefit) return;
+ const handleRiderToggle = (rider: HospitalIndemnityRider) => {
+    const benefit = rider.benefits[0];
+    if (!benefit) return;
 
     setSelectedRiders(prev => {
-        const quoteSelections = { ...(prev[quoteId] || {}) };
-        if (quoteSelections[rider.name]) {
-            delete quoteSelections[rider.name];
+        const newSelections = { ...prev };
+        if (newSelections[rider.name]) {
+            delete newSelections[rider.name];
         } else {
-            quoteSelections[rider.name] = { rate: riderBenefit.rate, amount: riderBenefit.amount };
+            newSelections[rider.name] = benefit;
         }
-        return { ...prev, [quoteId]: quoteSelections };
+        return newSelections;
     });
   };
 
-  const handleRiderOptionSelect = (quoteId: string, riderName: string, benefit: { rate: number; amount: string } | null) => {
-    setSelectedRiders(prev => {
-        const quoteSelections = { ...(prev[quoteId] || {}) };
-        if (benefit === null) {
-            delete quoteSelections[riderName];
-        } else {
-            quoteSelections[riderName] = benefit;
-        }
-        return { ...prev, [quoteId]: quoteSelections };
-    });
+  const handleRiderOptionSelect = (riderName: string, benefit: HospitalIndemnityBenefit | null) => {
+      setSelectedRiders(prev => {
+          const newSelections = { ...prev };
+          if (benefit === null) {
+              delete newSelections[riderName];
+          } else {
+              newSelections[riderName] = benefit;
+          }
+          return newSelections;
+      });
   };
 
-  const calculateTotalPremium = (quote: HospitalIndemnityQuote) => {
-    const basePremium = quote.monthly_premium;
-    const selections = selectedRiders[quote.id] || {};
-    const riderPremium = Object.values(selections).reduce((total, selection) => total + selection.rate, 0);
+  const calculateTotalPremium = () => {
+    if (!selectedBaseBenefit) return 0;
+    const basePremium = selectedBaseBenefit.rate;
+    const riderPremium = Object.values(selectedRiders).reduce((total, selection) => total + selection.rate, 0);
     return basePremium + riderPremium;
   };
   
+  const totalPremium = calculateTotalPremium();
+  const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
+
   return (
     <div className="space-y-6">
       <div>
@@ -666,142 +686,160 @@ export default function QuotesPage() {
                     </Alert>
                 )}
                 {hospitalIndemnityQuotes && (
-                    <Card className="mt-6">
-                        <CardHeader>
-                            <CardTitle>Your Hospital Indemnity Quotes</CardTitle>
-                            <CardDescription>
-                                Found {hospitalIndemnityQuotes.length} plan{hospitalIndemnityQuotes.length !== 1 ? 's' : ''} based on your information. Click a row to see riders.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {hospitalIndemnityQuotes.length > 0 ? (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-[50px]"></TableHead>
-                                            <TableHead>Carrier</TableHead>
-                                            <TableHead>Plan Name</TableHead>
-                                            <TableHead>Benefit</TableHead>
-                                            <TableHead className="text-right">Monthly Premium</TableHead>
-                                            <TableHead className="w-[120px] text-right"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {hospitalIndemnityQuotes.map((quote, index) => {
-                                            const key = `${quote.id}-${index}`;
-                                            const isOpen = openRows.includes(key);
-                                            const totalPremium = calculateTotalPremium(quote);
-                                            return (
-                                                <React.Fragment key={key}>
-                                                    <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
-                                                        <TableCell>
-                                                            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                                                        </TableCell>
-                                                        <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                        <TableCell>{quote.plan_name}</TableCell>
-                                                        <TableCell>
-                                                            <div className="font-medium">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</div>
-                                                            <div className="text-xs text-muted-foreground">per {quote.benefit_quantifier}</div>
-                                                        </TableCell>
-                                                        <TableCell className="text-right font-bold">${totalPremium.toFixed(2)}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Button asChild onClick={(e) => e.stopPropagation()}><Link href="/dashboard/apply">Select Plan</Link></Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                    {isOpen && (
-                                                        <TableRow>
-                                                            <TableCell colSpan={6} className="p-0">
-                                                                <div className="p-4 bg-muted/50 text-sm">
-                                                                    <h4 className="font-semibold mb-3">Available Riders</h4>
-                                                                    {quote.riders?.filter(r => r.benefits.length > 0).length > 0 ? (
-                                                                        <div className="space-y-4">
-                                                                            {quote.riders.map((rider, i) => {
-                                                                                if (rider.included) {
-                                                                                     return (
-                                                                                        <div key={i} className="p-2 bg-green-50 border border-green-200 rounded-md">
-                                                                                            <p><strong>{rider.name} (Included):</strong> {rider.note || 'No additional details.'}</p>
-                                                                                        </div>
-                                                                                     )
-                                                                                }
-                                                                                
-                                                                                if (rider.benefits.length === 1) {
-                                                                                    const benefit = rider.benefits[0];
-                                                                                    return (
-                                                                                        <div key={i} className="flex items-center p-2 rounded-md border bg-background">
-                                                                                            <Checkbox 
-                                                                                                id={`${key}-rider-${i}`}
-                                                                                                onCheckedChange={() => handleRiderToggle(quote.id, rider)}
-                                                                                                checked={!!selectedRiders[quote.id]?.[rider.name]}
-                                                                                            />
-                                                                                            <Label htmlFor={`${key}-rider-${i}`} className="ml-3 flex justify-between w-full cursor-pointer">
-                                                                                                <div className="flex-1">
-                                                                                                    <p className="font-medium">{rider.name}</p>
-                                                                                                    {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
-                                                                                                </div>
-                                                                                                <span className="font-semibold pl-4">+${benefit.rate.toFixed(2)}</span>
-                                                                                            </Label>
-                                                                                        </div>
-                                                                                    )
-                                                                                }
+                    <div className="mt-6">
+                        {featuredQuote ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <Card className="lg:col-span-2">
+                                    <CardHeader>
+                                        <CardTitle className="font-headline text-2xl">{featuredQuote.carrier.name}</CardTitle>
+                                        <CardDescription>{featuredQuote.plan_name}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div>
+                                            <Label htmlFor="base-benefit-select">Hospital Confinement Benefit</Label>
+                                            <Select
+                                                value={selectedBaseBenefit?.amount}
+                                                onValueChange={(amount) => {
+                                                    const newBenefit = featuredQuote.baseBenefits.find(b => b.amount === amount);
+                                                    if (newBenefit) setSelectedBaseBenefit(newBenefit);
+                                                }}
+                                            >
+                                                <SelectTrigger id="base-benefit-select" className="mt-1">
+                                                    <SelectValue placeholder="Select a daily benefit" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {featuredQuote.baseBenefits.map(benefit => (
+                                                        <SelectItem key={benefit.amount} value={benefit.amount}>
+                                                            ${benefit.amount} / {benefit.quantifier} (+${benefit.rate.toFixed(2)}/mo)
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                                                                                if (rider.benefits.length > 1) {
-                                                                                    return (
-                                                                                        <div key={i} className="p-3 rounded-md border bg-background">
-                                                                                            <p className="font-medium">{rider.name}</p>
-                                                                                            {rider.note && <p className="text-xs text-muted-foreground mb-2 mt-1">{rider.note}</p>}
-                                                                                            <RadioGroup
-                                                                                                onValueChange={(value) => {
-                                                                                                    if (value === 'none') {
-                                                                                                         handleRiderOptionSelect(quote.id, rider.name, null);
-                                                                                                    } else {
-                                                                                                        const selectedBenefit = rider.benefits.find(b => b.amount === value);
-                                                                                                        if (selectedBenefit) handleRiderOptionSelect(quote.id, rider.name, selectedBenefit);
-                                                                                                    }
-                                                                                                }}
-                                                                                                value={selectedRiders[quote.id]?.[rider.name]?.amount || 'none'}
-                                                                                                className="mt-2 space-y-1"
-                                                                                            >
-                                                                                                {rider.benefits.map((benefit, j) => (
-                                                                                                    <div key={j} className="flex items-center">
-                                                                                                        <RadioGroupItem value={benefit.amount} id={`${key}-rider-${i}-${j}`} />
-                                                                                                        <Label htmlFor={`${key}-rider-${i}-${j}`} className="ml-2 flex justify-between w-full font-normal cursor-pointer">
-                                                                                                            <span>{benefit.amount} / {benefit.quantifier}</span>
-                                                                                                            <span className="font-medium">+${benefit.rate.toFixed(2)}</span>
-                                                                                                        </Label>
-                                                                                                    </div>
-                                                                                                ))}
-                                                                                                <div className="flex items-center">
-                                                                                                    <RadioGroupItem value="none" id={`${key}-rider-${i}-none`} />
-                                                                                                    <Label htmlFor={`${key}-rider-${i}-none`} className="ml-2 font-normal cursor-pointer">None</Label>
-                                                                                                </div>
-                                                                                            </RadioGroup>
-                                                                                        </div>
-                                                                                    )
-                                                                                }
-                                                                                return null;
-                                                                            })}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <p>No optional riders available for this plan.</p>
-                                                                    )}
+                                        <Separator/>
+
+                                        <div>
+                                           <h4 className="font-semibold mb-3">Optional Riders</h4>
+                                           <div className="space-y-4">
+                                            {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
+                                                if (rider.included) {
+                                                        return (
+                                                        <div key={i} className="flex items-center p-3 rounded-md border bg-green-50 border-green-200">
+                                                            <Check className="h-4 w-4 mr-3 text-green-600"/>
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm">{rider.name} (Included)</p>
+                                                                {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                            </div>
+                                                        </div>
+                                                        )
+                                                }
+                                                
+                                                if (rider.benefits.length === 1) {
+                                                    const benefit = rider.benefits[0];
+                                                    return (
+                                                        <div key={i} className="flex items-center p-3 rounded-md border bg-background">
+                                                            <Checkbox 
+                                                                id={`rider-${i}`}
+                                                                onCheckedChange={() => handleRiderToggle(rider)}
+                                                                checked={!!selectedRiders[rider.name]}
+                                                            />
+                                                            <Label htmlFor={`rider-${i}`} className="ml-3 flex justify-between w-full cursor-pointer">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium">{rider.name}</p>
+                                                                    {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
                                                                 </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                </React.Fragment>
-                                            )
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
-                                    <p>No quotes found for the selected criteria.</p>
-                                    <p className="text-sm">Please try different options.</p>
+                                                                <span className="font-semibold pl-4 whitespace-nowrap">+ ${benefit.rate.toFixed(2)}</span>
+                                                            </Label>
+                                                        </div>
+                                                    )
+                                                }
+
+                                                if (rider.benefits.length > 1) {
+                                                    return (
+                                                        <div key={i} className="p-3 rounded-md border bg-background">
+                                                            <p className="font-medium">{rider.name}</p>
+                                                            {rider.note && <p className="text-xs text-muted-foreground mb-2 mt-1">{rider.note}</p>}
+                                                            <RadioGroup
+                                                                onValueChange={(value) => {
+                                                                    if (value === 'none') {
+                                                                        handleRiderOptionSelect(rider.name, null);
+                                                                    } else {
+                                                                        const selectedBenefit = rider.benefits.find(b => b.amount === value);
+                                                                        if (selectedBenefit) handleRiderOptionSelect(rider.name, selectedBenefit);
+                                                                    }
+                                                                }}
+                                                                value={selectedRiders[rider.name]?.amount || 'none'}
+                                                                className="mt-2 space-y-1"
+                                                            >
+                                                                {rider.benefits.map((benefit, j) => (
+                                                                    <div key={j} className="flex items-center">
+                                                                        <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
+                                                                        <Label htmlFor={`rider-${i}-${j}`} className="ml-2 flex justify-between w-full font-normal cursor-pointer">
+                                                                            <span>{benefit.amount} / {benefit.quantifier}</span>
+                                                                            <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
+                                                                        </Label>
+                                                                    </div>
+                                                                ))}
+                                                                <div className="flex items-center">
+                                                                    <RadioGroupItem value="none" id={`rider-${i}-none`} />
+                                                                    <Label htmlFor={`rider-${i}-none`} className="ml-2 font-normal cursor-pointer">None</Label>
+                                                                </div>
+                                                            </RadioGroup>
+                                                        </div>
+                                                    )
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-4">
+                                        <div className="flex justify-between items-center">
+                                            <p className="font-semibold">Total Monthly Premium</p>
+                                            <p className="font-headline text-3xl font-bold">${totalPremium.toFixed(2)}</p>
+                                        </div>
+                                         <Button size="lg" asChild><Link href="/dashboard/apply">Select This Plan</Link></Button>
+                                    </CardFooter>
+                                </Card>
+                                <div className="space-y-4">
+                                    <h3 className="font-headline text-lg font-semibold">Other Companies</h3>
+                                    {otherQuotes && otherQuotes.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {otherQuotes.map(quote => {
+                                                const lowestRate = quote.baseBenefits.length > 0 ? 
+                                                    [...quote.baseBenefits].sort((a,b) => a.rate - b.rate)[0].rate : 0;
+                                                return (
+                                                    <Card 
+                                                        key={quote.id} 
+                                                        className="p-4 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                                                        onClick={() => setFeaturedQuote(quote)}
+                                                    >
+                                                        <div>
+                                                            <p className="font-semibold">{quote.carrier.name}</p>
+                                                            <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="font-semibold">${lowestRate.toFixed(2)}</p>
+                                                            <p className="text-xs text-muted-foreground">starts from</p>
+                                                        </div>
+                                                    </Card>
+                                                )
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">No other companies matched your criteria.</p>
+                                    )}
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                            </div>
+                        ) : (
+                           <div className="text-center py-12 text-muted-foreground">
+                                <FileDigit className="h-10 w-10 mx-auto mb-4"/>
+                                <p>No quotes found for the selected criteria.</p>
+                                <p className="text-sm">Please try different options.</p>
+                            </div>
+                        )}
+                    </div>
                 )}
             </TabsContent>
        </Tabs>

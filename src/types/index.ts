@@ -85,25 +85,26 @@ export type HospitalIndemnityQuoteRequestValues = {
   tobacco: 'false' | 'true';
 };
 
+export type HospitalIndemnityBenefit = {
+    amount: string;
+    quantifier: string;
+    rate: number;
+};
+
 export type HospitalIndemnityRider = {
     name: string;
     note: string | null;
-    benefits: {
-        amount: string;
-        quantifier: string;
-        rate: number;
-    }[];
+    benefits: HospitalIndemnityBenefit[];
+    included?: boolean;
 };
 
 export type HospitalIndemnityQuote = {
-    id: string;
+    id: string; 
     carrier: {
         name: string;
         logo_url: string | null;
     };
     plan_name: string;
-    monthly_premium: number;
-    benefit_amount: string;
-    benefit_quantifier: string;
+    baseBenefits: HospitalIndemnityBenefit[];
     riders: HospitalIndemnityRider[];
 };

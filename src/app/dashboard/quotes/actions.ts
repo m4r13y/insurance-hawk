@@ -1,6 +1,7 @@
+
 "use server";
 
-import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, HospitalIndemnityQuote, HospitalIndemnityQuoteRequestValues, CsgDiscount, HospitalIndemnityRider } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues } from "@/types";
 
 // The raw response from the Medigap csgapi
 type CsgQuote = {
@@ -226,21 +227,18 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
 
         const csgQuotes = data as CsgHospitalIndemnityQuote[];
 
-        // Flatten the quotes because each quote can have multiple benefit levels
-        const quotes: HospitalIndemnityQuote[] = csgQuotes.flatMap(q => {
-            const planBenefits = q.base_plans?.flatMap(bp => bp.benefits) || [];
-            return planBenefits.map(benefit => ({
-                id: `${q.key}-${benefit.amount}`, // Create a unique ID for each benefit level
+        const quotes: HospitalIndemnityQuote[] = csgQuotes.map(q => {
+            const baseBenefits = q.base_plans?.flatMap(bp => bp.benefits) || [];
+            return {
+                id: q.key,
                 carrier: {
                     name: q.company_base.name,
                     logo_url: null,
                 },
                 plan_name: q.plan_name,
-                monthly_premium: benefit.rate,
-                benefit_amount: benefit.amount,
-                benefit_quantifier: benefit.quantifier,
+                baseBenefits: baseBenefits,
                 riders: q.riders,
-            }));
+            };
         });
 
         return { quotes };
