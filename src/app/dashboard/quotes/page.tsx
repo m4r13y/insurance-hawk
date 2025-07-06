@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,10 +40,11 @@ import {
 } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Terminal, FileDigit } from "lucide-react";
+import { Loader2, Terminal, FileDigit, Star } from "lucide-react";
 import { getQuotes } from "./actions";
 import type { Quote } from "@/types";
 import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
@@ -51,7 +53,20 @@ const formSchema = z.object({
   tobacco: z.enum(["false", "true"]),
   plan: z.enum(["A", "F", "G", "N"]),
   effectiveDate: z.string().optional(),
+  apply_discounts: z.boolean().default(true).optional(),
 });
+
+const getStarRating = (rating: string) => {
+    if (!rating) return '☆☆☆☆☆';
+    const filledStar = '★';
+    const emptyStar = '☆';
+    if (rating === 'A++' || rating === 'A+') return filledStar.repeat(5);
+    if (rating === 'A') return filledStar.repeat(4) + emptyStar;
+    if (rating === 'A-') return filledStar.repeat(3) + emptyStar.repeat(2);
+    if (rating === 'B+' || rating === 'B') return filledStar.repeat(2) + emptyStar.repeat(3);
+    if (rating) return filledStar + emptyStar.repeat(4);
+    return emptyStar.repeat(5);
+};
 
 export default function QuotesPage() {
   const [isPending, startTransition] = useTransition();
@@ -67,14 +82,27 @@ export default function QuotesPage() {
       tobacco: "false",
       plan: "G",
       effectiveDate: new Date().toISOString().split("T")[0],
+      apply_discounts: true,
     },
   });
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    const validPlans = formSchema.shape.plan.options;
+    if (planParam && validPlans.includes(planParam.toUpperCase())) {
+        form.setValue('plan', planParam.toUpperCase() as z.infer<typeof formSchema>['plan']);
+    }
+  }, [form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null);
     setQuotes(null);
     startTransition(async () => {
-      const result = await getQuotes(values);
+      const result = await getQuotes({
+        ...values,
+        apply_discounts: values.apply_discounts || false,
+      });
       if (result.error) {
         setError(result.error);
       }
@@ -100,93 +128,41 @@ export default function QuotesPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ZIP Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 90210" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="age"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Age</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gender</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="male">Male</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="tobacco"
-                  render={({ field }) => (
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <FormField control={form.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="gender" render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Uses Tobacco?</FormLabel>
+                      <FormLabel>Gender</FormLabel>
                       <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex items-center space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="false" /></FormControl>
-                            <FormLabel className="font-normal">No</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="true" /></FormControl>
-                            <FormLabel className="font-normal">Yes</FormLabel>
-                          </FormItem>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="plan"
-                  render={({ field }) => (
+                <FormField control={form.control} name="tobacco" render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Uses Tobacco?</FormLabel>
+                      <FormControl>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField control={form.control} name="plan" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Plan Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select plan" />
-                          </SelectTrigger>
-                        </FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger></FormControl>
                         <SelectContent>
                           <SelectItem value="A">Plan A</SelectItem>
                           <SelectItem value="F">Plan F</SelectItem>
@@ -198,19 +174,23 @@ export default function QuotesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="effectiveDate"
-                  render={({ field }) => (
+                <FormField control={form.control} name="effectiveDate" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Effective Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <FormControl><Input type="date" {...field} /></FormControl>
                       <FormDescription>Optional</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+                 <FormField control={form.control} name="apply_discounts" render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 h-full justify-center">
+                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>Apply Discounts</FormLabel>
+                            </div>
+                        </FormItem>
+                    )}
                 />
               </div>
               <div className="flex justify-end">
@@ -268,7 +248,7 @@ export default function QuotesPage() {
                                 <TableRow key={quote.id}>
                                     <TableCell className="font-medium">{quote.carrier.name}</TableCell>
                                     <TableCell>{quote.plan_name}</TableCell>
-                                    <TableCell>{quote.am_best_rating}</TableCell>
+                                    <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
                                     <TableCell className="text-right font-bold">${quote.monthly_premium.toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
                                         <Button asChild>

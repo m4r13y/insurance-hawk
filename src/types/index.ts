@@ -1,3 +1,4 @@
+
 export type Plan = {
   id: string;
   name: string;
@@ -29,6 +30,7 @@ export type QuoteRequestValues = {
   tobacco: 'false' | 'true';
   plan: 'A' | 'F' | 'G' | 'N';
   effectiveDate?: string;
+  apply_discounts: boolean;
 };
 
 export type Quote = {

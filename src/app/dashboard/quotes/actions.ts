@@ -1,3 +1,4 @@
+
 "use server";
 
 import type { Quote, QuoteRequestValues } from "@/types";
@@ -18,7 +19,7 @@ export async function getQuotes(values: QuoteRequestValues) {
         tobacco: values.tobacco,
         plan: values.plan,
         limit: '10',
-        apply_discounts: 'true',
+        apply_discounts: values.apply_discounts.toString(),
     });
 
     if (values.effectiveDate) {
