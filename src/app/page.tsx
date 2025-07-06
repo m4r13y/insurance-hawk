@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { CheckCircle, ShieldCheck } from "lucide-react"
+import Image from "next/image"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,23 +33,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="flex justify-center">
-            <Logo className="text-primary"/>
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      <div className="hidden bg-primary/90 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 text-primary-foreground">
+        <div className="self-start">
+            <Logo className="text-white"/>
         </div>
         <div className="text-center">
-            <h1 className="text-2xl font-bold">Sign in to your account</h1>
-            <p className="mt-2 text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <Link href="#" className="font-medium text-primary hover:underline" prefetch={false}>
-                    Contact us
-                </Link>
-            </p>
+            <h2 className="font-headline text-4xl font-bold">Your Ally in Medicare</h2>
+            <p className="mt-4 text-lg text-primary-foreground/80">Navigate your Medicare options with confidence and clarity.</p>
         </div>
-        <Card>
+        <div className="w-full max-w-md text-sm">
+            <ul className="space-y-4">
+                <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <span>Compare plans from top carriers instantly.</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <span>Get personalized, AI-driven recommendations.</span>
+                </li>
+                 <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <span>Securely apply and manage your documents online.</span>
+                </li>
+            </ul>
+        </div>
+      </div>
+      <div className="flex items-center justify-center py-12 px-4">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
+            <h1 className="text-3xl font-bold">Welcome Back</h1>
+            <p className="text-muted-foreground">
+              Enter your credentials to access your portal.
+            </p>
+          </div>
+          <Card>
             <CardContent className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="email">Email address</Label>
                         <Input
@@ -74,12 +96,19 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
                         Sign In
                     </Button>
                 </form>
             </CardContent>
-        </Card>
+          </Card>
+          <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="#" className="font-medium text-primary hover:underline" prefetch={false}>
+                  Contact us
+              </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

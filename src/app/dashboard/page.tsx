@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -46,8 +45,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold">Welcome Back, Sarah!</h1>
-        <p className="text-muted-foreground">Here's your Medicare portal overview.</p>
+        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-primary from-40% to-accent bg-clip-text text-transparent">Welcome Back, Sarah!</h1>
+        <p className="text-muted-foreground mt-1">Here's your Medicare portal overview.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -123,7 +122,7 @@ export default function DashboardPage() {
                 <p className="mb-4 text-muted-foreground">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
             </CardContent>
              <CardFooter>
-                 <Button className="w-full" asChild>
+                 <Button className="w-full bg-accent hover:bg-accent/90" asChild>
                     <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                  </Button>
              </CardFooter>
@@ -138,7 +137,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col items-center justify-center text-center p-4">
                     <div className="text-7xl font-bold text-primary">{retirementScore}</div>
                     <div className="font-medium text-muted-foreground">out of 100</div>
-                    <Progress value={retirementScore} className="mt-4 w-full" />
+                    <Progress value={retirementScore} className="mt-4 w-full" indicatorClassName="bg-accent" />
                 </div>
                 <div>
                     <h4 className="font-semibold mb-3">Your Current Plans</h4>

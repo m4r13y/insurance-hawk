@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useTransition, useEffect } from "react";
@@ -350,7 +349,7 @@ export default function QuotesPage() {
                         )}
                         />
                         <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg p-4">
+                            <FormItem className="flex flex-row items-center justify-between p-4">
                                 <div className="space-y-0.5">
                                     <FormLabel>Apply Discounts</FormLabel>
                                 </div>
@@ -424,7 +423,7 @@ export default function QuotesPage() {
                                                 <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
                                                 <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button asChild onClick={(e) => e.stopPropagation()}>
+                                                    <Button asChild onClick={(e) => e.stopPropagation()} className="bg-accent hover:bg-accent/90">
                                                         <Link href="/dashboard/apply">Select Plan</Link>
                                                     </Button>
                                                 </TableCell>
@@ -505,7 +504,7 @@ export default function QuotesPage() {
                             />
                         </div>
                         <div className="flex justify-end">
-                            <Button type="submit" disabled={isDentalPending} size="lg">
+                            <Button type="submit" disabled={isDentalPending} size="lg" className="bg-accent hover:bg-accent/90">
                             {isDentalPending ? (
                                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
                             ) : (
@@ -567,7 +566,7 @@ export default function QuotesPage() {
                                                         </TableCell>
                                                         <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button asChild onClick={(e) => e.stopPropagation()}>
+                                                            <Button asChild onClick={(e) => e.stopPropagation()} className="bg-accent hover:bg-accent/90">
                                                                 <Link href="/dashboard/apply">Select Plan</Link>
                                                             </Button>
                                                         </TableCell>
@@ -648,7 +647,7 @@ export default function QuotesPage() {
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
+                        <Button type="submit" disabled={isHospitalIndemnityPending} size="lg" className="bg-accent hover:bg-accent/90">
                         {isHospitalIndemnityPending ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
                         ) : (
@@ -788,7 +787,7 @@ export default function QuotesPage() {
                                             <p className="font-semibold">Total Monthly Premium</p>
                                             <p className="font-headline text-3xl font-bold">${totalPremium.toFixed(2)}</p>
                                         </div>
-                                         <Button size="lg" asChild><Link href="/dashboard/apply">Select This Plan</Link></Button>
+                                         <Button size="lg" asChild className="bg-accent hover:bg-accent/90"><Link href="/dashboard/apply">Select This Plan</Link></Button>
                                     </CardFooter>
                                 </Card>
                                 <div className="space-y-4">
@@ -851,7 +850,7 @@ export default function QuotesPage() {
                         </AlertDescription>
                     </Alert>
                      <div className="mt-6 flex justify-end">
-                        <Button size="lg">Request Quote from Agent</Button>
+                        <Button size="lg" className="bg-accent hover:bg-accent/90">Request Quote from Agent</Button>
                     </div>
                 </AccordionContent>
             </Card>
