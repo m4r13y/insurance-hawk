@@ -13,7 +13,7 @@ export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: 
   return (
     <Card className={cn(
         "flex flex-col h-full transition-all duration-300 relative",
-        isFeatured ? "border-sky-500 shadow-2xl scale-[1.03]" : "hover:border-primary/50 hover:shadow-xl"
+        isFeatured ? "border-sky-500 shadow-lg" : "hover:border-primary/50 hover:shadow-lg"
     )}>
       {isFeatured && <Badge className="absolute top-0 -translate-y-1/2 left-8 bg-sky-500 text-white">Best Value</Badge>}
       <CardHeader className="p-8">

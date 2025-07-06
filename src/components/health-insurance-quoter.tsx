@@ -161,7 +161,7 @@ export function HealthInsuranceQuoter({ onResults }: HealthInsuranceQuoterProps)
                             <div className="space-y-6">
                                 <Label className="text-lg font-medium">Please provide details for each person needing coverage.</Label>
                                 {fields.map((item, index) => (
-                                     <Card key={item.id} className="p-6 bg-slate-50">
+                                     <div key={item.id} className="p-6 bg-slate-50 border rounded-lg">
                                          <FormLabel className="font-semibold">Person {index + 1}</FormLabel>
                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 mt-4">
                                             <FormField control={form.control} name={`members.${index}.age`} render={({ field }) => (
@@ -190,7 +190,7 @@ export function HealthInsuranceQuoter({ onResults }: HealthInsuranceQuoterProps)
                                                 </FormItem>
                                             )} />
                                          </div>
-                                     </Card>
+                                     </div>
                                 ))}
                             </div>
                         )}

@@ -23,7 +23,7 @@ const getStarRating = (rating: string) => {
 
 export function MedigapQuoteCard({ quote }: { quote: Quote }) {
   return (
-    <Card className="flex flex-col h-full hover:border-primary/50 hover:shadow-xl transition-colors">
+    <Card className="flex flex-col h-full hover:border-primary/50 hover:shadow-lg transition-colors">
       <CardHeader className="p-8">
         <div className="flex justify-between items-start">
             <CardTitle className="text-xl font-bold text-slate-900">{quote.carrier.name}</CardTitle>

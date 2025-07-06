@@ -257,13 +257,12 @@ export default function QuotesPage() {
       </div>
 
        <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-6">
-        <AccordionItem value="medigap" className="border-b-0">
-          <Card>
-            <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
+        <AccordionItem value="medigap" className="border bg-white shadow-md rounded-xl overflow-hidden">
+            <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full data-[state=open]:border-b">
               Medicare Supplement (Medigap)
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-               <CardDescription className="mb-6">All fields are required to get your instant Medigap quotes.</CardDescription>
+            <AccordionContent className="px-6 pt-6 pb-6">
+               <p className="mb-6 text-muted-foreground">All fields are required to get your instant Medigap quotes.</p>
                 <Form {...medigapForm}>
                     <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -347,11 +346,11 @@ export default function QuotesPage() {
                 </Form>
 
                 {isMedigapPending && (
-                    <Card className="mt-8 flex flex-col items-center justify-center p-12">
+                    <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                         <h3 className="mt-4 font-headline text-xl font-semibold">Finding the best rates...</h3>
                         <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                    </Card>
+                    </div>
                 )}
                 {medigapError && (
                     <Alert variant="destructive" className="mt-8">
@@ -364,9 +363,9 @@ export default function QuotesPage() {
                 {medigapQuotes && (
                   <div className="mt-12">
                     <h3 className="text-2xl font-semibold mb-2">Your Medigap Quotes</h3>
-                    <CardDescription className="mb-6">
+                    <p className="mb-6 text-muted-foreground">
                         Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
-                    </CardDescription>
+                    </p>
                     {medigapQuotes.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {medigapQuotes.map((quote) => <MedigapQuoteCard key={quote.id} quote={quote} />)}
@@ -381,113 +380,20 @@ export default function QuotesPage() {
                   </div>
                 )}
             </AccordionContent>
-          </Card>
         </AccordionItem>
             
-        <AccordionItem value="dental" className="border-b-0">
-            <Card>
-                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
-                    Dental Insurance
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
-                    <CardDescription className="mb-6">Fill out the fields below to get instant dental quotes.</CardDescription>
-                    <Form {...dentalForm}>
-                        <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={dentalForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={dentalForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isDentalPending} size="lg">
-                            {isDentalPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
-                            ) : (
-                                <>Get Dental Quotes</>
-                            )}
-                            </Button>
-                        </div>
-                        </form>
-                    </Form>
-                    
-                    {isDentalPending && (
-                        <Card className="mt-8 flex flex-col items-center justify-center p-12">
-                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                            <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
-                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                        </Card>
-                    )}
-                    {dentalError && (
-                        <Alert variant="destructive" className="mt-8">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
-                        <AlertDescription>{dentalError}</AlertDescription>
-                        </Alert>
-                    )}
-
-                    {dentalQuotes && (
-                        <div className="mt-12">
-                            <h3 className="text-2xl font-semibold mb-2">Your Dental Quotes</h3>
-                            <CardDescription className="mb-6">
-                                Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
-                            </CardDescription>
-                            {dentalQuotes.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {dentalQuotes.map((quote) => <DentalQuoteCard key={quote.id} quote={quote} />)}
-                                </div>
-                            ) : (
-                                <div className="text-center py-16 text-muted-foreground">
-                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
-                                    <p>No quotes found for the selected criteria.</p>
-                                    <p className="text-sm">Please try different options.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </AccordionContent>
-            </Card>
-        </AccordionItem>
-            
-        <AccordionItem value="hospital-indemnity" className="border-b-0">
-             <Card>
-                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
-                    Hospital Indemnity
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
-                    <CardDescription className="mb-6">
-                        Fill out the fields below to get instant quotes. Customize your plan with optional riders.
-                    </CardDescription>
-                   <Form {...hospitalIndemnityForm}>
-                    <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
+        <AccordionItem value="dental" className="border bg-white shadow-md rounded-xl overflow-hidden">
+            <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full data-[state=open]:border-b">
+                Dental Insurance
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pt-6 pb-6">
+                <p className="mb-6 text-muted-foreground">Fill out the fields below to get instant dental quotes.</p>
+                <Form {...dentalForm}>
+                    <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                        <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                        <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
+                        <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={dentalForm.control} name="gender" render={({ field }) => (
                             <FormItem className="space-y-3">
                             <FormLabel>Gender</FormLabel>
                             <FormControl>
@@ -500,7 +406,7 @@ export default function QuotesPage() {
                             </FormItem>
                         )}
                         />
-                        <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
+                        <FormField control={dentalForm.control} name="tobacco" render={({ field }) => (
                             <FormItem className="space-y-3">
                             <FormLabel>Uses Tobacco?</FormLabel>
                             <FormControl>
@@ -515,181 +421,44 @@ export default function QuotesPage() {
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
-                        {isHospitalIndemnityPending ? (
+                        <Button type="submit" disabled={isDentalPending} size="lg">
+                        {isDentalPending ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
                         ) : (
-                            <>Get Hospital Indemnity Quotes</>
+                            <>Get Dental Quotes</>
                         )}
                         </Button>
                     </div>
                     </form>
                 </Form>
-
-                {isHospitalIndemnityPending && (
-                    <Card className="mt-8 flex flex-col items-center justify-center p-12">
+                
+                {isDentalPending && (
+                    <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                        <h3 className="mt-4 font-headline text-xl font-semibold">Finding hospital indemnity plans...</h3>
+                        <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
                         <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                    </Card>
+                    </div>
                 )}
-                {hospitalIndemnityError && (
+                {dentalError && (
                     <Alert variant="destructive" className="mt-8">
                     <Terminal className="h-4 w-4" />
-                    <AlertTitle>Error Fetching Hospital Indemnity Quotes</AlertTitle>
-                    <AlertDescription>{hospitalIndemnityError}</AlertDescription>
+                    <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
+                    <AlertDescription>{dentalError}</AlertDescription>
                     </Alert>
                 )}
 
-                {hospitalIndemnityQuotes && (
+                {dentalQuotes && (
                     <div className="mt-12">
-                        {featuredQuote ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <Card className="lg:col-span-2">
-                                    <CardHeader>
-                                        <CardTitle className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</CardTitle>
-                                        <CardDescription>{featuredQuote.plan_name}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="mt-8 space-y-8">
-                                        <div>
-                                            <Label htmlFor="base-benefit-select" className="text-base font-semibold">Hospital Confinement Benefit</Label>
-                                            <Select
-                                                value={selectedBaseBenefit?.amount}
-                                                onValueChange={(amount) => {
-                                                    const newBenefit = featuredQuote.baseBenefits.find(b => b.amount === amount);
-                                                    if (newBenefit) setSelectedBaseBenefit(newBenefit);
-                                                }}
-                                            >
-                                                <SelectTrigger id="base-benefit-select" className="mt-2 h-11">
-                                                    <SelectValue placeholder="Select a daily benefit" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {featuredQuote.baseBenefits.map(benefit => (
-                                                        <SelectItem key={benefit.amount} value={benefit.amount}>
-                                                            ${benefit.amount} / {benefit.quantifier} (+${benefit.rate.toFixed(2)}/mo)
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <Separator/>
-
-                                        <div>
-                                           <h4 className="font-semibold mb-4 text-base">Optional Riders</h4>
-                                           <div className="space-y-4">
-                                            {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
-                                                if (rider.included) {
-                                                        return (
-                                                        <div key={i} className="flex items-center p-4 rounded-md border bg-green-50 border-green-200">
-                                                            <Check className="h-5 w-5 mr-4 text-green-600"/>
-                                                            <div className="flex-1">
-                                                                <p className="font-medium">{rider.name} (Included)</p>
-                                                                {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
-                                                            </div>
-                                                        </div>
-                                                        )
-                                                }
-                                                
-                                                if (rider.benefits.length === 1) {
-                                                    const benefit = rider.benefits[0];
-                                                    return (
-                                                        <div key={i} className="flex items-center p-4 rounded-md border bg-background">
-                                                            <Switch 
-                                                                id={`rider-${i}`}
-                                                                onCheckedChange={() => handleRiderToggle(rider)}
-                                                                checked={!!selectedRiders[rider.name]}
-                                                            />
-                                                            <Label htmlFor={`rider-${i}`} className="ml-4 flex justify-between w-full cursor-pointer">
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium">{rider.name}</p>
-                                                                    {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
-                                                                </div>
-                                                                <span className="font-semibold pl-4 whitespace-nowrap">+ ${benefit.rate.toFixed(2)}</span>
-                                                            </Label>
-                                                        </div>
-                                                    )
-                                                }
-
-                                                if (rider.benefits.length > 1) {
-                                                    return (
-                                                        <div key={i} className="p-4 rounded-md border bg-background">
-                                                            <p className="font-medium">{rider.name}</p>
-                                                            {rider.note && <p className="text-xs text-muted-foreground mb-3 mt-1">{rider.note}</p>}
-                                                            <RadioGroup
-                                                                onValueChange={(value) => {
-                                                                    if (value === 'none') {
-                                                                        handleRiderOptionSelect(rider.name, null);
-                                                                    } else {
-                                                                        const selectedBenefit = rider.benefits.find(b => b.amount === value);
-                                                                        if (selectedBenefit) handleRiderOptionSelect(rider.name, selectedBenefit);
-                                                                    }
-                                                                }}
-                                                                value={selectedRiders[rider.name]?.amount || 'none'}
-                                                                className="mt-2 space-y-2"
-                                                            >
-                                                                {rider.benefits.map((benefit, j) => (
-                                                                    <div key={j} className="flex items-center">
-                                                                        <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
-                                                                        <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex justify-between w-full font-normal cursor-pointer">
-                                                                            <span>${benefit.amount} / {benefit.quantifier}</span>
-                                                                            <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
-                                                                        </Label>
-                                                                    </div>
-                                                                ))}
-                                                                <div className="flex items-center">
-                                                                    <RadioGroupItem value="none" id={`rider-${i}-none`} />
-                                                                    <Label htmlFor={`rider-${i}-none`} className="ml-3 font-normal cursor-pointer">None</Label>
-                                                                </div>
-                                                            </RadioGroup>
-                                                        </div>
-                                                    )
-                                                }
-                                                return null;
-                                            })}
-                                        </div>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6 mt-8">
-                                        <div className="flex justify-between items-center">
-                                            <p className="font-semibold text-lg">Total Monthly Premium</p>
-                                            <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
-                                        </div>
-                                         <Button size="lg" asChild><Link href="/dashboard/apply">Select This Plan</Link></Button>
-                                    </CardFooter>
-                                </Card>
-                                <div className="space-y-4">
-                                    <h3 className="font-headline text-xl font-semibold">Other Companies</h3>
-                                    {otherQuotes && otherQuotes.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {otherQuotes.map(quote => {
-                                                const lowestRate = quote.baseBenefits.length > 0 ? 
-                                                    [...quote.baseBenefits].sort((a,b) => a.rate - b.rate)[0].rate : 0;
-                                                return (
-                                                    <Card 
-                                                        key={quote.id} 
-                                                        className="p-6 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
-                                                        onClick={() => setFeaturedQuote(quote)}
-                                                    >
-                                                        <div>
-                                                            <p className="font-semibold text-lg">{quote.carrier.name}</p>
-                                                            <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="font-semibold text-lg">${lowestRate.toFixed(2)}</p>
-                                                            <p className="text-xs text-muted-foreground">starts from</p>
-                                                        </div>
-                                                    </Card>
-                                                )
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">No other companies matched your criteria.</p>
-                                    )}
-                                </div>
+                        <h3 className="text-2xl font-semibold mb-2">Your Dental Quotes</h3>
+                        <p className="mb-6 text-muted-foreground">
+                            Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
+                        </p>
+                        {dentalQuotes.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {dentalQuotes.map((quote) => <DentalQuoteCard key={quote.id} quote={quote} />)}
                             </div>
                         ) : (
-                           <div className="text-center py-16 text-muted-foreground">
+                            <div className="text-center py-16 text-muted-foreground">
                                 <FileDigit className="h-10 w-10 mx-auto mb-4"/>
                                 <p>No quotes found for the selected criteria.</p>
                                 <p className="text-sm">Please try different options.</p>
@@ -697,31 +466,254 @@ export default function QuotesPage() {
                         )}
                     </div>
                 )}
-                </AccordionContent>
-            </Card>
+            </AccordionContent>
+        </AccordionItem>
+            
+        <AccordionItem value="hospital-indemnity" className="border bg-white shadow-md rounded-xl overflow-hidden">
+             <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full data-[state=open]:border-b">
+                Hospital Indemnity
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pt-6 pb-6">
+                <p className="mb-6 text-muted-foreground">
+                    Fill out the fields below to get instant quotes. Customize your plan with optional riders.
+                </p>
+               <Form {...hospitalIndemnityForm}>
+                <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
+                        <FormItem className="space-y-3">
+                        <FormLabel>Gender</FormLabel>
+                        <FormControl>
+                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                            </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
+                        <FormItem className="space-y-3">
+                        <FormLabel>Uses Tobacco?</FormLabel>
+                        <FormControl>
+                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                            </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
+                    {isHospitalIndemnityPending ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
+                    ) : (
+                        <>Get Hospital Indemnity Quotes</>
+                    )}
+                    </Button>
+                </div>
+                </form>
+            </Form>
+
+            {isHospitalIndemnityPending && (
+                <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
+                    <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                    <h3 className="mt-4 font-headline text-xl font-semibold">Finding hospital indemnity plans...</h3>
+                    <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
+                </div>
+            )}
+            {hospitalIndemnityError && (
+                <Alert variant="destructive" className="mt-8">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Error Fetching Hospital Indemnity Quotes</AlertTitle>
+                <AlertDescription>{hospitalIndemnityError}</AlertDescription>
+                </Alert>
+            )}
+
+            {hospitalIndemnityQuotes && (
+                <div className="mt-12">
+                    {featuredQuote ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 border rounded-xl p-0 overflow-hidden">
+                                <div className="p-6">
+                                  <h3 className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</h3>
+                                  <p className="text-muted-foreground">{featuredQuote.plan_name}</p>
+                                </div>
+                                <div className="p-6 mt-2 space-y-8 border-t">
+                                    <div>
+                                        <Label htmlFor="base-benefit-select" className="text-base font-semibold">Hospital Confinement Benefit</Label>
+                                        <Select
+                                            value={selectedBaseBenefit?.amount}
+                                            onValueChange={(amount) => {
+                                                const newBenefit = featuredQuote.baseBenefits.find(b => b.amount === amount);
+                                                if (newBenefit) setSelectedBaseBenefit(newBenefit);
+                                            }}
+                                        >
+                                            <SelectTrigger id="base-benefit-select" className="mt-2 h-11">
+                                                <SelectValue placeholder="Select a daily benefit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {featuredQuote.baseBenefits.map(benefit => (
+                                                    <SelectItem key={benefit.amount} value={benefit.amount}>
+                                                        ${benefit.amount} / {benefit.quantifier} (+${benefit.rate.toFixed(2)}/mo)
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <Separator/>
+
+                                    <div>
+                                       <h4 className="font-semibold mb-4 text-base">Optional Riders</h4>
+                                       <div className="space-y-4">
+                                        {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
+                                            if (rider.included) {
+                                                    return (
+                                                    <div key={i} className="flex items-center p-4 rounded-md border bg-green-50 border-green-200">
+                                                        <Check className="h-5 w-5 mr-4 text-green-600"/>
+                                                        <div className="flex-1">
+                                                            <p className="font-medium">{rider.name} (Included)</p>
+                                                            {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                        </div>
+                                                    </div>
+                                                    )
+                                            }
+                                            
+                                            if (rider.benefits.length === 1) {
+                                                const benefit = rider.benefits[0];
+                                                return (
+                                                    <div key={i} className="flex items-center p-4 rounded-md border bg-background">
+                                                        <Switch 
+                                                            id={`rider-${i}`}
+                                                            onCheckedChange={() => handleRiderToggle(rider)}
+                                                            checked={!!selectedRiders[rider.name]}
+                                                        />
+                                                        <Label htmlFor={`rider-${i}`} className="ml-4 flex justify-between w-full cursor-pointer">
+                                                            <div className="flex-1">
+                                                                <p className="font-medium">{rider.name}</p>
+                                                                {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                            </div>
+                                                            <span className="font-semibold pl-4 whitespace-nowrap">+ ${benefit.rate.toFixed(2)}</span>
+                                                        </Label>
+                                                    </div>
+                                                )
+                                            }
+
+                                            if (rider.benefits.length > 1) {
+                                                return (
+                                                    <div key={i} className="p-4 rounded-md border bg-background">
+                                                        <p className="font-medium">{rider.name}</p>
+                                                        {rider.note && <p className="text-xs text-muted-foreground mb-3 mt-1">{rider.note}</p>}
+                                                        <RadioGroup
+                                                            onValueChange={(value) => {
+                                                                if (value === 'none') {
+                                                                    handleRiderOptionSelect(rider.name, null);
+                                                                } else {
+                                                                    const selectedBenefit = rider.benefits.find(b => b.amount === value);
+                                                                    if (selectedBenefit) handleRiderOptionSelect(rider.name, selectedBenefit);
+                                                                }
+                                                            }}
+                                                            value={selectedRiders[rider.name]?.amount || 'none'}
+                                                            className="mt-2 space-y-2"
+                                                        >
+                                                            {rider.benefits.map((benefit, j) => (
+                                                                <div key={j} className="flex items-center">
+                                                                    <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
+                                                                    <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex justify-between w-full font-normal cursor-pointer">
+                                                                        <span>${benefit.amount} / {benefit.quantifier}</span>
+                                                                        <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
+                                                                    </Label>
+                                                                </div>
+                                                            ))}
+                                                            <div className="flex items-center">
+                                                                <RadioGroupItem value="none" id={`rider-${i}-none`} />
+                                                                <Label htmlFor={`rider-${i}-none`} className="ml-3 font-normal cursor-pointer">None</Label>
+                                                            </div>
+                                                        </RadioGroup>
+                                                    </div>
+                                                )
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                    </div>
+                                </div>
+                                <div className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6 mt-8">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold text-lg">Total Monthly Premium</p>
+                                        <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
+                                    </div>
+                                     <Button size="lg" asChild className="w-full mt-4"><Link href="/dashboard/apply">Select This Plan</Link></Button>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="font-headline text-xl font-semibold">Other Companies</h3>
+                                {otherQuotes && otherQuotes.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {otherQuotes.map(quote => {
+                                            const lowestRate = quote.baseBenefits.length > 0 ? 
+                                                [...quote.baseBenefits].sort((a,b) => a.rate - b.rate)[0].rate : 0;
+                                            return (
+                                                <Card 
+                                                    key={quote.id} 
+                                                    className="p-6 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                                                    onClick={() => setFeaturedQuote(quote)}
+                                                >
+                                                    <div>
+                                                        <p className="font-semibold text-lg">{quote.carrier.name}</p>
+                                                        <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-semibold text-lg">${lowestRate.toFixed(2)}</p>
+                                                        <p className="text-xs text-muted-foreground">starts from</p>
+                                                    </div>
+                                                </Card>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">No other companies matched your criteria.</p>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                       <div className="text-center py-16 text-muted-foreground">
+                            <FileDigit className="h-10 w-10 mx-auto mb-4"/>
+                            <p>No quotes found for the selected criteria.</p>
+                            <p className="text-sm">Please try different options.</p>
+                        </div>
+                    )}
+                </div>
+            )}
+            </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="life-insurance" className="border-b-0">
-             <Card>
-                <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
-                    Life Insurance
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
-                    <CardDescription className="mb-6">
-                        An agent will prepare a personalized quote for you.
-                    </CardDescription>
-                    <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
-                        <AlertDescription>
-                            We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
-                        </AlertDescription>
-                    </Alert>
-                     <div className="mt-6 flex justify-end">
-                        <Button size="lg">Request Quote from Agent</Button>
-                    </div>
-                </AccordionContent>
-            </Card>
+        <AccordionItem value="life-insurance" className="border bg-white shadow-md rounded-xl overflow-hidden">
+             <AccordionTrigger className="p-6 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                Life Insurance
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pt-6 pb-6">
+                <p className="mb-6 text-muted-foreground">
+                    An agent will prepare a personalized quote for you.
+                </p>
+                <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
+                    <AlertDescription>
+                        We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
+                    </AlertDescription>
+                </Alert>
+                 <div className="mt-6 flex justify-end">
+                    <Button size="lg">Request Quote from Agent</Button>
+                </div>
+            </AccordionContent>
         </AccordionItem>
        </Accordion>
     </div>

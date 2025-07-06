@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 
 export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
   return (
-    <Card className="flex flex-col h-full hover:border-primary/50 hover:shadow-xl transition-colors">
+    <Card className="flex flex-col h-full hover:border-primary/50 hover:shadow-lg transition-colors">
       <CardHeader className="p-8">
         <CardTitle className="text-xl font-bold text-slate-900">{quote.carrier.name}</CardTitle>
         <CardDescription>{quote.plan_name}</CardDescription>
