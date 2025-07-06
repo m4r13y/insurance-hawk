@@ -88,7 +88,7 @@ export default function DashboardPage() {
             <CardTitle className="text-xl md:text-2xl font-semibold">Your Current Plan</CardTitle>
             <CardDescription className="text-base">Blue Shield Secure PPO</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Premium</p>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
             <CardTitle className="text-xl md:text-2xl font-semibold">Next Steps</CardTitle>
             <CardDescription className="text-base">Complete these items for your coverage.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 space-y-6">
+          <CardContent className="flex-1 space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
                 <FileUp className="h-6 w-6" />
