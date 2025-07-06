@@ -45,7 +45,7 @@ import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown, Check, Building,
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
 import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit } from "@/types";
 import Link from "next/link";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -358,14 +358,17 @@ export default function QuotesPage() {
                             )}
                             />
                             <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 h-full justify-center">
-                                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                        <div className="space-y-1 leading-none">
-                                            <FormLabel>Apply Discounts</FormLabel>
-                                        </div>
-                                    </FormItem>
-                                )}
-                            />
+                                <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-4 h-full justify-center">
+                                    <FormLabel>Apply Discounts</FormLabel>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
                         </div>
                         <div className="flex justify-end">
                             <Button type="submit" disabled={isMedigapPending} size="lg" className="bg-accent hover:bg-accent/90">
@@ -761,7 +764,7 @@ export default function QuotesPage() {
                                                     const benefit = rider.benefits[0];
                                                     return (
                                                         <div key={i} className="flex items-center p-3 rounded-md border bg-background">
-                                                            <Checkbox 
+                                                            <Switch 
                                                                 id={`rider-${i}`}
                                                                 onCheckedChange={() => handleRiderToggle(rider)}
                                                                 checked={!!selectedRiders[rider.name]}
@@ -868,5 +871,7 @@ export default function QuotesPage() {
     </div>
   );
 }
+
+    
 
     
