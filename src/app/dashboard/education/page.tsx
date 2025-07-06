@@ -2,21 +2,33 @@
 "use client";
 
 import { useState, useEffect, useTransition } from 'react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
 import { getExplanation } from './actions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Terminal, BookCopy, GitCompare, Scale } from 'lucide-react';
+import { PlanComparisonTool } from './plan-comparison-tool';
 
 const topics = [
-    { id: 'topic-1', title: 'Original Medicare vs. Medicare Advantage', query: 'Original Medicare vs. Medicare Advantage, Supplements, and Part D' },
-    { id: 'topic-2', title: 'Comparing Supplement Plans: Plan G vs. Plan N', query: 'Compare Medicare Supplement Plan G and Plan N' },
-    { id: 'topic-3', title: 'Comparing Network Types: HMO vs. PPO', query: 'Compare PPO and HMO plan types' },
+    { 
+        id: 'topic-1', 
+        title: 'Original Medicare vs. Medicare Advantage', 
+        query: 'Original Medicare vs. Medicare Advantage, Supplements, and Part D',
+        icon: GitCompare
+    },
+    { 
+        id: 'topic-2', 
+        title: 'Comparing Supplement Plans: G vs. N', 
+        query: 'Compare Medicare Supplement Plan G and Plan N',
+        icon: Scale
+    },
+    { 
+        id: 'topic-3', 
+        title: 'Comparing Network Types: HMO vs. PPO', 
+        query: 'Compare PPO and HMO plan types',
+        icon: BookCopy
+    },
 ];
 
 function MarkdownContent({ text }: { text: string }) {
@@ -85,16 +97,40 @@ export default function EducationPage() {
         <p className="text-muted-foreground">Understand your Medicare options with these simple guides.</p>
       </div>
 
-      <Accordion type="single" collapsible className="w-full" defaultValue={topics[0].id}>
-        {topics.map(topic => (
-            <AccordionItem value={topic.id} key={topic.id}>
-                <AccordionTrigger className="text-left hover:no-underline">{topic.title}</AccordionTrigger>
-                <AccordionContent>
-                    <Explanation topicQuery={topic.query} />
-                </AccordionContent>
-            </AccordionItem>
-        ))}
-      </Accordion>
+       <Tabs defaultValue="topics" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="topics">Learning Center</TabsTrigger>
+            <TabsTrigger value="comparison">Plan Comparison Tool</TabsTrigger>
+        </TabsList>
+        <TabsContent value="topics" className="mt-6">
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                {topics.map(topic => (
+                    <Card key={topic.id} className="flex flex-col">
+                        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <topic.icon className="h-6 w-6"/>
+                            </div>
+                            <CardTitle className="text-lg">{topic.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                            <Explanation topicQuery={topic.query} />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </TabsContent>
+        <TabsContent value="comparison" className="mt-6">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Side-by-Side Plan Comparison</CardTitle>
+                    <CardDescription>Select up to three plans to compare their features and costs.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <PlanComparisonTool />
+                </CardContent>
+             </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
