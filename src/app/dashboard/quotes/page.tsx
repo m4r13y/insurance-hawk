@@ -43,13 +43,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown, Check, Building, PlusCircle } from "lucide-react";
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
-import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit } from "@/types";
+import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CsgDiscount } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { HealthInsuranceQuoter } from "@/components/health-insurance-quoter";
 
 
 const medigapFormSchema = z.object({
@@ -287,18 +288,22 @@ export default function QuotesPage() {
         </p>
       </div>
 
-       <Tabs defaultValue="medigap" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+       <Tabs defaultValue="health-insurance" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+                <TabsTrigger value="health-insurance">Health Insurance</TabsTrigger>
                 <TabsTrigger value="medigap">Medigap</TabsTrigger>
                 <TabsTrigger value="dental">Dental</TabsTrigger>
                 <TabsTrigger value="life-insurance">Life Insurance</TabsTrigger>
                 <TabsTrigger value="hospital-indemnity">Hospital Indemnity</TabsTrigger>
             </TabsList>
+            <TabsContent value="health-insurance" className="mt-6">
+               <HealthInsuranceQuoter />
+            </TabsContent>
             <TabsContent value="medigap" className="mt-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Medicare Supplement Quotes</CardTitle>
-                        <CardDescription>All fields are required unless noted to get your instant Medigap quotes.</CardDescription>
+                        <CardDescription>All fields are required to get your instant Medigap quotes.</CardDescription>
                     </CardHeader>
                     <CardContent>
                     <Form {...medigapForm}>
@@ -357,7 +362,7 @@ export default function QuotesPage() {
                             )}
                             />
                             <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-center space-x-3 h-full">
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg p-4">
                                     <FormLabel>Apply Discounts</FormLabel>
                                     <FormControl>
                                         <Switch
@@ -870,9 +875,3 @@ export default function QuotesPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    

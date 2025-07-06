@@ -108,3 +108,29 @@ export type HospitalIndemnityQuote = {
     baseBenefits: HospitalIndemnityBenefit[];
     riders: HospitalIndemnityRider[];
 };
+
+export type HealthQuoteRequest = {
+    householdSize: number;
+    householdIncome: number;
+    zipCode: string;
+    members: { age: number }[];
+    hasInsurance: 'yes' | 'no';
+    hadUnemployment: 'yes' | 'no';
+};
+
+export type HealthPlan = {
+    id: string;
+    name: string;
+    provider: string;
+    isBestMatch: boolean;
+    premium: number;
+    taxCredit: number;
+    deductible: number;
+    outOfPocketMax: number;
+    network: 'HMO' | 'PPO';
+    rating: number;
+    features: {
+        doctors: string;
+        drugs: string;
+    };
+};
