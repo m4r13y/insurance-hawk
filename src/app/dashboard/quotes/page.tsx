@@ -400,7 +400,7 @@ export default function QuotesPage() {
                                         <TableRow>
                                             <TableHead>Carrier</TableHead>
                                             <TableHead>Plan Name</TableHead>
-                                            <TableHead>Rating</TableHead>
+                                            <TableHead>Benefit</TableHead>
                                             <TableHead className="text-right">Monthly Premium</TableHead>
                                             <TableHead className="text-right"></TableHead>
                                         </TableRow>
@@ -410,7 +410,10 @@ export default function QuotesPage() {
                                             <TableRow key={`${quote.id}-${index}`}>
                                                 <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
                                                 <TableCell>{quote.plan_name}</TableCell>
-                                                <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
+                                                <TableCell>
+                                                    <div className="font-medium">{quote.benefit_amount !== 'N/A' ? `$${new Intl.NumberFormat().format(Number(quote.benefit_amount))}` : 'N/A'}</div>
+                                                    <div className="text-xs text-muted-foreground">{quote.benefit_quantifier}</div>
+                                                </TableCell>
                                                 <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button asChild>

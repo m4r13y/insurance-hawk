@@ -98,6 +98,8 @@ type CsgDentalQuote = {
     base_plans: {
         benefits: {
             rate: number;
+            amount: string;
+            quantifier: string;
         }[];
     }[];
 };
@@ -140,16 +142,21 @@ export async function getDentalQuotes(values: DentalQuoteRequestValues) {
 
         const csgQuotes = data as CsgDentalQuote[];
 
-        const quotes: DentalQuote[] = csgQuotes.map(q => ({
-            id: q.key,
-            plan_name: q.plan_name,
-            carrier: {
-                name: q.company_base.name,
-                logo_url: null,
-            },
-            monthly_premium: q.base_plans[0]?.benefits[0]?.rate ?? 0,
-            am_best_rating: q.company_base.ambest_rating,
-        }));
+        const quotes: DentalQuote[] = csgQuotes.map(q => {
+            const firstBenefit = q.base_plans?.[0]?.benefits?.[0];
+            return {
+                id: q.key,
+                plan_name: q.plan_name,
+                carrier: {
+                    name: q.company_base.name,
+                    logo_url: null,
+                },
+                monthly_premium: firstBenefit?.rate ?? 0,
+                am_best_rating: q.company_base.ambest_rating,
+                benefit_amount: firstBenefit?.amount ?? 'N/A',
+                benefit_quantifier: firstBenefit?.quantifier ?? 'N/A',
+            };
+        });
 
         return { quotes };
 

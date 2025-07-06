@@ -64,4 +64,6 @@ export type DentalQuote = {
     };
     plan_name: string;
     am_best_rating: string;
+    benefit_amount: string;
+    benefit_quantifier: string;
 };
