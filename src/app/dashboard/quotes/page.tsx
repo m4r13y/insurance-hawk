@@ -656,7 +656,7 @@ export default function QuotesPage() {
                                                 <p className="font-semibold text-lg">Total Monthly Premium</p>
                                                 <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
                                             </div>
-                                            <Button size="lg" asChild className="w-full mt-4"><Link href="/dashboard/apply">Select This Plan</Link></Button>
+                                            <Button size="lg" asChild className="w-full mt-4"><Link href={`/dashboard/apply?planName=${encodeURIComponent(featuredQuote.plan_name)}&provider=${encodeURIComponent(featuredQuote.carrier.name)}&premium=${totalPremium}`}>Select This Plan</Link></Button>
                                         </div>
                                     </div>
                                     <div className="space-y-4">

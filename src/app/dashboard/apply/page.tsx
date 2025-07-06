@@ -1,8 +1,9 @@
 
 "use client"
 
-import { useState } from "react"
-import { useForm, type FieldPath, useFormContext } from "react-hook-form"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { useForm, type FieldPath } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -16,9 +17,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, LifeBuoy, Info } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
+import type { Plan } from "@/types"
 
 const formSchema = z.object({
   // Personal Info
@@ -57,7 +59,10 @@ const formSchema = z.object({
   // Plan Selection
   planId: z.string().min(1, "You must select a plan to apply for."),
   wantsDental: z.boolean().default(false).optional(),
-  wantsVision: z.boolean().default(false).optional(),
+  wantsCancer: z.boolean().default(false).optional(),
+  wantsLifeInsurance: z.boolean().default(false).optional(),
+  wantsFinancialPlanning: z.boolean().default(false).optional(),
+  wantsDrugPlan: z.boolean().default(false).optional(),
 
   // Agent Assistance
   wantsAgentContact: z.enum(["yes", "no"], { required_error: "This field is required." }),
@@ -83,7 +88,7 @@ const steps = [
     { id: 2, name: 'Medicare Details', icon: ShieldCheck, fields: ['medicareClaimNumber', 'partAEffectiveDate', 'partBEffectiveDate'] as FieldPath<FormSchemaType>[] },
     { id: 3, name: 'Current Coverage', icon: FileText, fields: ['hasOtherInsurance', 'otherInsuranceType', 'hasMedigap', 'medigapCompany', 'medigapPlan', 'isReplacingCoverage', 'hasPrescriptionPlan'] as FieldPath<FormSchemaType>[] },
     { id: 4, name: 'Medical History', icon: HeartPulse, fields: ['hospitalizedLast12Months', 'hasMajorIllness', 'majorIllnessDetails', 'takesPrescriptions', 'prescriptionList'] as FieldPath<FormSchemaType>[] },
-    { id: 5, name: 'Plan Selection', icon: CheckCircle, fields: ['planId', 'wantsDental', 'wantsVision'] as FieldPath<FormSchemaType>[] },
+    { id: 5, name: 'Plan Selection', icon: CheckCircle, fields: ['planId', 'wantsDental', 'wantsCancer', 'wantsLifeInsurance', 'wantsFinancialPlanning', 'wantsDrugPlan'] as FieldPath<FormSchemaType>[] },
     { id: 6, name: 'Agent Assistance', icon: Bot, fields: ['wantsAgentContact'] as FieldPath<FormSchemaType>[] },
     { id: 7, name: 'Review & Submit', icon: FileCheck, fields: ['signature', 'agreesToTerms', 'confirmsAccuracy'] as FieldPath<FormSchemaType>[] },
 ];
@@ -107,9 +112,39 @@ function ReviewItem({ label, value }: { label: string, value: any }) {
 }
 
 export default function ApplyPage() {
+    const searchParams = useSearchParams()
     const { toast } = useToast()
-    const [step, setStep] = useState(0); // 0 is welcome screen
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [step, setStep] = useState(0)
+    const [isSubmitted, setIsSubmitted] = useState(false)
+
+    const quotedPlanId = 'quoted-plan';
+    const planIdFromQuery = searchParams.get('planId');
+    const planNameFromQuery = searchParams.get('planName');
+    const providerFromQuery = searchParams.get('provider');
+    const premiumFromQuery = searchParams.get('premium');
+
+    const supplementPlans = mockPlans.filter(p => p.category === "Medicare Supplement");
+    
+    const allAvailablePlans: Plan[] = [...supplementPlans];
+    let quotedPlan: Plan | null = null;
+    
+    if (planNameFromQuery && providerFromQuery && premiumFromQuery) {
+        quotedPlan = {
+            id: quotedPlanId,
+            name: planNameFromQuery,
+            provider: providerFromQuery,
+            premium: parseFloat(premiumFromQuery),
+            category: 'Quoted Plan',
+            type: 'PPO',
+            deductible: 0,
+            maxOutOfPocket: 0,
+            rating: 0,
+            features: { dental: false, vision: false, hearing: false, prescriptionDrug: false }
+        }
+        if (!allAvailablePlans.some(p => p.name === quotedPlan?.name && p.provider === quotedPlan?.provider)) {
+            allAvailablePlans.unshift(quotedPlan);
+        }
+    }
 
     const form = useForm<FormSchemaType>({
         resolver: zodResolver(formSchema),
@@ -133,16 +168,23 @@ export default function ApplyPage() {
             hospitalizedLast12Months: "no",
             hasMajorIllness: "no",
             takesPrescriptions: "no",
-            planId: mockPlans[0].id,
+            planId: planIdFromQuery || (quotedPlan ? quotedPlanId : supplementPlans[0]?.id || ""),
             wantsAgentContact: "yes",
             signature: "",
             agreesToTerms: false,
             confirmsAccuracy: false,
+            wantsDental: false,
+            wantsCancer: false,
+            wantsLifeInsurance: false,
+            wantsFinancialPlanning: false,
+            wantsDrugPlan: false,
         }
     })
 
     const watchHasMajorIllness = form.watch("hasMajorIllness");
     const watchTakesPrescriptions = form.watch("takesPrescriptions");
+    const watchedPlanId = form.watch("planId");
+    const selectedPlan = allAvailablePlans.find(p => p.id === watchedPlanId);
     
     function onSubmit(values: FormSchemaType) {
         console.log(values)
@@ -230,10 +272,24 @@ export default function ApplyPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Submit Application</h1>
-        <p className="text-base text-muted-foreground mt-1">Please follow the steps to complete your enrollment.</p>
-      </div>
+        <div className="flex justify-between items-start gap-8">
+            <div>
+                <h1 className="text-2xl font-semibold">Submit Application</h1>
+                <p className="text-base text-muted-foreground mt-1">Please follow the steps to complete your enrollment.</p>
+            </div>
+            {selectedPlan && (
+                <Card className="w-full max-w-sm shrink-0 hidden sm:block">
+                    <CardHeader className="p-4">
+                        <CardDescription>Selected Plan</CardDescription>
+                        <CardTitle className="text-lg">{selectedPlan.name}</CardTitle>
+                    </CardHeader>
+                    <CardFooter className="p-4 pt-0 flex justify-between items-baseline">
+                        <p className="text-sm text-muted-foreground">{selectedPlan.provider}</p>
+                        <p className="font-bold text-xl">${selectedPlan.premium?.toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                    </CardFooter>
+                </Card>
+            )}
+        </div>
 
        <div className="space-y-6">
         <div className="space-y-3">
@@ -316,11 +372,11 @@ export default function ApplyPage() {
                     <CardContent className="space-y-8">
                         <FormField control={form.control} name="planId" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Selected Plan</FormLabel>
+                                <FormLabel>Selected Medicare Supplement Plan</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Select a plan" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        {mockPlans.map(plan => (
+                                        {allAvailablePlans.map(plan => (
                                             <SelectItem key={plan.id} value={plan.id}>{plan.name} - {plan.provider}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -331,8 +387,13 @@ export default function ApplyPage() {
                         <div className="space-y-3">
                              <FormLabel>Request Additional Benefits</FormLabel>
                              <FormDescription>Check any additional coverage you might be interested in.</FormDescription>
-                             <FormField control={form.control} name="wantsDental" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Dental Coverage</FormLabel></div></FormItem>} />
-                             <FormField control={form.control} name="wantsVision" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Vision Coverage</FormLabel></div></FormItem>} />
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="wantsDental" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Dental Coverage</FormLabel></div></FormItem>} />
+                                <FormField control={form.control} name="wantsCancer" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Cancer Coverage</FormLabel></div></FormItem>} />
+                                <FormField control={form.control} name="wantsLifeInsurance" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Life Insurance</FormLabel></div></FormItem>} />
+                                <FormField control={form.control} name="wantsFinancialPlanning" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Financial Planning</FormLabel></div></FormItem>} />
+                                <FormField control={form.control} name="wantsDrugPlan" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Prescription Drug Plan (Part D)</FormLabel></div></FormItem>} />
+                             </div>
                         </div>
                     </CardContent>
                 </Card>

@@ -58,7 +58,7 @@ export function MedigapQuoteCard({ quote }: { quote: Quote }) {
       </CardContent>
       <CardFooter className="p-8 mt-auto">
           <Button asChild className="w-full" size="lg">
-            <Link href="/dashboard/apply">Select Plan</Link>
+            <Link href={`/dashboard/apply?planName=${encodeURIComponent(quote.plan_name)}&provider=${encodeURIComponent(quote.carrier.name)}&premium=${quote.monthly_premium}`}>Select Plan</Link>
           </Button>
       </CardFooter>
     </Card>

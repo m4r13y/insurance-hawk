@@ -17,6 +17,7 @@ import { getHealthQuotes } from '@/app/dashboard/health-quotes/actions';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import Link from 'next/link';
 
 type FormValues = z.infer<typeof healthQuoterFormSchema>;
 interface HealthPlanResultsTableProps {
@@ -161,7 +162,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                             <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
                             <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>
                             <TableCell className="text-right">
-                                <Button>Select Plan</Button>
+                                <Button asChild><Link href={`/dashboard/apply?planName=${encodeURIComponent(plan.name)}&provider=${encodeURIComponent(plan.provider)}&premium=${plan.premium}`}>Select Plan</Link></Button>
                             </TableCell>
                         </TableRow>
                         ))}

@@ -49,7 +49,7 @@ export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: 
       {showSelectButton && (
         <CardFooter className="p-8 mt-auto">
           <Button asChild className="w-full" size="lg" variant={isFeatured ? 'default' : 'outline'}>
-            <Link href="/dashboard/apply">Select Plan</Link>
+            <Link href={`/dashboard/apply?planId=${plan.id}`}>Select Plan</Link>
           </Button>
         </CardFooter>
       )}
