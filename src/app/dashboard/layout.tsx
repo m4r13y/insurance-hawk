@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -37,24 +37,27 @@ import {
 } from "lucide-react";
 
 
-export default function DashboardLayout({
+function DashboardLayoutComponent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const applicationType = searchParams.get('type');
+  const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
+
   const isActive = (path: string) => pathname === path;
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for guest auth status in localStorage
     const guestAuth = localStorage.getItem("hawk-auth") === "true";
     setIsLoggedIn(guestAuth);
-    setLoading(false);
-  }, [pathname]);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("hawk-auth");
@@ -63,8 +66,12 @@ export default function DashboardLayout({
     router.push("/");
   };
   
-  if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading dashboard...</div>;
+  if (isApplyFormPage) {
+    return (
+      <div className="w-screen h-screen bg-slate-50 overflow-y-auto grid place-items-center p-4 sm:p-6 md:p-8">
+        {children}
+      </div>
+    );
   }
 
   return (
@@ -194,4 +201,17 @@ export default function DashboardLayout({
       </div>
     </SidebarProvider>
   );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <DashboardLayoutComponent>{children}</DashboardLayoutComponent>
+    </Suspense>
+  )
 }
