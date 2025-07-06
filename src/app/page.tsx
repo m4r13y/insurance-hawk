@@ -47,11 +47,23 @@ function LoginPageContent() {
     }
   }, [user, router]);
 
+  const handleGuestLogin = () => {
+    localStorage.setItem("hawk-auth", "true");
+    localStorage.setItem("userFirstName", "Guest");
+    localStorage.setItem("isNewUser", "true"); 
+    router.push("/dashboard");
+    toast({
+        title: "Welcome, Guest!",
+        description: "You are browsing as a guest. Some features will be limited.",
+    })
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
         await signInWithEmailAndPassword(auth, email, password);
+        localStorage.removeItem("hawk-auth");
+        localStorage.removeItem("isNewUser");
         router.push("/dashboard");
     } catch (error: any) {
         console.error("Login Error:", error);
@@ -81,6 +93,8 @@ function LoginPageContent() {
             createdAt: new Date()
         });
 
+        localStorage.removeItem("hawk-auth");
+        localStorage.setItem("isNewUser", "true"); 
         router.push("/dashboard")
         toast({
             title: "Account Created!",
@@ -187,7 +201,22 @@ function LoginPageContent() {
                 )}
             </CardContent>
           </Card>
-          <div className="text-center text-sm text-slate-600">
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-500">
+                Or
+              </span>
+            </div>
+          </div>
+          <Button variant="outline" className="w-full" onClick={handleGuestLogin}>
+            Continue as Guest
+          </Button>
+
+          <div className="mt-4 text-center text-sm text-slate-600">
             <p>
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
                 <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
