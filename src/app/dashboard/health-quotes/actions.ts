@@ -62,9 +62,15 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
 
     try {
         // Step 1: Get County FIPS and State from ZIP code
-        const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`);
+        const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'HawkNest/1.0.0',
+            }
+        });
         if (!countyResponse.ok) {
-            console.error(`County lookup failed for ZIP ${values.zipCode}: ${countyResponse.statusText}`);
+            const errorBody = await countyResponse.text();
+            console.error(`County lookup failed for ZIP ${values.zipCode}: ${countyResponse.statusText}`, errorBody);
             return { error: 'Could not retrieve location information for the provided ZIP code. Please check the ZIP code and try again.' };
         }
         const countyData = await countyResponse.json();
@@ -99,7 +105,10 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         // Step 3: Call the Plan Search API
         const planSearchResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/plans/search?apikey=${apiKey}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'User-Agent': 'HawkNest/1.0.0',
+            },
             body: JSON.stringify(searchPayload),
         });
 
@@ -159,7 +168,12 @@ export async function searchDrugs(params: { query: string }) {
   if (!apiKey) return { error: 'Service unavailable', drugs: [] };
 
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`);
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'HawkNest/1.0.0',
+        }
+    });
     if (!response.ok) return { drugs: [] };
     const data = await response.json();
     const drugs: Drug[] = data.drugs || [];
@@ -175,7 +189,12 @@ export async function searchProviders(params: { query: string, zipCode: string }
   if (!apiKey) return { error: 'Service unavailable', providers: [] };
   
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`);
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'HawkNest/1.0.0',
+        }
+    });
     if(!response.ok) return { providers: [] };
     const data = await response.json();
     const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);
