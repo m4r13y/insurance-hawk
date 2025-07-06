@@ -17,7 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
-import { ArrowRight, PartyPopper, User, Users, ShieldCheck, TrendingUp, Landmark, Home, Target, FileCheck, ClipboardList, Loader2, Download, Phone, Mail, Terminal, Sparkles } from "lucide-react"
+import { ArrowRight, PartyPopper, User, Users, ShieldCheck, TrendingUp, Landmark, Home, Target, FileCheck, ClipboardList, Loader2, Download, Phone, Mail, Terminal, Sparkles, Shield, Rocket, AlertTriangle, Percent, FileText, BookUser } from "lucide-react"
 import { getRetirementPlan } from "./actions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -36,7 +36,7 @@ const formSchema = z.object({
   healthInsuranceDeductible: z.coerce.number().min(0),
   healthInsurancePlan: z.string().min(1, "Required"),
   healthInsurancePremium: z.coerce.number().min(0),
-  healthInsuranceCopays: z.string().min(1, "Required"),
+  healthInsuranceCopays: z.string().optional(),
   healthInsuranceMaxOutOfPocket: z.coerce.number().min(0),
 
   // Spouse Health Insurance (conditional)
@@ -145,6 +145,19 @@ const steps = [
     { id: 7, name: 'Review & Submit', icon: FileCheck, fields: [] as FieldPath<FormSchemaType>[] },
 ];
 
+const iconMap: { [key: string]: React.ElementType } = {
+    Shield,
+    TrendingUp,
+    Landmark,
+    Rocket,
+    AlertTriangle,
+    PartyPopper,
+    Percent,
+    FileText,
+    BookUser,
+    Sparkles,
+};
+
 function PlanResults({ plan, name }: { plan: string, name: string }) {
     const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -194,8 +207,19 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                     <div className="prose prose-lg max-w-none text-card-foreground">
                         {plan.split('\n').map((line, index) => {
                             const trimmedLine = line.trim();
-                            if (trimmedLine.startsWith('## ')) {
-                                return <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2 flex items-center gap-2">{trimmedLine.substring(3)}</h3>;
+                             if (trimmedLine.startsWith('## [ICON:')) {
+                                const match = trimmedLine.match(/## \[ICON:(.*?)\] (.*)/);
+                                if (match) {
+                                    const iconName = match[1];
+                                    const title = match[2];
+                                    const IconComponent = iconMap[iconName];
+                                    return (
+                                        <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2 flex items-center gap-2">
+                                            {IconComponent && <IconComponent className="h-5 w-5 text-primary" />}
+                                            {title}
+                                        </h3>
+                                    );
+                                }
                             }
                             if (trimmedLine.startsWith('* ')) {
                                 return <li key={index} className="ml-5 list-disc">{trimmedLine.substring(2)}</li>;
