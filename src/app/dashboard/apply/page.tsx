@@ -444,7 +444,7 @@ function ApplicationSelectionGrid() {
         <h1 className="text-2xl font-semibold">Submit an Application</h1>
         <p className="text-base text-muted-foreground mt-1">Select the type of application you would like to start.</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {applicationTypes.map((app) => {
             const Icon = app.icon
             return (
