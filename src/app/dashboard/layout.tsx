@@ -59,6 +59,9 @@ function DashboardLayoutComponent({
   
   const applicationType = searchParams.get('type');
   const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
+  const isFinancialPlanPage = pathname === '/dashboard/recommendations';
+
+  const isFullScreenForm = isApplyFormPage || isFinancialPlanPage;
 
   const isActive = (path: string) => pathname === path;
   
@@ -78,7 +81,16 @@ function DashboardLayoutComponent({
     router.push("/");
   };
   
-  if (isApplyFormPage) {
+  const handleExit = () => {
+    setIsAlertOpen(false);
+    if (isApplyFormPage) {
+      router.push('/dashboard/apply');
+    } else {
+      router.push('/dashboard');
+    }
+  };
+
+  if (isFullScreenForm) {
     return (
       <>
         <div className="relative w-screen h-screen bg-background overflow-y-auto grid place-items-center p-4 sm:p-6 md:p-8">
@@ -98,15 +110,12 @@ function DashboardLayoutComponent({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure you want to exit?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Any unsaved changes will be lost. If you exit, you will have to start the application over.
+                        Any unsaved changes will be lost. If you exit, your progress on this form will be cleared.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setIsAlertOpen(false)}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => {
-                        setIsAlertOpen(false);
-                        router.push('/dashboard/apply');
-                    }}>
+                    <AlertDialogAction onClick={handleExit}>
                         Exit
                     </AlertDialogAction>
                 </AlertDialogFooter>
