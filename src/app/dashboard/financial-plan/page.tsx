@@ -1,10 +1,13 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition, useRef } from "react"
 import { useForm, type FieldPath } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -13,10 +16,10 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
-import { ArrowRight, PartyPopper, User, Users, ShieldCheck, TrendingUp, DollarSign, Landmark, Home, Target, FileCheck, ClipboardList } from "lucide-react"
-import Link from "next/link"
+import { ArrowRight, PartyPopper, User, Users, ShieldCheck, TrendingUp, Landmark, Home, Target, FileCheck, ClipboardList, Loader2, Download, Phone, Mail, Terminal, Sparkles } from "lucide-react"
+import { getRetirementPlan } from "./actions"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const formSchema = z.object({
   // General
@@ -142,6 +145,74 @@ const steps = [
     { id: 7, name: 'Review & Submit', icon: FileCheck, fields: [] as FieldPath<FormSchemaType>[] },
 ];
 
+function PlanResults({ plan, name }: { plan: string, name: string }) {
+    const resultsRef = useRef<HTMLDivElement>(null);
+
+    const handleDownload = () => {
+        if (!resultsRef.current) return;
+
+        html2canvas(resultsRef.current, { scale: 2 }).then((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'px', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const ratio = canvasWidth / pdfWidth;
+            const pdfHeight = canvasHeight / ratio;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`${name.replace(' ', '_')}_RetirementPlan.pdf`);
+        });
+    };
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-6">
+            <Card>
+                <CardHeader className="text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+                        <PartyPopper className="h-8 w-8" />
+                    </div>
+                    <CardTitle className="font-headline text-3xl pt-4">Your Retirement Plan is Ready!</CardTitle>
+                    <CardDescription>Here is your personalized plan, {name}.</CardDescription>
+                </CardHeader>
+                <CardContent ref={resultsRef} className="px-10 py-8 bg-background">
+                    <div className="prose prose-lg max-w-none">
+                        {plan.split('\n').map((line, index) => {
+                            const trimmedLine = line.trim();
+                            if (trimmedLine.startsWith('## ')) {
+                                return <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2 text-card-foreground">{trimmedLine.substring(3)}</h3>;
+                            }
+                            if (trimmedLine.startsWith('* ')) {
+                                return <li key={index} className="ml-5 list-disc">{trimmedLine.substring(2)}</li>;
+                            }
+                            if (trimmedLine === '') {
+                                return null;
+                            }
+                            return <p key={index}>{trimmedLine}</p>;
+                        })}
+                    </div>
+                </CardContent>
+                 <CardFooter className="flex-col gap-6 bg-muted/50 p-6">
+                    <div className="flex gap-4 w-full">
+                        <Button onClick={handleDownload} className="w-full">
+                            <Download className="mr-2 h-4 w-4" />
+                            Download as PDF
+                        </Button>
+                         <Button onClick={() => window.print()} variant="outline" className="w-full">Print Plan</Button>
+                    </div>
+                    <div className="text-center">
+                        <h4 className="font-semibold">Ready to take the next step?</h4>
+                        <p className="text-muted-foreground text-sm mt-1">Contact your fiduciary advisor to put your plan into action.</p>
+                        <div className="flex justify-center gap-6 mt-4">
+                            <Button variant="ghost"><Phone className="mr-2 h-4 w-4"/> Call Us</Button>
+                            <Button variant="ghost"><Mail className="mr-2 h-4 w-4"/> Email Us</Button>
+                        </div>
+                    </div>
+                 </CardFooter>
+            </Card>
+        </div>
+    )
+}
 
 function ReviewSection({ title, children }: { title: string, children: React.ReactNode }) {
     return (
@@ -162,65 +233,29 @@ function ReviewItem({ label, value }: { label: string, value: any }) {
     )
 }
 
-export default function FinancialPlanPage() {
-    const { toast } = useToast()
+export default function RetirementPlanPage() {
     const [step, setStep] = useState(0);
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const [planResult, setPlanResult] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const form = useForm<FormSchemaType>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            greatestConcern: "",
-            taxFilingStatus: "single",
-            hasSpouse: "no",
-            spouseFirstName: "",
-            spouseLastName: "",
-            healthInsuranceCompany: "",
-            healthInsuranceDeductible: 0,
-            healthInsurancePlan: "",
-            healthInsurancePremium: 0,
-            healthInsuranceCopays: "",
-            healthInsuranceMaxOutOfPocket: 0,
-            spouseHealthInsuranceCompany: "",
-            spouseHealthInsuranceDeductible: 0,
-            spouseHealthInsurancePlan: "",
-            spouseHealthInsurancePremium: 0,
-            spouseHealthInsuranceCopays: "",
-            spouseHealthInsuranceMaxOutOfPocket: 0,
-            otherInsurancePolicies: [],
-            hasLifeInsurance: "no",
-            lifeInsuranceType: "",
-            beneficiariesUpdated: "no",
-            hasLTC: "no",
-            ltcHasRiders: "no",
-            riskTolerance: "medium",
-            assetTypes: [],
-            assetsHeldAt: "",
-            investmentExperience: [],
-            hasEmergencyFund: "no",
-            socialSecurityIncome: 0,
-            pensionIncome: 0,
-            rmdIncome: 0,
-            annuityIncome: 0,
-            workIncome: 0,
-            rentalIncome: 0,
-            totalMonthlyIncome: 0,
-            totalMonthlyExpenses: 0,
-            takesIraDistributions: "no",
-            makingRothConversions: "no",
-            hasTaxFreeBonds: "no",
-            wantsToLowerTaxes: "no",
-            isDonating: "no",
-            hasEstatePlan: "no",
-            hasHealthCarePOA: "no",
-            hasLivingWill: "no",
-            wantsToAvoidProbate: "no",
-            marriedMoreThanOnce: "no",
-            wantsFiduciary: "no",
-            wantsMarketProtection: "no",
-            concernedAboutOutOfMoney: "no",
-            otherGoals: "",
-            signature: "",
+            greatestConcern: "", taxFilingStatus: "single", hasSpouse: "no",
+            spouseFirstName: "", spouseLastName: "", healthInsuranceCompany: "",
+            healthInsuranceDeductible: 0, healthInsurancePlan: "", healthInsurancePremium: 0,
+            healthInsuranceCopays: "", healthInsuranceMaxOutOfPocket: 0,
+            otherInsurancePolicies: [], hasLifeInsurance: "no", lifeInsuranceType: "",
+            beneficiariesUpdated: "no", hasLTC: "no", ltcHasRiders: "no", riskTolerance: "medium",
+            assetTypes: [], assetsHeldAt: "", investmentExperience: [], hasEmergencyFund: "no",
+            socialSecurityIncome: 0, pensionIncome: 0, rmdIncome: 0, annuityIncome: 0,
+            workIncome: 0, rentalIncome: 0, totalMonthlyIncome: 0, totalMonthlyExpenses: 0,
+            takesIraDistributions: "no", makingRothConversions: "no", hasTaxFreeBonds: "no",
+            wantsToLowerTaxes: "no", isDonating: "no", hasEstatePlan: "no", hasHealthCarePOA: "no",
+            hasLivingWill: "no", wantsToAvoidProbate: "no", marriedMoreThanOnce: "no",
+            wantsFiduciary: "no", wantsMarketProtection: "no", concernedAboutOutOfMoney: "no",
+            otherGoals: "", signature: "",
         },
     })
 
@@ -230,62 +265,63 @@ export default function FinancialPlanPage() {
     const watchHasEmergencyFund = form.watch("hasEmergencyFund");
     
     async function onSubmit(values: FormSchemaType) {
-        console.log(values);
-        toast({
-            title: "Financial Plan Submitted!",
-            description: "Thank you for providing your information. We will be in touch shortly.",
+        setError(null);
+        setPlanResult(null);
+        startTransition(async () => {
+            const { greatestConcern, taxFilingStatus, hasSpouse, healthInsurancePremium, healthInsuranceMaxOutOfPocket, hasLifeInsurance, hasLTC, riskTolerance, hasEmergencyFund, totalMonthlyIncome, totalMonthlyExpenses, wantsMarketProtection, concernedAboutOutOfMoney, hasEstatePlan, otherGoals } = values;
+            const result = await getRetirementPlan({ greatestConcern, taxFilingStatus, hasSpouse, healthInsurancePremium, healthInsuranceMaxOutOfPocket, hasLifeInsurance, hasLTC, riskTolerance, hasEmergencyFund, totalMonthlyIncome, totalMonthlyExpenses, wantsMarketProtection, concernedAboutOutOfMoney, hasEstatePlan, otherGoals });
+            if (result.error) {
+                setError(result.error);
+            }
+            if (result.plan) {
+                setPlanResult(result.plan);
+            }
         });
-        setIsSubmitted(true);
     }
 
     const handleNext = async () => {
         const currentStep = steps[step - 1];
         const fields = currentStep.fields;
         const output = await form.trigger(fields, { shouldFocus: true });
-        
         if (!output) return;
-        
-        // This is the last step before review
-        if (step === 6) {
-             setStep(7); // Go to Review step
-             return;
-        }
-
-        if (step < steps.length) {
-            setStep(step + 1);
-        } else {
-           await form.handleSubmit(onSubmit)();
-        }
+        if (step === 6) { setStep(7); return; }
+        if (step < steps.length) { setStep(step + 1); } 
+        else { await form.handleSubmit(onSubmit)(); }
     }
 
-    const handlePrev = () => {
-        if (step > 1) {
-            setStep(step - 1);
-        }
-    }
+    const handlePrev = () => { if (step > 1) { setStep(step - 1); } }
 
-    if (isSubmitted) {
+    if (isPending) {
         return (
             <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
                 <Card className="w-full">
                     <CardHeader>
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
-                             <PartyPopper className="h-8 w-8" />
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                             <Loader2 className="h-8 w-8 animate-spin" />
                         </div>
-                        <CardTitle className="font-headline text-2xl pt-4">Thank You!</CardTitle>
-                        <CardDescription>Your confidential financial plan has been submitted.</CardDescription>
+                        <CardTitle className="font-headline text-2xl pt-4">Generating Your Plan</CardTitle>
+                        <CardDescription>Our AI is crafting your personalized retirement plan. This may take a moment.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">A fiduciary advisor will review your information and be in contact with you shortly to discuss your financial future.</p>
-                    </CardContent>
-                    <CardFooter>
-                        <Button asChild className="w-full">
-                            <Link href="/dashboard">Return to Dashboard</Link>
-                        </Button>
-                    </CardFooter>
                 </Card>
             </div>
         )
+    }
+
+    if (error) {
+         return (
+            <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
+                <Alert variant="destructive">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>An Error Occurred</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+                <Button onClick={() => setError(null)} variant="outline" className="mt-4">Try Again</Button>
+            </div>
+         )
+    }
+
+    if (planResult) {
+        return <PlanResults plan={planResult} name="Sarah" />
     }
 
     if (step === 0) {
@@ -294,13 +330,13 @@ export default function FinancialPlanPage() {
                 <Card className="w-full">
                     <CardHeader>
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                             <ClipboardList className="h-6 w-6" />
+                             <Sparkles className="h-6 w-6" />
                         </div>
-                        <CardTitle className="font-headline text-2xl pt-4">Confidential Financial Plan</CardTitle>
+                        <CardTitle className="font-headline text-2xl pt-4">Your Personalized Retirement Plan</CardTitle>
                         <CardDescription>Let's build a secure future together.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground">This confidential questionnaire will help us understand your financial situation and goals. The process should take about 10-15 minutes. Your information is kept strictly private and secure.</p>
+                        <p className="text-sm text-muted-foreground">This confidential questionnaire helps us understand your goals to build a custom plan. The process should take about 10-15 minutes. Your information is kept strictly private and secure.</p>
                     </CardContent>
                     <CardFooter>
                         <Button className="w-full" onClick={() => setStep(1)}>
@@ -354,7 +390,7 @@ export default function FinancialPlanPage() {
                                         {financialConcerns.map((concern) => (
                                             <FormItem key={concern.id} className="flex items-center space-x-3 space-y-0 rounded-lg border bg-background hover:bg-secondary/50 p-4 transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
                                                 <FormControl>
-                                                    <RadioGroupItem value={concern.id} />
+                                                    <RadioGroupItem value={concern.label} />
                                                 </FormControl>
                                                 <FormLabel className="font-normal w-full cursor-pointer !mt-0">
                                                     {concern.label}
@@ -578,7 +614,7 @@ export default function FinancialPlanPage() {
             {step === 7 && ( // Review
                  <div className="space-y-6">
                     <ReviewSection title="General">
-                        <ReviewItem label="Greatest Financial Concern" value={financialConcerns.find(c => c.id === form.getValues("greatestConcern"))?.label} />
+                        <ReviewItem label="Greatest Financial Concern" value={form.getValues("greatestConcern")} />
                         <ReviewItem label="Tax Filing Status" value={form.getValues("taxFilingStatus")} />
                         <ReviewItem label="Has a Spouse" value={form.getValues("hasSpouse")} />
                         {form.getValues("hasSpouse") === 'yes' && <ReviewItem label="Spouse Name" value={`${form.getValues("spouseFirstName")} ${form.getValues("spouseLastName")}`} />}
@@ -596,7 +632,7 @@ export default function FinancialPlanPage() {
                         <ReviewItem label="Wants Fiduciary" value={form.getValues("wantsFiduciary")} />
                         <ReviewItem label="Concerned about market loss" value={form.getValues("wantsMarketProtection")} />
                         <ReviewItem label="Concerned about running out of money" value={form.getValues("concernedAboutOutOfMoney")} />
-                    </ReviewSection>
+                    </Section>
                 </div>
             )}
 
@@ -615,7 +651,7 @@ export default function FinancialPlanPage() {
                     </Button>
                 ) : (
                     <Button type="button" onClick={form.handleSubmit(onSubmit)} className='bg-accent hover:bg-accent/90'>
-                        Submit Plan
+                        Generate My Plan
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 )}

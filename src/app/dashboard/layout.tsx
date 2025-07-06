@@ -77,8 +77,8 @@ export default function DashboardLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/financial-plan")} tooltip="Financial Plan">
-                    <Link href="/dashboard/financial-plan"><PiggyBank /><span>Financial Plan</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/financial-plan")} tooltip="Retirement Plan">
+                    <Link href="/dashboard/financial-plan"><PiggyBank /><span>Retirement Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>

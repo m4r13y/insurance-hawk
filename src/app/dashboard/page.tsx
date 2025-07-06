@@ -27,7 +27,7 @@ export default function DashboardPage() {
         { id: 'vision', label: 'Vision Coverage', icon: Eye },
         { id: 'life', label: 'Life Insurance', icon: LifeBuoy },
         { id: 'ltc', label: 'Long-Term Care', icon: Home },
-        { id: 'financial', label: 'Financial Plan', icon: PiggyBank }
+        { id: 'financial', label: 'Retirement Plan', icon: PiggyBank }
     ];
 
     const [ownedPlans, setOwnedPlans] = useState(['health']);
