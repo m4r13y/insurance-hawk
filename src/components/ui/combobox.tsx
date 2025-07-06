@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,8 +25,14 @@ export type ComboboxOption = {
   label: string;
 }
 
-interface ComboboxProps {
+export type ComboboxGroup = {
+  heading: string;
   options: ComboboxOption[];
+}
+
+interface ComboboxProps {
+  options?: ComboboxOption[];
+  groupedOptions?: ComboboxGroup[];
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -33,8 +40,25 @@ interface ComboboxProps {
   emptyPlaceholder?: string;
 }
 
-export function Combobox({ options, value, onChange, placeholder = "Select an option...", searchPlaceholder = "Search...", emptyPlaceholder = "No results found." }: ComboboxProps) {
+export function Combobox({ 
+  options, 
+  groupedOptions, 
+  value, 
+  onChange, 
+  placeholder = "Select an option...", 
+  searchPlaceholder = "Search...", 
+  emptyPlaceholder = "No results found." 
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+
+  const allOptions = React.useMemo(() => {
+    if (groupedOptions) {
+      return groupedOptions.flatMap(group => group.options);
+    }
+    return options || [];
+  }, [options, groupedOptions]);
+
+  const selectedLabel = allOptions.find(option => option.value === value)?.label;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,7 +70,7 @@ export function Combobox({ options, value, onChange, placeholder = "Select an op
           className="w-full justify-between"
         >
           {value
-            ? options.find((option) => option.value === value)?.label
+            ? selectedLabel
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -56,26 +80,51 @@ export function Combobox({ options, value, onChange, placeholder = "Select an op
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyPlaceholder}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {groupedOptions ? (
+              groupedOptions.map((group) => (
+                <CommandGroup key={group.heading} heading={group.heading}>
+                  {group.options.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.value}
+                      onSelect={(currentValue) => {
+                        onChange(currentValue === value ? "" : currentValue)
+                        setOpen(false)
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.value ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))
+            ) : (
+              <CommandGroup>
+                {options?.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={(currentValue) => {
+                      onChange(currentValue === value ? "" : currentValue)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

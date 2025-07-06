@@ -35,9 +35,21 @@ const allAvailablePolicies = [
     { id: 'pol-vanguard-retirement', label: 'Retirement Plan', icon: PiggyBank, provider: 'Vanguard', planName: 'Target Retirement 2050' },
 ];
 
-const policyOptions = allAvailablePolicies.map(p => ({
-    value: p.id,
-    label: `${p.provider} - ${p.planName}`
+const groupedPolicies = allAvailablePolicies.reduce((acc, policy) => {
+    const category = policy.label;
+    if (!acc[category]) {
+        acc[category] = [];
+    }
+    acc[category].push({
+        value: policy.id,
+        label: `${policy.provider} - ${policy.planName}`
+    });
+    return acc;
+}, {} as Record<string, {value: string, label: string}[]>);
+
+const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, options]) => ({
+    heading,
+    options
 }));
 
 export default function DocumentsPage() {
@@ -242,11 +254,11 @@ export default function DocumentsPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <Combobox
-                        options={policyOptions}
+                        groupedOptions={comboboxGroupedOptions}
                         value={selectedPolicyId}
                         onChange={setSelectedPolicyId}
                         placeholder="Select a policy..."
-                        searchPlaceholder="Search for a policy..."
+                        searchPlaceholder="Search by provider or plan..."
                         emptyPlaceholder="No matching policies found."
                     />
                 </div>
