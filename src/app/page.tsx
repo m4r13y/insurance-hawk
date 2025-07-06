@@ -22,7 +22,8 @@ import { doc, setDoc } from "firebase/firestore"
 import { useAuthState } from "react-firebase-hooks/auth"
 import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
 
-function LoginPageContent() {
+
+function AuthFlow() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -47,17 +48,6 @@ function LoginPageContent() {
         router.push('/dashboard');
     }
   }, [user, router]);
-
-  const handleGuestLogin = () => {
-    localStorage.setItem("hawk-auth", "true");
-    localStorage.setItem("userFirstName", "Guest");
-    localStorage.setItem("isNewUser", "true"); 
-    router.push("/dashboard");
-    toast({
-        title: "Welcome, Guest!",
-        description: "You are browsing as a guest. Some features will be limited.",
-    })
-  };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -115,55 +105,24 @@ function LoginPageContent() {
   }
   
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <div className="text-center">Loading...</div>;
   }
   
   if (user) {
     router.push('/dashboard');
-    return <div className="flex h-screen items-center justify-center">Redirecting...</div>;
+    return <div className="text-center">Redirecting...</div>;
   }
 
-  return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-slate-100 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 xl:p-24">
-        <div className="self-start">
-            <Logo />
-        </div>
-        <div className="text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h2>
-            <p className="mt-4 text-lg text-slate-600">Securely manage your insurance and financial plans from one convenient place.</p>
-        </div>
-        <div className="w-full max-w-md text-slate-800">
-            <ul className="space-y-4">
-                <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-teal-500" />
-                    <span>Compare plans from top carriers instantly.</span>
-                </li>
-                <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-teal-500" />
-                    <span>Get personalized, AI-driven recommendations.</span>
-                </li>
-                 <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-teal-500" />
-                    <span>Securely apply and manage your documents online.</span>
-                </li>
-            </ul>
-        </div>
-      </div>
-      <div className="flex items-center justify-center py-12 px-4">
-        <div className="mx-auto grid w-full max-w-md gap-6">
-          <div className="grid gap-2 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
-              {isSignUp ? 'Create an Account' : 'Welcome Back'}
-            </h1>
-            <p className="text-slate-600">
-              {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your portal.'}
-            </p>
-          </div>
-
-          {!isFirebaseConfigured ? (
-             <FirebaseNotConfigured />
-          ) : (
+    return (
+        <>
+            <div className="grid gap-2 text-center">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+                {isSignUp ? 'Create an Account' : 'Welcome Back'}
+                </h1>
+                <p className="text-slate-600">
+                {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your portal.'}
+                </p>
+            </div>
             <Card>
               <CardContent className="p-6 sm:p-8">
                   {isSignUp ? (
@@ -213,6 +172,76 @@ function LoginPageContent() {
                   )}
               </CardContent>
             </Card>
+            <div className="mt-4 text-center text-sm text-slate-600">
+                <p>
+                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
+                    <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
+                        {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </button>
+                </p>
+            </div>
+        </>
+    )
+}
+
+
+function LoginPageContent() {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleGuestLogin = () => {
+    localStorage.setItem("hawk-auth", "true");
+    localStorage.setItem("userFirstName", "Guest");
+    localStorage.setItem("isNewUser", "true"); 
+    router.push("/dashboard");
+    toast({
+        title: "Welcome, Guest!",
+        description: "You are browsing as a guest. Some features will be limited.",
+    })
+  };
+
+  return (
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      <div className="hidden bg-slate-100 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 xl:p-24">
+        <div className="self-start">
+            <Logo />
+        </div>
+        <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h2>
+            <p className="mt-4 text-lg text-slate-600">Securely manage your insurance and financial plans from one convenient place.</p>
+        </div>
+        <div className="w-full max-w-md text-slate-800">
+            <ul className="space-y-4">
+                <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
+                    <span>Compare plans from top carriers instantly.</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
+                    <span>Get personalized, AI-driven recommendations.</span>
+                </li>
+                 <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
+                    <span>Securely apply and manage your documents online.</span>
+                </li>
+            </ul>
+        </div>
+      </div>
+      <div className="flex items-center justify-center py-12 px-4">
+        <div className="mx-auto grid w-full max-w-md gap-6">
+          
+          {isFirebaseConfigured ? <AuthFlow /> : (
+            <>
+                <div className="grid gap-2 text-center">
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+                    Welcome
+                    </h1>
+                    <p className="text-slate-600">
+                    Enter your credentials to access your portal.
+                    </p>
+                </div>
+                <FirebaseNotConfigured />
+            </>
           )}
           
           <div className="relative">
@@ -229,14 +258,6 @@ function LoginPageContent() {
             Continue as Guest
           </Button>
 
-          <div className="mt-4 text-center text-sm text-slate-600">
-            <p>
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
-                <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
-                    {isSignUp ? 'Sign In' : 'Sign Up'}
-                </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>
