@@ -30,43 +30,41 @@ export default function PlansPage() {
   return (
     <div className="space-y-6">
        <div>
-        <h1 className="font-headline text-3xl font-bold">Browse Plans</h1>
+        <h1 className="text-3xl font-bold">Browse Plans</h1>
         <p className="text-muted-foreground">Compare and find the best plan for you.</p>
       </div>
 
-      <Card>
-        <CardContent className="p-4 flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search by plan or provider..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 md:flex gap-4">
-                <Select value={planType} onValueChange={setPlanType}>
-                    <SelectTrigger className="w-full md:w-[180px]">
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Plan Types</SelectItem>
-                        <SelectItem value="HMO">HMO</SelectItem>
-                        <SelectItem value="PPO">PPO</SelectItem>
-                        <SelectItem value="FFS">FFS</SelectItem>
-                        <SelectItem value="SNP">SNP</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="rating">Sort by Rating</SelectItem>
-                        <SelectItem value="premium_asc">Sort by Premium (Low to High)</SelectItem>
-                        <SelectItem value="premium_desc">Sort by Premium (High to Low)</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-        </CardContent>
-      </Card>
+      <div className="p-4 flex flex-col md:flex-row gap-4 bg-card border rounded-lg">
+        <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search by plan or provider..." className="pl-8 bg-background" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 md:flex gap-4">
+            <Select value={planType} onValueChange={setPlanType}>
+                <SelectTrigger className="w-full md:w-[180px] bg-background">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Plan Types</SelectItem>
+                    <SelectItem value="HMO">HMO</SelectItem>
+                    <SelectItem value="PPO">PPO</SelectItem>
+                    <SelectItem value="FFS">FFS</SelectItem>
+                    <SelectItem value="SNP">SNP</SelectItem>
+                </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[180px] bg-background">
+                    <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="rating">Sort by Rating</SelectItem>
+                    <SelectItem value="premium_asc">Sort by Premium (Low to High)</SelectItem>
+                    <SelectItem value="premium_desc">Sort by Premium (High to Low)</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+      </div>
       
       {filteredAndSortedPlans.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -74,7 +72,7 @@ export default function PlansPage() {
         </div>
       ) : (
         <div className="text-center py-16">
-            <h3 className="font-headline text-2xl font-semibold">No Plans Found</h3>
+            <h3 className="text-2xl font-semibold">No Plans Found</h3>
             <p className="text-muted-foreground mt-2">Try adjusting your search or filters.</p>
         </div>
       )}

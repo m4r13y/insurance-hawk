@@ -10,12 +10,12 @@ import Link from 'next/link';
 
 export function PlanCard({ plan, showSelectButton = true }: { plan: Plan, showSelectButton?: boolean }) {
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-full hover:border-primary/50 transition-colors">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <Badge variant="secondary" className="mb-2">{plan.type}</Badge>
-            <CardTitle className="font-headline text-xl">{plan.name}</CardTitle>
+            <CardTitle className="text-lg">{plan.name}</CardTitle>
             <CardDescription>{plan.provider}</CardDescription>
           </div>
           <div className="flex items-center gap-1 text-sm font-bold text-amber-500">

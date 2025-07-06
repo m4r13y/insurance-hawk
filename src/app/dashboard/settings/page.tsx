@@ -83,18 +83,15 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-3xl mx-auto">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Settings</h1>
+        <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
 
       <Card>
         <CardHeader>
-            <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-muted-foreground"/>
-                <CardTitle>Profile Information</CardTitle>
-            </div>
+          <CardTitle className="text-xl">Profile Information</CardTitle>
           <CardDescription>Update your personal details here.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -140,19 +137,14 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Separator />
-
       <Card>
         <CardHeader>
-           <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-muted-foreground"/>
-                <CardTitle>Notification Settings</CardTitle>
-            </div>
+           <CardTitle className="text-xl">Notification Settings</CardTitle>
           <CardDescription>Choose how you want to be notified.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
            <Form {...notificationsForm}>
-            <form onSubmit={notificationsForm.handleSubmit(onNotificationsSubmit)} className="space-y-6">
+            <form onSubmit={notificationsForm.handleSubmit(onNotificationsSubmit)} className="space-y-4">
                 <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
@@ -179,15 +171,10 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
-      <Separator />
-
       <Card>
         <CardHeader>
-            <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-muted-foreground"/>
-                <CardTitle>Security</CardTitle>
-            </div>
-          <CardDescription>Change your password.</CardDescription>
+            <CardTitle className="text-xl">Change Password</CardTitle>
+          <CardDescription>For your security, we recommend using a strong password that you don't use elsewhere.</CardDescription>
         </CardHeader>
         <CardContent>
            <Form {...securityForm}>

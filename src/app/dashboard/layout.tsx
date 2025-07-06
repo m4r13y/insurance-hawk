@@ -13,8 +13,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarInset,
   SidebarTrigger,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import {
@@ -44,11 +44,12 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="min-h-screen lg:flex">
-        <Sidebar>
+        <Sidebar collapsible="icon">
+          <SidebarRail/>
           <SidebarContent className="flex flex-col justify-between">
             <div>
               <SidebarHeader>
-                <Logo />
+                <Logo className="text-sidebar-primary" />
               </SidebarHeader>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -128,7 +129,7 @@ export default function DashboardLayout({
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {children}
           </main>
         </div>

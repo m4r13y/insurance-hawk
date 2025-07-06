@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowRight, CheckCircle2, FileUp, Sparkles, Shield, Eye, LifeBuoy, Home, PiggyBank } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 
 // Custom icon for Dental since it's not in lucide-react
@@ -43,16 +44,16 @@ export default function DashboardPage() {
     const missingPlans = planTypes.filter(p => !ownedPlans.includes(p.id));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Welcome Back, Sarah!</h1>
+        <h1 className="text-3xl font-bold">Welcome Back, Sarah!</h1>
         <p className="text-muted-foreground">Here's your Medicare portal overview.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Your Current Plan</CardTitle>
+            <CardTitle className="text-xl">Your Current Plan</CardTitle>
             <CardDescription>Blue Shield Secure PPO</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -80,25 +81,25 @@ export default function DashboardPage() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
+            <CardTitle className="text-xl">Next Steps</CardTitle>
             <CardDescription>Complete these items for your coverage.</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <FileUp className="h-6 w-6" />
+                <FileUp className="h-5 w-5" />
               </div>
               <div>
                 <p className="font-medium">Upload Documents</p>
                 <p className="text-sm text-muted-foreground">Proof of residency needed.</p>
               </div>
-              <Button size="sm" variant="ghost" className="ml-auto" asChild>
+              <Button size="icon" variant="ghost" className="ml-auto" asChild>
                 <Link href="/dashboard/documents"><ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 text-green-600">
-                <CheckCircle2 className="h-6 w-6" />
+                <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
                 <p className="font-medium">Application Submitted</p>
@@ -110,19 +111,19 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-         <Card className="flex flex-col">
+         <Card className="flex flex-col bg-primary/5">
             <CardHeader>
-              <CardTitle>Create Your Financial Plan</CardTitle>
+              <CardTitle className="text-xl">Create Your Financial Plan</CardTitle>
               <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <PiggyBank className="h-8 w-8" />
                 </div>
                 <p className="mb-4 text-muted-foreground">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
             </CardContent>
              <CardFooter>
-                 <Button className="w-full bg-accent hover:bg-accent/90" asChild>
+                 <Button className="w-full" asChild>
                     <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                  </Button>
              </CardFooter>
@@ -130,7 +131,7 @@ export default function DashboardPage() {
         
         <Card className="lg:col-span-2">
             <CardHeader>
-                <CardTitle>Your Retirement Readiness Score</CardTitle>
+                <CardTitle className="text-xl">Your Retirement Readiness Score</CardTitle>
                 <CardDescription>Based on your current coverage and financial planning.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -161,12 +162,12 @@ export default function DashboardPage() {
                 </div>
             </CardContent>
             {missingPlans.length > 0 && (
-                <CardFooter className="flex-col items-start border-t pt-6">
+                <CardFooter className="flex-col items-start border-t pt-6 bg-secondary/50">
                      <h4 className="font-semibold text-card-foreground">Areas for Improvement</h4>
                      <p className="text-sm text-muted-foreground mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
                      <div className="flex flex-wrap gap-2">
                         {missingPlans.map(plan => (
-                            <Button key={plan.id} variant="outline" size="sm" asChild>
+                            <Button key={plan.id} variant="secondary" size="sm" asChild>
                                 <Link href={plan.id === 'financial' ? '/dashboard/financial-plan' : '/dashboard/quotes'}>
                                     Add {plan.label}
                                 </Link>
