@@ -352,13 +352,12 @@ export default function QuotesPage() {
                                 <FormItem>
                                 <FormLabel>Effective Date</FormLabel>
                                 <FormControl><Input type="date" {...field} /></FormControl>
-                                <FormDescription>Optional</FormDescription>
                                 <FormMessage />
                                 </FormItem>
                             )}
                             />
                             <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-4 h-full justify-center">
+                                <FormItem className="flex flex-row items-center justify-center space-x-3 h-full">
                                     <FormLabel>Apply Discounts</FormLabel>
                                     <FormControl>
                                         <Switch
@@ -871,6 +870,8 @@ export default function QuotesPage() {
     </div>
   );
 }
+
+    
 
     
 
