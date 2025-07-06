@@ -449,7 +449,7 @@ function ApplicationSelectionGrid() {
             const Icon = app.icon
             return (
               <Link key={app.type} href={`/dashboard/apply?type=${app.type}`} passHref>
-                <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all aspect-square">
+                <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
                     <Icon className="h-8 w-8" />
                   </div>
