@@ -36,7 +36,7 @@ import {
   LogIn
 } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 
 
@@ -49,7 +49,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
   
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading, error] = useAuthState(auth || undefined);
   const isLoggedIn = !!user;
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function DashboardLayout({
   }, [user, loading, pathname, router]);
 
   const handleLogout = () => {
+    if (!auth) return;
     signOut(auth);
     router.push("/");
   };

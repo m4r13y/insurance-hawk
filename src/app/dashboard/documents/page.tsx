@@ -60,7 +60,7 @@ const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, op
 }));
 
 export default function DocumentsPage() {
-    const [user, loading] = useAuthState(auth);
+    const [user, loading] = useAuthState(auth || undefined);
     const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);

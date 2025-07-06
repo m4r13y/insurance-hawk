@@ -46,7 +46,7 @@ const defaultHawkImage = "https://placehold.co/80x80.png";
 export default function SettingsPage() {
     const { toast } = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [user, loading] = useAuthState(auth);
+    const [user, loading] = useAuthState(auth || undefined);
     const [imagePreview, setImagePreview] = useState<string | null>(null)
 
     const profileForm = useForm<z.infer<typeof profileFormSchema>>({

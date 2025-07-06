@@ -98,7 +98,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
 
 
 export default function DashboardPage() {
-    const [user, loading] = useAuthState(auth);
+    const [user, loading] = useAuthState(auth || undefined);
     const [isNewUser, setIsNewUser] = useState(false);
     const [policies, setPolicies] = useState<Policy[]>([]);
     
