@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
@@ -35,6 +35,9 @@ import {
   UserPlus,
   LogIn
 } from "lucide-react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 
 export default function DashboardLayout({
@@ -46,26 +49,25 @@ export default function DashboardLayout({
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
   
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, loading, error] = useAuthState(auth);
+  const isLoggedIn = !!user;
 
   useEffect(() => {
-    // TODO FOR PRODUCTION: Replace localStorage with a proper authentication check.
-    // This should involve verifying a session or token from a secure context provider, not localStorage.
-    const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
-    setIsLoggedIn(loggedInStatus);
-    setIsLoading(false);
-  }, [pathname]); // Rerun on path change to ensure state is up-to-date
+    if (!loading && !user && pathname !== '/dashboard/recommendations' && pathname !== '/dashboard/plans' && pathname !== '/dashboard/health-quotes' && pathname !== '/dashboard/quotes' && pathname !== '/dashboard/education') {
+        // Allow guest access to certain pages
+        if(pathname !== '/dashboard') {
+             router.push('/');
+        }
+    }
+  }, [user, loading, pathname, router]);
 
   const handleLogout = () => {
-    // TODO FOR PRODUCTION: This should call a backend endpoint to invalidate the user's session/token.
-    localStorage.removeItem("hawk-auth");
-    setIsLoggedIn(false);
+    signOut(auth);
     router.push("/");
   };
   
-  if (isLoading) {
-    return null; // or a loading spinner
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading dashboard...</div>;
   }
 
   return (

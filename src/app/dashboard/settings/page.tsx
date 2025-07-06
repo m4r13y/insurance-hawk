@@ -12,12 +12,16 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
+import { useAuthState } from "react-firebase-hooks/auth"
+import { auth, db } from "@/lib/firebase"
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
+import { updateProfile } from "firebase/auth"
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email(),
-  phone: z.string().min(10, "A valid phone number is required"),
+  phone: z.string().min(10, "A valid phone number is required").optional(),
 });
 
 const notificationsFormSchema = z.object({
@@ -40,15 +44,16 @@ const defaultHawkImage = "https://placehold.co/80x80.png";
 export default function SettingsPage() {
     const { toast } = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [user, loading] = useAuthState(auth);
     const [imagePreview, setImagePreview] = useState<string | null>(null)
 
     const profileForm = useForm<z.infer<typeof profileFormSchema>>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            firstName: "Sarah",
-            lastName: "Connor",
-            email: "s.connor@email.com",
-            phone: "123-456-7890",
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
         },
     })
 
@@ -70,34 +75,58 @@ export default function SettingsPage() {
     })
 
     useEffect(() => {
-        const storedFirstName = localStorage.getItem("userFirstName")
-        if (storedFirstName) {
-            profileForm.setValue("firstName", storedFirstName)
-        }
-        const storedLastName = localStorage.getItem("userLastName")
-        if (storedLastName) {
-            profileForm.setValue("lastName", storedLastName)
-        }
-        const storedImage = localStorage.getItem("userProfilePicture")
-        if (storedImage) {
-            setImagePreview(storedImage)
-        }
-    }, [profileForm])
+        const fetchUserData = async () => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    profileForm.reset({
+                        firstName: userData.firstName || '',
+                        lastName: userData.lastName || '',
+                        email: user.email || '',
+                        phone: userData.phone || ''
+                    });
 
-    const onProfileSubmit = (values: z.infer<typeof profileFormSchema>) => {
-        console.log(values)
-        localStorage.setItem("userFirstName", values.firstName)
-        localStorage.setItem("userLastName", values.lastName)
-        window.dispatchEvent(new Event("profileUpdate"))
-        toast({ title: "Profile Updated", description: "Your personal information has been saved." })
+                    // For notifications, you'd fetch this from user profile too
+                    // notificationsForm.reset(userData.notificationSettings);
+                }
+                
+                setImagePreview(user.photoURL || defaultHawkImage);
+            }
+        };
+        fetchUserData();
+    }, [user, profileForm])
+
+    const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+        if (!user) return;
+        try {
+            const userDocRef = doc(db, "users", user.uid);
+            await setDoc(userDocRef, { 
+                firstName: values.firstName, 
+                lastName: values.lastName,
+                phone: values.phone
+            }, { merge: true });
+
+            await updateProfile(user, {
+                displayName: `${values.firstName} ${values.lastName}`
+            });
+
+            toast({ title: "Profile Updated", description: "Your personal information has been saved." })
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Could not update profile.", variant: "destructive" });
+        }
     }
 
     const onNotificationsSubmit = (values: z.infer<typeof notificationsFormSchema>) => {
+        // TODO: Save notification settings to user document in Firestore
         console.log(values)
         toast({ title: "Notifications Updated", description: "Your notification preferences have been saved." })
     }
     
     const onSecuritySubmit = (values: z.infer<typeof securityFormSchema>) => {
+        // TODO: Implement Firebase password change logic
         console.log(values)
         toast({ title: "Password Changed", description: "Your password has been successfully updated." })
         securityForm.reset();
@@ -105,48 +134,35 @@ export default function SettingsPage() {
     
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file) return;
-
+        if (!file || !user) return;
+        
+        // TODO for production: Upload file to Firebase Storage instead of using a data URL.
+        // After upload, get the downloadURL and update the user's photoURL with updateProfile.
+        
         const reader = new FileReader();
-        reader.onload = (e) => {
-            if (!e.target?.result) return;
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 200;
-                const MAX_HEIGHT = 200;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-
-                setImagePreview(dataUrl);
-                localStorage.setItem("userProfilePicture", dataUrl);
-                window.dispatchEvent(new Event("profileUpdate"));
+        reader.onload = async (e) => {
+            const dataUrl = e.target?.result as string;
+            setImagePreview(dataUrl);
+            try {
+                await updateProfile(user, { photoURL: dataUrl });
+                 const userDocRef = doc(db, "users", user.uid);
+                await updateDoc(userDocRef, { photoURL: dataUrl });
                 toast({ title: "Profile Picture Updated" });
-            };
-            img.src = e.target.result as string;
+            } catch (error) {
+                 console.error(error);
+                toast({ title: "Error", description: "Could not update profile picture.", variant: "destructive" });
+            }
         };
         reader.readAsDataURL(file);
     };
 
+  if (loading) {
+      return <p>Loading settings...</p>
+  }
+  
+  if (!user) {
+      return <p>You must be logged in to view settings.</p>
+  }
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
@@ -160,7 +176,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
                 <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" {...(!imagePreview && { 'data-ai-hint': 'hawk' })}/>
-                <AvatarFallback>SC</AvatarFallback>
+                <AvatarFallback>{profileForm.getValues("firstName")?.[0]}{profileForm.getValues("lastName")?.[0]}</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
                 <CardTitle className="text-xl">Profile Information</CardTitle>
@@ -201,7 +217,7 @@ export default function SettingsPage() {
                     <FormField control={profileForm.control} name="email" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Email Address</FormLabel>
-                            <FormControl><Input type="email" {...field} /></FormControl>
+                            <FormControl><Input type="email" {...field} readOnly /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />

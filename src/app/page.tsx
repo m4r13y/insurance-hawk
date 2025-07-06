@@ -12,6 +12,16 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, UserPlus } from "lucide-react"
 
+import { auth, db } from "@/lib/firebase"
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  signOut
+} from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { useAuthState } from "react-firebase-hooks/auth"
+
 function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -23,6 +33,8 @@ function LoginPageContent() {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  
+  const [user, loading, error] = useAuthState(auth);
 
   useEffect(() => {
     if (searchParams.get('mode') === 'signup') {
@@ -30,62 +42,75 @@ function LoginPageContent() {
     }
   }, [searchParams])
 
-  const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (user) {
+        router.push('/dashboard');
+    }
+  }, [user, router]);
+
+
+  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // TODO FOR PRODUCTION: Replace this with a call to your authentication service (e.g., Firebase Auth, Supabase, etc.).
-    // The service should return a secure token upon successful login.
-    if (email === "s.connor@email.com" && password.length > 0) {
-      // This is a temporary simulation for the prototype.
-      localStorage.setItem("hawk-auth", "true")
-      localStorage.setItem("userFirstName", "Sarah")
-      localStorage.setItem("userLastName", "Connor")
-      router.push("/dashboard")
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Please use 's.connor@email.com' and any password.",
-      })
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        router.push("/dashboard");
+    } catch (error: any) {
+        console.error("Login Error:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: error.message || "Please check your credentials and try again.",
+        })
     }
   }
 
-  const handleSignUpSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignUpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // TODO FOR PRODUCTION: Replace this with a call to your authentication service to create a new user.
-    // The service should handle password hashing and secure user creation.
-    if (firstName && lastName && email && password) {
-        // This is a temporary simulation for the prototype.
-        localStorage.setItem("hawk-auth", "true")
-        localStorage.setItem("userFirstName", firstName)
-        localStorage.setItem("userLastName", lastName)
-        localStorage.setItem("isNewUser", "true") 
-        localStorage.removeItem("userProfilePicture")
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
         
+        await updateProfile(user, {
+            displayName: `${firstName} ${lastName}`
+        });
+
+        await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            email: user.email,
+            firstName: firstName,
+            lastName: lastName,
+            createdAt: new Date()
+        });
+
         router.push("/dashboard")
         toast({
             title: "Account Created!",
-            description: "Welcome to HawkNest. Let's get started.",
+            description: "Welcome to MedicareAlly. Let's get started.",
         })
-    } else {
+
+    } catch (error: any) {
+         console.error("Signup Error:", error);
          toast({
             variant: "destructive",
             title: "Sign Up Failed",
-            description: "Please fill out all fields.",
+            description: error.message || "Please check your details and try again.",
         })
     }
   }
 
-  const handleGuestContinue = () => {
-    // This function provides a guest experience. In a production app, you might
-    // use a temporary anonymous session instead of clearing storage.
-    localStorage.removeItem("hawk-auth");
-    localStorage.removeItem("userFirstName");
-    localStorage.removeItem("userLastName");
-    localStorage.removeItem("userProfilePicture");
-    localStorage.removeItem("isNewUser");
-    localStorage.removeItem("hawk-policies");
-    router.push("/dashboard");
+  const handleGuestContinue = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out guest:", error);
+    } finally {
+      router.push("/dashboard");
+    }
   };
+
+  if (loading || user) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">

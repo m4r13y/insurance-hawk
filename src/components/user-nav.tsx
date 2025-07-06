@@ -14,49 +14,35 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreditCard, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useAuthState } from "react-firebase-hooks/auth"
+import { auth } from "@/lib/firebase"
+import { signOut } from "firebase/auth"
+import { useRouter } from "next/navigation"
+
 
 const defaultHawkImage = "https://placehold.co/40x40.png";
 
 export function UserNav() {
-  const [userName, setUserName] = useState("Sarah Connor");
-  const [userEmail, setUserEmail] = useState("s.connor@email.com");
-  const [userImage, setUserImage] = useState(defaultHawkImage);
+  const [user] = useAuthState(auth);
+  const router = useRouter();
 
-  useEffect(() => {
-    const updateUserData = () => {
-        const storedFirstName = localStorage.getItem("userFirstName");
-        const storedLastName = localStorage.getItem("userLastName");
-        const storedImage = localStorage.getItem("userProfilePicture");
+  const handleLogout = () => {
+    signOut(auth);
+    router.push('/');
+  }
 
-        if (storedFirstName && storedLastName) {
-            setUserName(`${storedFirstName} ${storedLastName}`);
-        } else if (storedFirstName) {
-            setUserName(storedFirstName);
-        }
-
-        if (storedImage) {
-            setUserImage(storedImage);
-        } else {
-            setUserImage(defaultHawkImage);
-        }
-    };
-
-    updateUserData();
-    window.addEventListener('profileUpdate', updateUserData);
-    return () => {
-        window.removeEventListener('profileUpdate', updateUserData);
-    };
-  }, []);
-
-  const fallback = userName ? userName.split(" ").map(n => n[0]).join("") : "SC";
+  if (!user) {
+    return null;
+  }
+  
+  const fallback = user.displayName ? user.displayName.split(" ").map(n => n[0]).join("").substring(0,2) : user.email?.[0].toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={userImage} alt="User avatar" {...(userImage === defaultHawkImage && { 'data-ai-hint': 'hawk' })} />
+            <AvatarImage src={user.photoURL || defaultHawkImage} alt="User avatar" {...(!user.photoURL && { 'data-ai-hint': 'hawk' })} />
             <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
         </Button>
@@ -64,9 +50,9 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-slate-900">{userName}</p>
+            <p className="text-sm font-medium leading-none text-slate-900">{user.displayName || 'User'}</p>
             <p className="text-xs leading-none text-slate-500">
-              {userEmail}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -78,7 +64,7 @@ export function UserNav() {
                 <span>Profile</span>
              </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             <CreditCard className="mr-2 h-4 w-4" />
             <span>Billing</span>
           </DropdownMenuItem>
@@ -90,11 +76,9 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </Link>
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

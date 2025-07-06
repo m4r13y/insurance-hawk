@@ -10,6 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Combobox } from '@/components/ui/combobox';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -55,6 +58,7 @@ const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, op
 }));
 
 export default function DocumentsPage() {
+    const [user, loading] = useAuthState(auth);
     const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,47 +68,48 @@ export default function DocumentsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        // TODO FOR PRODUCTION: Replace localStorage with a call to your backend service to fetch user-specific data.
-        // This data should be fetched based on the authenticated user's session or token.
-        const updateData = () => {
-            const storedPolicies = localStorage.getItem("hawk-policies");
-            if (storedPolicies) {
-                setPolicies(JSON.parse(storedPolicies));
-            }
-            const storedFiles = localStorage.getItem("hawk-documents");
-            if (storedFiles) {
-                setFiles(JSON.parse(storedFiles));
-            }
-        }
-        updateData();
-        window.addEventListener("storage", updateData);
+        if (!user) return;
+
+        // Fetch Policies
+        const policiesQuery = query(collection(db, `users/${user.uid}/policies`));
+        const unsubscribePolicies = onSnapshot(policiesQuery, (snapshot) => {
+            const userPolicies: PolicyType[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PolicyType));
+            setPolicies(userPolicies);
+        });
+
+        // Fetch Documents
+        const docsQuery = query(collection(db, `users/${user.uid}/documents`), orderBy('uploadDate', 'desc'));
+        const unsubscribeDocs = onSnapshot(docsQuery, (snapshot) => {
+            const userDocs: DocumentType[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as DocumentType));
+            setFiles(userDocs);
+        });
 
         return () => {
-            window.removeEventListener("storage", updateData);
+            unsubscribePolicies();
+            unsubscribeDocs();
         };
-    }, [])
+    }, [user])
 
-    const updateFilesInStorage = (updatedFiles: DocumentType[]) => {
-        // TODO FOR PRODUCTION: Replace this with a call to your backend API to save the document metadata.
-        // The actual file should be uploaded to a secure cloud storage service (e.g., Firebase Storage, AWS S3).
-        setFiles(updatedFiles);
-        localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
-    };
+    const handleSavePolicy = async () => {
+        if (!user) {
+            toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add a policy.' });
+            return;
+        }
 
-    const handleSavePolicy = () => {
-        // TODO FOR PRODUCTION: Replace this with a call to your backend API to save the policy to the user's profile.
         if (selectedPolicyId) {
             const policyToAdd = allAvailablePolicies.find(p => p.id === selectedPolicyId);
             
             if (policyToAdd && !policies.some(p => p.id === policyToAdd.id)) {
-                const newPolicies = [...policies, policyToAdd];
-                setPolicies(newPolicies);
-                localStorage.setItem("hawk-policies", JSON.stringify(newPolicies));
-                window.dispatchEvent(new Event("storage"));
-                toast({
-                    title: 'Policy Added',
-                    description: `${policyToAdd.provider} - ${policyToAdd.planName} has been added.`,
-                });
+                try {
+                    await addDoc(collection(db, `users/${user.uid}/policies`), policyToAdd);
+                    toast({
+                        title: 'Policy Added',
+                        description: `${policyToAdd.provider} - ${policyToAdd.planName} has been added.`,
+                    });
+                } catch (error) {
+                    console.error("Error adding policy: ", error);
+                    toast({ variant: 'destructive', title: 'Error', description: 'Could not add policy.' });
+                }
             } else if (policies.some(p => p.id === policyToAdd?.id)) {
                  toast({
                     variant: 'destructive',
@@ -113,8 +118,8 @@ export default function DocumentsPage() {
                 });
             }
 
-            setSelectedPolicyId(undefined); // Reset selection
-            setIsDialogOpen(false); // Close dialog
+            setSelectedPolicyId(undefined);
+            setIsDialogOpen(false);
         } else {
              toast({
                 variant: 'destructive',
@@ -124,51 +129,58 @@ export default function DocumentsPage() {
         }
     };
 
-    const handleDeleteFile = (fileId: string) => {
-        // TODO FOR PRODUCTION: Replace this with a call to your backend API to delete the file from storage and the user's records.
-        const updatedFiles = files.filter(file => file.id !== fileId);
-        updateFilesInStorage(updatedFiles);
-        toast({
-            title: "Document Deleted",
-            description: "The file has been removed from your list."
-        });
+    const handleDeleteFile = async (fileId: string) => {
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, `users/${user.uid}/documents`, fileId));
+            toast({
+                title: "Document Deleted",
+                description: "The file has been removed."
+            });
+        } catch (error) {
+            console.error("Error deleting document: ", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete document.' });
+        }
     };
 
     const handleFiles = (uploadedFiles: FileList) => {
+        if (!user) {
+            toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to upload files.' });
+            return;
+        }
         if (uploadedFiles && uploadedFiles.length > 0) {
             const uploadedFile = uploadedFiles[0];
+            
+            // TODO for production: Upload `uploadedFile` to Firebase Storage instead of storing as a data URL in Firestore,
+            // which has size limitations. After uploading, get the downloadURL and save that to Firestore.
+            
             const reader = new FileReader();
-
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const dataUrl = e.target?.result as string;
                 if(dataUrl) {
-                    const newFile: DocumentType = {
-                        id: `doc-${Date.now()}`,
+                    const newFile = {
                         name: uploadedFile.name,
-                        uploadDate: new Date().toISOString().split('T')[0],
+                        uploadDate: new Date().toISOString(),
                         size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
                         dataUrl: dataUrl,
                     };
-                    updateFilesInStorage([newFile, ...files]);
-                    toast({
-                        title: 'File Uploaded',
-                        description: `${uploadedFile.name} has been added to your documents.`,
-                    });
+                    try {
+                        await addDoc(collection(db, `users/${user.uid}/documents`), newFile);
+                        toast({
+                            title: 'File Uploaded',
+                            description: `${uploadedFile.name} has been added.`,
+                        });
+                    } catch (error) {
+                        console.error("Error uploading file metadata: ", error);
+                        toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not save file information.' });
+                    }
                 } else {
-                     toast({
-                        variant: 'destructive',
-                        title: 'Upload Failed',
-                        description: 'Could not read the file. Please try again.',
-                    });
+                     toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not read the file.' });
                 }
             };
             
             reader.onerror = () => {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Upload Failed',
-                    description: 'An error occurred while reading the file.',
-                });
+                 toast({ variant: 'destructive', title: 'Upload Failed', description: 'An error occurred while reading the file.' });
             }
             
             reader.readAsDataURL(uploadedFile);
@@ -182,33 +194,31 @@ export default function DocumentsPage() {
         if(e.target) e.target.value = '';
     };
 
-    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    };
-
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
+    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
-
         if (e.dataTransfer.files) {
             handleFiles(e.dataTransfer.files);
             e.dataTransfer.clearData();
         }
     };
+
+    if (loading) {
+        return <p>Loading documents...</p>;
+    }
+    
+    if (!user) {
+        return (
+            <div className="text-center">
+                <p>Please log in to manage your documents.</p>
+                <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
+            </div>
+        );
+    }
 
   return (
     <div className="space-y-8">
@@ -315,7 +325,7 @@ export default function DocumentsPage() {
                                         <File className="h-5 w-5 text-muted-foreground" />
                                         {doc.name}
                                     </TableCell>
-                                    <TableCell>{doc.uploadDate}</TableCell>
+                                    <TableCell>{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
                                     <TableCell>{doc.size}</TableCell>
                                     <TableCell className="text-right">
                                         <Button asChild variant="ghost" size="icon">
