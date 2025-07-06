@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Logo } from "@/components/logo";
@@ -27,6 +28,7 @@ import {
   Sparkles,
   BookOpen,
   FileDigit,
+  PiggyBank,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -72,6 +74,11 @@ export default function DashboardLayout({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/apply")} tooltip="Submit Application">
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/financial-plan")} tooltip="Financial Plan">
+                    <Link href="/dashboard/financial-plan"><PiggyBank /><span>Financial Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
