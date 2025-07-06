@@ -38,10 +38,10 @@ function AuthFlow() {
     return (
         <>
             <div className="grid gap-2 text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
                 {isSignUp ? 'Create an Account' : 'Welcome Back'}
                 </h1>
-                <p className="text-slate-600">
+                <p className="text-muted-foreground">
                 {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your portal.'}
                 </p>
             </div>
@@ -81,7 +81,7 @@ function AuthFlow() {
                           <div className="space-y-2">
                               <div className="flex items-center">
                                   <Label htmlFor="password">Password</Label>
-                                  <Link href="#" className="ml-auto inline-block text-sm font-medium text-sky-600 hover:underline" prefetch={false}>
+                                  <Link href="#" className="ml-auto inline-block text-sm font-medium text-primary hover:underline" prefetch={false}>
                                   Forgot password?
                                   </Link>
                               </div>
@@ -94,10 +94,10 @@ function AuthFlow() {
                   )}
               </CardContent>
             </Card>
-            <div className="mt-4 text-center text-sm text-slate-600">
+            <div className="mt-4 text-center text-sm text-muted-foreground">
                 <p>
                     {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
-                    <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
+                    <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-primary hover:underline">
                         {isSignUp ? 'Sign In' : 'Sign Up'}
                     </button>
                 </p>
@@ -124,15 +124,15 @@ function LoginPageContent() {
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-slate-100 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 xl:p-24">
+      <div className="hidden bg-muted lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 xl:p-24">
         <div className="self-start">
             <Logo />
         </div>
         <div className="text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h2>
-            <p className="mt-4 text-lg text-slate-600">Securely manage your insurance and financial plans from one convenient place.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Your Policies, All in One Nest.</h2>
+            <p className="mt-4 text-lg text-muted-foreground">Securely manage your insurance and financial plans from one convenient place.</p>
         </div>
-        <div className="w-full max-w-md text-slate-800">
+        <div className="w-full max-w-md">
             <ul className="space-y-4">
                 <li className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-teal-500" />
@@ -159,7 +159,7 @@ function LoginPageContent() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-500">
+              <span className="bg-background px-2 text-muted-foreground">
                 Or
               </span>
             </div>
