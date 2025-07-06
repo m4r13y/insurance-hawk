@@ -1,6 +1,18 @@
 import type { Metadata } from "next";
+import { Inter, Merriweather_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const merriweather_sans = Merriweather_Sans({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-merriweather-sans",
+});
 
 export const metadata: Metadata = {
   title: "MedicareAlly",
@@ -14,12 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
+      <body
+        className={`${inter.variable} ${merriweather_sans.variable} font-body antialiased`}
+      >
         {children}
         <Toaster />
       </body>
