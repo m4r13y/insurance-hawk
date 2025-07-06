@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 // This schema should match the form in financial-plan/page.tsx
-export const GenerateRetirementPlanInputSchema = z.object({
+const GenerateRetirementPlanInputSchema = z.object({
   greatestConcern: z.string(),
   taxFilingStatus: z.enum(["single", "married_jointly", "married_separately", "hoh", "widow"]),
   hasSpouse: z.enum(["yes", "no"]),
@@ -31,7 +31,7 @@ export const GenerateRetirementPlanInputSchema = z.object({
 });
 export type GenerateRetirementPlanInput = z.infer<typeof GenerateRetirementPlanInputSchema>;
 
-export const GenerateRetirementPlanOutputSchema = z.object({
+const GenerateRetirementPlanOutputSchema = z.object({
   plan: z.string().describe(
     "A comprehensive, personalized retirement plan document written in markdown. It should address the user's greatest concerns and provide actionable recommendations across Insurance, Investments, Tax Planning, and Estate Planning. Start with a positive summary. Use ## for main headings and * for bullet points."
   ),
