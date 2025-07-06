@@ -38,7 +38,7 @@ const securityFormSchema = z.object({
 });
 
 
-const defaultHawkImage = "https://placehold.co/80x80.png";
+const defaultHawkImage = "/hawk-profile.jpg";
 
 export default function SettingsPage() {
     const { toast } = useToast()
@@ -132,7 +132,7 @@ export default function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
-                <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" {...(!imagePreview && { 'data-ai-hint': 'hawk' })}/>
+                <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" />
                 <AvatarFallback>{firstName?.[0]}</AvatarFallback>
             </Avatar>
             <div className="space-y-2">

@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 
-const defaultHawkImage = "https://placehold.co/40x40.png";
+const defaultHawkImage = "/hawk-profile.jpg";
 
 export function UserNav() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={defaultHawkImage} alt="User avatar" data-ai-hint="hawk" />
+            <AvatarImage src={defaultHawkImage} alt="User avatar" />
             <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
         </Button>
