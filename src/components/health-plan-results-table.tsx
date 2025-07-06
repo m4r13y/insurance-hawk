@@ -9,7 +9,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
-import { Combobox, ComboboxOption } from './ui/combobox';
+import { Combobox, type ComboboxOption } from './ui/combobox';
 import { X, Loader2, RefreshCw, Info } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
@@ -187,10 +187,10 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                     <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead className="w-[40%]">Plan Details</TableHead>
-                        <TableHead>Monthly Premium</TableHead>
-                        <TableHead>Deductible</TableHead>
-                        <TableHead>Max Out-of-Pocket</TableHead>
+                        <TableHead className="min-w-[24rem]">Plan Details</TableHead>
+                        <TableHead className="min-w-[12rem]">Monthly Premium</TableHead>
+                        <TableHead className="min-w-[10rem]">Deductible</TableHead>
+                        <TableHead className="min-w-[12rem]">Max Out-of-Pocket</TableHead>
                         <TableHead className="text-right"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -213,7 +213,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <div className="flex items-center gap-1 cursor-help">
-                                          <p className="text-xs text-green-600">after ${plan.taxCredit.toFixed(2)} est. tax credit</p>
+                                          <p className="text-xs text-green-600 whitespace-nowrap">after ${plan.taxCredit.toFixed(2)} est. tax credit</p>
                                           <Info className="h-3 w-3 text-muted-foreground" />
                                         </div>
                                       </TooltipTrigger>
