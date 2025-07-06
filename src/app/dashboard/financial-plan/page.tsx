@@ -167,28 +167,43 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
 
         html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'px', 'a4');
+            const pdf = new jsPDF('p', 'pt', 'a4'); // Using points as units
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
             
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
             
-            const ratio = canvasWidth / pdfWidth;
-            const imgHeight = canvasHeight / ratio;
+            const margin = 40; // 40 points margin on each side
             
-            let heightLeft = imgHeight;
+            // The width of the content in the PDF, accounting for margins
+            const contentWidth = pdfWidth - margin * 2;
+            
+            // The aspect ratio of the captured image
+            const ratio = canvasWidth / canvasHeight;
+            
+            // The calculated height of the image in the PDF to maintain aspect ratio
+            const contentHeight = contentWidth / ratio;
+            
+            // The height of the printable area on one page
+            const pageHeight = pdfHeight - margin * 2;
+
+            let heightLeft = contentHeight;
             let position = 0;
 
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
+            // Add the first page. We add the entire image, and jspdf will clip it.
+            pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, contentHeight);
+            heightLeft -= pageHeight;
 
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
+            // Add new pages if the content is taller than one page
+            while (heightLeft > 0) {
+                position -= pageHeight;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-                heightLeft -= pdfHeight;
+                // Add the same image, but offset it up to show the next part
+                pdf.addImage(imgData, 'PNG', margin, position + margin, contentWidth, contentHeight);
+                heightLeft -= pageHeight;
             }
+            
             pdf.save(`${name.replace(' ', '_')}_RetirementPlan.pdf`);
         });
     };
@@ -405,7 +420,7 @@ export default function RetirementPlanPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="space-y-4">
+       <div className="space-y-4">
         <div className="space-y-2">
             <Progress value={(step / (steps.length-1)) * 100} />
             <div className="flex justify-between text-sm text-muted-foreground">
