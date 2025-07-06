@@ -6,9 +6,9 @@
   :root {
     --background: 234 43% 94%; /* #E8EAF6 */
     --foreground: 240 5.9% 10%;
-    --card: 0 0% 100%;
+    --card: 0 14% 97%; /* #faf8f8 */
     --card-foreground: 240 5.9% 10%;
-    --popover: 0 0% 100%;
+    --popover: 0 14% 97%; /* #faf8f8 */
     --popover-foreground: 240 5.9% 10%;
     --primary: 231 48% 48%; /* #3F51B5 */
     --primary-foreground: 210 40% 98%;
@@ -21,9 +21,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 234 43% 85%;
-    --input: 0 0% 100%;
+    --input: 0 14% 97%; /* #faf8f8 */
     --ring: 231 48% 48%;
-    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -32,7 +31,7 @@
 
     --sidebar-background: 240 6% 10%;
     --sidebar-foreground: 240 5% 65%;
-    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary: 0 14% 97%; /* #faf8f8 */
     --sidebar-primary-foreground: 240 6% 10%;
     --sidebar-accent: 240 4% 16%;
     --sidebar-accent-foreground: 0 0% 100%;
@@ -63,7 +62,7 @@
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 5% 65%;
-    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary: 0 14% 97%; /* #faf8f8 */
     --sidebar-primary-foreground: 240 6% 10%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 0 0% 100%;
