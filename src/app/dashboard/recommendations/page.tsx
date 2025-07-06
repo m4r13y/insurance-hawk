@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, ArrowRight, Info, Heart, Eye, Ear, Pill } from "lucide-react";
 import { getInitialRecommendationInstructions, getPlanRecommendation } from "./actions";
 import type { Plan } from "@/types";
+import Link from "next/link";
 
 const formSchema = z.object({
   age: z.coerce.number().min(64, "Must be at least 64"),
