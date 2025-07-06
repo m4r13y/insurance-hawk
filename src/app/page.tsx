@@ -1,13 +1,35 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    // Simple mock authentication
+    if (email === "s.connor@email.com" && password.length > 0) {
+      router.push("/dashboard")
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Please use 's.connor@email.com' and any password.",
+      })
+    }
+  }
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
@@ -19,10 +41,17 @@ export default function LoginPage() {
           <CardDescription>Enter your credentials to access your portal.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" required />
+              <Input
+                id="email"
+                type="email"
+                placeholder="s.connor@email.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <div className="flex items-center">
@@ -31,10 +60,16 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90" asChild>
-              <Link href="/dashboard">Sign In</Link>
+            <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+              Sign In
             </Button>
           </form>
         </CardContent>
