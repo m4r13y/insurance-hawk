@@ -34,8 +34,6 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Sparkles, ArrowRight, Download, Phone, Mail, Terminal, PartyPopper, AlertTriangle, Percent, FileText, BookUser, Rocket, Shield, TrendingUp, Landmark, Users, ClipboardList, Target, FileCheck } from "lucide-react";
 import { getRetirementPlan } from "./actions";
-import { useToast } from "@/hooks/use-toast";
-import type { Document as DocumentType } from "@/types";
 
 
 // --- Retirement Plan Component --- //
@@ -176,75 +174,6 @@ const sectionIconMap: { [key: string]: React.ElementType } = {
 
 function PlanResults({ plan, name }: { plan: string, name: string }) {
     const resultsRef = useRef<HTMLDivElement>(null);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        if (plan && resultsRef.current) {
-            const timer = setTimeout(() => {
-                const input = resultsRef.current;
-                if (!input) return;
-
-                html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF('p', 'pt', 'a4');
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const canvasWidth = canvas.width;
-                    const canvasHeight = canvas.height;
-                    const margin = 40;
-                    const contentWidth = pdfWidth - margin * 2;
-                    const ratio = contentWidth / canvasWidth;
-                    const contentHeight = canvasHeight * ratio;
-                    const pageHeight = pdfHeight - margin * 2;
-                    let heightLeft = contentHeight;
-                    let position = margin;
-
-                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft > 0) {
-                        position = margin - heightLeft;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
-                        heightLeft -= pageHeight;
-                    }
-                    
-                    const pdfDataUri = pdf.output('datauristring');
-                    const pdfName = `${name.replace(/\s+/g, '_')}_RetirementPlan.pdf`;
-
-                    const storedFiles = localStorage.getItem("hawk-documents");
-                    const files: DocumentType[] = storedFiles ? JSON.parse(storedFiles) : [];
-
-                    const getPdfSize = (dataUrl: string) => {
-                        const base64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
-                        const padding = (base64.endsWith("==") ? 2 : (base64.endsWith("=") ? 1 : 0));
-                        const sizeInBytes = (base64.length * 0.75) - padding;
-                        return `${(sizeInBytes / (1024 * 1024)).toFixed(2)}MB`;
-                    }
-
-                    const newFile: DocumentType = {
-                        id: `doc-${Date.now()}`,
-                        name: pdfName,
-                        uploadDate: new Date().toISOString().split('T')[0],
-                        size: getPdfSize(pdfDataUri),
-                        dataUrl: pdfDataUri
-                    };
-
-                    const updatedFiles = [newFile, ...files];
-                    localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
-                    window.dispatchEvent(new Event("storage"));
-                    
-                    toast({
-                        title: "Plan Saved",
-                        description: "Your financial plan PDF has been saved to your Documents.",
-                    });
-                });
-            }, 500);
-
-            return () => clearTimeout(timer);
-        }
-    }, [plan, name, toast]);
-
 
     const handleDownload = () => {
         const input = resultsRef.current;
@@ -494,7 +423,7 @@ function RetirementPlanForm() {
   
   const CurrentStepIcon = steps[step - 1]?.icon;
   const totalFormSteps = steps.length - 1;
-  const progressPercentage = step > totalFormSteps ? 100 : Math.round((step / totalFormSteps) * 100);
+  const progressPercentage = step > totalFormSteps ? 100 : Math.round(((step-1) / totalFormSteps) * 100);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -798,7 +727,7 @@ function RetirementPlanForm() {
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 ) : (
-                    <Button type="button" onClick={form.handleSubmit(onSubmit)}>
+                    <Button type="button" onClick={form.handleSubmit(onSubmit)} className="bg-primary hover:bg-primary/90">
                         Generate My Plan
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
