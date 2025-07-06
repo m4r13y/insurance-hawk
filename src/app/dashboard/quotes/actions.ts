@@ -1,13 +1,13 @@
 
 "use server";
 
-import type { Quote, QuoteRequestValues } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues } from "@/types";
 
-// The raw response from the csgapi
+// The raw response from the Medigap csgapi
 type CsgQuote = {
     key: string;
     rate: {
-        month: number; // in pennies
+        month: number;
     };
     company_base: {
         name: string;
@@ -17,7 +17,7 @@ type CsgQuote = {
     discounts: any[];
 };
 
-export async function getQuotes(values: QuoteRequestValues) {
+export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
     const params = new URLSearchParams({
         zip5: values.zipCode,
@@ -54,7 +54,6 @@ export async function getQuotes(values: QuoteRequestValues) {
     
     const data: unknown = await response.json();
 
-    // The API may return an object with an error message.
     if (data && typeof data === 'object' && !Array.isArray(data) && 'message' in data) {
          throw new Error((data as {message: string}).message);
     }
@@ -88,3 +87,74 @@ export async function getQuotes(values: QuoteRequestValues) {
   }
 }
 
+// The raw response from the Dental csgapi
+type CsgDentalQuote = {
+    key: string;
+    plan_name: string;
+    company_base: {
+        name: string;
+        ambest_rating: string;
+    };
+    base_plans: {
+        benefits: {
+            rate: number;
+        }[];
+    }[];
+};
+
+export async function getDentalQuotes(values: DentalQuoteRequestValues) {
+    try {
+        const params = new URLSearchParams({
+            zip5: values.zipCode,
+            age: values.age.toString(),
+            gender: values.gender === 'female' ? 'F' : 'M',
+            tobacco: values.tobacco === 'true' ? '1' : '0',
+            covered_members: 'all',
+            limit: '10',
+        });
+
+        const url = `https://private-anon-b21e065ee3-dentalvisionandhearingapi.apiary-mock.com/v1/dental/quotes.json?${params.toString()}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'x-api-token': '0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Dental API Error Response:", errorText);
+            throw new Error(`Dental API request failed: ${response.statusText}`);
+        }
+
+        const data: unknown = await response.json();
+
+        if (data && typeof data === 'object' && !Array.isArray(data) && 'message' in data) {
+            throw new Error((data as { message: string }).message);
+        }
+
+        if (!Array.isArray(data)) {
+            console.error("Dental API Error: Unexpected response format", data);
+            throw new Error('Unexpected response format from Dental API. Expected an array of quotes.');
+        }
+
+        const csgQuotes = data as CsgDentalQuote[];
+
+        const quotes: DentalQuote[] = csgQuotes.map(q => ({
+            id: q.key,
+            plan_name: q.plan_name,
+            carrier: {
+                name: q.company_base.name,
+                logo_url: null,
+            },
+            monthly_premium: q.base_plans[0]?.benefits[0]?.rate ?? 0,
+            am_best_rating: q.company_base.ambest_rating,
+        }));
+
+        return { quotes };
+
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "Failed to fetch dental quotes. Please try again later." };
+    }
+}

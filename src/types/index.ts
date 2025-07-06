@@ -1,4 +1,5 @@
 
+
 export type Plan = {
   id: string;
   name: string;
@@ -44,5 +45,23 @@ export type Quote = {
     plan_name: string;
     plan_type: string;
     discounts: any[];
+    am_best_rating: string;
+};
+
+export type DentalQuoteRequestValues = {
+  zipCode: string;
+  age: number;
+  gender: 'female' | 'male';
+  tobacco: 'false' | 'true';
+};
+
+export type DentalQuote = {
+    id: string;
+    monthly_premium: number;
+    carrier: {
+        name: string;
+        logo_url: string | null;
+    };
+    plan_name: string;
     am_best_rating: string;
 };
