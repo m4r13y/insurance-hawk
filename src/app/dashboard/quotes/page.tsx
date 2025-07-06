@@ -46,12 +46,10 @@ import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from ".
 import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CsgDiscount } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { HealthInsuranceQuoter } from "@/components/health-insurance-quoter";
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const medigapFormSchema = z.object({
   zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
@@ -282,112 +280,102 @@ export default function QuotesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Get Quotes</h1>
+        <h1 className="font-headline text-3xl font-bold">Get Supplemental Quotes</h1>
         <p className="text-muted-foreground">
-          Select a plan type below to get instant quotes or request information.
+          Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
         </p>
       </div>
 
-       <Tabs defaultValue="health-insurance" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-                <TabsTrigger value="health-insurance">Health Insurance</TabsTrigger>
-                <TabsTrigger value="medigap">Medigap</TabsTrigger>
-                <TabsTrigger value="dental">Dental</TabsTrigger>
-                <TabsTrigger value="life-insurance">Life Insurance</TabsTrigger>
-                <TabsTrigger value="hospital-indemnity">Hospital Indemnity</TabsTrigger>
-            </TabsList>
-            <TabsContent value="health-insurance" className="mt-6">
-               <HealthInsuranceQuoter />
-            </TabsContent>
-            <TabsContent value="medigap" className="mt-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Medicare Supplement Quotes</CardTitle>
-                        <CardDescription>All fields are required to get your instant Medigap quotes.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <Form {...medigapForm}>
-                        <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={medigapForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="plan" render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Plan Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="A">Plan A</SelectItem>
-                                    <SelectItem value="F">Plan F</SelectItem>
-                                    <SelectItem value="G">Plan G</SelectItem>
-                                    <SelectItem value="N">Plan N</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="effectiveDate" render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Effective Date</FormLabel>
-                                <FormControl><Input type="date" {...field} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg p-4">
-                                    <FormLabel>Apply Discounts</FormLabel>
-                                    <FormControl>
-                                        <Switch
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
+       <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-4">
+        <AccordionItem value="medigap" className="border-b-0">
+          <Card>
+            <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+              Medicare Supplement (Medigap)
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+               <CardDescription className="mb-6">All fields are required to get your instant Medigap quotes.</CardDescription>
+                <Form {...medigapForm}>
+                    <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={medigapForm.control} name="gender" render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Gender</FormLabel>
+                            <FormControl>
+                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
                         />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isMedigapPending} size="lg" className="bg-accent hover:bg-accent/90">
-                            {isMedigapPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
-                            ) : (
-                                <>Get Instant Quotes</>
-                            )}
-                            </Button>
-                        </div>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
-      
+                        <FormField control={medigapForm.control} name="tobacco" render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Uses Tobacco?</FormLabel>
+                            <FormControl>
+                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField control={medigapForm.control} name="plan" render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Plan Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                <SelectItem value="A">Plan A</SelectItem>
+                                <SelectItem value="F">Plan F</SelectItem>
+                                <SelectItem value="G">Plan G</SelectItem>
+                                <SelectItem value="N">Plan N</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField control={medigapForm.control} name="effectiveDate" render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Effective Date</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel>Apply Discounts</FormLabel>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isMedigapPending} size="lg" className="bg-accent hover:bg-accent/90">
+                        {isMedigapPending ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
+                        ) : (
+                            <>Get Instant Quotes</>
+                        )}
+                        </Button>
+                    </div>
+                    </form>
+                </Form>
+
                 {isMedigapPending && (
                     <Card className="mt-6 flex flex-col items-center justify-center p-12">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
@@ -395,7 +383,6 @@ export default function QuotesPage() {
                         <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
                     </Card>
                 )}
-
                 {medigapError && (
                     <Alert variant="destructive" className="mt-6">
                     <Terminal className="h-4 w-4" />
@@ -405,87 +392,86 @@ export default function QuotesPage() {
                 )}
                 
                 {medigapQuotes && (
-                    <Card className="mt-6">
-                        <CardHeader>
-                            <CardTitle>Your Medigap Quotes</CardTitle>
-                            <CardDescription>
-                                Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {medigapQuotes.length > 0 ? (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-[50px]"></TableHead>
-                                            <TableHead>Carrier</TableHead>
-                                            <TableHead>Plan</TableHead>
-                                            <TableHead>Rating</TableHead>
-                                            <TableHead className="text-right">Monthly Premium</TableHead>
-                                            <TableHead className="w-[120px] text-right"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {medigapQuotes.map((quote, index) => {
-                                            const key = `${quote.id}-${index}`;
-                                            const isOpen = openRows.includes(key);
-                                            return (
-                                                <React.Fragment key={key}>
-                                                    <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
-                                                        <TableCell>
-                                                            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                                                        </TableCell>
-                                                        <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                        <TableCell>{quote.plan_name}</TableCell>
-                                                        <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
-                                                        <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Button asChild onClick={(e) => e.stopPropagation()}>
-                                                                <Link href="/dashboard/apply">Select Plan</Link>
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                    {isOpen && (
-                                                        <TableRow>
-                                                            <TableCell colSpan={6} className="p-0">
-                                                                <div className="p-4 bg-muted/50 text-sm">
-                                                                    <h4 className="font-semibold mb-2">Plan Details</h4>
-                                                                    <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
-                                                                    {quote.discounts?.length > 0 && (
-                                                                        <div className="mt-2">
-                                                                            <p className="font-semibold text-muted-foreground">Available Discounts:</p>
-                                                                            <ul className="list-disc pl-5">
-                                                                                {quote.discounts.map((d, i) => <li key={i} className="capitalize">{d.name}: {d.value * 100}%</li>)}
-                                                                            </ul>
-                                                                        </div>
-                                                                    )}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-2">Your Medigap Quotes</h3>
+                    <CardDescription className="mb-4">
+                        Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
+                    </CardDescription>
+                    {medigapQuotes.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead>Carrier</TableHead>
+                                    <TableHead>Plan</TableHead>
+                                    <TableHead>Rating</TableHead>
+                                    <TableHead className="text-right">Monthly Premium</TableHead>
+                                    <TableHead className="w-[120px] text-right"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {medigapQuotes.map((quote, index) => {
+                                    const key = `${quote.id}-${index}`;
+                                    const isOpen = openRows.includes(key);
+                                    return (
+                                        <React.Fragment key={key}>
+                                            <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
+                                                <TableCell>
+                                                    <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                </TableCell>
+                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                <TableCell>{quote.plan_name}</TableCell>
+                                                <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
+                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button asChild onClick={(e) => e.stopPropagation()}>
+                                                        <Link href="/dashboard/apply">Select Plan</Link>
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                            {isOpen && (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="p-0">
+                                                        <div className="p-4 bg-muted/50 text-sm">
+                                                            <h4 className="font-semibold mb-2">Plan Details</h4>
+                                                            <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
+                                                            {quote.discounts?.length > 0 && (
+                                                                <div className="mt-2">
+                                                                    <p className="font-semibold text-muted-foreground">Available Discounts:</p>
+                                                                    <ul className="list-disc pl-5">
+                                                                        {quote.discounts.map((d, i) => <li key={i} className="capitalize">{d.name}: {d.value * 100}%</li>)}
+                                                                    </ul>
                                                                 </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                </React.Fragment>
-                                            )
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
-                                    <p>No quotes found for the selected criteria.</p>
-                                    <p className="text-sm">Please try different options.</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </React.Fragment>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <FileDigit className="h-10 w-10 mx-auto mb-4"/>
+                            <p>No quotes found for the selected criteria.</p>
+                            <p className="text-sm">Please try different options.</p>
+                        </div>
+                    )}
+                  </div>
                 )}
-            </TabsContent>
-            <TabsContent value="dental" className="mt-6">
-               <Card>
-                    <CardHeader>
-                        <CardTitle>Dental Plan Quotes</CardTitle>
-                        <CardDescription>Fill out the fields below to get instant dental quotes.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
+            
+        <AccordionItem value="dental" className="border-b-0">
+            <Card>
+                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                    Dental Insurance
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                    <CardDescription className="mb-6">Fill out the fields below to get instant dental quotes.</CardDescription>
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -529,34 +515,28 @@ export default function QuotesPage() {
                         </div>
                         </form>
                     </Form>
-                    </CardContent>
-                </Card>
+                    
+                    {isDentalPending && (
+                        <Card className="mt-6 flex flex-col items-center justify-center p-12">
+                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                            <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
+                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
+                        </Card>
+                    )}
+                    {dentalError && (
+                        <Alert variant="destructive" className="mt-6">
+                        <Terminal className="h-4 w-4" />
+                        <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
+                        <AlertDescription>{dentalError}</AlertDescription>
+                        </Alert>
+                    )}
 
-                 {isDentalPending && (
-                    <Card className="mt-6 flex flex-col items-center justify-center p-12">
-                        <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                        <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
-                        <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                    </Card>
-                )}
-
-                {dentalError && (
-                    <Alert variant="destructive" className="mt-6">
-                    <Terminal className="h-4 w-4" />
-                    <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
-                    <AlertDescription>{dentalError}</AlertDescription>
-                    </Alert>
-                )}
-
-                {dentalQuotes && (
-                    <Card className="mt-6">
-                        <CardHeader>
-                            <CardTitle>Your Dental Quotes</CardTitle>
-                            <CardDescription>
+                    {dentalQuotes && (
+                        <div className="mt-8">
+                            <h3 className="text-lg font-semibold mb-2">Your Dental Quotes</h3>
+                            <CardDescription className="mb-4">
                                 Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
                             </CardDescription>
-                        </CardHeader>
-                        <CardContent>
                             {dentalQuotes.length > 0 ? (
                                 <Table>
                                     <TableHeader>
@@ -620,86 +600,65 @@ export default function QuotesPage() {
                                     <p className="text-sm">Please try different options.</p>
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
-                )}
-            </TabsContent>
-            <TabsContent value="life-insurance" className="mt-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Request a Life Insurance Quote</CardTitle>
-                        <CardDescription>
-                            An agent will prepare a personalized quote for you.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
-                            <AlertDescription>
-                                We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
-                            </AlertDescription>
-                        </Alert>
-                         <div className="mt-6 flex justify-end">
-                            <Button size="lg">Request Quote from Agent</Button>
                         </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="hospital-indemnity" className="mt-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Hospital Indemnity Quotes</CardTitle>
-                        <CardDescription>
-                            Fill out the fields below to get instant quotes. Customize your plan with optional riders.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                       <Form {...hospitalIndemnityForm}>
-                        <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
-                            {isHospitalIndemnityPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
-                            ) : (
-                                <>Get Hospital Indemnity Quotes</>
-                            )}
-                            </Button>
-                        </div>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
+                    )}
+                </AccordionContent>
+            </Card>
+        </AccordionItem>
+            
+        <AccordionItem value="hospital-indemnity" className="border-b-0">
+             <Card>
+                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                    Hospital Indemnity
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                    <CardDescription className="mb-6">
+                        Fill out the fields below to get instant quotes. Customize your plan with optional riders.
+                    </CardDescription>
+                   <Form {...hospitalIndemnityForm}>
+                    <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Gender</FormLabel>
+                            <FormControl>
+                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Uses Tobacco?</FormLabel>
+                            <FormControl>
+                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
+                        {isHospitalIndemnityPending ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
+                        ) : (
+                            <>Get Hospital Indemnity Quotes</>
+                        )}
+                        </Button>
+                    </div>
+                    </form>
+                </Form>
+
                 {isHospitalIndemnityPending && (
                     <Card className="mt-6 flex flex-col items-center justify-center p-12">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
@@ -714,8 +673,9 @@ export default function QuotesPage() {
                     <AlertDescription>{hospitalIndemnityError}</AlertDescription>
                     </Alert>
                 )}
+
                 {hospitalIndemnityQuotes && (
-                    <div className="mt-6">
+                    <div className="mt-8">
                         {featuredQuote ? (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Card className="lg:col-span-2">
@@ -870,8 +830,34 @@ export default function QuotesPage() {
                         )}
                     </div>
                 )}
-            </TabsContent>
-       </Tabs>
+                </AccordionContent>
+            </Card>
+        </AccordionItem>
+
+        <AccordionItem value="life-insurance" className="border-b-0">
+             <Card>
+                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                    Life Insurance
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                    <CardDescription className="mb-6">
+                        An agent will prepare a personalized quote for you.
+                    </CardDescription>
+                    <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
+                        <AlertDescription>
+                            We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
+                        </AlertDescription>
+                    </Alert>
+                     <div className="mt-6 flex justify-end">
+                        <Button size="lg">Request Quote from Agent</Button>
+                    </div>
+                </AccordionContent>
+            </Card>
+        </AccordionItem>
+
+       </Accordion>
     </div>
   );
 }

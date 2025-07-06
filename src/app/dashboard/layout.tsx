@@ -28,6 +28,7 @@ import {
   BookOpen,
   FileDigit,
   PiggyBank,
+  Heart,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,9 +66,14 @@ export default function DashboardLayout({
                     <Link href="/dashboard/plans"><ShieldCheck /><span>Browse Plans</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/health-quotes")} tooltip="Health Quotes">
+                    <Link href="/dashboard/health-quotes"><Heart /><span>Health Quotes</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                  <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/quotes")} tooltip="Get Quotes">
-                    <Link href="/dashboard/quotes"><FileDigit /><span>Get Quotes</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/quotes")} tooltip="Supplemental Quotes">
+                    <Link href="/dashboard/quotes"><FileDigit /><span>Supplemental Quotes</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
