@@ -13,9 +13,11 @@ import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
 import { useAuthState } from "react-firebase-hooks/auth"
-import { auth, db } from "@/lib/firebase"
+import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import { updateProfile } from "firebase/auth"
+import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
+import Link from "next/link"
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -76,7 +78,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const fetchUserData = async () => {
-            if (user) {
+            if (user && db) {
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
@@ -99,7 +101,7 @@ export default function SettingsPage() {
     }, [user, profileForm])
 
     const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
-        if (!user) return;
+        if (!user || !db) return;
         try {
             const userDocRef = doc(db, "users", user.uid);
             await setDoc(userDocRef, { 
@@ -134,7 +136,7 @@ export default function SettingsPage() {
     
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file || !user) return;
+        if (!file || !user || !db) return;
         
         // TODO for production: Upload file to Firebase Storage instead of using a data URL.
         // After upload, get the downloadURL and update the user's photoURL with updateProfile.
@@ -156,12 +158,21 @@ export default function SettingsPage() {
         reader.readAsDataURL(file);
     };
 
+  if (!isFirebaseConfigured) {
+      return <FirebaseNotConfigured />;
+  }
+
   if (loading) {
       return <p>Loading settings...</p>
   }
   
   if (!user) {
-      return <p>You must be logged in to view settings.</p>
+      return (
+        <div className="text-center">
+            <p>You must be logged in to view settings.</p>
+            <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
+        </div>
+      )
   }
 
   return (

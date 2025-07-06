@@ -11,13 +11,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Combobox } from '@/components/ui/combobox';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { FirebaseNotConfigured } from '@/components/firebase-not-configured';
+import Link from 'next/link';
 
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M9.34 2.15l3.93 2.75c.1.07.14.19.14.32v4.34c0 .28-.22.5-.5.5h-4.82c-.28 0-.5-.22-.5-.5V5.22c0-.13.04-.25.14-.32l3.93-2.75c.22-.15.54-.15.76 0z"/><path d="M12 10v4c0 .55.45 1 1 1h.5c.55 0 1-.45 1-1v-4"/><path d="m14 14 2.5-3"/><path d="m10 14-2.5-3"/><path d="M12 14v4.5c0 .83.67 1.5 1.5 1.5h.03c.82 0 1.47-.68 1.47-1.5V14"/><path d="M9.97 20c0 .82-.65 1.5-1.47 1.5h-.03C7.67 21.5 7 20.83 7 20v-4.5"/><path d="M14.5 9h-5c-1.1 0-2 .9-2 2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1c0-1.1-.9-2-2-2z"/>
+        <path d="M9.34 2.15l3.93 2.75c.1.07.14.19.14.32v4.34c0 .28-.22.5-.5.5h-4.82c-.28 0-.5-.22-.5-.5V5.22c0-.13.04-.25.14-.32l3.93-2.75c.22-.15.54-.15.76 0z"/><path d="M12 10v4c0 .55.45 1 1 1h.5c.55 0 1-.45 1-1v-4"/><path d="m14 14 2.5-3"/><path d="m10 14-2.5-3"/><path d="M12 14v4.5c0 .83.67 1.5 1.5 1.5h-.03c.82 0 1.47-.68 1.47-1.5V14"/><path d="M9.97 20c0 .82-.65 1.5-1.47 1.5h-.03C7.67 21.5 7 20.83 7 20v-4.5"/><path d="M14.5 9h-5c-1.1 0-2 .9-2 2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1c0-1.1-.9-2-2-2z"/>
     </svg>
 );
 
@@ -68,7 +70,7 @@ export default function DocumentsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !db) return;
 
         // Fetch Policies
         const policiesQuery = query(collection(db, `users/${user.uid}/policies`));
@@ -91,7 +93,7 @@ export default function DocumentsPage() {
     }, [user])
 
     const handleSavePolicy = async () => {
-        if (!user) {
+        if (!user || !db) {
             toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add a policy.' });
             return;
         }
@@ -130,7 +132,7 @@ export default function DocumentsPage() {
     };
 
     const handleDeleteFile = async (fileId: string) => {
-        if (!user) return;
+        if (!user || !db) return;
         try {
             await deleteDoc(doc(db, `users/${user.uid}/documents`, fileId));
             toast({
@@ -144,7 +146,7 @@ export default function DocumentsPage() {
     };
 
     const handleFiles = (uploadedFiles: FileList) => {
-        if (!user) {
+        if (!user || !db) {
             toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to upload files.' });
             return;
         }
@@ -206,6 +208,10 @@ export default function DocumentsPage() {
             e.dataTransfer.clearData();
         }
     };
+    
+    if (!isFirebaseConfigured) {
+        return <FirebaseNotConfigured />;
+    }
 
     if (loading) {
         return <p>Loading documents...</p>;

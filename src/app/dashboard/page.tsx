@@ -9,10 +9,15 @@ import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy
 import Image from "next/image";
 import Link from "next/link";
 import type { Policy } from "@/types";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { GuestDashboard } from "@/components/guest-dashboard";
+
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M9.34 2.15l3.93 2.75c.1.07.14.19.14.32v4.34c0 .28-.22.5-.5.5h-4.82c-.28 0-.5-.22-.5-.5V5.22c0-.13.04-.25.14-.32l3.93-2.75c.22-.15.54-.15.76 0z"/><path d="M12 10v4c0 .55.45 1 1 1h.5c.55 0 1-.45 1-1v-4"/><path d="m14 14 2.5-3"/><path d="m10 14-2.5-3"/><path d="M12 14v4.5c0 .83.67 1.5 1.5 1.5h.03c.82 0 1.47-.68 1.47-1.5V14"/><path d="M9.97 20c0 .82-.65 1.5-1.47 1.5h-.03C7.67 21.5 7 20.83 7 20v-4.5"/><path d="M14.5 9h-5c-1.1 0-2 .9-2 2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1c0-1.1-.9-2-2-2z"/>
+        <path d="M9.34 2.15l3.93 2.75c.1.07.14.19.14.32v4.34c0 .28-.22.5-.5.5h-4.82c-.28 0-.5-.22-.5-.5V5.22c0-.13.04-.25.14-.32l3.93-2.75c.22-.15.54-.15.76 0z"/><path d="M12 10v4c0 .55.45 1 1 1h.5c.55 0 1-.45 1-1v-4"/><path d="m14 14 2.5-3"/><path d="m10 14-2.5-3"/><path d="M12 14v4.5c0 .83.67 1.5 1.5 1.5h-.03c.82 0 1.47-.68 1.47-1.5V14"/><path d="M9.97 20c0 .82-.65 1.5-1.47 1.5h-.03C7.67 21.5 7 20.83 7 20v-4.5"/><path d="M14.5 9h-5c-1.1 0-2 .9-2 2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1c0-1.1-.9-2-2-2z"/>
     </svg>
 );
 
@@ -33,64 +38,6 @@ const planTypes = [
     { id: 'Long-Term Care', label: 'Long-Term Care', icon: Home, href: '/dashboard/quotes' },
     { id: 'Retirement Plan', label: 'Retirement Plan', icon: PiggyBank, href: '/dashboard/recommendations' }
 ];
-
-const GuestDashboard = () => (
-    <div className="space-y-8 md:space-y-12">
-        <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h1>
-            <p className="mt-4 text-lg text-slate-600 leading-relaxed">Welcome to HawkNest. Compare plans from top carriers, get personalized recommendations, and securely manage your insurance and financial plans from one convenient place.</p>
-             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" asChild><Link href="/?mode=signup">Create Your Account <UserPlus className="ml-2 h-4 w-4"/></Link></Button>
-                <Button size="lg" variant="outline" asChild><Link href="/dashboard/plans">Browse Plans</Link></Button>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-                <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600 shrink-0"><Heart className="h-6 w-6"/></div>
-                    <CardTitle>Health Insurance Quotes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription>Find affordable health coverage for individuals and families under 65.</CardDescription>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" className="w-full" asChild>
-                        <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-             <Card>
-                <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-100 text-teal-600 shrink-0"><FileDigit className="h-6 w-6"/></div>
-                    <CardTitle>Supplemental Quotes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription>Get instant quotes for Medigap, Dental, and other supplemental plans.</CardDescription>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" className="w-full" asChild>
-                        <Link href="/dashboard/quotes">Get Supplemental Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-            <Card>
-                <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 text-amber-600 shrink-0"><BookOpen className="h-6 w-6"/></div>
-                    <CardTitle>Education Center</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription>Understand your options with our AI-powered educational resources.</CardDescription>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" className="w-full" asChild>
-                        <Link href="/dashboard/education">Learn More <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-    </div>
-);
 
 const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => void }) => (
     <div className="flex items-center justify-center h-full">
@@ -151,63 +98,49 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
 
 
 export default function DashboardPage() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [user, loading] = useAuthState(auth);
     const [isNewUser, setIsNewUser] = useState(false);
     const [policies, setPolicies] = useState<Policy[]>([]);
-    const [userName, setUserName] = useState("Sarah");
-
+    
     useEffect(() => {
-        const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
-        setIsLoggedIn(loggedInStatus);
-
-        const updateData = () => {
-             if (loggedInStatus) {
-                const newUserStatus = localStorage.getItem("isNewUser") === "true";
-                setIsNewUser(newUserStatus);
-                
-                const storedName = localStorage.getItem("userFirstName");
-                if (storedName) {
-                    setUserName(storedName);
-                }
-
-                const storedPolicies = localStorage.getItem("hawk-policies");
-                if (storedPolicies) {
-                    setPolicies(JSON.parse(storedPolicies));
-                }
+        if (user) {
+            const newUserStatus = localStorage.getItem("isNewUser") === "true";
+            setIsNewUser(newUserStatus);
+            
+            if (db) {
+                const policiesQuery = query(collection(db, `users/${user.uid}/policies`));
+                const unsubscribe = onSnapshot(policiesQuery, (snapshot) => {
+                    const userPolicies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Policy);
+                    setPolicies(userPolicies);
+                });
+                return () => unsubscribe();
             }
-             setIsLoading(false);
-        };
-        
-        updateData();
-        window.addEventListener("storage", updateData);
-
-        return () => {
-            window.removeEventListener("storage", updateData);
-        };
-    }, []);
+        }
+    }, [user]);
 
     const handleDismissOnboarding = () => {
         localStorage.removeItem("isNewUser");
         setIsNewUser(false);
     };
 
-    if (isLoading) {
-        return null; // Or a loading spinner
+    if (loading) {
+        return <div className="flex h-screen items-center justify-center">Loading...</div>;
     }
 
-    if (!isLoggedIn) {
+    if (!isFirebaseConfigured || !user) {
+        // Fallback to guest dashboard if Firebase isn't set up or user is not logged in.
         return <GuestDashboard />;
     }
 
     if (isNewUser) {
-        return <OnboardingGuide name={userName} onDismiss={handleDismissOnboarding} />;
+        return <OnboardingGuide name={user.displayName?.split(' ')[0] || 'User'} onDismiss={handleDismissOnboarding} />;
     }
 
     const ownedPlanCategories = [...new Set(policies.map(p => p.category))];
     const retirementScore = Math.round((ownedPlanCategories.length / planTypes.length) * 100);
     const missingPlans = planTypes.filter(p => !ownedPlanCategories.includes(p.id));
     const primaryHealthPlan = policies.find(p => p.category === 'Health/Medical Plan');
+    const userName = user.displayName?.split(' ')[0] || 'User';
 
   return (
     <div className="space-y-8 md:space-y-12">

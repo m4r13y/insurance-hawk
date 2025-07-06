@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, UserPlus } from "lucide-react"
 
-import { auth, db } from "@/lib/firebase"
+import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -20,6 +20,7 @@ import {
 } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { useAuthState } from "react-firebase-hooks/auth"
+import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
 
 function LoginPageContent() {
   const router = useRouter()
@@ -60,6 +61,7 @@ function LoginPageContent() {
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!auth) return;
     try {
         await signInWithEmailAndPassword(auth, email, password);
         localStorage.removeItem("hawk-auth");
@@ -77,6 +79,7 @@ function LoginPageContent() {
 
   const handleSignUpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!auth || !db) return;
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -110,9 +113,14 @@ function LoginPageContent() {
         })
     }
   }
-
-  if (loading || user) {
+  
+  if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (user) {
+    router.push('/dashboard');
+    return <div className="flex h-screen items-center justify-center">Redirecting...</div>;
   }
 
   return (
@@ -152,55 +160,60 @@ function LoginPageContent() {
               {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your portal.'}
             </p>
           </div>
-          <Card>
-            <CardContent className="p-6 sm:p-8">
-                {isSignUp ? (
-                    <form onSubmit={handleSignUpSubmit} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="firstName">First Name</Label>
-                                <Input id="firstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="lastName">Last Name</Label>
-                                <Input id="lastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email address</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-                        </div>
-                        <Button type="submit" className="w-full">
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            Create Account
-                        </Button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleLoginSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email address</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center">
-                                <Label htmlFor="password">Password</Label>
-                                <Link href="#" className="ml-auto inline-block text-sm font-medium text-sky-600 hover:underline" prefetch={false}>
-                                Forgot password?
-                                </Link>
-                            </div>
-                            <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                        </div>
-                        <Button type="submit" className="w-full">
-                            Sign In
-                        </Button>
-                    </form>
-                )}
-            </CardContent>
-          </Card>
+
+          {!isFirebaseConfigured ? (
+             <FirebaseNotConfigured />
+          ) : (
+            <Card>
+              <CardContent className="p-6 sm:p-8">
+                  {isSignUp ? (
+                      <form onSubmit={handleSignUpSubmit} className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                  <Label htmlFor="firstName">First Name</Label>
+                                  <Input id="firstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                  <Label htmlFor="lastName">Last Name</Label>
+                                  <Input id="lastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                              </div>
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="email">Email address</Label>
+                              <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="password">Password</Label>
+                              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                          </div>
+                          <Button type="submit" className="w-full">
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              Create Account
+                          </Button>
+                      </form>
+                  ) : (
+                      <form onSubmit={handleLoginSubmit} className="space-y-6">
+                          <div className="space-y-2">
+                              <Label htmlFor="email">Email address</Label>
+                              <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                              <div className="flex items-center">
+                                  <Label htmlFor="password">Password</Label>
+                                  <Link href="#" className="ml-auto inline-block text-sm font-medium text-sky-600 hover:underline" prefetch={false}>
+                                  Forgot password?
+                                  </Link>
+                              </div>
+                              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                          </div>
+                          <Button type="submit" className="w-full">
+                              Sign In
+                          </Button>
+                      </form>
+                  )}
+              </CardContent>
+            </Card>
+          )}
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
