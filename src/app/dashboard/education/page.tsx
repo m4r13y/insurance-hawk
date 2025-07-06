@@ -7,12 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bot, User, Send, Phone, Loader2, Sparkles, AlertTriangle, GitCompare } from 'lucide-react';
+import { Bot, User, Send, Phone, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 import { getExplanation } from './actions';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlanComparisonTool } from './plan-comparison-tool';
+
 
 // Chatbot specific types and data
 type Message = {
@@ -195,29 +194,9 @@ export default function EducationPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">Medicare Education Center</h1>
-        <p className="text-muted-foreground">Understand your Medicare options with our AI-powered tools.</p>
+        <p className="text-muted-foreground">Understand your Medicare options with our AI-powered chatbot.</p>
       </div>
-
-      <Tabs defaultValue="chatbot" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="chatbot"><Bot className="mr-2 h-4 w-4"/>AI Chatbot</TabsTrigger>
-            <TabsTrigger value="comparison"><GitCompare className="mr-2 h-4 w-4"/>Plan Comparison</TabsTrigger>
-        </TabsList>
-        <TabsContent value="chatbot" className="mt-6">
-            <Chatbot />
-        </TabsContent>
-        <TabsContent value="comparison" className="mt-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Side-by-Side Plan Comparison</CardTitle>
-                    <CardDescription>Select up to three plans to compare their features and costs.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <PlanComparisonTool />
-                </CardContent>
-             </Card>
-        </TabsContent>
-      </Tabs>
+      <Chatbot />
     </div>
   )
 }
