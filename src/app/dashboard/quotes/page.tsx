@@ -42,10 +42,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Star, Info, ChevronDown } from "lucide-react";
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
-import type { Quote, DentalQuote, HospitalIndemnityQuote } from "@/types";
+import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider } from "@/types";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 
 
 const medigapFormSchema = z.object({
@@ -79,7 +80,7 @@ const getStarRating = (rating: string) => {
     if (rating === 'A++' || rating === 'A+') return filledStar.repeat(5);
     if (rating === 'A') return filledStar.repeat(4) + emptyStar;
     if (rating === 'A-') return filledStar.repeat(3) + emptyStar.repeat(2);
-    if (rating === 'B+' || rating === 'B') return filledStar.repeat(2) + emptyStar.repeat(3);
+    if (rating === 'B+' || 'B') return filledStar.repeat(2) + emptyStar.repeat(3);
     if (rating) return filledStar + emptyStar.repeat(4);
     return emptyStar.repeat(5);
 };
@@ -99,6 +100,9 @@ export default function QuotesPage() {
   const [hospitalIndemnityError, setHospitalIndemnityError] = useState<string | null>(null);
 
   const [openRows, setOpenRows] = useState<string[]>([]);
+
+  // State for hospital indemnity riders
+  const [selectedRiders, setSelectedRiders] = useState<Record<string, Record<string, { rate: number; amount: string }>>>({});
 
   const toggleRow = (id: string) => {
     setOpenRows(prev => 
@@ -186,6 +190,7 @@ export default function QuotesPage() {
     setHospitalIndemnityError(null);
     setHospitalIndemnityQuotes(null);
     setOpenRows([]);
+    setSelectedRiders({});
     startHospitalIndemnityTransition(async () => {
         const result = await getHospitalIndemnityQuotes(values);
         if (result.error) {
@@ -196,6 +201,40 @@ export default function QuotesPage() {
         }
     });
   }
+
+  const handleRiderToggle = (quoteId: string, rider: HospitalIndemnityRider) => {
+    const riderBenefit = rider.benefits[0];
+    if (!riderBenefit) return;
+
+    setSelectedRiders(prev => {
+        const quoteSelections = { ...(prev[quoteId] || {}) };
+        if (quoteSelections[rider.name]) {
+            delete quoteSelections[rider.name];
+        } else {
+            quoteSelections[rider.name] = { rate: riderBenefit.rate, amount: riderBenefit.amount };
+        }
+        return { ...prev, [quoteId]: quoteSelections };
+    });
+  };
+
+  const handleRiderOptionSelect = (quoteId: string, riderName: string, benefit: { rate: number; amount: string } | null) => {
+    setSelectedRiders(prev => {
+        const quoteSelections = { ...(prev[quoteId] || {}) };
+        if (benefit === null) {
+            delete quoteSelections[riderName];
+        } else {
+            quoteSelections[riderName] = benefit;
+        }
+        return { ...prev, [quoteId]: quoteSelections };
+    });
+  };
+
+  const calculateTotalPremium = (quote: HospitalIndemnityQuote) => {
+    const basePremium = quote.monthly_premium;
+    const selections = selectedRiders[quote.id] || {};
+    const riderPremium = Object.values(selections).reduce((total, selection) => total + selection.rate, 0);
+    return basePremium + riderPremium;
+  };
   
   return (
     <div className="space-y-6">
@@ -563,7 +602,7 @@ export default function QuotesPage() {
                     <CardHeader>
                         <CardTitle>Hospital Indemnity Quotes</CardTitle>
                         <CardDescription>
-                            Fill out the fields below to get instant quotes.
+                            Fill out the fields below to get instant quotes. Customize your plan with optional riders.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -631,7 +670,7 @@ export default function QuotesPage() {
                         <CardHeader>
                             <CardTitle>Your Hospital Indemnity Quotes</CardTitle>
                             <CardDescription>
-                                Found {hospitalIndemnityQuotes.length} plan{hospitalIndemnityQuotes.length !== 1 ? 's' : ''} based on your information.
+                                Found {hospitalIndemnityQuotes.length} plan{hospitalIndemnityQuotes.length !== 1 ? 's' : ''} based on your information. Click a row to see riders.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -651,6 +690,7 @@ export default function QuotesPage() {
                                         {hospitalIndemnityQuotes.map((quote, index) => {
                                             const key = `${quote.id}-${index}`;
                                             const isOpen = openRows.includes(key);
+                                            const totalPremium = calculateTotalPremium(quote);
                                             return (
                                                 <React.Fragment key={key}>
                                                     <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
@@ -663,7 +703,7 @@ export default function QuotesPage() {
                                                             <div className="font-medium">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</div>
                                                             <div className="text-xs text-muted-foreground">per {quote.benefit_quantifier}</div>
                                                         </TableCell>
-                                                        <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                        <TableCell className="text-right font-bold">${totalPremium.toFixed(2)}</TableCell>
                                                         <TableCell className="text-right">
                                                             <Button asChild onClick={(e) => e.stopPropagation()}><Link href="/dashboard/apply">Select Plan</Link></Button>
                                                         </TableCell>
@@ -672,17 +712,77 @@ export default function QuotesPage() {
                                                         <TableRow>
                                                             <TableCell colSpan={6} className="p-0">
                                                                 <div className="p-4 bg-muted/50 text-sm">
-                                                                    <h4 className="font-semibold mb-2">Available Riders</h4>
-                                                                    {quote.riders?.length > 0 ? (
-                                                                        <ul className="list-disc pl-5 space-y-1">
-                                                                            {quote.riders.map((rider, i) => (
-                                                                                <li key={i}>
-                                                                                    <strong>{rider.name}:</strong> {rider.note || 'No additional details.'}
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
+                                                                    <h4 className="font-semibold mb-3">Available Riders</h4>
+                                                                    {quote.riders?.filter(r => r.benefits.length > 0).length > 0 ? (
+                                                                        <div className="space-y-4">
+                                                                            {quote.riders.map((rider, i) => {
+                                                                                if (rider.included) {
+                                                                                     return (
+                                                                                        <div key={i} className="p-2 bg-green-50 border border-green-200 rounded-md">
+                                                                                            <p><strong>{rider.name} (Included):</strong> {rider.note || 'No additional details.'}</p>
+                                                                                        </div>
+                                                                                     )
+                                                                                }
+                                                                                
+                                                                                if (rider.benefits.length === 1) {
+                                                                                    const benefit = rider.benefits[0];
+                                                                                    return (
+                                                                                        <div key={i} className="flex items-center p-2 rounded-md border bg-background">
+                                                                                            <Checkbox 
+                                                                                                id={`${key}-rider-${i}`}
+                                                                                                onCheckedChange={() => handleRiderToggle(quote.id, rider)}
+                                                                                                checked={!!selectedRiders[quote.id]?.[rider.name]}
+                                                                                            />
+                                                                                            <Label htmlFor={`${key}-rider-${i}`} className="ml-3 flex justify-between w-full cursor-pointer">
+                                                                                                <div className="flex-1">
+                                                                                                    <p className="font-medium">{rider.name}</p>
+                                                                                                    {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                                                                </div>
+                                                                                                <span className="font-semibold pl-4">+${benefit.rate.toFixed(2)}</span>
+                                                                                            </Label>
+                                                                                        </div>
+                                                                                    )
+                                                                                }
+
+                                                                                if (rider.benefits.length > 1) {
+                                                                                    return (
+                                                                                        <div key={i} className="p-3 rounded-md border bg-background">
+                                                                                            <p className="font-medium">{rider.name}</p>
+                                                                                            {rider.note && <p className="text-xs text-muted-foreground mb-2 mt-1">{rider.note}</p>}
+                                                                                            <RadioGroup
+                                                                                                onValueChange={(value) => {
+                                                                                                    if (value === 'none') {
+                                                                                                         handleRiderOptionSelect(quote.id, rider.name, null);
+                                                                                                    } else {
+                                                                                                        const selectedBenefit = rider.benefits.find(b => b.amount === value);
+                                                                                                        if (selectedBenefit) handleRiderOptionSelect(quote.id, rider.name, selectedBenefit);
+                                                                                                    }
+                                                                                                }}
+                                                                                                value={selectedRiders[quote.id]?.[rider.name]?.amount || 'none'}
+                                                                                                className="mt-2 space-y-1"
+                                                                                            >
+                                                                                                {rider.benefits.map((benefit, j) => (
+                                                                                                    <div key={j} className="flex items-center">
+                                                                                                        <RadioGroupItem value={benefit.amount} id={`${key}-rider-${i}-${j}`} />
+                                                                                                        <Label htmlFor={`${key}-rider-${i}-${j}`} className="ml-2 flex justify-between w-full font-normal cursor-pointer">
+                                                                                                            <span>{benefit.amount} / {benefit.quantifier}</span>
+                                                                                                            <span className="font-medium">+${benefit.rate.toFixed(2)}</span>
+                                                                                                        </Label>
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                                <div className="flex items-center">
+                                                                                                    <RadioGroupItem value="none" id={`${key}-rider-${i}-none`} />
+                                                                                                    <Label htmlFor={`${key}-rider-${i}-none`} className="ml-2 font-normal cursor-pointer">None</Label>
+                                                                                                </div>
+                                                                                            </RadioGroup>
+                                                                                        </div>
+                                                                                    )
+                                                                                }
+                                                                                return null;
+                                                                            })}
+                                                                        </div>
                                                                     ) : (
-                                                                        <p>No riders available for this plan.</p>
+                                                                        <p>No optional riders available for this plan.</p>
                                                                     )}
                                                                 </div>
                                                             </TableCell>
