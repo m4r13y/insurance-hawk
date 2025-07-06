@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Tooth, Hospital, ShieldAlert, FileHeart, UserPlus } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
 import type { Plan } from "@/types"
@@ -398,10 +398,80 @@ function GenericApplication({ title, icon: Icon }: { title: string, icon: React.
     );
 }
 
+const applicationTypes = [
+  {
+    title: "Medicare Supplement",
+    description: "For Medigap plans to cover Original Medicare costs.",
+    icon: FileText,
+    type: "medicare-supplement",
+  },
+  {
+    title: "Dental Insurance",
+    description: "Coverage for check-ups, procedures, and more.",
+    icon: Smile,
+    type: "dental",
+  },
+  {
+    title: "Hospital Indemnity",
+    description: "Pays a fixed amount for covered hospital stays.",
+    icon: Hospital,
+    type: "hospital-indemnity",
+  },
+  {
+    title: "Life Insurance",
+    description: "Protect your loved ones with a life insurance policy.",
+    icon: FileHeart,
+    type: "life-insurance",
+  },
+  {
+    title: "Health Insurance",
+    description: "For individuals and families under the age of 65.",
+    icon: Heart,
+    type: "health-insurance",
+  },
+  {
+    title: "Medicare Advantage",
+    description: "Part C plans that bundle Parts A, B, and often D.",
+    icon: UserPlus,
+    type: "medicare-advantage",
+  },
+];
+
+function ApplicationSelectionGrid() {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Submit an Application</h1>
+        <p className="text-base text-muted-foreground mt-1">Select the type of application you would like to start.</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {applicationTypes.map((app) => {
+            const Icon = app.icon
+            return (
+              <Link key={app.type} href={`/dashboard/apply?type=${app.type}`} passHref>
+                <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all aspect-square">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+                    <Icon className="h-8 w-8" />
+                  </div>
+                  <h3 className="font-semibold text-lg">{app.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
+                </Card>
+              </Link>
+            )
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function ApplyPageContent() {
     const searchParams = useSearchParams()
     const applicationType = searchParams.get('type')
+
+    if (!applicationType) {
+        return <ApplicationSelectionGrid />;
+    }
 
     switch (applicationType) {
         case 'medicare-supplement':
@@ -417,7 +487,7 @@ function ApplyPageContent() {
         case 'medicare-advantage':
             return <MedicareAdvantageApplication />;
         default:
-            return <MedicareSupplementApplication />; // Default to Med Supp
+            return <ApplicationSelectionGrid />;
     }
 }
 
