@@ -133,12 +133,13 @@ const financialConcerns = [
 ];
 
 const steps = [
-    { id: 1, name: 'Your Picture', icon: Users, fields: ['greatestConcern', 'taxFilingStatus', 'hasSpouse', 'spouseFirstName', 'spouseLastName'] as FieldPath<FormSchemaType>[] },
-    { id: 2, name: 'Insurance', icon: ShieldCheck, fields: ['healthInsuranceCompany', 'healthInsuranceDeductible', 'healthInsurancePlan', 'healthInsurancePremium', 'healthInsuranceCopays', 'healthInsuranceMaxOutOfPocket', 'spouseHealthInsuranceCompany', 'spouseHealthInsuranceDeductible', 'spouseHealthInsurancePlan', 'spouseHealthInsurancePremium', 'spouseHealthInsuranceCopays', 'spouseHealthInsuranceMaxOutOfPocket', 'otherInsurancePolicies', 'hasLifeInsurance', 'lifeInsuranceType', 'beneficiariesUpdated', 'hasLTC', 'ltcHasRiders'] as FieldPath<FormSchemaType>[] },
-    { id: 3, name: 'Assets & Income', icon: TrendingUp, fields: ['riskTolerance', 'assetTypes', 'assetsHeldAt', 'investmentExperience', 'hasEmergencyFund', 'emergencyFundMonths', 'socialSecurityIncome', 'pensionIncome', 'rmdIncome', 'annuityIncome', 'workIncome', 'rentalIncome', 'totalMonthlyIncome', 'totalMonthlyExpenses'] as FieldPath<FormSchemaType>[] },
-    { id: 4, name: 'Tax & Estate', icon: Landmark, fields: ['takesIraDistributions', 'makingRothConversions', 'hasTaxFreeBonds', 'wantsToLowerTaxes', 'isDonating', 'hasEstatePlan', 'hasHealthCarePOA', 'hasLivingWill', 'wantsToAvoidProbate', 'marriedMoreThanOnce'] as FieldPath<FormSchemaType>[] },
-    { id: 5, name: 'Goals & Consent', icon: Target, fields: ['wantsFiduciary', 'wantsMarketProtection', 'concernedAboutOutOfMoney', 'otherGoals', 'signature'] as FieldPath<FormSchemaType>[] },
-    { id: 6, name: 'Review & Submit', icon: FileCheck, fields: [] as FieldPath<FormSchemaType>[] },
+    { id: 1, name: 'Getting Started', icon: ClipboardList, fields: ['greatestConcern'] as FieldPath<FormSchemaType>[] },
+    { id: 2, name: 'Your Picture', icon: Users, fields: ['taxFilingStatus', 'hasSpouse', 'spouseFirstName', 'spouseLastName'] as FieldPath<FormSchemaType>[] },
+    { id: 3, name: 'Insurance', icon: ShieldCheck, fields: ['healthInsuranceCompany', 'healthInsuranceDeductible', 'healthInsurancePlan', 'healthInsurancePremium', 'healthInsuranceCopays', 'healthInsuranceMaxOutOfPocket', 'spouseHealthInsuranceCompany', 'spouseHealthInsuranceDeductible', 'spouseHealthInsurancePlan', 'spouseHealthInsurancePremium', 'spouseHealthInsuranceCopays', 'spouseHealthInsuranceMaxOutOfPocket', 'otherInsurancePolicies', 'hasLifeInsurance', 'lifeInsuranceType', 'beneficiariesUpdated', 'hasLTC', 'ltcHasRiders'] as FieldPath<FormSchemaType>[] },
+    { id: 4, name: 'Assets & Income', icon: TrendingUp, fields: ['riskTolerance', 'assetTypes', 'assetsHeldAt', 'investmentExperience', 'hasEmergencyFund', 'emergencyFundMonths', 'socialSecurityIncome', 'pensionIncome', 'rmdIncome', 'annuityIncome', 'workIncome', 'rentalIncome', 'totalMonthlyIncome', 'totalMonthlyExpenses'] as FieldPath<FormSchemaType>[] },
+    { id: 5, name: 'Tax & Estate', icon: Landmark, fields: ['takesIraDistributions', 'makingRothConversions', 'hasTaxFreeBonds', 'wantsToLowerTaxes', 'isDonating', 'hasEstatePlan', 'hasHealthCarePOA', 'hasLivingWill', 'wantsToAvoidProbate', 'marriedMoreThanOnce'] as FieldPath<FormSchemaType>[] },
+    { id: 6, name: 'Goals & Consent', icon: Target, fields: ['wantsFiduciary', 'wantsMarketProtection', 'concernedAboutOutOfMoney', 'otherGoals', 'signature'] as FieldPath<FormSchemaType>[] },
+    { id: 7, name: 'Review & Submit', icon: FileCheck, fields: [] as FieldPath<FormSchemaType>[] },
 ];
 
 
@@ -245,8 +246,8 @@ export default function FinancialPlanPage() {
         if (!output) return;
         
         // This is the last step before review
-        if (step === 5) {
-             setStep(6); // Go to Review step
+        if (step === 6) {
+             setStep(7); // Go to Review step
              return;
         }
 
@@ -335,7 +336,7 @@ export default function FinancialPlanPage() {
                 </CardHeader>
                 <CardContent>
 
-            {step === 1 && ( // Your Picture
+            {step === 1 && ( // Getting Started
                 <div className="space-y-8">
                      <FormField
                         control={form.control}
@@ -366,7 +367,11 @@ export default function FinancialPlanPage() {
                             </FormItem>
                         )}
                     />
-
+                </div>
+            )}
+            
+            {step === 2 && ( // Your Picture
+                <div className="space-y-8">
                     <FormField control={form.control} name="taxFilingStatus" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Tax Filing Status</FormLabel>
@@ -393,7 +398,7 @@ export default function FinancialPlanPage() {
                 </div>
             )}
 
-            {step === 2 && ( // Insurance
+            {step === 3 && ( // Insurance
                 <div className="space-y-8">
                     <div>
                         <h4 className="font-semibold mb-4">Your Health Insurance</h4>
@@ -453,7 +458,7 @@ export default function FinancialPlanPage() {
                 </div>
             )}
 
-            {step === 3 && ( // Assets & Income
+            {step === 4 && ( // Assets & Income
                 <div className="space-y-6">
                     <FormField control={form.control} name="riskTolerance" render={({ field }) => (
                         <FormItem>
@@ -532,7 +537,7 @@ export default function FinancialPlanPage() {
                 </div>
             )}
 
-            {step === 4 && ( // Tax & Estate
+            {step === 5 && ( // Tax & Estate
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                     <div className="space-y-6">
                         <h4 className="font-semibold text-lg">Tax Planning</h4>
@@ -553,7 +558,7 @@ export default function FinancialPlanPage() {
                 </div>
             )}
 
-            {step === 5 && ( // Goals & Consent
+            {step === 6 && ( // Goals & Consent
                 <div className="space-y-6">
                     <FormField control={form.control} name="wantsFiduciary" render={({ field }) => <FormItem><FormLabel>Would it be valuable for you to work with a fiduciary?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="wantsMarketProtection" render={({ field }) => <FormItem><FormLabel>Do you want to know how to protect yourself from loss in the markets and still grow money?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
@@ -570,7 +575,7 @@ export default function FinancialPlanPage() {
                 </div>
             )}
             
-            {step === 6 && ( // Review
+            {step === 7 && ( // Review
                  <div className="space-y-6">
                     <ReviewSection title="General">
                         <ReviewItem label="Greatest Financial Concern" value={financialConcerns.find(c => c.id === form.getValues("greatestConcern"))?.label} />
@@ -603,9 +608,9 @@ export default function FinancialPlanPage() {
                     <Button type="button" variant="outline" onClick={handlePrev}>Back</Button>
                 ) : <div />}
                 
-                {step < 6 ? (
+                {step < 7 ? (
                     <Button type="button" onClick={handleNext}>
-                        {step === 5 ? 'Review' : 'Next Step'}
+                        {step === 6 ? 'Review' : 'Next Step'}
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 ) : (
