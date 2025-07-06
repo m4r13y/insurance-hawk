@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -12,98 +12,69 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, ArrowRight, ArrowLeft, ShieldCheck, Users, Wallet, MapPin, Cake, ShieldQuestion, Briefcase, Star, Search, Pill, PlusCircle } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, ArrowRight, ArrowLeft, ShieldCheck, Users, Wallet, MapPin, Cake, ShieldQuestion, Briefcase, Star, Search, Pill, PlusCircle, Info, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "./ui/label";
 import type { HealthPlan } from "@/types";
+import { getHealthQuotes } from "@/app/dashboard/health-quotes/actions";
+import { useToast } from "@/hooks/use-toast";
+import { Switch } from "./ui/switch";
+import { Badge } from "./ui/badge";
 
-// Mock data
-const mockHealthPlans: HealthPlan[] = [
-    { id: 'hplan-1', name: 'Silver Enhanced 2500', provider: 'Blue Cross', isBestMatch: true, premium: 450, taxCredit: 200, deductible: 2500, outOfPocketMax: 8000, network: 'PPO', rating: 4, features: { doctors: '10,000+', drugs: 'Tier 1 & 2 Covered' } },
-    { id: 'hplan-2', name: 'Bronze Secure HMO', provider: 'HealthNet', isBestMatch: true, premium: 320, taxCredit: 200, deductible: 6000, outOfPocketMax: 9000, network: 'HMO', rating: 3, features: { doctors: '5,000+', drugs: 'Tier 1 Covered' } },
-    { id: 'hplan-3', name: 'Gold Premier PPO', provider: 'UnitedHealthcare', isBestMatch: false, premium: 600, taxCredit: 200, deductible: 1000, outOfPocketMax: 6500, network: 'PPO', rating: 5, features: { doctors: '12,000+', drugs: 'Tier 1, 2 & 3 Covered' } },
-];
-
-const formSchema = z.object({
+export const healthQuoterFormSchema = z.object({
+    zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code."),
     householdSize: z.coerce.number().min(1, "Household must have at least one person.").max(10, "Please contact us for households larger than 10."),
     householdIncome: z.coerce.number().min(0, "Income must be a positive number."),
-    zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code."),
-    members: z.array(z.object({ age: z.coerce.number().min(0,"Please enter a valid age.").max(120, "Please enter a valid age.") })).min(1),
+    members: z.array(z.object({ 
+        age: z.coerce.number().min(0,"Please enter a valid age.").max(120, "Please enter a valid age."),
+        gender: z.enum(["Male", "Female"], { required_error: "Please select a gender."}),
+        uses_tobacco: z.boolean().default(false),
+     })).min(1),
     hasInsurance: z.enum(["yes", "no"], {required_error: "Please select an option."}),
     hadUnemployment: z.enum(["yes", "no"], {required_error: "Please select an option."}),
 });
 
-type FormSchemaType = z.infer<typeof formSchema>;
+type FormSchemaType = z.infer<typeof healthQuoterFormSchema>;
 
-const steps = [
-    { id: 1, name: "Household Size", field: "householdSize", icon: Users },
-    { id: 2, name: "Ages", field: "members", icon: Cake },
-    { id: 3, name: "Location", field: "zipCode", icon: MapPin },
-    { id: 4, name: "Household Income", field: "householdIncome", icon: Wallet },
-    { id: 5, name: "Current Coverage", field: "hasInsurance", icon: ShieldQuestion },
-    { id: 6, name: "Unemployment", field: "hadUnemployment", icon: Briefcase },
+const steps: { id: number; name: string; icon: React.ElementType; fields: FieldPath<FormSchemaType>[] }[] = [
+    { id: 1, name: "Location & Household Size", icon: MapPin, fields: ["zipCode", "householdSize"] },
+    { id: 2, name: "Member Details", icon: Users, fields: ["members"] },
+    { id: 3, name: "Household Income", icon: Wallet, fields: ["householdIncome"] },
+    { id: 4, name: "Coverage Status", icon: ShieldQuestion, fields: ["hasInsurance", "hadUnemployment"] },
 ];
 
 const HealthPlanCard = ({ plan }: { plan: HealthPlan }) => (
-    <Card className="w-full">
+    <Card className="w-full flex flex-col">
         <CardHeader>
             {plan.isBestMatch && <Badge className="w-fit bg-accent text-accent-foreground mb-2">Best Match</Badge>}
             <CardTitle>{plan.name}</CardTitle>
             <CardDescription>{plan.provider}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1">
             <div className="flex justify-between items-baseline border-b pb-4">
                 <div>
-                    <p className="text-2xl sm:text-3xl font-bold">${(plan.premium - plan.taxCredit).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                    <p className="text-sm text-muted-foreground">After estimated ${plan.taxCredit} tax credit</p>
+                    <p className="text-2xl sm:text-3xl font-bold">${plan.premium.toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                    {plan.taxCredit > 0 && <p className="text-sm text-green-600">After estimated ${plan.taxCredit.toFixed(2)} tax credit</p>}
                 </div>
-                <div className="flex items-center gap-1 text-amber-500">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-bold">{plan.rating}</span>
-                </div>
+                {plan.rating > 0 && 
+                    <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="h-4 w-4 fill-current" />
+                        <span className="font-bold">{plan.rating}</span>
+                    </div>
+                }
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                <div><p className="text-muted-foreground">Deductible</p><p className="font-medium">${plan.deductible}</p></div>
-                <div><p className="text-muted-foreground">Max Out-of-Pocket</p><p className="font-medium">${plan.outOfPocketMax}</p></div>
+                <div><p className="text-muted-foreground">Deductible</p><p className="font-medium">${plan.deductible.toLocaleString()}</p></div>
+                <div><p className="text-muted-foreground">Max Out-of-Pocket</p><p className="font-medium">${plan.outOfPocketMax.toLocaleString()}</p></div>
                 <div><p className="text-muted-foreground">Network</p><p className="font-medium">{plan.network}</p></div>
-                <div><p className="text-muted-foreground">Doctors</p><p className="font-medium">{plan.features.doctors}</p></div>
             </div>
-            <Accordion type="single" collapsible className="w-full mt-4">
-                <AccordionItem value="item-1">
-                    <AccordionTrigger>More Details</AccordionTrigger>
-                    <AccordionContent className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                             <h4 className="font-semibold">What's Covered?</h4>
-                             <ul className="list-disc list-inside text-muted-foreground text-xs">
-                                <li>Preventive care, check-ups, and immunizations</li>
-                                <li>Emergency services and hospitalization</li>
-                                <li>Prescription drugs (details below)</li>
-                             </ul>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                             <h4 className="font-semibold">Find a Doctor</h4>
-                             <div className="flex gap-2">
-                                <Input placeholder="Search for a doctor or specialist" />
-                                <Button size="icon" variant="outline"><Search className="h-4 w-4"/></Button>
-                             </div>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                             <h4 className="font-semibold">Check Medications</h4>
-                             <div className="flex gap-2">
-                                <Input placeholder="Search for your prescription drug" />
-                                <Button size="icon" variant="outline"><Pill className="h-4 w-4"/></Button>
-                             </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex-col items-stretch gap-2 pt-4">
             <Button className="w-full">Select Plan</Button>
+            <div className="flex justify-around text-xs pt-2">
+                {plan.benefits_url && <a href={plan.benefits_url} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Benefits Summary</a>}
+                {plan.formulary_url && <a href={plan.formulary_url} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Drug List</a>}
+            </div>
         </CardFooter>
     </Card>
 );
@@ -112,14 +83,17 @@ export function HealthInsuranceQuoter() {
     const [step, setStep] = useState(1);
     const [isPending, startTransition] = useTransition();
     const [results, setResults] = useState<HealthPlan[] | null>(null);
+    const { toast } = useToast();
 
     const form = useForm<FormSchemaType>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(healthQuoterFormSchema),
         defaultValues: {
             householdSize: 1,
             householdIncome: 50000,
             zipCode: "",
-            members: [{ age: 30 }],
+            members: [{ age: 30, gender: "Female", uses_tobacco: false }],
+            hasInsurance: "no",
+            hadUnemployment: "no",
         },
     });
 
@@ -135,7 +109,7 @@ export function HealthInsuranceQuoter() {
         const currentCount = fields.length;
         if (size > currentCount) {
             for (let i = 0; i < size - currentCount; i++) {
-                append({ age: 0 });
+                append({ age: 30, gender: "Female", uses_tobacco: false });
             }
         } else if (size < currentCount) {
              for (let i = currentCount - 1; i >= size; i--) {
@@ -145,19 +119,25 @@ export function HealthInsuranceQuoter() {
     }, [watchHouseholdSize, fields.length, append, remove]);
 
 
-    function onSubmit(values: FormSchemaType) {
-        startTransition(() => {
-            // Mock API call
-            setTimeout(() => {
-                setResults(mockHealthPlans);
-            }, 1500);
+    async function onSubmit(values: FormSchemaType) {
+        setResults(null);
+        startTransition(async () => {
+            const result = await getHealthQuotes(values);
+            if(result.error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error fetching quotes",
+                    description: result.error
+                });
+            } else {
+                setResults(result.plans || []);
+            }
         });
     }
     
     const handleNext = async () => {
         const currentStepInfo = steps[step - 1];
-        // @ts-ignore
-        const output = await form.trigger(currentStepInfo.field, { shouldFocus: true });
+        const output = await form.trigger(currentStepInfo.fields, { shouldFocus: true });
         if (!output) return;
         
         if (step < steps.length) {
@@ -184,34 +164,18 @@ export function HealthInsuranceQuoter() {
             <div className="space-y-8">
                 <div>
                      <h2 className="font-headline text-3xl font-bold">Your Health Plan Results</h2>
-                     <p className="text-muted-foreground">We found {results.length} plans that match your needs. Here are the top matches.</p>
+                     {results.length > 0 ? (
+                        <p className="text-muted-foreground">We found {results.length} plans that match your needs. Here are the top matches.</p>
+                     ) : (
+                        <p className="text-muted-foreground">No plans found for your criteria. Please try different options or contact us for assistance.</p>
+                     )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {results.map(plan => <HealthPlanCard key={plan.id} plan={plan}/>)}
-                </div>
-                <Card className="bg-secondary/50">
-                    <CardHeader>
-                        <CardTitle>Complete Your Coverage</CardTitle>
-                        <CardDescription>Don't leave gaps in your protection. Add these affordable plans to your cart.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between rounded-md border bg-background p-4">
-                            <h4 className="font-semibold">Dental Insurance</h4>
-                            <Button>Add to Cart <PlusCircle className="ml-2 h-4 w-4"/></Button>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border bg-background p-4">
-                            <h4 className="font-semibold">Cancer & Critical Illness</h4>
-                             <Button>Add to Cart <PlusCircle className="ml-2 h-4 w-4"/></Button>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border bg-background p-4">
-                            <h4 className="font-semibold">Life Insurance</h4>
-                             <Button>Add to Cart <PlusCircle className="ml-2 h-4 w-4"/></Button>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <p className="text-xs text-muted-foreground">An agent will contact you to finalize these additional coverages.</p>
-                    </CardFooter>
-                </Card>
+                {results.length > 0 && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {results.map(plan => <HealthPlanCard key={plan.id} plan={plan}/>)}
+                    </div>
+                )}
+                <Button variant="outline" onClick={() => setResults(null)}>Start Over</Button>
             </div>
         )
     }
@@ -236,45 +200,66 @@ export function HealthInsuranceQuoter() {
                 <Form {...form}>
                     <form className="space-y-8">
                         {step === 1 && (
-                            <FormField control={form.control} name="householdSize" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-lg">How many people are in your household (including yourself)?</FormLabel>
-                                    <FormControl><Input type="number" {...field} min={1} max={10} className="max-w-xs"/></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
+                            <div className="space-y-8">
+                                <FormField control={form.control} name="zipCode" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-lg">What's your ZIP code?</FormLabel>
+                                        <FormDescription>Your location determines which plans are available.</FormDescription>
+                                        <FormControl><Input {...field} className="max-w-xs"/></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="householdSize" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-lg">How many people are in your household (including yourself)?</FormLabel>
+                                        <FormControl><Input type="number" {...field} min={1} max={10} className="max-w-xs"/></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
                         )}
                         {step === 2 && (
-                            <div className="space-y-4">
-                                <Label className="text-lg font-medium">What are the ages of each person needing coverage?</Label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-6">
+                                <Label className="text-lg font-medium">Please provide details for each person needing coverage.</Label>
                                 {fields.map((item, index) => (
-                                     <FormField key={item.id} control={form.control} name={`members.${index}.age`} render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Person {index + 1} Age</FormLabel>
-                                            <FormControl><Input type="number" {...field} placeholder="e.g. 42" className="max-w-xs"/></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )} />
+                                     <Card key={item.id} className="p-6 bg-slate-50">
+                                         <FormLabel className="font-semibold">Person {index + 1}</FormLabel>
+                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 mt-4">
+                                            <FormField control={form.control} name={`members.${index}.age`} render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Age</FormLabel>
+                                                    <FormControl><Input type="number" {...field} placeholder="e.g. 42" /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name={`members.${index}.gender`} render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Gender</FormLabel>
+                                                    <FormControl>
+                                                         <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4">
+                                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="Male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="Female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                                        </RadioGroup>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name={`members.${index}.uses_tobacco`} render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 sm:col-span-2">
+                                                    <FormLabel>Uses Tobacco?</FormLabel>
+                                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                                </FormItem>
+                                            )} />
+                                         </div>
+                                     </Card>
                                 ))}
-                                </div>
                             </div>
                         )}
                         {step === 3 && (
-                             <FormField control={form.control} name="zipCode" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-lg">What's your ZIP code?</FormLabel>
-                                    <FormDescription>Your location determines which plans are available.</FormDescription>
-                                    <FormControl><Input {...field} className="max-w-xs"/></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        )}
-                         {step === 4 && (
                              <FormField control={form.control} name="householdIncome" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-lg">What's your estimated household income for this year?</FormLabel>
-                                    <FormDescription>This helps us calculate your potential tax credits.</FormDescription>
+                                    <FormDescription>This helps us calculate your potential tax credits. Include income from all members.</FormDescription>
                                     <FormControl>
                                         <div className="relative max-w-xs">
                                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
@@ -285,33 +270,33 @@ export function HealthInsuranceQuoter() {
                                 </FormItem>
                             )} />
                         )}
-                        {step === 5 && (
-                             <FormField control={form.control} name="hasInsurance" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-lg">Do you currently have health insurance?</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4">
-                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                        </RadioGroup>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        )}
-                         {step === 6 && (
-                             <FormField control={form.control} name="hadUnemployment" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-lg">Have you received unemployment income at any time this year?</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4">
-                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                        </RadioGroup>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
+                         {step === 4 && (
+                            <div className="space-y-8">
+                                <FormField control={form.control} name="hasInsurance" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-lg">Does anyone in your household currently have health insurance?</FormLabel>
+                                        <FormControl>
+                                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4">
+                                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                                            </RadioGroup>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="hadUnemployment" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-lg">Has anyone in your household received unemployment income at any time this year?</FormLabel>
+                                        <FormControl>
+                                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4">
+                                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                                            </RadioGroup>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
                         )}
                     </form>
                 </Form>
@@ -328,7 +313,7 @@ export function HealthInsuranceQuoter() {
                 </div>
                  <div className="flex items-center gap-2 pt-4 text-xs text-muted-foreground">
                     <ShieldCheck className="h-4 w-4" />
-                    <span>No spam. This info only finds you real plans & real savings.</span>
+                    <span>Your information is secure and will only be used to find plans and estimate savings.</span>
                 </div>
             </CardFooter>
         </Card>
