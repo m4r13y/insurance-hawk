@@ -125,7 +125,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
 
             return {
                 id: plan.id,
-                name: plan.name,
+                name: plan.name.split('(')[0].trim(),
                 provider: plan.issuer.name,
                 premium: premiumWithCredit,
                 taxCredit: (plan.premium - premiumWithCredit) > 0 ? (plan.premium - premiumWithCredit) : 0,

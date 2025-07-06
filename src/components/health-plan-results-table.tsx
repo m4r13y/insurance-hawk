@@ -193,10 +193,10 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                   <Table>
                   <TableHeader>
                       <TableRow>
-                      <TableHead className="min-w-[24rem]">Plan Details</TableHead>
-                      <TableHead className="min-w-[12rem]">Monthly Premium</TableHead>
-                      <TableHead className="min-w-[10rem]">Deductible</TableHead>
-                      <TableHead className="min-w-[12rem]">Max Out-of-Pocket</TableHead>
+                      <TableHead>Plan Details</TableHead>
+                      <TableHead>Monthly Premium</TableHead>
+                      <TableHead>Deductible</TableHead>
+                      <TableHead>Max Out-of-Pocket</TableHead>
                       <TableHead className="text-right"></TableHead>
                       </TableRow>
                   </TableHeader>
