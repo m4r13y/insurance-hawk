@@ -50,13 +50,15 @@ export default function DashboardLayout({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Since this is a client component, we can safely check localStorage.
+    // TODO FOR PRODUCTION: Replace localStorage with a proper authentication check.
+    // This should involve verifying a session or token from a secure context provider, not localStorage.
     const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
     setIsLoggedIn(loggedInStatus);
     setIsLoading(false);
   }, [pathname]); // Rerun on path change to ensure state is up-to-date
 
   const handleLogout = () => {
+    // TODO FOR PRODUCTION: This should call a backend endpoint to invalidate the user's session/token.
     localStorage.removeItem("hawk-auth");
     setIsLoggedIn(false);
     router.push("/");

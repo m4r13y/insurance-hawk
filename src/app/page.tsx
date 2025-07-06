@@ -32,7 +32,10 @@ function LoginPageContent() {
 
   const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    // TODO FOR PRODUCTION: Replace this with a call to your authentication service (e.g., Firebase Auth, Supabase, etc.).
+    // The service should return a secure token upon successful login.
     if (email === "s.connor@email.com" && password.length > 0) {
+      // This is a temporary simulation for the prototype.
       localStorage.setItem("hawk-auth", "true")
       localStorage.setItem("userFirstName", "Sarah")
       localStorage.setItem("userLastName", "Connor")
@@ -48,12 +51,15 @@ function LoginPageContent() {
 
   const handleSignUpSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    // TODO FOR PRODUCTION: Replace this with a call to your authentication service to create a new user.
+    // The service should handle password hashing and secure user creation.
     if (firstName && lastName && email && password) {
+        // This is a temporary simulation for the prototype.
         localStorage.setItem("hawk-auth", "true")
         localStorage.setItem("userFirstName", firstName)
         localStorage.setItem("userLastName", lastName)
-        localStorage.setItem("isNewUser", "true") // Set new user flag
-        localStorage.removeItem("userProfilePicture") // Ensure no old picture
+        localStorage.setItem("isNewUser", "true") 
+        localStorage.removeItem("userProfilePicture")
         
         router.push("/dashboard")
         toast({
@@ -70,7 +76,8 @@ function LoginPageContent() {
   }
 
   const handleGuestContinue = () => {
-    // Clear all potential user data to ensure a clean guest session
+    // This function provides a guest experience. In a production app, you might
+    // use a temporary anonymous session instead of clearing storage.
     localStorage.removeItem("hawk-auth");
     localStorage.removeItem("userFirstName");
     localStorage.removeItem("userLastName");

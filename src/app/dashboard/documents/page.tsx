@@ -64,6 +64,8 @@ export default function DocumentsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        // TODO FOR PRODUCTION: Replace localStorage with a call to your backend service to fetch user-specific data.
+        // This data should be fetched based on the authenticated user's session or token.
         const updateData = () => {
             const storedPolicies = localStorage.getItem("hawk-policies");
             if (storedPolicies) {
@@ -83,11 +85,14 @@ export default function DocumentsPage() {
     }, [])
 
     const updateFilesInStorage = (updatedFiles: DocumentType[]) => {
+        // TODO FOR PRODUCTION: Replace this with a call to your backend API to save the document metadata.
+        // The actual file should be uploaded to a secure cloud storage service (e.g., Firebase Storage, AWS S3).
         setFiles(updatedFiles);
         localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
     };
 
     const handleSavePolicy = () => {
+        // TODO FOR PRODUCTION: Replace this with a call to your backend API to save the policy to the user's profile.
         if (selectedPolicyId) {
             const policyToAdd = allAvailablePolicies.find(p => p.id === selectedPolicyId);
             
@@ -120,6 +125,7 @@ export default function DocumentsPage() {
     };
 
     const handleDeleteFile = (fileId: string) => {
+        // TODO FOR PRODUCTION: Replace this with a call to your backend API to delete the file from storage and the user's records.
         const updatedFiles = files.filter(file => file.id !== fileId);
         updateFilesInStorage(updatedFiles);
         toast({
