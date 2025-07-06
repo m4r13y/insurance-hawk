@@ -62,7 +62,11 @@ export default function RecommendationsPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      age: "" as any,
       zipCode: "",
+      healthStatus: "" as any,
+      conditions: "",
+      medications: "",
       preferences: [],
     },
   });
@@ -130,7 +134,7 @@ export default function RecommendationsPage() {
                 <FormField control={form.control} name="healthStatus" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Overall Health</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select your health status" /></SelectTrigger></FormControl>
                         <SelectContent>
                           <SelectItem value="excellent">Excellent</SelectItem>

@@ -14,14 +14,14 @@ import { useToast } from "@/hooks/use-toast"
 import { mockPlans } from "@/lib/mock-data"
 
 const formSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   dob: z.string().min(1, "Date of birth is required"),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  state: z.string().min(1),
-  zip: z.string().min(5),
-  phone: z.string().min(10),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zip: z.string().min(5, "Zip code is required"),
+  phone: z.string().min(10, "Phone number is required"),
   email: z.string().email(),
   medicareClaimNumber: z.string().min(1, "Medicare Claim Number is required."),
   partAEffectiveDate: z.string().optional(),
@@ -37,7 +37,21 @@ export default function ApplyPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            planId: mockPlans[0].id
+            firstName: "",
+            lastName: "",
+            dob: "",
+            address: "",
+            city: "",
+            state: "",
+            zip: "",
+            phone: "",
+            email: "",
+            medicareClaimNumber: "",
+            partAEffectiveDate: "",
+            partBEffectiveDate: "",
+            planId: mockPlans[0].id,
+            receiveByMail: false,
+            signature: ""
         }
     })
 
