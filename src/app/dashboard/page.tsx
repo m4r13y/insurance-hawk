@@ -77,19 +77,19 @@ export default function DashboardPage() {
     const missingPlans = planTypes.filter(p => !policies[p.id]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 md:space-y-12">
       <div className="max-w-4xl">
-        <h1 className="text-5xl font-extrabold tracking-tight text-slate-900">Welcome Back, Sarah!</h1>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">Welcome Back, Sarah!</h1>
         <p className="mt-4 text-lg text-slate-600 leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
       </div>
 
-      <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2 p-2">
-          <CardHeader className="p-8">
-            <CardTitle className="text-2xl font-semibold">Your Current Plan</CardTitle>
+      <div className="grid gap-6 md:gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-xl md:text-2xl font-semibold">Your Current Plan</CardTitle>
             <CardDescription className="text-base">Blue Shield Secure PPO</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 px-8">
+          <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Premium</p>
@@ -105,19 +105,19 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="p-8">
+          <CardFooter>
             <Button variant="outline" asChild>
               <Link href="/dashboard/plans">View Plan Details</Link>
             </Button>
           </CardFooter>
         </Card>
 
-        <Card className="flex flex-col p-2">
-          <CardHeader className="p-8">
-            <CardTitle className="text-2xl font-semibold">Next Steps</CardTitle>
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-xl md:text-2xl font-semibold">Next Steps</CardTitle>
             <CardDescription className="text-base">Complete these items for your coverage.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 space-y-6 px-8">
+          <CardContent className="flex-1 space-y-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
                 <FileUp className="h-6 w-6" />
@@ -143,33 +143,33 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-3">
-         <Card className="flex flex-col bg-slate-100/70 p-2">
-            <CardHeader className="p-8">
-              <CardTitle className="text-2xl font-semibold">Create Your Financial Plan</CardTitle>
+      <div className="grid gap-6 md:gap-8 lg:gap-10 lg:grid-cols-3">
+         <Card className="flex flex-col bg-slate-100/70">
+            <CardHeader>
+              <CardTitle className="text-xl md:text-2xl font-semibold">Create Your Financial Plan</CardTitle>
               <CardDescription className="text-base">Get a personalized retirement plan to secure your future.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-8">
+            <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600">
                     <PiggyBank className="h-10 w-10" />
                 </div>
                 <p className="mb-4 text-slate-600">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
             </CardContent>
-             <CardFooter className="p-8">
+             <CardFooter>
                  <Button className="w-full" size="lg" asChild>
                     <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                  </Button>
              </CardFooter>
          </Card>
         
-        <Card className="lg:col-span-2 p-2">
-            <CardHeader className="p-8">
-                <CardTitle className="text-2xl font-semibold">Your Retirement Readiness Score</CardTitle>
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="text-xl md:text-2xl font-semibold">Your Retirement Readiness Score</CardTitle>
                 <CardDescription className="text-base">Based on your current coverage and financial planning.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-8">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                 <div className="flex flex-col items-center justify-center text-center p-4">
-                    <div className="text-8xl font-extrabold text-slate-900">{retirementScore}</div>
+                    <div className="text-7xl md:text-8xl font-extrabold text-slate-900">{retirementScore}</div>
                     <div className="font-medium text-slate-500">out of 100</div>
                     <Progress value={retirementScore} className="mt-6 w-full" indicatorClassName="bg-teal-500" />
                 </div>
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                 </div>
             </CardContent>
             {missingPlans.length > 0 && (
-                <CardFooter className="flex-col items-start border-t p-8 bg-slate-100/50">
+                <CardFooter className="flex-col items-start border-t bg-slate-100/50">
                      <h4 className="font-semibold text-slate-800 text-lg">Areas for Improvement</h4>
                      <p className="text-sm text-slate-500 mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
                      <div className="flex flex-wrap gap-3">

@@ -92,7 +92,7 @@ function ReviewSection({ title, children }: { title: string, children: React.Rea
     return (
         <div className="mb-8">
             <h4 className="font-headline text-xl font-semibold border-b pb-3 mb-4">{title}</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-base">{children}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-base">{children}</div>
         </div>
     )
 }
@@ -177,17 +177,17 @@ export default function ApplyPage() {
         return (
             <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
                 <Card className="w-full">
-                    <CardHeader className="p-8">
+                    <CardHeader>
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
                              <PartyPopper className="h-8 w-8" />
                         </div>
-                        <CardTitle className="font-headline text-3xl pt-4">Application Complete!</CardTitle>
+                        <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Application Complete!</CardTitle>
                         <CardDescription className="text-base">Thank you for submitting your application.</CardDescription>
                     </CardHeader>
-                    <CardContent className="px-8">
+                    <CardContent>
                         <p className="text-muted-foreground">A licensed agent will be in contact with you shortly to finalize your enrollment. You will also receive a confirmation email with a copy of your application.</p>
                     </CardContent>
-                    <CardFooter className="p-8">
+                    <CardFooter>
                         <Button asChild className="w-full" size="lg">
                             <Link href="/dashboard">Return to Dashboard</Link>
                         </Button>
@@ -201,14 +201,14 @@ export default function ApplyPage() {
         return (
              <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
                 <Card className="w-full">
-                    <CardHeader className="p-8">
+                    <CardHeader>
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                              <FileText className="h-6 w-6" />
                         </div>
-                        <CardTitle className="font-headline text-3xl pt-4">Medicare Supplement Application</CardTitle>
+                        <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Medicare Supplement Application</CardTitle>
                         <CardDescription className="text-base">Let's get you enrolled in the right plan.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6 px-8">
+                    <CardContent className="space-y-6">
                         <p className="text-base text-muted-foreground">This application will help us determine your eligibility for a Medicare Supplement insurance policy. The process should take about 5-10 minutes.</p>
                         <Alert>
                             <ShieldCheck className="h-4 w-4" />
@@ -218,7 +218,7 @@ export default function ApplyPage() {
                             </AlertDescription>
                         </Alert>
                     </CardContent>
-                    <CardFooter className="p-8">
+                    <CardFooter>
                         <Button className="w-full" size="lg" onClick={() => setStep(1)}>
                             Start Application <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -231,7 +231,7 @@ export default function ApplyPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-4xl font-bold">Submit Application</h1>
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Submit Application</h1>
         <p className="text-muted-foreground text-lg mt-2">Please follow the steps to complete your enrollment.</p>
       </div>
 
@@ -244,12 +244,12 @@ export default function ApplyPage() {
             </div>
         </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
             {step === 1 && ( // Personal Info
                 <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Personal Information</CardTitle></CardHeader>
-                    <CardContent className="space-y-6 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Personal Information</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                             <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -274,8 +274,8 @@ export default function ApplyPage() {
 
             {step === 2 && ( // Medicare Details
                 <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Medicare Details</CardTitle></CardHeader>
-                    <CardContent className="space-y-6 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Medicare Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
                         <FormField control={form.control} name="medicareClaimNumber" render={({ field }) => <FormItem><FormLabel>Medicare ID Number (MBI)</FormLabel><FormControl><Input placeholder="Found on your Medicare card" {...field} /></FormControl><FormMessage /></FormItem>} />
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="partAEffectiveDate" render={({ field }) => <FormItem><FormLabel>Part A Effective Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -287,8 +287,8 @@ export default function ApplyPage() {
 
             {step === 3 && ( // Current Coverage
                  <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Current Coverage</CardTitle><CardDescription>Tell us about any other health insurance you have.</CardDescription></CardHeader>
-                    <CardContent className="space-y-8 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Current Coverage</CardTitle><CardDescription>Tell us about any other health insurance you have.</CardDescription></CardHeader>
+                    <CardContent className="space-y-8">
                         <FormField control={form.control} name="hasOtherInsurance" render={({ field }) => <FormItem><FormLabel>Are you currently covered by any other health insurance (e.g., from an employer, Medicaid)?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         <FormField control={form.control} name="hasMedigap" render={({ field }) => <FormItem><FormLabel>Do you have a Medicare Supplement (Medigap) plan now?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         <FormField control={form.control} name="isReplacingCoverage" render={({ field }) => <FormItem><FormLabel>Are you replacing your current coverage with this new plan?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormDescription>If yes, do not cancel any coverage until you receive written approval for your new plan.</FormDescription><FormMessage /></FormItem>} />
@@ -299,8 +299,8 @@ export default function ApplyPage() {
 
             {step === 4 && ( // Medical History
                  <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Medical Questions</CardTitle><CardDescription>Your answers help determine eligibility and are kept confidential.</CardDescription></CardHeader>
-                    <CardContent className="space-y-8 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Medical Questions</CardTitle><CardDescription>Your answers help determine eligibility and are kept confidential.</CardDescription></CardHeader>
+                    <CardContent className="space-y-8">
                         <FormField control={form.control} name="hospitalizedLast12Months" render={({ field }) => <FormItem><FormLabel>Have you been hospitalized in the last 12 months?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         <FormField control={form.control} name="hasMajorIllness" render={({ field }) => <FormItem><FormLabel>Have you ever been diagnosed with or treated for heart disease, cancer, stroke, COPD, or kidney failure?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         {watchHasMajorIllness === "yes" && <FormField control={form.control} name="majorIllnessDetails" render={({ field }) => <FormItem><FormLabel>Please provide details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />}
@@ -312,8 +312,8 @@ export default function ApplyPage() {
 
             {step === 5 && ( // Plan Selection
                 <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Plan Selection</CardTitle></CardHeader>
-                    <CardContent className="space-y-8 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Plan Selection</CardTitle></CardHeader>
+                    <CardContent className="space-y-8">
                         <FormField control={form.control} name="planId" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Selected Plan</FormLabel>
@@ -340,8 +340,8 @@ export default function ApplyPage() {
 
             {step === 6 && ( // Agent Assistance
                 <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Agent Assistance</CardTitle></CardHeader>
-                    <CardContent className="space-y-6 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Agent Assistance</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
                         <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application and answer any questions?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes, please have an agent call me.</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No, I'll proceed on my own.</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                     </CardContent>
                 </Card>
@@ -349,8 +349,8 @@ export default function ApplyPage() {
 
             {step === 7 && ( // Review & Submit
                  <Card>
-                    <CardHeader className="p-8"><CardTitle className="text-2xl">Review Your Application</CardTitle><CardDescription>Please review all information for accuracy before submitting.</CardDescription></CardHeader>
-                    <CardContent className="space-y-8 p-8 pt-0">
+                    <CardHeader><CardTitle className="text-2xl">Review Your Application</CardTitle><CardDescription>Please review all information for accuracy before submitting.</CardDescription></CardHeader>
+                    <CardContent className="space-y-8">
                         <ReviewSection title="Personal Information">
                             <ReviewItem label="Full Name" value={`${form.getValues("firstName")} ${form.getValues("lastName")}`} />
                             <ReviewItem label="Date of Birth" value={form.getValues("dob")} />

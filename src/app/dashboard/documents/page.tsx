@@ -70,16 +70,16 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-8">
        <div>
-        <h1 className="font-headline text-4xl font-bold">Policies & Documents</h1>
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Policies & Documents</h1>
         <p className="text-muted-foreground mt-2 text-lg">Manage your policies and upload related documents securely.</p>
       </div>
 
       <Card>
-        <CardHeader className="p-8">
+        <CardHeader>
             <CardTitle className="text-2xl">My Policies</CardTitle>
             <CardDescription>Here are the policies you've added to your nest. Upload documents for each policy.</CardDescription>
         </CardHeader>
-        <CardContent className="px-8">
+        <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mockPolicies.map((policy) => {
                     const Icon = policy.icon;
@@ -111,17 +111,17 @@ export default function DocumentsPage() {
       </Card>
       
       <Card>
-        <CardHeader className="p-8">
+        <CardHeader>
           <CardTitle className="text-2xl">Document Upload</CardTitle>
           <CardDescription>Drag and drop files here or click to browse. You can also upload from your policy cards above.</CardDescription>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
+        <CardContent>
           <div
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className={`flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg transition-colors ${
+            className={`flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed rounded-lg transition-colors ${
               isDragging ? 'border-primary bg-primary/10' : 'border-border'
             }`}
           >
@@ -135,42 +135,44 @@ export default function DocumentsPage() {
       </Card>
 
       <Card>
-        <CardHeader className="p-8">
+        <CardHeader>
           <CardTitle className="text-2xl">Your Uploaded Documents</CardTitle>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>File Name</TableHead>
-                        <TableHead>Upload Date</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {files.map((doc) => (
-                        <TableRow key={doc.id}>
-                            <TableCell className="font-medium flex items-center gap-3">
-                                <File className="h-5 w-5 text-muted-foreground" />
-                                {doc.name}
-                            </TableCell>
-                            <TableCell>{doc.uploadDate}</TableCell>
-                            <TableCell>{doc.size}</TableCell>
-                            <TableCell className="text-right">
-                                <Button variant="ghost" size="icon">
-                                    <Download className="h-4 w-4" />
-                                    <span className="sr-only">Download</span>
-                                </Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                     <span className="sr-only">Delete</span>
-                                </Button>
-                            </TableCell>
+        <CardContent>
+            <div className="w-full overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>File Name</TableHead>
+                            <TableHead>Upload Date</TableHead>
+                            <TableHead>Size</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {files.map((doc) => (
+                            <TableRow key={doc.id}>
+                                <TableCell className="font-medium flex items-center gap-3">
+                                    <File className="h-5 w-5 text-muted-foreground" />
+                                    {doc.name}
+                                </TableCell>
+                                <TableCell>{doc.uploadDate}</TableCell>
+                                <TableCell>{doc.size}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon">
+                                        <Download className="h-4 w-4" />
+                                        <span className="sr-only">Download</span>
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Delete</span>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
       </Card>
     </div>

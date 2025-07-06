@@ -56,7 +56,7 @@ const HealthPlanCard = ({ plan }: { plan: HealthPlan }) => (
         <CardContent>
             <div className="flex justify-between items-baseline border-b pb-4">
                 <div>
-                    <p className="text-3xl font-bold">${(plan.premium - plan.taxCredit).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                    <p className="text-2xl sm:text-3xl font-bold">${(plan.premium - plan.taxCredit).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
                     <p className="text-sm text-muted-foreground">After estimated ${plan.taxCredit} tax credit</p>
                 </div>
                 <div className="flex items-center gap-1 text-amber-500">
@@ -232,7 +232,7 @@ export function HealthInsuranceQuoter() {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="min-h-[200px]">
+            <CardContent>
                 <Form {...form}>
                     <form className="space-y-8">
                         {step === 1 && (

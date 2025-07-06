@@ -216,15 +216,15 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <Card>
-                <CardHeader className="text-center p-12">
+                <CardHeader className="text-center p-8 sm:p-12">
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
                         <PartyPopper className="h-10 w-10" />
                     </div>
-                    <CardTitle className="font-headline text-4xl pt-6">Your Retirement Plan is Ready!</CardTitle>
+                    <CardTitle className="font-headline text-3xl sm:text-4xl pt-6">Your Retirement Plan is Ready!</CardTitle>
                     <CardDescription className="text-lg">Here is your personalized plan, {name}.</CardDescription>
                 </CardHeader>
-                <CardContent ref={resultsRef} className="px-12 py-10 bg-background">
-                    <div className="prose prose-xl max-w-none text-card-foreground">
+                <CardContent ref={resultsRef} className="px-6 sm:px-12 py-10 bg-background">
+                    <div className="prose lg:prose-xl max-w-none text-card-foreground">
                         {plan.split('\n').map((line, index) => {
                             const trimmedLine = line.trim();
                              if (trimmedLine.startsWith('## [ICON:')) {
@@ -254,8 +254,8 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                         })}
                     </div>
                 </CardContent>
-                 <CardFooter className="flex-col gap-8 bg-muted/50 p-8">
-                    <div className="flex gap-4 w-full">
+                 <CardFooter className="flex-col gap-8 bg-muted/50">
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
                         <Button onClick={handleDownload} className="w-full" size="lg">
                             <Download className="mr-2 h-4 w-4" />
                             Download as PDF
@@ -368,7 +368,7 @@ function RetirementPlanForm() {
         return (
             <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
                 <Card className="w-full">
-                    <CardHeader className="p-8">
+                    <CardHeader>
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                              <Loader2 className="h-8 w-8 animate-spin" />
                         </div>
@@ -401,17 +401,17 @@ function RetirementPlanForm() {
         return (
              <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
                 <Card className="w-full">
-                    <CardHeader className="p-8">
+                    <CardHeader>
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                              <Sparkles className="h-8 w-8" />
                         </div>
-                        <CardTitle className="font-headline text-3xl pt-4">Your Personalized Retirement Plan</CardTitle>
+                        <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Your Personalized Retirement Plan</CardTitle>
                         <CardDescription className="text-lg">Let's build a secure future together.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4 px-8">
+                    <CardContent className="space-y-4">
                         <p className="text-base text-muted-foreground">This confidential questionnaire helps us understand your goals to build a custom plan. The process should take about 10-15 minutes. Your information is kept strictly private and secure.</p>
                     </CardContent>
-                    <CardFooter className="p-8">
+                    <CardFooter>
                         <Button className="w-full" size="lg" onClick={() => setStep(1)}>
                             Get Started <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -436,13 +436,13 @@ function RetirementPlanForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
-                <CardHeader className="p-8">
+                <CardHeader>
                     <div className="flex items-center gap-4">
                         {CurrentStepIcon && <CurrentStepIcon className="h-8 w-8 text-primary"/>}
-                        <CardTitle className="font-headline text-2xl">{steps[step - 1].name}</CardTitle>
+                        <CardTitle className="font-headline text-xl md:text-2xl">{steps[step - 1].name}</CardTitle>
                     </div>
                 </CardHeader>
-                <CardContent className="p-8 pt-0">
+                <CardContent>
                   {step === 1 && ( // Getting Started
                       <div className="space-y-8">
                           <FormField
@@ -497,7 +497,7 @@ function RetirementPlanForm() {
                           )} />
                           <FormField control={form.control} name="hasSpouse" render={({ field }) => <FormItem><FormLabel>Do you have a spouse?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                           {watchHasSpouse === 'yes' && (
-                              <div className="grid grid-cols-2 gap-6 p-6 border rounded-md">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 border rounded-md">
                                   <FormField control={form.control} name="spouseFirstName" render={({ field }) => <FormItem><FormLabel>Spouse's First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="spouseLastName" render={({ field }) => <FormItem><FormLabel>Spouse's Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                               </div>
@@ -509,7 +509,7 @@ function RetirementPlanForm() {
                       <div className="space-y-10">
                           <div>
                               <h4 className="font-semibold mb-4 text-lg">Your Health Insurance</h4>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                   <FormField control={form.control} name="healthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="healthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="healthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -521,7 +521,7 @@ function RetirementPlanForm() {
                           {watchHasSpouse === 'yes' && (
                               <div>
                                   <h4 className="font-semibold mb-4 text-lg">Spouse's Health Insurance</h4>
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                       <FormField control={form.control} name="spouseHealthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                       <FormField control={form.control} name="spouseHealthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                       <FormField control={form.control} name="spouseHealthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -636,7 +636,7 @@ function RetirementPlanForm() {
                           </div>
                             <div>
                               <h4 className="font-semibold mb-4 text-lg">Monthly Totals ($)</h4>
-                              <div className="grid grid-cols-2 gap-6">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                   <FormField control={form.control} name="totalMonthlyIncome" render={({ field }) => <FormItem><FormLabel>Total Income</FormLabel><FormControl><Input type="number" {...field} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>} />
                                   <FormField control={form.control} name="totalMonthlyExpenses" render={({ field }) => <FormItem><FormLabel>Total Expenses</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
                               </div>
@@ -738,7 +738,7 @@ export default function FinancialPlanPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-4xl font-bold">Financial Plan</h1>
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Financial Plan</h1>
         <p className="text-muted-foreground mt-2 text-lg">
           Use our AI tool to create a personalized retirement strategy.
         </p>

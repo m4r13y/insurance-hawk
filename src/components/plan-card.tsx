@@ -26,7 +26,7 @@ export function PlanCard({ plan, showSelectButton = true }: { plan: Plan, showSe
       </CardHeader>
       <CardContent className="flex-1 space-y-4">
         <div className="flex justify-between items-baseline border-b pb-4">
-          <p className="text-3xl font-bold">${plan.premium}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+          <p className="text-2xl sm:text-3xl font-bold">${plan.premium}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
         </div>
         <div className="grid grid-cols-2 gap-4 text-sm">
             <div><p className="text-muted-foreground">Deductible</p><p className="font-medium">${plan.deductible}</p></div>

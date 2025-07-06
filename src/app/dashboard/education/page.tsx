@@ -92,8 +92,8 @@ function Chatbot() {
     };
 
     return (
-        <Card className="h-[75vh] flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between p-6">
+        <Card className="h-full flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle className="text-2xl">Medicare Assistant</CardTitle>
                     <CardDescription>Your AI-powered guide to Medicare questions.</CardDescription>
@@ -107,13 +107,13 @@ function Chatbot() {
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
                 <ScrollArea className="h-full" viewportRef={scrollAreaViewportRef}>
-                    <div className="p-8 space-y-6" ref={scrollAreaContentRef}>
+                    <div className="p-4 md:p-8 space-y-6" ref={scrollAreaContentRef}>
                         {messages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
+                            <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-8">
+                                 <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
                                     <Sparkles className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-2xl font-semibold">Welcome to the Medicare Assistant!</h3>
+                                <h3 className="text-xl md:text-2xl font-semibold">Welcome to the Medicare Assistant!</h3>
                                 <p className="text-muted-foreground mt-2 text-lg">Ask a question or try one of the prompts below.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8 w-full max-w-3xl">
                                     {starterPrompts.map(prompt => (
@@ -161,7 +161,7 @@ function Chatbot() {
                     </div>
                 </ScrollArea>
             </CardContent>
-            <CardFooter className="pt-6 border-t p-6">
+            <CardFooter className="pt-6 border-t">
                 <form
                     className="flex w-full items-center space-x-3"
                     onSubmit={(e) => {
@@ -191,12 +191,14 @@ function Chatbot() {
 // Main page component
 export default function EducationPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 h-[calc(100vh-10rem)] flex flex-col">
       <div>
-        <h1 className="font-headline text-4xl font-bold">Medicare Education Center</h1>
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Medicare Education Center</h1>
         <p className="text-muted-foreground mt-2 text-lg">Understand your Medicare options with our AI-powered chatbot.</p>
       </div>
-      <Chatbot />
+      <div className="flex-1 min-h-0">
+        <Chatbot />
+      </div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useTransition, useEffect } from "react";
@@ -279,7 +280,7 @@ export default function QuotesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-4xl font-bold">Get Supplemental Quotes</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Get Supplemental Quotes</h1>
         <p className="text-muted-foreground mt-2 text-lg">
           Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
         </p>
@@ -288,14 +289,14 @@ export default function QuotesPage() {
        <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-6">
         <AccordionItem value="medigap" className="border-b-0">
           <Card>
-            <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+            <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
               Medicare Supplement (Medigap)
             </AccordionTrigger>
-            <AccordionContent className="px-8 pb-8">
+            <AccordionContent className="px-6 sm:px-8 pb-6 sm:pb-8">
                <CardDescription className="mb-8">All fields are required to get your instant Medigap quotes.</CardDescription>
                 <Form {...medigapForm}>
                     <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={medigapForm.control} name="gender" render={({ field }) => (
@@ -349,7 +350,7 @@ export default function QuotesPage() {
                         )}
                         />
                         <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between p-4">
+                            <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
                                 <div className="space-y-0.5">
                                     <FormLabel>Apply Discounts</FormLabel>
                                 </div>
@@ -397,60 +398,62 @@ export default function QuotesPage() {
                         Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
                     </CardDescription>
                     {medigapQuotes.length > 0 ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px]"></TableHead>
-                                    <TableHead>Carrier</TableHead>
-                                    <TableHead>Plan</TableHead>
-                                    <TableHead>Rating</TableHead>
-                                    <TableHead className="text-right">Monthly Premium</TableHead>
-                                    <TableHead className="w-[120px] text-right"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {medigapQuotes.map((quote, index) => {
-                                    const key = `${quote.id}-${index}`;
-                                    const isOpen = openRows.includes(key);
-                                    return (
-                                        <React.Fragment key={key}>
-                                            <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
-                                                <TableCell>
-                                                    <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                                                </TableCell>
-                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
-                                                <TableCell>{quote.plan_name}</TableCell>
-                                                <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
-                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button asChild onClick={(e) => e.stopPropagation()} className="bg-accent hover:bg-accent/90">
-                                                        <Link href="/dashboard/apply">Select Plan</Link>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                            {isOpen && (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="p-0">
-                                                        <div className="p-6 bg-muted/50 text-sm">
-                                                            <h4 className="font-semibold mb-2">Plan Details</h4>
-                                                            <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
-                                                            {quote.discounts?.length > 0 && (
-                                                                <div className="mt-2">
-                                                                    <p className="font-semibold text-muted-foreground">Available Discounts:</p>
-                                                                    <ul className="list-disc pl-5">
-                                                                        {quote.discounts.map((d, i) => <li key={i} className="capitalize">{d.name}: {d.value * 100}%</li>)}
-                                                                    </ul>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                        <div className="w-full overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[50px]"></TableHead>
+                                        <TableHead>Carrier</TableHead>
+                                        <TableHead>Plan</TableHead>
+                                        <TableHead>Rating</TableHead>
+                                        <TableHead className="text-right">Monthly Premium</TableHead>
+                                        <TableHead className="w-[120px] text-right"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {medigapQuotes.map((quote, index) => {
+                                        const key = `${quote.id}-${index}`;
+                                        const isOpen = openRows.includes(key);
+                                        return (
+                                            <React.Fragment key={key}>
+                                                <TableRow onClick={() => toggleRow(key)} className="cursor-pointer">
+                                                    <TableCell>
+                                                        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                    <TableCell>{quote.plan_name}</TableCell>
+                                                    <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
+                                                    <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button asChild onClick={(e) => e.stopPropagation()} className="bg-accent hover:bg-accent/90">
+                                                            <Link href="/dashboard/apply">Select Plan</Link>
+                                                        </Button>
                                                     </TableCell>
                                                 </TableRow>
-                                            )}
-                                        </React.Fragment>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
+                                                {isOpen && (
+                                                    <TableRow>
+                                                        <TableCell colSpan={6} className="p-0">
+                                                            <div className="p-6 bg-muted/50 text-sm">
+                                                                <h4 className="font-semibold mb-2">Plan Details</h4>
+                                                                <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
+                                                                {quote.discounts?.length > 0 && (
+                                                                    <div className="mt-2">
+                                                                        <p className="font-semibold text-muted-foreground">Available Discounts:</p>
+                                                                        <ul className="list-disc pl-5">
+                                                                            {quote.discounts.map((d, i) => <li key={i} className="capitalize">{d.name}: {d.value * 100}%</li>)}
+                                                                        </ul>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </React.Fragment>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
                     ) : (
                         <div className="text-center py-16 text-muted-foreground">
                             <FileDigit className="h-10 w-10 mx-auto mb-4"/>
@@ -466,14 +469,14 @@ export default function QuotesPage() {
             
         <AccordionItem value="dental" className="border-b-0">
             <Card>
-                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Dental Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-8 pb-8">
+                <AccordionContent className="px-6 sm:px-8 pb-6 sm:pb-8">
                     <CardDescription className="mb-8">Fill out the fields below to get instant dental quotes.</CardDescription>
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={dentalForm.control} name="gender" render={({ field }) => (
@@ -537,6 +540,7 @@ export default function QuotesPage() {
                                 Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
                             </CardDescription>
                             {dentalQuotes.length > 0 ? (
+                                <div className="w-full overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -592,6 +596,7 @@ export default function QuotesPage() {
                                         })}
                                     </TableBody>
                                 </Table>
+                                </div>
                             ) : (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <FileDigit className="h-10 w-10 mx-auto mb-4"/>
@@ -607,16 +612,16 @@ export default function QuotesPage() {
             
         <AccordionItem value="hospital-indemnity" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Hospital Indemnity
                 </AccordionTrigger>
-                <AccordionContent className="px-8 pb-8">
+                <AccordionContent className="px-6 sm:px-8 pb-6 sm:pb-8">
                     <CardDescription className="mb-8">
                         Fill out the fields below to get instant quotes. Customize your plan with optional riders.
                     </CardDescription>
                    <Form {...hospitalIndemnityForm}>
                     <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
@@ -676,13 +681,13 @@ export default function QuotesPage() {
                 {hospitalIndemnityQuotes && (
                     <div className="mt-8">
                         {featuredQuote ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                                 <Card className="lg:col-span-2">
-                                    <CardHeader className="p-8">
-                                        <CardTitle className="font-headline text-3xl">{featuredQuote.carrier.name}</CardTitle>
+                                    <CardHeader>
+                                        <CardTitle className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</CardTitle>
                                         <CardDescription>{featuredQuote.plan_name}</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-8 p-8">
+                                    <CardContent className="space-y-8">
                                         <div>
                                             <Label htmlFor="base-benefit-select" className="text-base">Hospital Confinement Benefit</Label>
                                             <Select
@@ -785,7 +790,7 @@ export default function QuotesPage() {
                                     <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6">
                                         <div className="flex justify-between items-center">
                                             <p className="font-semibold text-lg">Total Monthly Premium</p>
-                                            <p className="font-headline text-4xl font-bold">${totalPremium.toFixed(2)}</p>
+                                            <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
                                         </div>
                                          <Button size="lg" asChild className="bg-accent hover:bg-accent/90"><Link href="/dashboard/apply">Select This Plan</Link></Button>
                                     </CardFooter>
@@ -835,10 +840,10 @@ export default function QuotesPage() {
 
         <AccordionItem value="life-insurance" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-6 sm:p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Life Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-8 pb-8">
+                <AccordionContent className="px-6 sm:px-8 pb-6 sm:pb-8">
                     <CardDescription className="mb-6">
                         An agent will prepare a personalized quote for you.
                     </CardDescription>

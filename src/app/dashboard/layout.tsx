@@ -117,7 +117,7 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b bg-white/80 px-8 backdrop-blur-sm">
+          <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b bg-white/80 px-4 sm:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="lg:hidden" />
                 <div className="relative hidden lg:block">
@@ -129,7 +129,7 @@ export default function DashboardLayout({
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-8 md:p-12">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-12">
             {children}
           </main>
         </div>
