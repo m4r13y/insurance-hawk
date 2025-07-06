@@ -164,17 +164,14 @@ const steps = [
     { id: 7, name: 'Review & Submit', icon: FileCheck, fields: [] as FieldPath<FormSchemaType>[] },
 ];
 
-const iconMap: { [key: string]: React.ElementType } = {
-    Shield,
-    TrendingUp,
-    Landmark,
-    Rocket,
-    AlertTriangle,
-    PartyPopper,
-    Percent,
-    FileText,
-    BookUser,
-    Sparkles,
+const sectionIconMap: { [key: string]: React.ElementType } = {
+    'Retirement Plan Summary': PartyPopper,
+    'Insurance Review': Shield,
+    'Investment & Income Strategy': TrendingUp,
+    'Tax Planning': Landmark,
+    'Estate Planning': FileText,
+    'Next Steps': Rocket,
+    'Important Disclaimer': AlertTriangle,
 };
 
 function PlanResults({ plan, name }: { plan: string, name: string }) {
@@ -299,25 +296,21 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                     <div className="prose lg:prose-xl max-w-none text-card-foreground">
                         {plan.split('\n').map((line, index) => {
                             const trimmedLine = line.trim();
-                             if (trimmedLine.startsWith('## [ICON:')) {
-                                const match = trimmedLine.match(/## \[ICON:(.*?)\] (.*)/);
-                                if (match) {
-                                    const iconName = match[1];
-                                    const title = match[2];
-                                    const IconComponent = iconMap[iconName];
-                                    return (
-                                        <h3 key={index} className="font-headline text-2xl font-semibold mt-8 mb-4 flex items-center gap-3">
-                                            {IconComponent && <IconComponent className="h-6 w-6 text-primary" />}
-                                            {title}
-                                        </h3>
-                                    );
-                                }
+                             if (trimmedLine.startsWith('## ')) {
+                                const title = trimmedLine.substring(3).trim();
+                                const IconComponent = sectionIconMap[title];
+                                return (
+                                    <h2 key={index} className="font-headline text-2xl font-semibold mt-8 mb-4 flex items-center gap-3 border-b pb-2">
+                                        {IconComponent && <IconComponent className="h-7 w-7 text-primary" />}
+                                        <span>{title}</span>
+                                    </h2>
+                                );
+                            }
+                             if (trimmedLine.startsWith('### ')) {
+                                return <h3 key={index} className="font-headline text-xl font-semibold mt-6 mb-2">{trimmedLine.substring(4)}</h3>;
                             }
                             if (trimmedLine.startsWith('* ')) {
                                 return <li key={index} className="ml-6 list-disc">{trimmedLine.substring(2)}</li>;
-                            }
-                             if (trimmedLine.startsWith('### ')) {
-                                return <h4 key={index} className="font-headline text-xl font-semibold mt-6 mb-2">{trimmedLine.substring(4)}</h4>;
                             }
                             if (trimmedLine === '') {
                                 return null;
@@ -500,15 +493,22 @@ function RetirementPlanForm() {
     }
   
   const CurrentStepIcon = steps[step - 1]?.icon;
+  const totalFormSteps = steps.length - 1;
+  const progressPercentage = step > totalFormSteps ? 100 : Math.round((step / totalFormSteps) * 100);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
        <div className="space-y-4">
         <div className="space-y-3">
-            <Progress value={(step / (steps.length-1)) * 100} />
+            <Progress value={progressPercentage} />
             <div className="flex justify-between text-sm text-muted-foreground">
-                <p>Step {step} of {steps.length -1}: <strong>{steps[step - 1].name}</strong></p>
-                <p>{Math.round((step / (steps.length-1)) * 100)}% Complete</p>
+                <p>
+                  {step > totalFormSteps
+                    ? <strong>{steps[step - 1].name}</strong>
+                    : <>Step {step} of {totalFormSteps}: <strong>{steps[step - 1].name}</strong></>
+                  }
+                </p>
+                <p>{progressPercentage}% Complete</p>
             </div>
         </div>
         <Form {...form}>
@@ -798,7 +798,7 @@ function RetirementPlanForm() {
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 ) : (
-                    <Button type="button" onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90">
+                    <Button type="button" onClick={form.handleSubmit(onSubmit)}>
                         Generate My Plan
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
