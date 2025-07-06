@@ -16,8 +16,7 @@ import { auth, db } from "@/lib/firebase"
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile,
-  signOut
+  updateProfile
 } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { useAuthState } from "react-firebase-hooks/auth"
@@ -85,7 +84,7 @@ function LoginPageContent() {
         router.push("/dashboard")
         toast({
             title: "Account Created!",
-            description: "Welcome to MedicareAlly. Let's get started.",
+            description: "Welcome to HawkNest. Let's get started.",
         })
 
     } catch (error: any) {
@@ -97,16 +96,6 @@ function LoginPageContent() {
         })
     }
   }
-
-  const handleGuestContinue = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out guest:", error);
-    } finally {
-      router.push("/dashboard");
-    }
-  };
 
   if (loading || user) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
@@ -169,7 +158,7 @@ function LoginPageContent() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
                         </div>
                         <Button type="submit" className="w-full">
                             <UserPlus className="mr-2 h-4 w-4" />
@@ -180,7 +169,7 @@ function LoginPageContent() {
                     <form onSubmit={handleLoginSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email address</Label>
-                            <Input id="email" type="email" placeholder="s.connor@email.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center">
@@ -198,17 +187,11 @@ function LoginPageContent() {
                 )}
             </CardContent>
           </Card>
-          <div className="text-center text-sm text-slate-600 space-y-2">
+          <div className="text-center text-sm text-slate-600">
             <p>
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
                 <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
                     {isSignUp ? 'Sign In' : 'Sign Up'}
-                </button>
-            </p>
-             <p>
-                or{" "}
-                <button onClick={handleGuestContinue} className="font-medium text-sky-600 hover:underline">
-                    Continue as a Guest
                 </button>
             </p>
           </div>
