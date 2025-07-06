@@ -146,115 +146,128 @@ export default function DashboardPage() {
         <p className="mt-2 text-lg text-slate-600 leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
       </div>
 
-      <div className="grid gap-6 md:gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
-        {primaryHealthPlan ? (
-             <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Your Current Plan</CardTitle>
-                <CardDescription>{primaryHealthPlan.provider} {primaryHealthPlan.planName}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">Premium</p>
-                    <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 150).toFixed(2)}/mo</p>
-                  </div>
-                  <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
-                </div>
-                <div>
-                  <div className="flex justify-between items-baseline text-sm mb-1">
-                    <p className="text-slate-500">Deductible Progress</p>
-                    <p className="font-medium text-slate-700">$125 / $500</p>
-                  </div>
-                  <Progress value={25} aria-label="25% of deductible met" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" asChild>
-                  <Link href="/dashboard/documents">View All Policies</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-        ) : (
-             <Card className="lg:col-span-2 flex flex-col items-center justify-center text-center p-8">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6">
-                    <ShieldCheck className="h-10 w-10" />
-                </div>
-                <CardTitle className="font-headline text-2xl">Secure Your Health</CardTitle>
-                <CardDescription className="mt-2">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
-                <CardFooter className="mt-6 p-0">
-                    <Button asChild size="lg">
-                        <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-        )}
-       
-        <Card className="flex flex-col bg-slate-100/70">
-            <CardHeader>
-              <CardTitle>Create Your Financial Plan</CardTitle>
-              <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                    <PiggyBank className="h-10 w-10" />
-                </div>
-                <p className="mb-4 text-slate-600">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
-            </CardContent>
-             <CardFooter>
-                 <Button className="w-full" size="lg" asChild>
-                    <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                 </Button>
-             </CardFooter>
-         </Card>
+      <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
         
-        <Card className="lg:col-span-3">
-            <CardHeader>
-                <CardTitle>Your Retirement Readiness Score</CardTitle>
-                <CardDescription>Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                <div className="flex flex-col items-center justify-center text-center p-4">
-                    <div className="text-7xl md:text-8xl font-extrabold text-slate-900">{retirementScore}</div>
-                    <div className="font-medium text-slate-500">out of 100</div>
-                    <Progress value={retirementScore} className="mt-6 w-full" indicatorClassName="bg-teal-500" />
-                </div>
-                <div>
-                    <h4 className="font-semibold mb-4 text-lg text-slate-800">Your Current Plans</h4>
-                    {ownedPlanCategories.length > 0 ? (
-                        <div className="space-y-4">
-                            {ownedPlanCategories.map(category => {
-                                const planInfo = planTypes.find(p => p.id === category);
-                                const Icon = planInfo?.icon || FileDigit;
-                                return (
-                                    <div key={category} className="flex items-center gap-4 p-3 bg-green-50 rounded-md border border-green-200">
-                                        <Icon className="h-6 w-6 text-green-600" />
-                                        <p className="font-medium text-base text-green-800">{category}</p>
-                                    </div>
-                                )
-                            })}
+        {/* Top Row Wrapper */}
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10">
+            {/* Card 1: Current Plan / Prompt */}
+            <div className="w-full lg:w-2/3">
+                {primaryHealthPlan ? (
+                     <Card className="h-full">
+                      <CardHeader>
+                        <CardTitle>Your Current Plan</CardTitle>
+                        <CardDescription>{primaryHealthPlan.provider} {primaryHealthPlan.planName}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-slate-500">Premium</p>
+                            <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 150).toFixed(2)}/mo</p>
+                          </div>
+                          <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
                         </div>
-                    ) : (
-                        <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the Documents page to add your policies.</p>
-                    )}
-                </div>
-            </CardContent>
-            {missingPlans.length > 0 && (
-                <CardFooter className="flex-col items-start border-t bg-slate-100/50 p-6 sm:p-8">
-                     <h4 className="font-semibold text-slate-800 text-lg">Areas for Improvement</h4>
-                     <p className="text-sm text-slate-500 mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
-                     <div className="flex flex-wrap gap-3">
-                        {missingPlans.map(plan => (
-                            <Button key={plan.id} variant="secondary" size="sm" asChild>
-                                <Link href={plan.href || '#'}>
-                                    Add {plan.label}
-                                </Link>
+                        <div>
+                          <div className="flex justify-between items-baseline text-sm mb-1">
+                            <p className="text-slate-500">Deductible Progress</p>
+                            <p className="font-medium text-slate-700">$125 / $500</p>
+                          </div>
+                          <Progress value={25} aria-label="25% of deductible met" />
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" asChild>
+                          <Link href="/dashboard/documents">View All Policies</Link>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                ) : (
+                     <Card className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6">
+                            <ShieldCheck className="h-10 w-10" />
+                        </div>
+                        <CardTitle className="font-headline text-2xl">Secure Your Health</CardTitle>
+                        <CardDescription className="mt-2">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
+                        <CardFooter className="mt-6 p-0">
+                            <Button asChild size="lg">
+                                <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
                             </Button>
-                        ))}
-                     </div>
-                </CardFooter>
-            )}
-        </Card>
+                        </CardFooter>
+                    </Card>
+                )}
+            </div>
+            
+            {/* Card 2: Financial Plan */}
+            <div className="w-full lg:w-1/3">
+                <Card className="h-full flex flex-col bg-slate-100/70">
+                    <CardHeader>
+                      <CardTitle>Create Your Financial Plan</CardTitle>
+                      <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                            <PiggyBank className="h-10 w-10" />
+                        </div>
+                        <p className="mb-4 text-slate-600">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
+                    </CardContent>
+                     <CardFooter>
+                         <Button className="w-full" size="lg" asChild>
+                            <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                         </Button>
+                     </CardFooter>
+                 </Card>
+            </div>
+        </div>
+        
+        {/* Bottom Row */}
+        <div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Your Retirement Readiness Score</CardTitle>
+                    <CardDescription>Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                    <div className="flex flex-col items-center justify-center text-center p-4">
+                        <div className="text-7xl md:text-8xl font-extrabold text-slate-900">{retirementScore}</div>
+                        <div className="font-medium text-slate-500">out of 100</div>
+                        <Progress value={retirementScore} className="mt-6 w-full" indicatorClassName="bg-teal-500" />
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-4 text-lg text-slate-800">Your Current Plans</h4>
+                        {ownedPlanCategories.length > 0 ? (
+                            <div className="space-y-4">
+                                {ownedPlanCategories.map(category => {
+                                    const planInfo = planTypes.find(p => p.id === category);
+                                    const Icon = planInfo?.icon || FileDigit;
+                                    return (
+                                        <div key={category} className="flex items-center gap-4 p-3 bg-green-50 rounded-md border border-green-200">
+                                            <Icon className="h-6 w-6 text-green-600" />
+                                            <p className="font-medium text-base text-green-800">{category}</p>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the Documents page to add your policies.</p>
+                        )}
+                    </div>
+                </CardContent>
+                {missingPlans.length > 0 && (
+                    <CardFooter className="flex-col items-start border-t bg-slate-100/50 p-6 sm:p-8">
+                         <h4 className="font-semibold text-slate-800 text-lg">Areas for Improvement</h4>
+                         <p className="text-sm text-slate-500 mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
+                         <div className="flex flex-wrap gap-3">
+                            {missingPlans.map(plan => (
+                                <Button key={plan.id} variant="secondary" size="sm" asChild>
+                                    <Link href={plan.href || '#'}>
+                                        Add {plan.label}
+                                    </Link>
+                                </Button>
+                            ))}
+                         </div>
+                    </CardFooter>
+                )}
+            </Card>
+        </div>
       </div>
     </div>
   )
