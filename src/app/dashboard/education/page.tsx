@@ -120,7 +120,7 @@ function Chatbot() {
                                         <Button
                                             key={prompt}
                                             variant="outline"
-                                            className="text-left justify-start h-auto py-2"
+                                            className="text-left justify-start h-auto py-2 whitespace-normal"
                                             onClick={() => handleSendMessage(prompt)}
                                         >
                                             {prompt}
