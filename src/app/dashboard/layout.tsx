@@ -8,6 +8,16 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
@@ -33,7 +43,8 @@ import {
   PiggyBank,
   Heart,
   UserPlus,
-  LogIn
+  LogIn,
+  X
 } from "lucide-react";
 
 
@@ -52,6 +63,7 @@ function DashboardLayoutComponent({
   const isActive = (path: string) => pathname === path;
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
     // Check for guest auth status in localStorage
@@ -68,9 +80,39 @@ function DashboardLayoutComponent({
   
   if (isApplyFormPage) {
     return (
-      <div className="w-screen h-screen bg-slate-50 overflow-y-auto grid place-items-center p-4 sm:p-6 md:p-8">
-        {children}
-      </div>
+      <>
+        <div className="relative w-screen h-screen bg-slate-50 overflow-y-auto grid place-items-center p-4 sm:p-6 md:p-8">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-10 rounded-full"
+                onClick={() => setIsAlertOpen(true)}
+            >
+                <X className="h-6 w-6" />
+                <span className="sr-only">Exit Form</span>
+            </Button>
+            {children}
+        </div>
+         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to exit?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Any unsaved changes will be lost. If you exit, you will have to start the application over.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setIsAlertOpen(false)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                        setIsAlertOpen(false);
+                        router.push('/dashboard/apply');
+                    }}>
+                        Exit
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 
