@@ -244,12 +244,12 @@ export default function QuotesPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {quotes.map((quote) => (
-                                <TableRow key={quote.id}>
-                                    <TableCell className="font-medium">{quote.carrier.name}</TableCell>
+                            {quotes.map((quote, index) => (
+                                <TableRow key={quote.id || index}>
+                                    <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
                                     <TableCell>{quote.plan_name}</TableCell>
                                     <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
-                                    <TableCell className="text-right font-bold">${quote.monthly_premium.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
                                     <TableCell className="text-right">
                                         <Button asChild>
                                             <Link href="/dashboard/apply">Select Plan</Link>
