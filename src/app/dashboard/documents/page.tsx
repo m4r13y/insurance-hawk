@@ -5,12 +5,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { mockDocuments as initialMockDocuments } from '@/lib/mock-data';
 import { UploadCloud, File, Trash2, Download, Shield, Activity, LifeBuoy, Home, PiggyBank, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Combobox } from '@/components/ui/combobox';
-import type { Policy as PolicyType } from '@/types';
+import type { Policy as PolicyType, Document as DocumentType } from '@/types';
 
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -56,7 +55,7 @@ const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, op
 }));
 
 export default function DocumentsPage() {
-    const [files, setFiles] = useState(initialMockDocuments);
+    const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedPolicyId, setSelectedPolicyId] = useState<string | undefined>();
@@ -68,7 +67,16 @@ export default function DocumentsPage() {
         if (storedPolicies) {
             setPolicies(JSON.parse(storedPolicies));
         }
+        const storedFiles = localStorage.getItem("hawk-documents");
+        if (storedFiles) {
+            setFiles(JSON.parse(storedFiles));
+        }
     }, [])
+
+    const updateFilesInStorage = (updatedFiles: DocumentType[]) => {
+        setFiles(updatedFiles);
+        localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
+    };
 
     const handleSavePolicy = () => {
         if (selectedPolicyId) {
@@ -102,6 +110,15 @@ export default function DocumentsPage() {
         }
     };
 
+    const handleDeleteFile = (fileId: string) => {
+        const updatedFiles = files.filter(file => file.id !== fileId);
+        updateFilesInStorage(updatedFiles);
+        toast({
+            title: "Document Deleted",
+            description: "The file has been removed from your list."
+        });
+    };
+
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -126,18 +143,19 @@ export default function DocumentsPage() {
         setIsDragging(false);
 
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const uploadedFile = e.dataTransfer.files[0];
             toast({
                 title: 'File "Uploaded"',
-                description: `${e.dataTransfer.files[0].name} has been added to the list. (Demo)`,
+                description: `${uploadedFile.name} has been added to the list. (Demo)`,
             });
             // This is a simulation. In a real app, you would upload the file.
             const newFile = {
                 id: `doc-${Date.now()}`,
-                name: e.dataTransfer.files[0].name,
+                name: uploadedFile.name,
                 uploadDate: new Date().toISOString().split('T')[0],
-                size: `${(e.dataTransfer.files[0].size / 1024 / 1024).toFixed(2)}MB`,
+                size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
             };
-            setFiles(prev => [newFile, ...prev]);
+            updateFilesInStorage([newFile, ...files]);
             e.dataTransfer.clearData();
         }
     };
@@ -227,40 +245,47 @@ export default function DocumentsPage() {
           <CardTitle className="text-xl">Your Uploaded Documents</CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="w-full overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>File Name</TableHead>
-                            <TableHead>Upload Date</TableHead>
-                            <TableHead>Size</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {files.map((doc) => (
-                            <TableRow key={doc.id}>
-                                <TableCell className="font-medium flex items-center gap-3">
-                                    <File className="h-5 w-5 text-muted-foreground" />
-                                    {doc.name}
-                                </TableCell>
-                                <TableCell>{doc.uploadDate}</TableCell>
-                                <TableCell>{doc.size}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <Download className="h-4 w-4" />
-                                        <span className="sr-only">Download</span>
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete</span>
-                                    </Button>
-                                </TableCell>
+            {files.length > 0 ? (
+                <div className="w-full overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>File Name</TableHead>
+                                <TableHead>Upload Date</TableHead>
+                                <TableHead>Size</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+                        </TableHeader>
+                        <TableBody>
+                            {files.map((doc) => (
+                                <TableRow key={doc.id}>
+                                    <TableCell className="font-medium flex items-center gap-3">
+                                        <File className="h-5 w-5 text-muted-foreground" />
+                                        {doc.name}
+                                    </TableCell>
+                                    <TableCell>{doc.uploadDate}</TableCell>
+                                    <TableCell>{doc.size}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon">
+                                            <Download className="h-4 w-4" />
+                                            <span className="sr-only">Download</span>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteFile(doc.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Delete</span>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            ) : (
+                 <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <h3 className="text-lg font-semibold">No Documents Uploaded</h3>
+                    <p className="text-muted-foreground mt-2">Use the uploader above to add your first document.</p>
+                </div>
+            )}
         </CardContent>
       </Card>
 
