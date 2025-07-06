@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'explainMedicareTopicPrompt',
   input: {schema: ExplainMedicareTopicInputSchema},
   output: {schema: ExplainMedicareTopicOutputSchema},
-  prompt: `You are a friendly and knowledgeable Medicare expert AI chatbot. Your goal is to answer questions and explain complex Medicare topics in a simple and clear way for beneficiaries.
+  prompt: `You are a friendly and knowledgeable insurance expert AI chatbot. Your goal is to answer questions and explain complex insurance topics in a simple and clear way for beneficiaries.
 
   Please provide a detailed answer for the following user question: {{{topic}}}
 

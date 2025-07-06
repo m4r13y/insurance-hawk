@@ -46,7 +46,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-primary from-40% to-accent bg-clip-text text-transparent">Welcome Back, Sarah!</h1>
-        <p className="text-muted-foreground mt-1">Here's your Medicare portal overview.</p>
+        <p className="text-muted-foreground mt-1">Here's your policy nest overview.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

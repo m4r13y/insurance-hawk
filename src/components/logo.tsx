@@ -1,12 +1,12 @@
-import { ShieldCheck } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Logo({className}: {className?: string}) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <ShieldCheck className="h-7 w-7" />
+      <Home className="h-7 w-7" />
       <h1 className="font-headline text-xl font-bold">
-        MedicareAlly
+        Policy Nest
       </h1>
     </div>
   );

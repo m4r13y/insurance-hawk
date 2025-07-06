@@ -39,8 +39,8 @@ export default function LoginPage() {
             <Logo className="text-white"/>
         </div>
         <div className="text-center">
-            <h2 className="font-headline text-4xl font-bold">Your Ally in Medicare</h2>
-            <p className="mt-4 text-lg text-primary-foreground/80">Navigate your Medicare options with confidence and clarity.</p>
+            <h2 className="font-headline text-4xl font-bold">Your Policies, All in One Nest.</h2>
+            <p className="mt-4 text-lg text-primary-foreground/80">Securely manage your insurance and financial plans from one convenient place.</p>
         </div>
         <div className="w-full max-w-md text-sm">
             <ul className="space-y-4">

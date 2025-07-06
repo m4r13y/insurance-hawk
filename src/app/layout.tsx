@@ -15,8 +15,8 @@ const merriweather_sans = Merriweather_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MedicareAlly",
-  description: "Your trusted partner in Medicare insurance.",
+  title: "Policy Nest",
+  description: "Your policies, all in one nest.",
 };
 
 export default function RootLayout({
