@@ -20,7 +20,7 @@ import Link from "next/link"
 
 const formSchema = z.object({
   // General
-  greatestConcern: z.string().min(1, "This field is required"),
+  greatestConcern: z.string().min(1, "Please select an option."),
   taxFilingStatus: z.enum(["single", "married_jointly", "married_separately", "hoh", "widow"]),
   hasSpouse: z.enum(["yes", "no"]),
 
@@ -123,6 +123,14 @@ const assetTypeOptions = [
     { id: 'stocks', label: 'Stocks' }
 ];
 
+const financialConcerns = [
+    { id: 'health', label: 'Protecting my health and insuring my assets' },
+    { id: 'retirement', label: 'Ensuring I have financial security for tomorrow' },
+    { id: 'investments', label: 'Growing my money with confidence' },
+    { id: 'estate', label: 'Planning my estate and gifting strategies' },
+    { id: 'taxes', label: 'Maximizing my tax reduction techniques' },
+    { id: 'planning', label: 'Continuous monitoring of my financial plan' },
+];
 
 const steps = [
     { id: 1, name: 'Your Picture', icon: Users, fields: ['greatestConcern', 'taxFilingStatus', 'hasSpouse', 'spouseFirstName', 'spouseLastName'] as FieldPath<FormSchemaType>[] },
@@ -328,8 +336,37 @@ export default function FinancialPlanPage() {
                 <CardContent>
 
             {step === 1 && ( // Your Picture
-                <div className="space-y-6">
-                    <FormField control={form.control} name="greatestConcern" render={({ field }) => <FormItem><FormLabel>What is your greatest financial concern?</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <div className="space-y-8">
+                     <FormField
+                        control={form.control}
+                        name="greatestConcern"
+                        render={({ field }) => (
+                            <FormItem className="space-y-4">
+                                <FormLabel className="text-base font-semibold">To start, which of the following best describes your greatest financial concern?</FormLabel>
+                                <FormDescription>This helps us understand what's most important to you right now.</FormDescription>
+                                <FormControl>
+                                    <RadioGroup
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
+                                    >
+                                        {financialConcerns.map((concern) => (
+                                            <FormItem key={concern.id} className="flex items-center space-x-3 space-y-0 rounded-lg border bg-background hover:bg-secondary/50 p-4 transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                                                <FormControl>
+                                                    <RadioGroupItem value={concern.id} />
+                                                </FormControl>
+                                                <FormLabel className="font-normal w-full cursor-pointer !mt-0">
+                                                    {concern.label}
+                                                </FormLabel>
+                                            </FormItem>
+                                        ))}
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <FormField control={form.control} name="taxFilingStatus" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Tax Filing Status</FormLabel>
@@ -536,7 +573,7 @@ export default function FinancialPlanPage() {
             {step === 6 && ( // Review
                  <div className="space-y-6">
                     <ReviewSection title="General">
-                        <ReviewItem label="Greatest Financial Concern" value={form.getValues("greatestConcern")} />
+                        <ReviewItem label="Greatest Financial Concern" value={financialConcerns.find(c => c.id === form.getValues("greatestConcern"))?.label} />
                         <ReviewItem label="Tax Filing Status" value={form.getValues("taxFilingStatus")} />
                         <ReviewItem label="Has a Spouse" value={form.getValues("hasSpouse")} />
                         {form.getValues("hasSpouse") === 'yes' && <ReviewItem label="Spouse Name" value={`${form.getValues("spouseFirstName")} ${form.getValues("spouseLastName")}`} />}
