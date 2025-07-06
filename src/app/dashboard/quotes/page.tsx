@@ -10,9 +10,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Form,
@@ -632,7 +632,7 @@ export default function QuotesPage() {
                                                                     <div key={j} className="flex items-center">
                                                                         <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
                                                                         <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex justify-between w-full font-normal cursor-pointer">
-                                                                            <span>{benefit.amount} / {benefit.quantifier}</span>
+                                                                            <span>${benefit.amount} / {benefit.quantifier}</span>
                                                                             <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
                                                                         </Label>
                                                                     </div>

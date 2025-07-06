@@ -5,9 +5,13 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { mockDocuments } from '@/lib/mock-data';
-import { UploadCloud, File, Trash2, Download, Shield, Activity, LifeBuoy, Home, PiggyBank } from 'lucide-react';
+import { mockDocuments as initialMockDocuments } from '@/lib/mock-data';
+import { UploadCloud, File, Trash2, Download, Shield, Activity, LifeBuoy, Home, PiggyBank, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 
 // Custom icon for Dental since it's not in lucide-react
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -16,17 +20,43 @@ const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-
-const mockPolicies = [
+const initialMockPolicies = [
     { id: 'health', label: 'Health/Medical Plan', icon: Shield, provider: 'Blue Shield', planName: 'Secure PPO' },
     { id: 'dental', label: 'Dental Coverage', icon: DentalIcon, provider: 'Delta Dental', planName: 'PPO Plus' },
     { id: 'cancer', label: 'Cancer Insurance', icon: Activity, provider: 'Aflac', planName: 'Guaranteed Issue' },
 ];
 
 export default function DocumentsPage() {
-    const [files, setFiles] = useState(mockDocuments);
+    const [files, setFiles] = useState(initialMockDocuments);
+    const [policies, setPolicies] = useState(initialMockPolicies);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [newPolicy, setNewPolicy] = useState({ label: '', provider: '', planName: '' });
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
+
+    const handleSavePolicy = () => {
+        if (newPolicy.label && newPolicy.provider && newPolicy.planName) {
+            const newPolicyWithIdAndIcon = {
+                ...newPolicy,
+                id: `policy-${Date.now()}`,
+                icon: LifeBuoy, // Use a default icon for newly added policies
+            };
+            setPolicies(prev => [...prev, newPolicyWithIdAndIcon]);
+            setNewPolicy({ label: '', provider: '', planName: '' }); // Reset form
+            setIsDialogOpen(false); // Close dialog
+            toast({
+                title: 'Policy Added',
+                description: `${newPolicy.label} has been added to your policies.`,
+            });
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Missing Information',
+                description: 'Please fill out all fields to add a policy.',
+            });
+        }
+    };
+
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -75,13 +105,19 @@ export default function DocumentsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-            <CardTitle className="text-2xl">My Policies</CardTitle>
-            <CardDescription>Here are the policies you've added to your nest. Upload documents for each policy.</CardDescription>
+        <CardHeader className="flex flex-row justify-between items-start">
+            <div>
+                <CardTitle className="text-2xl">My Policies</CardTitle>
+                <CardDescription>Here are the policies you've added to your nest.</CardDescription>
+            </div>
+            <Button size="icon" variant="outline" onClick={() => setIsDialogOpen(true)}>
+                <PlusCircle className="h-6 w-6" />
+                <span className="sr-only">Add Policy</span>
+            </Button>
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockPolicies.map((policy) => {
+                {policies.map((policy) => {
                     const Icon = policy.icon;
                     return (
                         <Card key={policy.id} className="flex flex-col">
@@ -175,6 +211,50 @@ export default function DocumentsPage() {
             </div>
         </CardContent>
       </Card>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Policy</DialogTitle>
+                    <DialogDescription>
+                        Enter the details of your new insurance policy below.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="policyLabel">Policy Type</Label>
+                        <Input
+                            id="policyLabel"
+                            value={newPolicy.label}
+                            onChange={(e) => setNewPolicy({ ...newPolicy, label: e.target.value })}
+                            placeholder="e.g., Life Insurance"
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="provider">Provider / Company</Label>
+                        <Input
+                            id="provider"
+                            value={newPolicy.provider}
+                            onChange={(e) => setNewPolicy({ ...newPolicy, provider: e.target.value })}
+                            placeholder="e.g., Prudential"
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="planName">Plan Name</Label>
+                        <Input
+                            id="planName"
+                            value={newPolicy.planName}
+                            onChange={(e) => setNewPolicy({ ...newPolicy, planName: e.target.value })}
+                            placeholder="e.g., Term Life Essentials"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSavePolicy}>Save Policy</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   )
 }
