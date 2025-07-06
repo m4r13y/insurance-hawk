@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'login-gradient': 'linear-gradient(220.55deg, #4063BC 0%, #6B0013 100%)',
+      },
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-merriweather-sans)', 'sans-serif'],

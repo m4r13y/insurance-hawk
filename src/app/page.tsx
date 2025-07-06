@@ -34,7 +34,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-primary/90 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 text-primary-foreground">
+      <div className="hidden bg-login-gradient lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 text-primary-foreground">
         <div className="self-start">
             <Logo className="text-white"/>
         </div>
