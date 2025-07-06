@@ -41,8 +41,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Star, Info } from "lucide-react";
-import { getMedigapQuotes, getDentalQuotes } from "./actions";
-import type { Quote, DentalQuote } from "@/types";
+import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
+import type { Quote, DentalQuote, HospitalIndemnityQuote } from "@/types";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,6 +59,13 @@ const medigapFormSchema = z.object({
 });
 
 const dentalFormSchema = z.object({
+  zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
+  age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
+  gender: z.enum(["female", "male"]),
+  tobacco: z.enum(["false", "true"]),
+});
+
+const hospitalIndemnityFormSchema = z.object({
   zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
   age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
   gender: z.enum(["female", "male"]),
@@ -87,6 +94,10 @@ export default function QuotesPage() {
   const [dentalQuotes, setDentalQuotes] = useState<DentalQuote[] | null>(null);
   const [dentalError, setDentalError] = useState<string | null>(null);
 
+  const [isHospitalIndemnityPending, startHospitalIndemnityTransition] = useTransition();
+  const [hospitalIndemnityQuotes, setHospitalIndemnityQuotes] = useState<HospitalIndemnityQuote[] | null>(null);
+  const [hospitalIndemnityError, setHospitalIndemnityError] = useState<string | null>(null);
+
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
     defaultValues: {
@@ -109,6 +120,17 @@ export default function QuotesPage() {
       tobacco: "false",
     },
   });
+
+  const hospitalIndemnityForm = useForm<z.infer<typeof hospitalIndemnityFormSchema>>({
+    resolver: zodResolver(hospitalIndemnityFormSchema),
+    defaultValues: {
+        zipCode: "",
+        age: 65,
+        gender: "female",
+        tobacco: "false",
+    },
+  });
+
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -149,6 +171,20 @@ export default function QuotesPage() {
       }
     });
   }
+
+  function onHospitalIndemnitySubmit(values: z.infer<typeof hospitalIndemnityFormSchema>) {
+    setHospitalIndemnityError(null);
+    setHospitalIndemnityQuotes(null);
+    startHospitalIndemnityTransition(async () => {
+        const result = await getHospitalIndemnityQuotes(values);
+        if (result.error) {
+            setHospitalIndemnityError(result.error);
+        }
+        if (result.quotes) {
+            setHospitalIndemnityQuotes(result.quotes);
+        }
+    });
+  }
   
   return (
     <div className="space-y-6">
@@ -164,7 +200,7 @@ export default function QuotesPage() {
                 <TabsTrigger value="medigap">Medigap</TabsTrigger>
                 <TabsTrigger value="dental">Dental</TabsTrigger>
                 <TabsTrigger value="life-insurance">Life Insurance</TabsTrigger>
-                <TabsTrigger value="ltc">Long-Term Care</TabsTrigger>
+                <TabsTrigger value="hospital-indemnity">Hospital Indemnity</TabsTrigger>
             </TabsList>
             <TabsContent value="medigap" className="mt-6">
                 <Card>
@@ -457,27 +493,121 @@ export default function QuotesPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-            <TabsContent value="ltc" className="mt-6">
+            <TabsContent value="hospital-indemnity" className="mt-6">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Request a Long-Term Care Quote</CardTitle>
+                        <CardTitle>Hospital Indemnity Quotes</CardTitle>
                         <CardDescription>
-                            An agent will prepare a personalized quote for you.
+                            Fill out the fields below to get instant quotes.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
-                            <AlertDescription>
-                                We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
-                            </AlertDescription>
-                        </Alert>
-                        <div className="mt-6 flex justify-end">
-                            <Button size="lg">Request Quote from Agent</Button>
+                       <Form {...hospitalIndemnityForm}>
+                        <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                <FormLabel>Gender</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                <FormLabel>Uses Tobacco?</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
                         </div>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
+                            {isHospitalIndemnityPending ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
+                            ) : (
+                                <>Get Hospital Indemnity Quotes</>
+                            )}
+                            </Button>
+                        </div>
+                        </form>
+                    </Form>
                     </CardContent>
                 </Card>
+                {isHospitalIndemnityPending && (
+                    <Card className="mt-6 flex flex-col items-center justify-center p-12">
+                        <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                        <h3 className="mt-4 font-headline text-xl font-semibold">Finding hospital indemnity plans...</h3>
+                        <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
+                    </Card>
+                )}
+                {hospitalIndemnityError && (
+                    <Alert variant="destructive" className="mt-6">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>Error Fetching Hospital Indemnity Quotes</AlertTitle>
+                    <AlertDescription>{hospitalIndemnityError}</AlertDescription>
+                    </Alert>
+                )}
+                {hospitalIndemnityQuotes && (
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle>Your Hospital Indemnity Quotes</CardTitle>
+                            <CardDescription>
+                                Found {hospitalIndemnityQuotes.length} plan{hospitalIndemnityQuotes.length !== 1 ? 's' : ''} based on your information.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {hospitalIndemnityQuotes.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Carrier</TableHead>
+                                            <TableHead>Plan Name</TableHead>
+                                            <TableHead>Benefit</TableHead>
+                                            <TableHead className="text-right">Monthly Premium</TableHead>
+                                            <TableHead className="text-right"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {hospitalIndemnityQuotes.map((quote) => (
+                                            <TableRow key={quote.id}>
+                                                <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
+                                                <TableCell>{quote.plan_name}</TableCell>
+                                                <TableCell>
+                                                    <div className="font-medium">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</div>
+                                                    <div className="text-xs text-muted-foreground">per {quote.benefit_quantifier}</div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold">${quote.monthly_premium?.toFixed(2) ?? 'N/A'}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button asChild><Link href="/dashboard/apply">Select Plan</Link></Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
+                                    <p>No quotes found for the selected criteria.</p>
+                                    <p className="text-sm">Please try different options.</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
             </TabsContent>
        </Tabs>
     </div>

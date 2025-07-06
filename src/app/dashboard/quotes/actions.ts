@@ -1,7 +1,7 @@
 
 "use server";
 
-import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, HospitalIndemnityQuote, HospitalIndemnityQuoteRequestValues } from "@/types";
 
 // The raw response from the Medigap csgapi
 type CsgQuote = {
@@ -163,5 +163,82 @@ export async function getDentalQuotes(values: DentalQuoteRequestValues) {
     } catch (e: any) {
         console.error(e);
         return { error: e.message || "Failed to fetch dental quotes. Please try again later." };
+    }
+}
+
+// The raw response from the Hospital Indemnity csgapi
+type CsgHospitalIndemnityQuote = {
+    key: string;
+    plan_name: string;
+    company_base: {
+        name: string;
+    };
+    base_plans: {
+        benefits: {
+            rate: number;
+            amount: string;
+            quantifier: string;
+        }[];
+    }[];
+};
+
+export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteRequestValues) {
+    try {
+        const params = new URLSearchParams({
+            zip5: values.zipCode,
+            age: values.age.toString(),
+            gender: values.gender === 'female' ? 'F' : 'M',
+            tobacco: values.tobacco === 'true' ? '1' : '0',
+            limit: '10',
+        });
+
+        const url = `https://private-anon-1df7339add-hospitalindemnityapi.apiary-mock.com/v1/hospital_indemnity/quotes.json?${params.toString()}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'x-api-token': '0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Hospital Indemnity API Error Response:", errorText);
+            throw new Error(`Hospital Indemnity API request failed: ${response.statusText}`);
+        }
+
+        const data: unknown = await response.json();
+
+        if (data && typeof data === 'object' && !Array.isArray(data) && 'message' in data) {
+            throw new Error((data as { message: string }).message);
+        }
+
+        if (!Array.isArray(data)) {
+            console.error("Hospital Indemnity API Error: Unexpected response format", data);
+            throw new Error('Unexpected response format from Hospital Indemnity API. Expected an array of quotes.');
+        }
+
+        const csgQuotes = data as CsgHospitalIndemnityQuote[];
+
+        // Flatten the quotes because each quote can have multiple benefit levels
+        const quotes: HospitalIndemnityQuote[] = csgQuotes.flatMap(q => {
+            const planBenefits = q.base_plans?.flatMap(bp => bp.benefits) || [];
+            return planBenefits.map(benefit => ({
+                id: `${q.key}-${benefit.amount}`, // Create a unique ID for each benefit level
+                carrier: {
+                    name: q.company_base.name,
+                    logo_url: null,
+                },
+                plan_name: q.plan_name,
+                monthly_premium: benefit.rate,
+                benefit_amount: benefit.amount,
+                benefit_quantifier: benefit.quantifier,
+            }));
+        });
+
+        return { quotes };
+
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "Failed to fetch hospital indemnity quotes. Please try again later." };
     }
 }

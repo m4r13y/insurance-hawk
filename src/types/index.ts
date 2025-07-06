@@ -67,3 +67,22 @@ export type DentalQuote = {
     benefit_amount: string;
     benefit_quantifier: string;
 };
+
+export type HospitalIndemnityQuoteRequestValues = {
+  zipCode: string;
+  age: number;
+  gender: 'female' | 'male';
+  tobacco: 'false' | 'true';
+};
+
+export type HospitalIndemnityQuote = {
+    id: string;
+    carrier: {
+        name: string;
+        logo_url: string | null;
+    };
+    plan_name: string;
+    monthly_premium: number;
+    benefit_amount: string;
+    benefit_quantifier: string;
+};
