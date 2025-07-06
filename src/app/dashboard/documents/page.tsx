@@ -64,14 +64,22 @@ export default function DocumentsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        const storedPolicies = localStorage.getItem("hawk-policies");
-        if (storedPolicies) {
-            setPolicies(JSON.parse(storedPolicies));
+        const updateData = () => {
+            const storedPolicies = localStorage.getItem("hawk-policies");
+            if (storedPolicies) {
+                setPolicies(JSON.parse(storedPolicies));
+            }
+            const storedFiles = localStorage.getItem("hawk-documents");
+            if (storedFiles) {
+                setFiles(JSON.parse(storedFiles));
+            }
         }
-        const storedFiles = localStorage.getItem("hawk-documents");
-        if (storedFiles) {
-            setFiles(JSON.parse(storedFiles));
-        }
+        updateData();
+        window.addEventListener("storage", updateData);
+
+        return () => {
+            window.removeEventListener("storage", updateData);
+        };
     }, [])
 
     const updateFilesInStorage = (updatedFiles: DocumentType[]) => {
@@ -123,18 +131,41 @@ export default function DocumentsPage() {
     const handleFiles = (uploadedFiles: FileList) => {
         if (uploadedFiles && uploadedFiles.length > 0) {
             const uploadedFile = uploadedFiles[0];
-            toast({
-                title: 'File "Uploaded"',
-                description: `${uploadedFile.name} has been added to the list. (Demo)`,
-            });
-            // This is a simulation. In a real app, you would upload the file.
-            const newFile = {
-                id: `doc-${Date.now()}`,
-                name: uploadedFile.name,
-                uploadDate: new Date().toISOString().split('T')[0],
-                size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const dataUrl = e.target?.result as string;
+                if(dataUrl) {
+                    const newFile: DocumentType = {
+                        id: `doc-${Date.now()}`,
+                        name: uploadedFile.name,
+                        uploadDate: new Date().toISOString().split('T')[0],
+                        size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
+                        dataUrl: dataUrl,
+                    };
+                    updateFilesInStorage([newFile, ...files]);
+                    toast({
+                        title: 'File Uploaded',
+                        description: `${uploadedFile.name} has been added to your documents.`,
+                    });
+                } else {
+                     toast({
+                        variant: 'destructive',
+                        title: 'Upload Failed',
+                        description: 'Could not read the file. Please try again.',
+                    });
+                }
             };
-            updateFilesInStorage([newFile, ...files]);
+            
+            reader.onerror = () => {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Upload Failed',
+                    description: 'An error occurred while reading the file.',
+                });
+            }
+            
+            reader.readAsDataURL(uploadedFile);
         }
     };
 
@@ -142,7 +173,6 @@ export default function DocumentsPage() {
         if (e.target.files) {
             handleFiles(e.target.files);
         }
-        // Reset the input value to allow uploading the same file again
         if(e.target) e.target.value = '';
     };
 
@@ -282,9 +312,11 @@ export default function DocumentsPage() {
                                     <TableCell>{doc.uploadDate}</TableCell>
                                     <TableCell>{doc.size}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon">
-                                            <Download className="h-4 w-4" />
-                                            <span className="sr-only">Download</span>
+                                        <Button asChild variant="ghost" size="icon">
+                                            <a href={doc.dataUrl} download={doc.name}>
+                                                <Download className="h-4 w-4" />
+                                                <span className="sr-only">Download</span>
+                                            </a>
                                         </Button>
                                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteFile(doc.id)}>
                                             <Trash2 className="h-4 w-4" />

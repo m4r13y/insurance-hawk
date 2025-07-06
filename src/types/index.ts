@@ -23,6 +23,7 @@ export type Document = {
   name: string;
   uploadDate: string;
   size: string;
+  dataUrl: string;
 };
 
 export type Policy = {
