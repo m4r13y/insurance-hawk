@@ -1,9 +1,12 @@
+
 "use server";
 
 import { z } from "zod";
 import {
   initialRecommendationPrompt,
   explainPlanRecommendation,
+  generateRetirementPlan,
+  type GenerateRetirementPlanInput,
 } from "@/ai/flows";
 import { mockPlans } from "@/lib/mock-data";
 import type { Plan } from "@/types";
@@ -68,5 +71,15 @@ export async function getPlanRecommendation(
   } catch (e) {
     console.error(e);
     return { error: "Failed to generate recommendation. Please try again." };
+  }
+}
+
+export async function getRetirementPlan(values: GenerateRetirementPlanInput) {
+  try {
+    const { plan } = await generateRetirementPlan(values);
+    return { plan };
+  } catch (e) {
+    console.error(e);
+    return { error: "Could not generate your retirement plan. Please try again later." };
   }
 }

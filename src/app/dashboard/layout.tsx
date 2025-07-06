@@ -28,7 +28,6 @@ import {
   Sparkles,
   BookOpen,
   FileDigit,
-  PiggyBank,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -57,8 +56,8 @@ export default function DashboardLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Plan Recommendations">
-                    <Link href="/dashboard/recommendations"><Sparkles /><span>Plan Recommendations</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Guided Plans">
+                    <Link href="/dashboard/recommendations"><Sparkles /><span>Guided Plans</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
@@ -74,11 +73,6 @@ export default function DashboardLayout({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/apply")} tooltip="Submit Application">
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/financial-plan")} tooltip="Retirement Plan">
-                    <Link href="/dashboard/financial-plan"><PiggyBank /><span>Retirement Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
