@@ -60,15 +60,15 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="flex items-center justify-center py-12 px-4">
-        <div className="mx-auto grid w-[350px] gap-6">
+        <div className="mx-auto grid w-[380px] gap-8">
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Welcome Back</h1>
+            <h1 className="text-4xl font-bold">Welcome Back</h1>
             <p className="text-muted-foreground">
               Enter your credentials to access your portal.
             </p>
           </div>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-8">
                  <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="email">Email address</Label>

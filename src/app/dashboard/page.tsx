@@ -78,35 +78,35 @@ export default function DashboardPage() {
     const missingPlans = planTypes.filter(p => !policies[p.id]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-primary from-40% to-accent bg-clip-text text-transparent">Welcome Back, Sarah!</h1>
-        <p className="text-muted-foreground mt-1">Here's your nest overview.</p>
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-primary from-40% to-accent bg-clip-text text-transparent">Welcome Back, Sarah!</h1>
+        <p className="text-muted-foreground mt-2 text-lg">Here's your nest overview.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-xl">Your Current Plan</CardTitle>
+          <CardHeader className="p-8">
+            <CardTitle className="text-2xl">Your Current Plan</CardTitle>
             <CardDescription>Blue Shield Secure PPO</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 px-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Premium</p>
-                <p className="text-2xl font-bold">$150/mo</p>
+                <p className="text-3xl font-bold">$150/mo</p>
               </div>
               <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Deductible Progress</p>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-4">
                 <Progress value={25} aria-label="25% of deductible met" />
-                <span className="text-sm font-medium">$125 / $500</span>
+                <span className="text-base font-medium">$125 / $500</span>
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="p-8">
             <Button variant="outline" asChild>
               <Link href="/dashboard/plans">View Plan Details</Link>
             </Button>
@@ -114,29 +114,29 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-xl">Next Steps</CardTitle>
+          <CardHeader className="p-8">
+            <CardTitle className="text-2xl">Next Steps</CardTitle>
             <CardDescription>Complete these items for your coverage.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 space-y-4">
+          <CardContent className="flex-1 space-y-6 px-8">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <FileUp className="h-5 w-5" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <FileUp className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-medium">Upload Documents</p>
+                <p className="font-semibold text-base">Upload Documents</p>
                 <p className="text-sm text-muted-foreground">Proof of residency needed.</p>
               </div>
               <Button size="icon" variant="ghost" className="ml-auto" asChild>
-                <Link href="/dashboard/documents"><ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/dashboard/documents"><ArrowRight className="h-5 w-5" /></Link>
               </Button>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 text-green-600">
-                <CheckCircle2 className="h-5 w-5" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/10 text-green-600">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-medium">Application Submitted</p>
+                <p className="font-semibold text-base">Application Submitted</p>
                 <p className="text-sm text-muted-foreground">Status: Pending Review</p>
               </div>
             </div>
@@ -144,44 +144,44 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
          <Card className="flex flex-col bg-primary/5">
-            <CardHeader>
-              <CardTitle className="text-xl">Create Your Financial Plan</CardTitle>
+            <CardHeader className="p-8">
+              <CardTitle className="text-2xl">Create Your Financial Plan</CardTitle>
               <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <PiggyBank className="h-8 w-8" />
+            <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <PiggyBank className="h-10 w-10" />
                 </div>
                 <p className="mb-4 text-muted-foreground">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
             </CardContent>
-             <CardFooter>
-                 <Button className="w-full bg-accent hover:bg-accent/90" asChild>
+             <CardFooter className="p-8">
+                 <Button className="w-full bg-accent hover:bg-accent/90" size="lg" asChild>
                     <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                  </Button>
              </CardFooter>
          </Card>
         
         <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle className="text-xl">Your Retirement Readiness Score</CardTitle>
+            <CardHeader className="p-8">
+                <CardTitle className="text-2xl">Your Retirement Readiness Score</CardTitle>
                 <CardDescription>Based on your current coverage and financial planning.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center p-8">
                 <div className="flex flex-col items-center justify-center text-center p-4">
-                    <div className="text-7xl font-bold text-primary">{retirementScore}</div>
+                    <div className="text-8xl font-bold text-primary">{retirementScore}</div>
                     <div className="font-medium text-muted-foreground">out of 100</div>
-                    <Progress value={retirementScore} className="mt-4 w-full" indicatorClassName="bg-accent" />
+                    <Progress value={retirementScore} className="mt-6 w-full" indicatorClassName="bg-accent" />
                 </div>
                 <div>
-                    <h4 className="font-semibold mb-3">Your Current Plans</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Toggle the switches for plans you currently have to update your score.</p>
-                    <div className="space-y-4">
+                    <h4 className="font-semibold mb-4 text-lg">Your Current Plans</h4>
+                    <p className="text-sm text-muted-foreground mb-6">Toggle the switches for plans you currently have to update your score.</p>
+                    <div className="space-y-5">
                         {planTypes.map(plan => (
                             <div key={plan.id} className="flex items-center justify-between">
-                                <Label htmlFor={`plan-${plan.id}`} className="flex items-center gap-3 font-normal cursor-pointer">
-                                    <plan.icon className="h-5 w-5 text-muted-foreground" />
+                                <Label htmlFor={`plan-${plan.id}`} className="flex items-center gap-4 font-normal cursor-pointer text-base">
+                                    <plan.icon className="h-6 w-6 text-muted-foreground" />
                                     {plan.label}
                                 </Label>
                                 <Switch 
@@ -195,10 +195,10 @@ export default function DashboardPage() {
                 </div>
             </CardContent>
             {missingPlans.length > 0 && (
-                <CardFooter className="flex-col items-start border-t pt-6 bg-secondary/50">
-                     <h4 className="font-semibold text-card-foreground">Areas for Improvement</h4>
+                <CardFooter className="flex-col items-start border-t p-8 bg-secondary/50">
+                     <h4 className="font-semibold text-card-foreground text-lg">Areas for Improvement</h4>
                      <p className="text-sm text-muted-foreground mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
-                     <div className="flex flex-wrap gap-2">
+                     <div className="flex flex-wrap gap-3">
                         {missingPlans.map(plan => (
                             <Button key={plan.id} variant="secondary" size="sm" asChild>
                                 <Link href={plan.id === 'financial' ? '/dashboard/financial-plan' : '/dashboard/quotes'}>
@@ -239,5 +239,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
-    

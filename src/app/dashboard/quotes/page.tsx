@@ -277,25 +277,25 @@ export default function QuotesPage() {
   const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Get Supplemental Quotes</h1>
-        <p className="text-muted-foreground">
+        <h1 className="font-headline text-4xl font-bold">Get Supplemental Quotes</h1>
+        <p className="text-muted-foreground mt-2 text-lg">
           Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
         </p>
       </div>
 
-       <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-4">
+       <Accordion type="single" collapsible defaultValue="medigap" className="w-full space-y-6">
         <AccordionItem value="medigap" className="border-b-0">
           <Card>
-            <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+            <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
               Medicare Supplement (Medigap)
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-               <CardDescription className="mb-6">All fields are required to get your instant Medigap quotes.</CardDescription>
+            <AccordionContent className="px-8 pb-8">
+               <CardDescription className="mb-8">All fields are required to get your instant Medigap quotes.</CardDescription>
                 <Form {...medigapForm}>
                     <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={medigapForm.control} name="gender" render={({ field }) => (
@@ -376,14 +376,14 @@ export default function QuotesPage() {
                 </Form>
 
                 {isMedigapPending && (
-                    <Card className="mt-6 flex flex-col items-center justify-center p-12">
+                    <Card className="mt-8 flex flex-col items-center justify-center p-12">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                         <h3 className="mt-4 font-headline text-xl font-semibold">Finding the best rates...</h3>
                         <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
                     </Card>
                 )}
                 {medigapError && (
-                    <Alert variant="destructive" className="mt-6">
+                    <Alert variant="destructive" className="mt-8">
                     <Terminal className="h-4 w-4" />
                     <AlertTitle>Error Fetching Quotes</AlertTitle>
                     <AlertDescription>{medigapError}</AlertDescription>
@@ -392,7 +392,7 @@ export default function QuotesPage() {
                 
                 {medigapQuotes && (
                   <div className="mt-8">
-                    <h3 className="text-lg font-semibold mb-2">Your Medigap Quotes</h3>
+                    <h3 className="text-xl font-semibold mb-2">Your Medigap Quotes</h3>
                     <CardDescription className="mb-4">
                         Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
                     </CardDescription>
@@ -431,7 +431,7 @@ export default function QuotesPage() {
                                             {isOpen && (
                                                 <TableRow>
                                                     <TableCell colSpan={6} className="p-0">
-                                                        <div className="p-4 bg-muted/50 text-sm">
+                                                        <div className="p-6 bg-muted/50 text-sm">
                                                             <h4 className="font-semibold mb-2">Plan Details</h4>
                                                             <p><strong className="text-muted-foreground">Rate Type:</strong> {quote.rate_type || 'N/A'}</p>
                                                             {quote.discounts?.length > 0 && (
@@ -452,7 +452,7 @@ export default function QuotesPage() {
                             </TableBody>
                         </Table>
                     ) : (
-                        <div className="text-center py-12 text-muted-foreground">
+                        <div className="text-center py-16 text-muted-foreground">
                             <FileDigit className="h-10 w-10 mx-auto mb-4"/>
                             <p>No quotes found for the selected criteria.</p>
                             <p className="text-sm">Please try different options.</p>
@@ -466,14 +466,14 @@ export default function QuotesPage() {
             
         <AccordionItem value="dental" className="border-b-0">
             <Card>
-                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Dental Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
-                    <CardDescription className="mb-6">Fill out the fields below to get instant dental quotes.</CardDescription>
+                <AccordionContent className="px-8 pb-8">
+                    <CardDescription className="mb-8">Fill out the fields below to get instant dental quotes.</CardDescription>
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={dentalForm.control} name="gender" render={({ field }) => (
@@ -516,14 +516,14 @@ export default function QuotesPage() {
                     </Form>
                     
                     {isDentalPending && (
-                        <Card className="mt-6 flex flex-col items-center justify-center p-12">
+                        <Card className="mt-8 flex flex-col items-center justify-center p-12">
                             <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                             <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
                             <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
                         </Card>
                     )}
                     {dentalError && (
-                        <Alert variant="destructive" className="mt-6">
+                        <Alert variant="destructive" className="mt-8">
                         <Terminal className="h-4 w-4" />
                         <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
                         <AlertDescription>{dentalError}</AlertDescription>
@@ -532,7 +532,7 @@ export default function QuotesPage() {
 
                     {dentalQuotes && (
                         <div className="mt-8">
-                            <h3 className="text-lg font-semibold mb-2">Your Dental Quotes</h3>
+                            <h3 className="text-xl font-semibold mb-2">Your Dental Quotes</h3>
                             <CardDescription className="mb-4">
                                 Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
                             </CardDescription>
@@ -574,7 +574,7 @@ export default function QuotesPage() {
                                                     {isOpen && (
                                                         <TableRow>
                                                             <TableCell colSpan={6} className="p-0">
-                                                                <div className="p-4 bg-muted/50 text-sm space-y-2">
+                                                                <div className="p-6 bg-muted/50 text-sm space-y-4">
                                                                     <div>
                                                                         <h4 className="font-semibold text-muted-foreground">Benefit Notes</h4>
                                                                         <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.benefit_notes || 'N/A' }} />
@@ -593,7 +593,7 @@ export default function QuotesPage() {
                                     </TableBody>
                                 </Table>
                             ) : (
-                                <div className="text-center py-12 text-muted-foreground">
+                                <div className="text-center py-16 text-muted-foreground">
                                     <FileDigit className="h-10 w-10 mx-auto mb-4"/>
                                     <p>No quotes found for the selected criteria.</p>
                                     <p className="text-sm">Please try different options.</p>
@@ -607,16 +607,16 @@ export default function QuotesPage() {
             
         <AccordionItem value="hospital-indemnity" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Hospital Indemnity
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
-                    <CardDescription className="mb-6">
+                <AccordionContent className="px-8 pb-8">
+                    <CardDescription className="mb-8">
                         Fill out the fields below to get instant quotes. Customize your plan with optional riders.
                     </CardDescription>
                    <Form {...hospitalIndemnityForm}>
                     <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                         <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
@@ -659,14 +659,14 @@ export default function QuotesPage() {
                 </Form>
 
                 {isHospitalIndemnityPending && (
-                    <Card className="mt-6 flex flex-col items-center justify-center p-12">
+                    <Card className="mt-8 flex flex-col items-center justify-center p-12">
                         <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                         <h3 className="mt-4 font-headline text-xl font-semibold">Finding hospital indemnity plans...</h3>
                         <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
                     </Card>
                 )}
                 {hospitalIndemnityError && (
-                    <Alert variant="destructive" className="mt-6">
+                    <Alert variant="destructive" className="mt-8">
                     <Terminal className="h-4 w-4" />
                     <AlertTitle>Error Fetching Hospital Indemnity Quotes</AlertTitle>
                     <AlertDescription>{hospitalIndemnityError}</AlertDescription>
@@ -676,15 +676,15 @@ export default function QuotesPage() {
                 {hospitalIndemnityQuotes && (
                     <div className="mt-8">
                         {featuredQuote ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 <Card className="lg:col-span-2">
-                                    <CardHeader>
-                                        <CardTitle className="font-headline text-2xl">{featuredQuote.carrier.name}</CardTitle>
+                                    <CardHeader className="p-8">
+                                        <CardTitle className="font-headline text-3xl">{featuredQuote.carrier.name}</CardTitle>
                                         <CardDescription>{featuredQuote.plan_name}</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-6">
+                                    <CardContent className="space-y-8 p-8">
                                         <div>
-                                            <Label htmlFor="base-benefit-select">Hospital Confinement Benefit</Label>
+                                            <Label htmlFor="base-benefit-select" className="text-base">Hospital Confinement Benefit</Label>
                                             <Select
                                                 value={selectedBaseBenefit?.amount}
                                                 onValueChange={(amount) => {
@@ -692,7 +692,7 @@ export default function QuotesPage() {
                                                     if (newBenefit) setSelectedBaseBenefit(newBenefit);
                                                 }}
                                             >
-                                                <SelectTrigger id="base-benefit-select" className="mt-1">
+                                                <SelectTrigger id="base-benefit-select" className="mt-2 h-11">
                                                     <SelectValue placeholder="Select a daily benefit" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -708,15 +708,15 @@ export default function QuotesPage() {
                                         <Separator/>
 
                                         <div>
-                                           <h4 className="font-semibold mb-3">Optional Riders</h4>
+                                           <h4 className="font-semibold mb-4 text-base">Optional Riders</h4>
                                            <div className="space-y-4">
                                             {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
                                                 if (rider.included) {
                                                         return (
-                                                        <div key={i} className="flex items-center p-3 rounded-md border bg-green-50 border-green-200">
-                                                            <Check className="h-4 w-4 mr-3 text-green-600"/>
+                                                        <div key={i} className="flex items-center p-4 rounded-md border bg-green-50 border-green-200">
+                                                            <Check className="h-5 w-5 mr-4 text-green-600"/>
                                                             <div className="flex-1">
-                                                                <p className="font-medium text-sm">{rider.name} (Included)</p>
+                                                                <p className="font-medium">{rider.name} (Included)</p>
                                                                 {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
                                                             </div>
                                                         </div>
@@ -726,13 +726,13 @@ export default function QuotesPage() {
                                                 if (rider.benefits.length === 1) {
                                                     const benefit = rider.benefits[0];
                                                     return (
-                                                        <div key={i} className="flex items-center p-3 rounded-md border bg-background">
+                                                        <div key={i} className="flex items-center p-4 rounded-md border bg-background">
                                                             <Switch 
                                                                 id={`rider-${i}`}
                                                                 onCheckedChange={() => handleRiderToggle(rider)}
                                                                 checked={!!selectedRiders[rider.name]}
                                                             />
-                                                            <Label htmlFor={`rider-${i}`} className="ml-3 flex justify-between w-full cursor-pointer">
+                                                            <Label htmlFor={`rider-${i}`} className="ml-4 flex justify-between w-full cursor-pointer">
                                                                 <div className="flex-1">
                                                                     <p className="font-medium">{rider.name}</p>
                                                                     {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
@@ -745,9 +745,9 @@ export default function QuotesPage() {
 
                                                 if (rider.benefits.length > 1) {
                                                     return (
-                                                        <div key={i} className="p-3 rounded-md border bg-background">
+                                                        <div key={i} className="p-4 rounded-md border bg-background">
                                                             <p className="font-medium">{rider.name}</p>
-                                                            {rider.note && <p className="text-xs text-muted-foreground mb-2 mt-1">{rider.note}</p>}
+                                                            {rider.note && <p className="text-xs text-muted-foreground mb-3 mt-1">{rider.note}</p>}
                                                             <RadioGroup
                                                                 onValueChange={(value) => {
                                                                     if (value === 'none') {
@@ -758,12 +758,12 @@ export default function QuotesPage() {
                                                                     }
                                                                 }}
                                                                 value={selectedRiders[rider.name]?.amount || 'none'}
-                                                                className="mt-2 space-y-1"
+                                                                className="mt-2 space-y-2"
                                                             >
                                                                 {rider.benefits.map((benefit, j) => (
                                                                     <div key={j} className="flex items-center">
                                                                         <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
-                                                                        <Label htmlFor={`rider-${i}-${j}`} className="ml-2 flex justify-between w-full font-normal cursor-pointer">
+                                                                        <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex justify-between w-full font-normal cursor-pointer">
                                                                             <span>{benefit.amount} / {benefit.quantifier}</span>
                                                                             <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
                                                                         </Label>
@@ -771,7 +771,7 @@ export default function QuotesPage() {
                                                                 ))}
                                                                 <div className="flex items-center">
                                                                     <RadioGroupItem value="none" id={`rider-${i}-none`} />
-                                                                    <Label htmlFor={`rider-${i}-none`} className="ml-2 font-normal cursor-pointer">None</Label>
+                                                                    <Label htmlFor={`rider-${i}-none`} className="ml-3 font-normal cursor-pointer">None</Label>
                                                                 </div>
                                                             </RadioGroup>
                                                         </div>
@@ -782,33 +782,33 @@ export default function QuotesPage() {
                                         </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-4">
+                                    <CardFooter className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6">
                                         <div className="flex justify-between items-center">
-                                            <p className="font-semibold">Total Monthly Premium</p>
-                                            <p className="font-headline text-3xl font-bold">${totalPremium.toFixed(2)}</p>
+                                            <p className="font-semibold text-lg">Total Monthly Premium</p>
+                                            <p className="font-headline text-4xl font-bold">${totalPremium.toFixed(2)}</p>
                                         </div>
                                          <Button size="lg" asChild className="bg-accent hover:bg-accent/90"><Link href="/dashboard/apply">Select This Plan</Link></Button>
                                     </CardFooter>
                                 </Card>
                                 <div className="space-y-4">
-                                    <h3 className="font-headline text-lg font-semibold">Other Companies</h3>
+                                    <h3 className="font-headline text-xl font-semibold">Other Companies</h3>
                                     {otherQuotes && otherQuotes.length > 0 ? (
-                                        <div className="space-y-3">
+                                        <div className="space-y-4">
                                             {otherQuotes.map(quote => {
                                                 const lowestRate = quote.baseBenefits.length > 0 ? 
                                                     [...quote.baseBenefits].sort((a,b) => a.rate - b.rate)[0].rate : 0;
                                                 return (
                                                     <Card 
                                                         key={quote.id} 
-                                                        className="p-4 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                                                        className="p-6 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
                                                         onClick={() => setFeaturedQuote(quote)}
                                                     >
                                                         <div>
-                                                            <p className="font-semibold">{quote.carrier.name}</p>
+                                                            <p className="font-semibold text-lg">{quote.carrier.name}</p>
                                                             <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="font-semibold">${lowestRate.toFixed(2)}</p>
+                                                            <p className="font-semibold text-lg">${lowestRate.toFixed(2)}</p>
                                                             <p className="text-xs text-muted-foreground">starts from</p>
                                                         </div>
                                                     </Card>
@@ -821,7 +821,7 @@ export default function QuotesPage() {
                                 </div>
                             </div>
                         ) : (
-                           <div className="text-center py-12 text-muted-foreground">
+                           <div className="text-center py-16 text-muted-foreground">
                                 <FileDigit className="h-10 w-10 mx-auto mb-4"/>
                                 <p>No quotes found for the selected criteria.</p>
                                 <p className="text-sm">Please try different options.</p>
@@ -835,10 +835,10 @@ export default function QuotesPage() {
 
         <AccordionItem value="life-insurance" className="border-b-0">
              <Card>
-                <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline flex justify-between w-full">
+                <AccordionTrigger className="p-8 text-xl font-semibold hover:no-underline flex justify-between w-full">
                     Life Insurance
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
+                <AccordionContent className="px-8 pb-8">
                     <CardDescription className="mb-6">
                         An agent will prepare a personalized quote for you.
                     </CardDescription>

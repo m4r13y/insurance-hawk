@@ -68,36 +68,36 @@ export default function DocumentsPage() {
     };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
        <div>
-        <h1 className="font-headline text-3xl font-bold">Policies & Documents</h1>
-        <p className="text-muted-foreground">Manage your policies and upload related documents securely.</p>
+        <h1 className="font-headline text-4xl font-bold">Policies & Documents</h1>
+        <p className="text-muted-foreground mt-2 text-lg">Manage your policies and upload related documents securely.</p>
       </div>
 
       <Card>
-        <CardHeader>
-            <CardTitle>My Policies</CardTitle>
+        <CardHeader className="p-8">
+            <CardTitle className="text-2xl">My Policies</CardTitle>
             <CardDescription>Here are the policies you've added to your nest. Upload documents for each policy.</CardDescription>
         </CardHeader>
-        <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mockPolicies.map((policy) => {
                     const Icon = policy.icon;
                     return (
                         <Card key={policy.id} className="flex flex-col">
-                            <CardHeader className="flex-row items-center gap-4 space-y-0">
+                            <CardHeader className="flex-row items-center gap-4 space-y-0 p-6">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                                     <Icon className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1">
-                                    <CardTitle className="text-base">{policy.label}</CardTitle>
+                                    <CardTitle className="text-lg">{policy.label}</CardTitle>
                                 </div>
                             </CardHeader>
-                            <CardContent className="flex-1 space-y-2 text-sm">
+                            <CardContent className="flex-1 space-y-2 text-sm p-6 pt-0">
                                 <p><span className="font-semibold">Provider:</span> {policy.provider}</p>
                                 <p><span className="font-semibold">Plan:</span> {policy.planName}</p>
                             </CardContent>
-                            <CardFooter>
+                            <CardFooter className="p-6 pt-0">
                                 <Button variant="outline" className="w-full">
                                     <UploadCloud className="mr-2 h-4 w-4" />
                                     Upload Documents
@@ -111,11 +111,11 @@ export default function DocumentsPage() {
       </Card>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Document Upload</CardTitle>
+        <CardHeader className="p-8">
+          <CardTitle className="text-2xl">Document Upload</CardTitle>
           <CardDescription>Drag and drop files here or click to browse. You can also upload from your policy cards above.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8 pb-8">
           <div
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -135,10 +135,10 @@ export default function DocumentsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Your Uploaded Documents</CardTitle>
+        <CardHeader className="p-8">
+          <CardTitle className="text-2xl">Your Uploaded Documents</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8 pb-8">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -151,8 +151,8 @@ export default function DocumentsPage() {
                 <TableBody>
                     {files.map((doc) => (
                         <TableRow key={doc.id}>
-                            <TableCell className="font-medium flex items-center gap-2">
-                                <File className="h-4 w-4 text-muted-foreground" />
+                            <TableCell className="font-medium flex items-center gap-3">
+                                <File className="h-5 w-5 text-muted-foreground" />
                                 {doc.name}
                             </TableCell>
                             <TableCell>{doc.uploadDate}</TableCell>
@@ -176,5 +176,3 @@ export default function DocumentsPage() {
     </div>
   )
 }
-
-    

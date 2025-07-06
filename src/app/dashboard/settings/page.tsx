@@ -83,21 +83,21 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-10 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+        <h1 className="text-4xl font-bold">Settings</h1>
+        <p className="text-muted-foreground mt-2 text-lg">Manage your account settings and preferences.</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Profile Information</CardTitle>
+        <CardHeader className="p-8">
+          <CardTitle className="text-2xl">Profile Information</CardTitle>
           <CardDescription>Update your personal details here.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
            <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={profileForm.control} name="firstName" render={({ field }) => (
                         <FormItem>
                             <FormLabel>First Name</FormLabel>
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                         </FormItem>
                     )} />
                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={profileForm.control} name="email" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Email Address</FormLabel>
@@ -138,16 +138,16 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-           <CardTitle className="text-xl">Notification Settings</CardTitle>
+        <CardHeader className="p-8">
+           <CardTitle className="text-2xl">Notification Settings</CardTitle>
           <CardDescription>Choose how you want to be notified.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 p-8 pt-0">
            <Form {...notificationsForm}>
-            <form onSubmit={notificationsForm.handleSubmit(onNotificationsSubmit)} className="space-y-4">
+            <form onSubmit={notificationsForm.handleSubmit(onNotificationsSubmit)} className="space-y-6">
                 <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-6">
+                        <div className="space-y-1.5">
                             <FormLabel className="text-base">Email Notifications</FormLabel>
                             <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
                         </div>
@@ -155,8 +155,8 @@ export default function SettingsPage() {
                     </FormItem>
                 )} />
                  <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-6">
+                        <div className="space-y-1.5">
                             <FormLabel className="text-base">SMS Text Notifications</FormLabel>
                             <FormDescription>Get important alerts and status updates via text message.</FormDescription>
                         </div>
@@ -172,13 +172,13 @@ export default function SettingsPage() {
       </Card>
       
       <Card>
-        <CardHeader>
-            <CardTitle className="text-xl">Change Password</CardTitle>
+        <CardHeader className="p-8">
+            <CardTitle className="text-2xl">Change Password</CardTitle>
           <CardDescription>For your security, we recommend using a strong password that you don't use elsewhere.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
            <Form {...securityForm}>
-            <form onSubmit={securityForm.handleSubmit(onSecuritySubmit)} className="space-y-6">
+            <form onSubmit={securityForm.handleSubmit(onSecuritySubmit)} className="space-y-8">
                  <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Current Password</FormLabel>

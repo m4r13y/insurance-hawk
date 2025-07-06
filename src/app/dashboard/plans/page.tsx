@@ -28,20 +28,20 @@ export default function PlansPage() {
         });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
        <div>
-        <h1 className="text-3xl font-bold">Browse Plans</h1>
-        <p className="text-muted-foreground">Compare and find the best plan for you.</p>
+        <h1 className="text-4xl font-bold">Browse Plans</h1>
+        <p className="text-muted-foreground mt-2 text-lg">Compare and find the best plan for you.</p>
       </div>
 
-      <div className="p-4 flex flex-col md:flex-row gap-4 bg-card border rounded-lg">
+      <div className="p-6 flex flex-col md:flex-row gap-4 bg-card border rounded-lg">
         <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by plan or provider..." className="pl-8 bg-background" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+            <Input placeholder="Search by plan or provider..." className="pl-10 bg-background h-11" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 md:flex gap-4">
             <Select value={planType} onValueChange={setPlanType}>
-                <SelectTrigger className="w-full md:w-[180px] bg-background">
+                <SelectTrigger className="w-full md:w-[180px] bg-background h-11">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
@@ -54,7 +54,7 @@ export default function PlansPage() {
                 </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-[180px] bg-background">
+                <SelectTrigger className="w-full md:w-[180px] bg-background h-11">
                     <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -67,11 +67,11 @@ export default function PlansPage() {
       </div>
       
       {filteredAndSortedPlans.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredAndSortedPlans.map(plan => <PlanCard key={plan.id} plan={plan} />)}
         </div>
       ) : (
-        <div className="text-center py-16">
+        <div className="text-center py-20">
             <h3 className="text-2xl font-semibold">No Plans Found</h3>
             <p className="text-muted-foreground mt-2">Try adjusting your search or filters.</p>
         </div>
