@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ export default function DocumentsPage() {
     const [selectedPolicyId, setSelectedPolicyId] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const storedPolicies = localStorage.getItem("hawk-policies");
@@ -119,6 +120,31 @@ export default function DocumentsPage() {
         });
     };
 
+    const handleFiles = (uploadedFiles: FileList) => {
+        if (uploadedFiles && uploadedFiles.length > 0) {
+            const uploadedFile = uploadedFiles[0];
+            toast({
+                title: 'File "Uploaded"',
+                description: `${uploadedFile.name} has been added to the list. (Demo)`,
+            });
+            // This is a simulation. In a real app, you would upload the file.
+            const newFile = {
+                id: `doc-${Date.now()}`,
+                name: uploadedFile.name,
+                uploadDate: new Date().toISOString().split('T')[0],
+                size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
+            };
+            updateFilesInStorage([newFile, ...files]);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            handleFiles(e.target.files);
+        }
+        // Reset the input value to allow uploading the same file again
+        if(e.target) e.target.value = '';
+    };
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -142,20 +168,8 @@ export default function DocumentsPage() {
         e.stopPropagation();
         setIsDragging(false);
 
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const uploadedFile = e.dataTransfer.files[0];
-            toast({
-                title: 'File "Uploaded"',
-                description: `${uploadedFile.name} has been added to the list. (Demo)`,
-            });
-            // This is a simulation. In a real app, you would upload the file.
-            const newFile = {
-                id: `doc-${Date.now()}`,
-                name: uploadedFile.name,
-                uploadDate: new Date().toISOString().split('T')[0],
-                size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
-            };
-            updateFilesInStorage([newFile, ...files]);
+        if (e.dataTransfer.files) {
+            handleFiles(e.dataTransfer.files);
             e.dataTransfer.clearData();
         }
     };
@@ -198,7 +212,7 @@ export default function DocumentsPage() {
                                     <p><span className="font-semibold">Plan:</span> {policy.planName}</p>
                                 </CardContent>
                                 <CardFooter className="p-4 pt-0">
-                                    <Button variant="outline" className="w-full">
+                                    <Button variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
                                         <UploadCloud className="mr-2 h-4 w-4" />
                                         Upload Documents
                                     </Button>
@@ -222,12 +236,14 @@ export default function DocumentsPage() {
           <CardDescription>Drag and drop files here or click to browse. You can also upload from your policy cards above.</CardDescription>
         </CardHeader>
         <CardContent>
+          <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
           <div
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className={`flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed rounded-lg transition-colors ${
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
               isDragging ? 'border-primary bg-primary/10' : 'border-border'
             }`}
           >
@@ -235,7 +251,7 @@ export default function DocumentsPage() {
             <p className="mt-4 text-center text-muted-foreground">
               {isDragging ? 'Drop the file to upload' : 'Drag & drop file here, or click to select file'}
             </p>
-            <Button variant="outline" className="mt-4">Browse Files</Button>
+            <Button variant="outline" className="mt-4 pointer-events-none">Browse Files</Button>
           </div>
         </CardContent>
       </Card>
