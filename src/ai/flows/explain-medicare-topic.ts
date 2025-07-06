@@ -22,7 +22,7 @@ const ExplainMedicareTopicOutputSchema = z.object({
   explanation: z
     .string()
     .describe(
-      "A factual explanation of the topic, or a message indicating the question is out of scope. For valid explanations, use headings and bullet points for clarity and end with a disclaimer."
+      "A concise, factual explanation of the topic, or a message indicating the question is out of scope. For valid explanations, use headings and bullet points for clarity and end with a disclaimer."
     ),
 });
 export type ExplainMedicareTopicOutput = z.infer<typeof ExplainMedicareTopicOutputSchema>;
@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'explainMedicareTopicPrompt',
   input: {schema: ExplainMedicareTopicInputSchema},
   output: {schema: ExplainMedicareTopicOutputSchema},
-  prompt: `You are an AI assistant for an insurance portal. Your primary function is to provide factual information about Medicare, general health insurance, and supplemental insurance plans.
+  prompt: `You are an AI assistant for an insurance portal. Your primary function is to provide factual information about Medicare, general health insurance, and supplemental insurance plans. Your answers must be concise and to the point.
 
 Analyze the user's question: {{{topic}}}
 
@@ -54,9 +54,10 @@ Your scope EXCLUDES:
 
 1.  **If the question is OUTSIDE your scope:** Your entire response for the 'explanation' field must be ONLY the following text: "I can only answer factual questions about Medicare, health insurance, and supplemental plans. For personalized advice or questions about other topics, please speak with a licensed agent." Do NOT add the disclaimer in this case.
 
-2.  **If the question is INSIDE your scope:** Provide a clear, factual, and unbiased explanation.
+2.  **If the question is INSIDE your scope:** Provide a clear, factual, concise, and unbiased explanation.
     - Structure your explanation with clear headings (using markdown '## ') and bullet points (using markdown '* ').
     - Avoid jargon where possible, or explain it if you must use it.
+    - Get straight to the answer without unnecessary introductions or filler.
     - After your explanation, you MUST conclude with the following disclaimer, formatted exactly like this on a new line:
     **Disclaimer:** I am an AI assistant. The information provided is for educational purposes only and is not a substitute for professional advice from a licensed insurance agent. Please consult with a qualified professional to discuss your personal situation and ensure you make the best decision for your needs.`,
 });
