@@ -4,6 +4,7 @@ export type Plan = {
   id: string;
   name: string;
   provider: string;
+  category: string;
   type: 'HMO' | 'PPO' | 'FFS' | 'SNP';
   premium: number;
   deductible: number;
