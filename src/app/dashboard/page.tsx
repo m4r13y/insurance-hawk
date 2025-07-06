@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, UserPlus } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, UserPlus, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -39,7 +39,7 @@ const GuestDashboard = () => (
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h1>
             <p className="mt-4 text-lg text-slate-600 leading-relaxed">Welcome to HawkNest. Compare plans from top carriers, get personalized recommendations, and securely manage your insurance and financial plans from one convenient place.</p>
              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" asChild><Link href="/">Create Your Account <UserPlus className="ml-2 h-4 w-4"/></Link></Button>
+                <Button size="lg" asChild><Link href="/?mode=signup">Create Your Account <UserPlus className="ml-2 h-4 w-4"/></Link></Button>
                 <Button size="lg" variant="outline" asChild><Link href="/dashboard/plans">Browse Plans</Link></Button>
             </div>
         </div>
@@ -91,10 +91,68 @@ const GuestDashboard = () => (
     </div>
 );
 
+const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => void }) => (
+    <div className="flex items-center justify-center h-full">
+        <Card className="max-w-3xl mx-auto text-center animate-in fade-in-50 zoom-in-95">
+            <CardHeader className="p-8 sm:p-12">
+                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 mb-6">
+                    <CheckCircle2 className="h-10 w-10" />
+                </div>
+                <CardTitle className="font-headline text-3xl sm:text-4xl pt-2">Welcome to HawkNest, {name}!</CardTitle>
+                <CardDescription className="text-lg mt-2">Let's get your nest set up. What would you like to do first?</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-8">
+                <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
+                    <Link href="/dashboard/recommendations">
+                        <PiggyBank className="mr-3 h-6 w-6 text-primary" />
+                        <span className="flex flex-col">
+                            <span className="font-semibold">Create a Financial Plan</span>
+                            <span className="text-xs text-muted-foreground">Get personalized retirement advice.</span>
+                        </span>
+                    </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
+                    <Link href="/dashboard/health-quotes">
+                        <Heart className="mr-3 h-6 w-6 text-primary" />
+                        <span className="flex flex-col">
+                            <span className="font-semibold">Get Health Quotes</span>
+                            <span className="text-xs text-muted-foreground">For individuals under 65.</span>
+                        </span>
+                    </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
+                    <Link href="/dashboard/quotes">
+                        <FileDigit className="mr-3 h-6 w-6 text-primary" />
+                        <span className="flex flex-col">
+                            <span className="font-semibold">Get Supplemental Quotes</span>
+                            <span className="text-xs text-muted-foreground">For Medigap, Dental, and more.</span>
+                        </span>
+                    </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
+                    <Link href="/dashboard/plans">
+                        <ShieldCheck className="mr-3 h-6 w-6 text-primary" />
+                        <span className="flex flex-col">
+                            <span className="font-semibold">Just Browse Plans</span>
+                            <span className="text-xs text-muted-foreground">Explore all available options.</span>
+                        </span>
+                    </Link>
+                </Button>
+            </CardContent>
+            <CardFooter className="p-8">
+                <Button onClick={onDismiss} variant="ghost" className="w-full text-muted-foreground">
+                    I'll explore on my own
+                </Button>
+            </CardFooter>
+        </Card>
+    </div>
+);
+
 
 export default function DashboardPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isNewUser, setIsNewUser] = useState(false);
 
     const [policies, setPolicies] = useState<Record<string, PolicyInfo | null>>({
         health: { provider: "Blue Shield", planName: "Secure PPO" },
@@ -116,6 +174,9 @@ export default function DashboardPage() {
         setIsLoggedIn(loggedInStatus);
 
         if (loggedInStatus) {
+            const newUserStatus = localStorage.getItem("isNewUser") === "true";
+            setIsNewUser(newUserStatus);
+            
             const updateName = () => {
                 const storedName = localStorage.getItem("userFirstName");
                 if (storedName) {
@@ -132,6 +193,11 @@ export default function DashboardPage() {
             setIsLoading(false);
         }
     }, []);
+
+    const handleDismissOnboarding = () => {
+        localStorage.removeItem("isNewUser");
+        setIsNewUser(false);
+    };
 
     const handleSwitchChange = (planId: string, planLabel: string, checked: boolean) => {
         if (checked) {
@@ -161,6 +227,10 @@ export default function DashboardPage() {
 
     if (!isLoggedIn) {
         return <GuestDashboard />;
+    }
+
+    if (isNewUser) {
+        return <OnboardingGuide name={userName} onDismiss={handleDismissOnboarding} />;
     }
 
     const ownedPlanCount = Object.values(policies).filter(p => p !== null).length;

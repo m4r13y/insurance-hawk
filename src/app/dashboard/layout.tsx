@@ -145,7 +145,7 @@ export default function DashboardLayout({
                 ) : (
                   <>
                     <SidebarMenuItem>
-                       <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Login">
+                       <SidebarMenuButton asChild isActive={isActive("/") && !pathname.includes('signup')} tooltip="Login">
                         <Link href="/">
                           <LogIn />
                           <span>Login</span>
@@ -153,8 +153,8 @@ export default function DashboardLayout({
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                       <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Sign Up">
-                        <Link href="/">
+                       <SidebarMenuButton asChild isActive={pathname.includes('signup')} tooltip="Sign Up">
+                        <Link href="/?mode=signup">
                           <UserPlus />
                           <span>Sign Up</span>
                         </Link>
@@ -181,7 +181,7 @@ export default function DashboardLayout({
               ) : (
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" asChild><Link href="/">Login</Link></Button>
-                    <Button asChild><Link href="/">Sign Up</Link></Button>
+                    <Button asChild><Link href="/?mode=signup">Sign Up</Link></Button>
                 </div>
               )}
             </div>
