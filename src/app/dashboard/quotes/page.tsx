@@ -346,8 +346,8 @@ export default function QuotesPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {quotes.map((quote) => (
-                                            <TableRow key={quote.id}>
+                                        {quotes.map((quote, index) => (
+                                            <TableRow key={`${quote.id}-${index}`}>
                                                 <TableCell className="font-medium">{quote.carrier?.name || 'Unknown Carrier'}</TableCell>
                                                 <TableCell>{quote.plan_name}</TableCell>
                                                 <TableCell className="text-amber-500">{getStarRating(quote.am_best_rating)}</TableCell>
