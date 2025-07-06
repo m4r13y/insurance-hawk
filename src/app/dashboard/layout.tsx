@@ -25,6 +25,7 @@ import {
   LogOut,
   Search,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -70,6 +71,11 @@ export default function DashboardLayout({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="Documents">
                     <Link href="/dashboard/documents"><UploadCloud /><span>Documents</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/education")} tooltip="Education">
+                    <Link href="/dashboard/education"><BookOpen /><span>Education</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
