@@ -372,6 +372,12 @@ function RetirementPlanForm() {
     const [isPending, startTransition] = useTransition();
     const [planResult, setPlanResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [userName, setUserName] = useState("Guest");
+
+    useEffect(() => {
+        const name = localStorage.getItem("userFirstName");
+        if (name) setUserName(name);
+    }, []);
 
     const form = useForm<FormSchemaType>({
         resolver: zodResolver(retirementFormSchema),
@@ -466,7 +472,7 @@ function RetirementPlanForm() {
     }
 
     if (planResult) {
-        return <PlanResults plan={planResult} name="Sarah" />
+        return <PlanResults plan={planResult} name={userName} />
     }
 
     if (step === 0) {

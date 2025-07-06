@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
@@ -35,9 +35,6 @@ import {
   UserPlus,
   LogIn
 } from "lucide-react";
-import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 
 
 export default function DashboardLayout({
@@ -49,21 +46,20 @@ export default function DashboardLayout({
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
   
-  const [user, loading, error] = useFirebaseAuth();
-  const isLoggedIn = !!user;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/dashboard/recommendations' && pathname !== '/dashboard/plans' && pathname !== '/dashboard/health-quotes' && pathname !== '/dashboard/quotes' && pathname !== '/dashboard/education') {
-        // Allow guest access to certain pages
-        if(pathname !== '/dashboard') {
-             router.push('/');
-        }
-    }
-  }, [user, loading, pathname, router]);
+    // Check for guest auth status in localStorage
+    const guestAuth = localStorage.getItem("hawk-auth") === "true";
+    setIsLoggedIn(guestAuth);
+    setLoading(false);
+  }, [pathname]);
 
   const handleLogout = () => {
-    if (!auth) return;
-    signOut(auth);
+    localStorage.removeItem("hawk-auth");
+    localStorage.removeItem("isNewUser");
+    localStorage.removeItem("userFirstName");
     router.push("/");
   };
   

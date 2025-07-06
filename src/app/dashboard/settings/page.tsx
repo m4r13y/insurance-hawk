@@ -12,12 +12,9 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
-import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
-import { updateProfile } from "firebase/auth"
-import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
 import Link from "next/link"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Info } from "lucide-react"
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -46,13 +43,15 @@ const defaultHawkImage = "https://placehold.co/80x80.png";
 export default function SettingsPage() {
     const { toast } = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [user, loading] = useFirebaseAuth();
-    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [firstName, setFirstName] = useState("Guest");
 
     const profileForm = useForm<z.infer<typeof profileFormSchema>>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            firstName: "",
+            firstName: "Guest",
             lastName: "",
             email: "",
             phone: "",
@@ -76,97 +75,36 @@ export default function SettingsPage() {
         },
     })
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            if (user && db) {
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    profileForm.reset({
-                        firstName: userData.firstName || '',
-                        lastName: userData.lastName || '',
-                        email: user.email || '',
-                        phone: userData.phone || ''
-                    });
-
-                    // For notifications, you'd fetch this from user profile too
-                    // notificationsForm.reset(userData.notificationSettings);
-                }
-                
-                setImagePreview(user.photoURL || defaultHawkImage);
-            }
+     useEffect(() => {
+        const checkAuth = () => {
+            const guestAuth = localStorage.getItem("hawk-auth") === "true";
+            setIsLoggedIn(guestAuth);
+            const name = localStorage.getItem("userFirstName") || "Guest";
+            setFirstName(name);
+            profileForm.reset({ firstName: name, lastName: "", email: "" });
+            setImagePreview(defaultHawkImage);
+            setLoading(false);
         };
-        fetchUserData();
-    }, [user, profileForm])
+        checkAuth();
+    }, [profileForm])
 
-    const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
-        if (!user || !db) return;
-        try {
-            const userDocRef = doc(db, "users", user.uid);
-            await setDoc(userDocRef, { 
-                firstName: values.firstName, 
-                lastName: values.lastName,
-                phone: values.phone
-            }, { merge: true });
-
-            await updateProfile(user, {
-                displayName: `${values.firstName} ${values.lastName}`
-            });
-
-            toast({ title: "Profile Updated", description: "Your personal information has been saved." })
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Error", description: "Could not update profile.", variant: "destructive" });
-        }
-    }
-
-    const onNotificationsSubmit = (values: z.infer<typeof notificationsFormSchema>) => {
-        // TODO: Save notification settings to user document in Firestore
-        console.log(values)
-        toast({ title: "Notifications Updated", description: "Your notification preferences have been saved." })
+    const handleDisabledSubmit = () => {
+         toast({
+            variant: "destructive",
+            title: "Feature Disabled",
+            description: "This feature is only available for registered users.",
+        })
     }
     
-    const onSecuritySubmit = (values: z.infer<typeof securityFormSchema>) => {
-        // TODO: Implement Firebase password change logic
-        console.log(values)
-        toast({ title: "Password Changed", description: "Your password has been successfully updated." })
-        securityForm.reset();
-    }
-    
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !user || !db) return;
-        
-        // TODO for production: Upload file to Firebase Storage instead of using a data URL.
-        // After upload, get the downloadURL and update the user's photoURL with updateProfile.
-        
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const dataUrl = e.target?.result as string;
-            setImagePreview(dataUrl);
-            try {
-                await updateProfile(user, { photoURL: dataUrl });
-                 const userDocRef = doc(db, "users", user.uid);
-                await updateDoc(userDocRef, { photoURL: dataUrl });
-                toast({ title: "Profile Picture Updated" });
-            } catch (error) {
-                 console.error(error);
-                toast({ title: "Error", description: "Could not update profile picture.", variant: "destructive" });
-            }
-        };
-        reader.readAsDataURL(file);
+    const handleImageChange = () => {
+        handleDisabledSubmit();
     };
-
-  if (!isFirebaseConfigured) {
-      return <FirebaseNotConfigured />;
-  }
 
   if (loading) {
       return <p>Loading settings...</p>
   }
   
-  if (!user) {
+  if (!isLoggedIn) {
       return (
         <div className="text-center">
             <p>You must be logged in to view settings.</p>
@@ -182,12 +120,20 @@ export default function SettingsPage() {
         <p className="text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
       </div>
 
+       <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Guest Mode</AlertTitle>
+          <AlertDescription>
+            You are currently browsing as a guest. Settings cannot be saved. Please <Link href="/?mode=signup" className="font-bold underline">create an account</Link> to save your changes.
+          </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
                 <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" {...(!imagePreview && { 'data-ai-hint': 'hawk' })}/>
-                <AvatarFallback>{profileForm.getValues("firstName")?.[0]}{profileForm.getValues("lastName")?.[0]}</AvatarFallback>
+                <AvatarFallback>{firstName?.[0]}</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
                 <CardTitle className="text-xl">Profile Information</CardTitle>
@@ -207,42 +153,44 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
            <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={profileForm.control} name="firstName" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={profileForm.control} name="lastName" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={profileForm.control} name="email" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl><Input type="email" {...field} readOnly /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={profileForm.control} name="phone" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl><Input type="tel" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </div>
-                <div className="flex justify-end">
-                    <Button type="submit">Save Changes</Button>
-                </div>
+            <form onSubmit={profileForm.handleSubmit(handleDisabledSubmit)} className="space-y-8">
+                <fieldset disabled className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField control={profileForm.control} name="firstName" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>First Name</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                         <FormField control={profileForm.control} name="lastName" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Last Name</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField control={profileForm.control} name="email" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Email Address</FormLabel>
+                                <FormControl><Input type="email" {...field} readOnly /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                         <FormField control={profileForm.control} name="phone" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl><Input type="tel" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit">Save Changes</Button>
+                    </div>
+                </fieldset>
             </form>
            </Form>
         </CardContent>
@@ -255,28 +203,30 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
            <Form {...notificationsForm}>
-            <form onSubmit={notificationsForm.handleSubmit(onNotificationsSubmit)} className="space-y-6">
-                <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                        <div className="space-y-1.5">
-                            <FormLabel className="text-base">Email Notifications</FormLabel>
-                            <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
-                        </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    </FormItem>
-                )} />
-                 <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                        <div className="space-y-1.5">
-                            <FormLabel className="text-base">SMS Text Notifications</FormLabel>
-                            <FormDescription>Get important alerts and status updates via text message.</FormDescription>
-                        </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    </FormItem>
-                )} />
-                 <div className="flex justify-end">
-                    <Button type="submit">Save Preferences</Button>
-                </div>
+            <form onSubmit={notificationsForm.handleSubmit(handleDisabledSubmit)} className="space-y-6">
+                <fieldset disabled className="space-y-6">
+                    <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
+                            <div className="space-y-1.5">
+                                <FormLabel className="text-base">Email Notifications</FormLabel>
+                                <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
+                            </div>
+                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        </FormItem>
+                    )} />
+                     <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
+                            <div className="space-y-1.5">
+                                <FormLabel className="text-base">SMS Text Notifications</FormLabel>
+                                <FormDescription>Get important alerts and status updates via text message.</FormDescription>
+                            </div>
+                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        </FormItem>
+                    )} />
+                     <div className="flex justify-end">
+                        <Button type="submit">Save Preferences</Button>
+                    </div>
+                </fieldset>
             </form>
            </Form>
         </CardContent>
@@ -289,31 +239,33 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
            <Form {...securityForm}>
-            <form onSubmit={securityForm.handleSubmit(onSecuritySubmit)} className="space-y-8">
-                 <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Current Password</FormLabel>
-                        <FormControl><Input type="password" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                 <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl><Input type="password" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                 <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
-                        <FormControl><Input type="password" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                 <div className="flex justify-end">
-                    <Button type="submit" variant="destructive">Change Password</Button>
-                </div>
+            <form onSubmit={securityForm.handleSubmit(handleDisabledSubmit)} className="space-y-8">
+                <fieldset disabled className="space-y-8">
+                     <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl><Input type="password" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl><Input type="password" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormControl><Input type="password" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <div className="flex justify-end">
+                        <Button type="submit" variant="destructive">Change Password</Button>
+                    </div>
+                </fieldset>
             </form>
            </Form>
         </CardContent>

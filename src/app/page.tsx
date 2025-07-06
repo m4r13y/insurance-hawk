@@ -11,106 +11,28 @@ import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, UserPlus } from "lucide-react"
-
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile
-} from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
-import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { FirebaseNotConfigured } from "@/components/firebase-not-configured"
+import { isFirebaseConfigured } from "@/lib/firebase"
 
 
 function AuthFlow() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
-  
+  const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
-
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   
-  const [user, loading, error] = useFirebaseAuth();
-
   useEffect(() => {
     if (searchParams.get('mode') === 'signup') {
       setIsSignUp(true)
     }
   }, [searchParams])
 
-  useEffect(() => {
-    if (user) {
-        router.push('/dashboard');
-    }
-  }, [user, router]);
-
-  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!auth) return;
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        localStorage.removeItem("hawk-auth");
-        localStorage.removeItem("isNewUser");
-        router.push("/dashboard");
-    } catch (error: any) {
-        console.error("Login Error:", error);
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: error.message || "Please check your credentials and try again.",
-        })
-    }
-  }
-
-  const handleSignUpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!auth || !db) return;
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        await updateProfile(user, {
-            displayName: `${firstName} ${lastName}`
-        });
-
-        await setDoc(doc(db, "users", user.uid), {
-            uid: user.uid,
-            email: user.email,
-            firstName: firstName,
-            lastName: lastName,
-            createdAt: new Date()
-        });
-
-        localStorage.removeItem("hawk-auth");
-        localStorage.setItem("isNewUser", "true"); 
-        router.push("/dashboard")
-        toast({
-            title: "Account Created!",
-            description: "Welcome to HawkNest. Let's get started.",
-        })
-
-    } catch (error: any) {
-         console.error("Signup Error:", error);
-         toast({
-            variant: "destructive",
-            title: "Sign Up Failed",
-            description: error.message || "Please check your details and try again.",
-        })
-    }
-  }
-  
-  if (loading) {
-    return <div className="text-center">Loading...</div>;
-  }
-  
-  if (user) {
-    router.push('/dashboard');
-    return <div className="text-center">Redirecting...</div>;
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+     toast({
+        variant: "destructive",
+        title: "Feature Disabled",
+        description: "User authentication requires Firebase setup. Please continue as a guest.",
+    })
   }
 
     return (
@@ -126,24 +48,24 @@ function AuthFlow() {
             <Card>
               <CardContent className="p-6 sm:p-8">
                   {isSignUp ? (
-                      <form onSubmit={handleSignUpSubmit} className="space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-6">
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
                                   <Label htmlFor="firstName">First Name</Label>
-                                  <Input id="firstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                                  <Input id="firstName" required />
                               </div>
                               <div className="space-y-2">
                                   <Label htmlFor="lastName">Last Name</Label>
-                                  <Input id="lastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                                  <Input id="lastName" required />
                               </div>
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="email">Email address</Label>
-                              <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                              <Input id="email" type="email" placeholder="you@example.com" required />
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="password">Password</Label>
-                              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                              <Input id="password" type="password" required minLength={6} />
                           </div>
                           <Button type="submit" className="w-full">
                               <UserPlus className="mr-2 h-4 w-4" />
@@ -151,10 +73,10 @@ function AuthFlow() {
                           </Button>
                       </form>
                   ) : (
-                      <form onSubmit={handleLoginSubmit} className="space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-6">
                           <div className="space-y-2">
                               <Label htmlFor="email">Email address</Label>
-                              <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                              <Input id="email" type="email" placeholder="you@example.com" required />
                           </div>
                           <div className="space-y-2">
                               <div className="flex items-center">
@@ -163,7 +85,7 @@ function AuthFlow() {
                                   Forgot password?
                                   </Link>
                               </div>
-                              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                              <Input id="password" type="password" required />
                           </div>
                           <Button type="submit" className="w-full">
                               Sign In
@@ -230,19 +152,7 @@ function LoginPageContent() {
       <div className="flex items-center justify-center py-12 px-4">
         <div className="mx-auto grid w-full max-w-md gap-6">
           
-          {isFirebaseConfigured ? <AuthFlow /> : (
-            <>
-                <div className="grid gap-2 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
-                    Welcome
-                    </h1>
-                    <p className="text-slate-600">
-                    Enter your credentials to access your portal.
-                    </p>
-                </div>
-                <FirebaseNotConfigured />
-            </>
-          )}
+          <AuthFlow />
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

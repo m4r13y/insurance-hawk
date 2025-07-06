@@ -10,10 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Combobox } from '@/components/ui/combobox';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
-import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
-import { db, isFirebaseConfigured } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
-import { FirebaseNotConfigured } from '@/components/firebase-not-configured';
 import Link from 'next/link';
 
 
@@ -60,7 +56,8 @@ const comboboxGroupedOptions = Object.entries(groupedPolicies).map(([heading, op
 }));
 
 export default function DocumentsPage() {
-    const [user, loading] = useFirebaseAuth();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -69,32 +66,31 @@ export default function DocumentsPage() {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        if (!user || !db) return;
-
-        // Fetch Policies
-        const policiesQuery = query(collection(db, `users/${user.uid}/policies`));
-        const unsubscribePolicies = onSnapshot(policiesQuery, (snapshot) => {
-            const userPolicies: PolicyType[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PolicyType));
-            setPolicies(userPolicies);
-        });
-
-        // Fetch Documents
-        const docsQuery = query(collection(db, `users/${user.uid}/documents`), orderBy('uploadDate', 'desc'));
-        const unsubscribeDocs = onSnapshot(docsQuery, (snapshot) => {
-            const userDocs: DocumentType[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as DocumentType));
-            setFiles(userDocs);
-        });
-
-        return () => {
-            unsubscribePolicies();
-            unsubscribeDocs();
+     useEffect(() => {
+        const checkAuth = () => {
+            const guestAuth = localStorage.getItem("hawk-auth") === "true";
+            setIsLoggedIn(guestAuth);
+            setLoading(false);
         };
-    }, [user])
+        checkAuth();
+
+        const handleStorageChange = () => {
+            const storedFiles = localStorage.getItem("hawk-documents");
+            if (storedFiles) {
+                setFiles(JSON.parse(storedFiles));
+            }
+        };
+
+        handleStorageChange(); // Initial load
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+
+    }, [])
 
     const handleSavePolicy = async () => {
-        if (!user || !db) {
-            toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add a policy.' });
+        if (!isLoggedIn) {
+            toast({ variant: 'destructive', title: 'Action Disabled', description: 'You must have an account to add policies.' });
             return;
         }
 
@@ -102,16 +98,11 @@ export default function DocumentsPage() {
             const policyToAdd = allAvailablePolicies.find(p => p.id === selectedPolicyId);
             
             if (policyToAdd && !policies.some(p => p.id === policyToAdd.id)) {
-                try {
-                    await addDoc(collection(db, `users/${user.uid}/policies`), policyToAdd);
-                    toast({
-                        title: 'Policy Added',
-                        description: `${policyToAdd.provider} - ${policyToAdd.planName} has been added.`,
-                    });
-                } catch (error) {
-                    console.error("Error adding policy: ", error);
-                    toast({ variant: 'destructive', title: 'Error', description: 'Could not add policy.' });
-                }
+                setPolicies(prev => [...prev, policyToAdd]);
+                toast({
+                    title: 'Policy Added',
+                    description: `${policyToAdd.provider} - ${policyToAdd.planName} has been added.`,
+                });
             } else if (policies.some(p => p.id === policyToAdd?.id)) {
                  toast({
                     variant: 'destructive',
@@ -119,7 +110,6 @@ export default function DocumentsPage() {
                     description: 'This policy is already in your list.',
                 });
             }
-
             setSelectedPolicyId(undefined);
             setIsDialogOpen(false);
         } else {
@@ -132,50 +122,37 @@ export default function DocumentsPage() {
     };
 
     const handleDeleteFile = async (fileId: string) => {
-        if (!user || !db) return;
-        try {
-            await deleteDoc(doc(db, `users/${user.uid}/documents`, fileId));
-            toast({
-                title: "Document Deleted",
-                description: "The file has been removed."
-            });
-        } catch (error) {
-            console.error("Error deleting document: ", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete document.' });
-        }
+        setFiles(prev => prev.filter(f => f.id !== fileId));
+        toast({
+            title: "Document Deleted",
+            description: "The file has been removed from this session."
+        });
     };
 
     const handleFiles = (uploadedFiles: FileList) => {
-        if (!user || !db) {
-            toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to upload files.' });
+        if (!isLoggedIn) {
+            toast({ variant: 'destructive', title: 'Action Disabled', description: 'You must have an account to upload files.' });
             return;
         }
+
         if (uploadedFiles && uploadedFiles.length > 0) {
             const uploadedFile = uploadedFiles[0];
-            
-            // TODO for production: Upload `uploadedFile` to Firebase Storage instead of storing as a data URL in Firestore,
-            // which has size limitations. After uploading, get the downloadURL and save that to Firestore.
-            
             const reader = new FileReader();
-            reader.onload = async (e) => {
+            reader.onload = (e) => {
                 const dataUrl = e.target?.result as string;
                 if(dataUrl) {
-                    const newFile = {
+                    const newFile: DocumentType = {
+                        id: `doc-${Date.now()}`,
                         name: uploadedFile.name,
                         uploadDate: new Date().toISOString(),
                         size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
                         dataUrl: dataUrl,
                     };
-                    try {
-                        await addDoc(collection(db, `users/${user.uid}/documents`), newFile);
-                        toast({
-                            title: 'File Uploaded',
-                            description: `${uploadedFile.name} has been added.`,
-                        });
-                    } catch (error) {
-                        console.error("Error uploading file metadata: ", error);
-                        toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not save file information.' });
-                    }
+                    setFiles(prev => [newFile, ...prev]);
+                    toast({
+                        title: 'File Uploaded',
+                        description: `${uploadedFile.name} has been added for this session.`,
+                    });
                 } else {
                      toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not read the file.' });
                 }
@@ -209,18 +186,14 @@ export default function DocumentsPage() {
         }
     };
     
-    if (!isFirebaseConfigured) {
-        return <FirebaseNotConfigured />;
-    }
-
     if (loading) {
         return <p>Loading documents...</p>;
     }
     
-    if (!user) {
+    if (!isLoggedIn) {
         return (
             <div className="text-center">
-                <p>Please log in to manage your documents.</p>
+                <p>Please log in or continue as a guest to manage your documents.</p>
                 <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
             </div>
         );

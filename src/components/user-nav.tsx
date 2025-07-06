@@ -14,35 +14,39 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreditCard, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
-import { useAuthState } from "react-firebase-hooks/auth"
-import { auth } from "@/lib/firebase"
-import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 
 const defaultHawkImage = "https://placehold.co/40x40.png";
 
 export function UserNav() {
-  const [user] = useAuthState(auth);
   const router = useRouter();
+  const [userName, setUserName] = useState("Guest");
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    const name = localStorage.getItem("userFirstName");
+    if (name) {
+        setUserName(name);
+    }
+  }, []);
 
   const handleLogout = () => {
-    signOut(auth);
+    localStorage.removeItem("hawk-auth");
+    localStorage.removeItem("isNewUser");
+    localStorage.removeItem("userFirstName");
     router.push('/');
   }
 
-  if (!user) {
-    return null;
-  }
-  
-  const fallback = user.displayName ? user.displayName.split(" ").map(n => n[0]).join("").substring(0,2) : user.email?.[0].toUpperCase();
+  const fallback = userName ? userName.split(" ").map(n => n[0]).join("").substring(0,2) : "G";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.photoURL || defaultHawkImage} alt="User avatar" {...(!user.photoURL && { 'data-ai-hint': 'hawk' })} />
+            <AvatarImage src={defaultHawkImage} alt="User avatar" data-ai-hint="hawk" />
             <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
         </Button>
@@ -50,10 +54,8 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-slate-900">{user.displayName || 'User'}</p>
-            <p className="text-xs leading-none text-slate-500">
-              {user.email}
-            </p>
+            <p className="text-sm font-medium leading-none text-slate-900">{userName}</p>
+            {userEmail && <p className="text-xs leading-none text-slate-500">{userEmail}</p>}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

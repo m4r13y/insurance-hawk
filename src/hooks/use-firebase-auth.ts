@@ -1,34 +1,7 @@
-
-"use client";
-
-import { useState, useEffect } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase';
+// This hook is not in use as Firebase has been disabled.
+// It returns a mock logged-out state to prevent app crashes.
+// To re-enable, restore the previous version of this file.
 
 export function useFirebaseAuth() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | undefined>();
-
-    useEffect(() => {
-        if (!isFirebaseConfigured || !auth) {
-            setLoading(false);
-            return;
-        }
-
-        const unsubscribe = onAuthStateChanged(auth, 
-            (user) => {
-                setUser(user);
-                setLoading(false);
-            },
-            (error) => {
-                setError(error);
-                setLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, []);
-
-    return [user, loading, error] as const;
+  return [null, false, undefined] as const;
 }

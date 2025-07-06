@@ -9,9 +9,6 @@ import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy
 import Image from "next/image";
 import Link from "next/link";
 import type { Policy } from "@/types";
-import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { db, isFirebaseConfigured } from "@/lib/firebase";
-import { collection, onSnapshot, query } from "firebase/firestore";
 import { GuestDashboard } from "@/components/guest-dashboard";
 
 
@@ -98,25 +95,26 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
 
 
 export default function DashboardPage() {
-    const [user, loading] = useFirebaseAuth();
+    const [loading, setLoading] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isNewUser, setIsNewUser] = useState(false);
     const [policies, setPolicies] = useState<Policy[]>([]);
+    const [userName, setUserName] = useState("Guest");
     
     useEffect(() => {
-        if (user) {
-            const newUserStatus = localStorage.getItem("isNewUser") === "true";
-            setIsNewUser(newUserStatus);
-            
-            if (db) {
-                const policiesQuery = query(collection(db, `users/${user.uid}/policies`));
-                const unsubscribe = onSnapshot(policiesQuery, (snapshot) => {
-                    const userPolicies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Policy);
-                    setPolicies(userPolicies);
-                });
-                return () => unsubscribe();
-            }
-        }
-    }, [user]);
+        const guestAuth = localStorage.getItem("hawk-auth") === "true";
+        const newUser = localStorage.getItem("isNewUser") === "true";
+        const name = localStorage.getItem("userFirstName") || "Guest";
+        
+        setIsLoggedIn(guestAuth);
+        setIsNewUser(newUser);
+        setUserName(name);
+        
+        // In guest mode, we can use localStorage for policies or show none.
+        // For this example, we'll just show an empty state.
+        setPolicies([]);
+        setLoading(false);
+    }, []);
 
     const handleDismissOnboarding = () => {
         localStorage.removeItem("isNewUser");
@@ -127,25 +125,24 @@ export default function DashboardPage() {
         return <div className="flex h-screen items-center justify-center">Loading...</div>;
     }
 
-    if (!isFirebaseConfigured || !user) {
-        // Fallback to guest dashboard if Firebase isn't set up or user is not logged in.
+    if (!isLoggedIn) {
         return <GuestDashboard />;
     }
 
     if (isNewUser) {
-        return <OnboardingGuide name={user.displayName?.split(' ')[0] || 'User'} onDismiss={handleDismissOnboarding} />;
+        return <OnboardingGuide name={userName} onDismiss={handleDismissOnboarding} />;
     }
 
     const ownedPlanCategories = [...new Set(policies.map(p => p.category))];
     const retirementScore = Math.round((ownedPlanCategories.length / planTypes.length) * 100);
     const missingPlans = planTypes.filter(p => !ownedPlanCategories.includes(p.id));
     const primaryHealthPlan = policies.find(p => p.category === 'Health/Medical Plan');
-    const userName = user.displayName?.split(' ')[0] || 'User';
+    const displayName = userName.split(' ')[0];
 
   return (
     <div className="space-y-8 md:space-y-12">
       <div className="max-w-4xl">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Welcome Back, {userName}!</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Welcome Back, {displayName}!</h1>
         <p className="mt-2 text-lg text-slate-600 leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
       </div>
 

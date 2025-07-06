@@ -1,4 +1,6 @@
-
+// Firebase has been temporarily disabled. To re-enable, add your configuration
+// to a .env.local file and uncomment the code below.
+/*
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -17,7 +19,6 @@ let auth: Auth | null = null;
 let db: Firestore | null = null;
 let isFirebaseConfigured = false;
 
-// Check if the essential Firebase config keys are present
 const hasEssentialConfig = !!(
     firebaseConfig.apiKey && 
     firebaseConfig.authDomain && 
@@ -29,10 +30,9 @@ if (hasEssentialConfig) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
-    isFirebaseConfigured = true; // Only set to true if initialization succeeds
+    isFirebaseConfigured = true;
   } catch (e) {
     console.error("Firebase initialization error:", e);
-    // Keep services as null and isFirebaseConfigured as false
     app = null;
     auth = null;
     db = null;
@@ -45,3 +45,9 @@ if (!isFirebaseConfigured) {
 }
 
 export { app, auth, db, isFirebaseConfigured };
+*/
+
+export const app = null;
+export const auth = null;
+export const db = null;
+export const isFirebaseConfigured = false;
