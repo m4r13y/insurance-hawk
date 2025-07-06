@@ -3,14 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, ShieldCheck } from "lucide-react"
-import Image from "next/image"
+import { CheckCircle } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -34,40 +33,40 @@ export default function LoginPage() {
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-login-gradient lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 text-primary-foreground">
+      <div className="hidden bg-slate-100 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-24">
         <div className="self-start">
-            <Logo className="text-white"/>
+            <Logo />
         </div>
         <div className="text-center">
-            <h2 className="font-headline text-4xl font-bold">Your Policies, All in One Nest.</h2>
-            <p className="mt-4 text-lg text-primary-foreground/80">Securely manage your insurance and financial plans from one convenient place.</p>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900">Your Policies, All in One Nest.</h2>
+            <p className="mt-4 text-lg text-slate-600">Securely manage your insurance and financial plans from one convenient place.</p>
         </div>
-        <div className="w-full max-w-md text-sm">
+        <div className="w-full max-w-md text-slate-800">
             <ul className="space-y-4">
                 <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
                     <span>Compare plans from top carriers instantly.</span>
                 </li>
                 <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
                     <span>Get personalized, AI-driven recommendations.</span>
                 </li>
                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-300" />
+                    <CheckCircle className="h-5 w-5 text-teal-500" />
                     <span>Securely apply and manage your documents online.</span>
                 </li>
             </ul>
         </div>
       </div>
       <div className="flex items-center justify-center py-12 px-4">
-        <div className="mx-auto grid w-[380px] gap-8">
+        <div className="mx-auto grid w-full max-w-md gap-8">
           <div className="grid gap-2 text-center">
-            <h1 className="text-4xl font-bold">Welcome Back</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">Welcome Back</h1>
+            <p className="text-slate-600">
               Enter your credentials to access your portal.
             </p>
           </div>
-          <Card>
+          <Card className="p-2">
             <CardContent className="p-8">
                  <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
@@ -84,7 +83,7 @@ export default function LoginPage() {
                     <div className="space-y-2">
                          <div className="flex items-center">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" className="ml-auto inline-block text-sm font-medium text-primary hover:underline" prefetch={false}>
+                            <Link href="#" className="ml-auto inline-block text-sm font-medium text-sky-600 hover:underline" prefetch={false}>
                             Forgot password?
                             </Link>
                         </div>
@@ -96,15 +95,15 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+                    <Button type="submit" className="w-full">
                         Sign In
                     </Button>
                 </form>
             </CardContent>
           </Card>
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-slate-600">
               Don't have an account?{" "}
-              <Link href="#" className="font-medium text-primary hover:underline" prefetch={false}>
+              <Link href="#" className="font-medium text-sky-600 hover:underline" prefetch={false}>
                   Contact us
               </Link>
           </p>

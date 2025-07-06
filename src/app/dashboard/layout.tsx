@@ -49,7 +49,7 @@ export default function DashboardLayout({
           <SidebarContent className="flex flex-col justify-between">
             <div>
               <SidebarHeader>
-                <Logo className="text-sidebar-primary" />
+                <Logo />
               </SidebarHeader>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -117,19 +117,19 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm sm:px-8">
+          <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b bg-white/80 px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="lg:hidden" />
                 <div className="relative hidden lg:block">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search..." className="w-full rounded-lg bg-white pl-8 md:w-[200px] lg:w-[336px]" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                    <Input placeholder="Search..." className="w-full rounded-lg bg-white pl-10 h-11 md:w-[200px] lg:w-[336px]" />
                 </div>
             </div>
             <div className="flex items-center gap-4">
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-10">
+          <main className="flex-1 overflow-y-auto p-8 md:p-12">
             {children}
           </main>
         </div>
