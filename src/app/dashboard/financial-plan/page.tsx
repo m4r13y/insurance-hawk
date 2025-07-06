@@ -352,7 +352,7 @@ export default function RetirementPlanPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-       <div className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-2">
             <Progress value={(step / (steps.length-1)) * 100} />
             <div className="flex justify-between text-sm text-muted-foreground">
@@ -360,9 +360,8 @@ export default function RetirementPlanPage() {
                 <p>{Math.round((step / (steps.length-1)) * 100)}% Complete</p>
             </div>
         </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-3">
@@ -371,272 +370,270 @@ export default function RetirementPlanPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-
-            {step === 1 && ( // Getting Started
-                <div className="space-y-8">
-                     <FormField
-                        control={form.control}
-                        name="greatestConcern"
-                        render={({ field }) => (
-                            <FormItem className="space-y-4">
-                                <FormLabel className="text-base font-semibold">To start, which of the following best describes your greatest financial concern?</FormLabel>
-                                <FormDescription>This helps us understand what's most important to you right now.</FormDescription>
-                                <FormControl>
-                                    <RadioGroup
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
-                                    >
-                                        {financialConcerns.map((concern) => (
-                                            <FormItem key={concern.id} className="flex items-center space-x-3 space-y-0 rounded-lg border bg-background hover:bg-secondary/50 p-4 transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
-                                                <FormControl>
-                                                    <RadioGroupItem value={concern.label} />
-                                                </FormControl>
-                                                <FormLabel className="font-normal w-full cursor-pointer !mt-0">
-                                                    {concern.label}
-                                                </FormLabel>
-                                            </FormItem>
-                                        ))}
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            )}
-            
-            {step === 2 && ( // Your Picture
-                <div className="space-y-8">
-                    <FormField control={form.control} name="taxFilingStatus" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Tax Filing Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="single">Single</SelectItem>
-                                    <SelectItem value="married_jointly">Married Filing Jointly</SelectItem>
-                                    <SelectItem value="married_separately">Married Filing Separately</SelectItem>
-                                    <SelectItem value="hoh">Head of Household</SelectItem>
-                                    <SelectItem value="widow">Qualifying Widow(er)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="hasSpouse" render={({ field }) => <FormItem><FormLabel>Do you have a spouse?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    {watchHasSpouse === 'yes' && (
-                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-md">
-                            <FormField control={form.control} name="spouseFirstName" render={({ field }) => <FormItem><FormLabel>Spouse's First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="spouseLastName" render={({ field }) => <FormItem><FormLabel>Spouse's Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {step === 3 && ( // Insurance
-                <div className="space-y-8">
-                    <div>
-                        <h4 className="font-semibold mb-4">Your Health Insurance</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <FormField control={form.control} name="healthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="healthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="healthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="healthInsuranceDeductible" render={({ field }) => <FormItem><FormLabel>Deductible ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="healthInsuranceCopays" render={({ field }) => <FormItem><FormLabel>Copays</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="healthInsuranceMaxOutOfPocket" render={({ field }) => <FormItem><FormLabel>Max Out-of-Pocket ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                        </div>
-                    </div>
-                     {watchHasSpouse === 'yes' && (
-                        <div>
-                            <h4 className="font-semibold mb-4">Spouse's Health Insurance</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <FormField control={form.control} name="spouseHealthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField control={form.control} name="spouseHealthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField control={form.control} name="spouseHealthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField control={form.control} name="spouseHealthInsuranceDeductible" render={({ field }) => <FormItem><FormLabel>Deductible ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField control={form.control} name="spouseHealthInsuranceCopays" render={({ field }) => <FormItem><FormLabel>Copays</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField control={form.control} name="spouseHealthInsuranceMaxOutOfPocket" render={({ field }) => <FormItem><FormLabel>Max Out-of-Pocket ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            </div>
-                        </div>
-                     )}
-                     <FormField control={form.control} name="otherInsurancePolicies" render={() => (
-                        <FormItem>
-                            <FormLabel>Do you have any of the following insurance policies?</FormLabel>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                                {otherInsuranceOptions.map((item) => (
-                                    <FormField key={item.id} control={form.control} name="otherInsurancePolicies" render={({ field }) => (
-                                        <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                            <FormControl>
-                                                <Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {
-                                                    return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))
-                                                }} />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">{item.label}</FormLabel>
-                                        </FormItem>
-                                    )} />
-                                ))}
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                     )}/>
-                     <FormField control={form.control} name="hasLifeInsurance" render={({ field }) => <FormItem><FormLabel>Do you have life insurance?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                     {watchHasLifeInsurance === 'yes' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-md">
-                            <FormField control={form.control} name="lifeInsuranceType" render={({ field }) => <FormItem><FormLabel>Type of Life Insurance</FormLabel><FormControl><Input placeholder="e.g., Term, Whole, Universal" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="beneficiariesUpdated" render={({ field }) => <FormItem><FormLabel>Have beneficiaries been updated in the last 5 years?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                        </div>
-                     )}
-                     <FormField control={form.control} name="hasLTC" render={({ field }) => <FormItem><FormLabel>Do you have Long Term Care (LTC) insurance?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                     {watchHasLTC === 'yes' && (
-                         <FormField control={form.control} name="ltcHasRiders" render={({ field }) => <FormItem><FormLabel>Does your LTC policy have riders (e.g., inflation protection)?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                     )}
-                </div>
-            )}
-
-            {step === 4 && ( // Assets & Income
-                <div className="space-y-6">
-                    <FormField control={form.control} name="riskTolerance" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>What is your investment risk tolerance?</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="low">Low (Conservative)</SelectItem>
-                                    <SelectItem value="medium">Medium (Moderate)</SelectItem>
-                                    <SelectItem value="high">High (Aggressive)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="assetTypes" render={() => (
-                        <FormItem>
-                            <FormLabel>Where is your money currently?</FormLabel>
-                             <FormDescription>Select all that apply.</FormDescription>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                                {assetTypeOptions.map((item) => (
-                                    <FormField key={item.id} control={form.control} name="assetTypes" render={({ field }) => (
-                                        <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                            <FormControl>
-                                                <Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {
-                                                    return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))
-                                                }} />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">{item.label}</FormLabel>
-                                        </FormItem>
-                                    )} />
-                                ))}
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField control={form.control} name="assetsHeldAt" render={({ field }) => <FormItem><FormLabel>Where are your assets held?</FormLabel><FormControl><Textarea placeholder="e.g., Fidelity, Vanguard, Local Bank..." {...field} /></FormControl><FormMessage /></FormItem>} />
-                    <FormField control={form.control} name="investmentExperience" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Have you experienced any of the following with your money?</FormLabel>
-                            <div className="flex flex-col space-y-2 pt-2">
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                    <FormControl><Checkbox checked={field.value?.includes('loss')} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), 'loss']) : field.onChange(field.value?.filter((v) => v !== 'loss'))}} /></FormControl>
-                                    <FormLabel className="font-normal">Loss or instability</FormLabel>
-                                </FormItem>
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                    <FormControl><Checkbox checked={field.value?.includes('no_growth')} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), 'no_growth']) : field.onChange(field.value?.filter((v) => v !== 'no_growth'))}} /></FormControl>
-                                    <FormLabel className="font-normal">Lack of growth</FormLabel>
-                                </FormItem>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="hasEmergencyFund" render={({ field }) => <FormItem><FormLabel>Do you have an emergency fund?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                     {watchHasEmergencyFund === 'yes' && (
-                         <FormField control={form.control} name="emergencyFundMonths" render={({ field }) => <FormItem><FormLabel>How many months of expenses does it cover?</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                     )}
-                     <div>
-                        <h4 className="font-semibold mb-4">Monthly Income Sources ($)</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                             <FormField control={form.control} name="socialSecurityIncome" render={({ field }) => <FormItem><FormLabel>Social Security</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="pensionIncome" render={({ field }) => <FormItem><FormLabel>Pensions</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="rmdIncome" render={({ field }) => <FormItem><FormLabel>RMDs</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="annuityIncome" render={({ field }) => <FormItem><FormLabel>Annuity Payments</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="workIncome" render={({ field }) => <FormItem><FormLabel>Full-time Work</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="rentalIncome" render={({ field }) => <FormItem><FormLabel>Rental Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                        </div>
-                     </div>
-                      <div>
-                        <h4 className="font-semibold mb-4">Monthly Totals ($)</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                             <FormField control={form.control} name="totalMonthlyIncome" render={({ field }) => <FormItem><FormLabel>Total Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="totalMonthlyExpenses" render={({ field }) => <FormItem><FormLabel>Total Expenses</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                        </div>
+                  {step === 1 && ( // Getting Started
+                      <div className="space-y-8">
+                          <FormField
+                              control={form.control}
+                              name="greatestConcern"
+                              render={({ field }) => (
+                                  <FormItem className="space-y-4">
+                                      <FormLabel className="text-base font-semibold">To start, which of the following best describes your greatest financial concern?</FormLabel>
+                                      <FormDescription>This helps us understand what's most important to you right now.</FormDescription>
+                                      <FormControl>
+                                          <RadioGroup
+                                              onValueChange={field.onChange}
+                                              defaultValue={field.value}
+                                              className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
+                                          >
+                                              {financialConcerns.map((concern) => (
+                                                  <FormItem key={concern.id} className="flex items-center space-x-3 space-y-0 rounded-lg border bg-background hover:bg-secondary/50 p-4 transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                                                      <FormControl>
+                                                          <RadioGroupItem value={concern.label} />
+                                                      </FormControl>
+                                                      <FormLabel className="font-normal w-full cursor-pointer !mt-0">
+                                                          {concern.label}
+                                                      </FormLabel>
+                                                  </FormItem>
+                                              ))}
+                                          </RadioGroup>
+                                      </FormControl>
+                                      <FormMessage />
+                                  </FormItem>
+                              )}
+                          />
                       </div>
-                </div>
-            )}
+                  )}
+                  
+                  {step === 2 && ( // Your Picture
+                      <div className="space-y-8">
+                          <FormField control={form.control} name="taxFilingStatus" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Tax Filing Status</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                      <SelectContent>
+                                          <SelectItem value="single">Single</SelectItem>
+                                          <SelectItem value="married_jointly">Married Filing Jointly</SelectItem>
+                                          <SelectItem value="married_separately">Married Filing Separately</SelectItem>
+                                          <SelectItem value="hoh">Head of Household</SelectItem>
+                                          <SelectItem value="widow">Qualifying Widow(er)</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                          <FormField control={form.control} name="hasSpouse" render={({ field }) => <FormItem><FormLabel>Do you have a spouse?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          {watchHasSpouse === 'yes' && (
+                              <div className="grid grid-cols-2 gap-4 p-4 border rounded-md">
+                                  <FormField control={form.control} name="spouseFirstName" render={({ field }) => <FormItem><FormLabel>Spouse's First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="spouseLastName" render={({ field }) => <FormItem><FormLabel>Spouse's Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                          )}
+                      </div>
+                  )}
 
-            {step === 5 && ( // Tax & Estate
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
-                    <div className="space-y-6">
-                        <h4 className="font-semibold text-lg">Tax Planning</h4>
-                         <FormField control={form.control} name="takesIraDistributions" render={({ field }) => <FormItem><FormLabel>Are you taking IRA distributions?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="makingRothConversions" render={({ field }) => <FormItem><FormLabel>Are you making Roth conversions?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="hasTaxFreeBonds" render={({ field }) => <FormItem><FormLabel>Do you have tax-free mutual bonds?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="wantsToLowerTaxes" render={({ field }) => <FormItem><FormLabel>Would you like to lower your taxes every year?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="isDonating" render={({ field }) => <FormItem><FormLabel>Are you donating anything?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    </div>
-                     <div className="space-y-6">
-                        <h4 className="font-semibold text-lg">Estate Planning</h4>
-                         <FormField control={form.control} name="hasEstatePlan" render={({ field }) => <FormItem><FormLabel>Do you have an estate plan in place?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="hasHealthCarePOA" render={({ field }) => <FormItem><FormLabel>Do you have a Power of Attorney for health care?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="hasLivingWill" render={({ field }) => <FormItem><FormLabel>Do you have a living will for advanced medical directives?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="wantsToAvoidProbate" render={({ field }) => <FormItem><FormLabel>Are you wanting to go through or avoid probate?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Avoid</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">Go Through / Unsure</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                         <FormField control={form.control} name="marriedMoreThanOnce" render={({ field }) => <FormItem><FormLabel>Have you been married more than once?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    </div>
-                </div>
-            )}
+                  {step === 3 && ( // Insurance
+                      <div className="space-y-8">
+                          <div>
+                              <h4 className="font-semibold mb-4">Your Health Insurance</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                  <FormField control={form.control} name="healthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="healthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="healthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="healthInsuranceDeductible" render={({ field }) => <FormItem><FormLabel>Deductible ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="healthInsuranceCopays" render={({ field }) => <FormItem><FormLabel>Copays</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="healthInsuranceMaxOutOfPocket" render={({ field }) => <FormItem><FormLabel>Max Out-of-Pocket ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                          </div>
+                          {watchHasSpouse === 'yes' && (
+                              <div>
+                                  <h4 className="font-semibold mb-4">Spouse's Health Insurance</h4>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                      <FormField control={form.control} name="spouseHealthInsuranceCompany" render={({ field }) => <FormItem><FormLabel>Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                      <FormField control={form.control} name="spouseHealthInsurancePlan" render={({ field }) => <FormItem><FormLabel>Plan</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                      <FormField control={form.control} name="spouseHealthInsurancePremium" render={({ field }) => <FormItem><FormLabel>Premium ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                      <FormField control={form.control} name="spouseHealthInsuranceDeductible" render={({ field }) => <FormItem><FormLabel>Deductible ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                      <FormField control={form.control} name="spouseHealthInsuranceCopays" render={({ field }) => <FormItem><FormLabel>Copays</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                      <FormField control={form.control} name="spouseHealthInsuranceMaxOutOfPocket" render={({ field }) => <FormItem><FormLabel>Max Out-of-Pocket ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  </div>
+                              </div>
+                          )}
+                          <FormField control={form.control} name="otherInsurancePolicies" render={() => (
+                              <FormItem>
+                                  <FormLabel>Do you have any of the following insurance policies?</FormLabel>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+                                      {otherInsuranceOptions.map((item) => (
+                                          <FormField key={item.id} control={form.control} name="otherInsurancePolicies" render={({ field }) => (
+                                              <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                  <FormControl>
+                                                      <Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {
+                                                          return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))
+                                                      }} />
+                                                  </FormControl>
+                                                  <FormLabel className="font-normal">{item.label}</FormLabel>
+                                              </FormItem>
+                                          )} />
+                                      ))}
+                                  </div>
+                                  <FormMessage />
+                              </FormItem>
+                          )}/>
+                          <FormField control={form.control} name="hasLifeInsurance" render={({ field }) => <FormItem><FormLabel>Do you have life insurance?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          {watchHasLifeInsurance === 'yes' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-md">
+                                  <FormField control={form.control} name="lifeInsuranceType" render={({ field }) => <FormItem><FormLabel>Type of Life Insurance</FormLabel><FormControl><Input placeholder="e.g., Term, Whole, Universal" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="beneficiariesUpdated" render={({ field }) => <FormItem><FormLabel>Have beneficiaries been updated in the last 5 years?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                          )}
+                          <FormField control={form.control} name="hasLTC" render={({ field }) => <FormItem><FormLabel>Do you have Long Term Care (LTC) insurance?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          {watchHasLTC === 'yes' && (
+                              <FormField control={form.control} name="ltcHasRiders" render={({ field }) => <FormItem><FormLabel>Does your LTC policy have riders (e.g., inflation protection)?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          )}
+                      </div>
+                  )}
 
-            {step === 6 && ( // Goals & Consent
-                <div className="space-y-6">
-                    <FormField control={form.control} name="wantsFiduciary" render={({ field }) => <FormItem><FormLabel>Would it be valuable for you to work with a fiduciary?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    <FormField control={form.control} name="wantsMarketProtection" render={({ field }) => <FormItem><FormLabel>Do you want to know how to protect yourself from loss in the markets and still grow money?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    <FormField control={form.control} name="concernedAboutOutOfMoney" render={({ field }) => <FormItem><FormLabel>Are you concerned about running out of money?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                    <FormField control={form.control} name="otherGoals" render={({ field }) => <FormItem><FormLabel>Do you have any other financial goals?</FormLabel><FormControl><Textarea placeholder="e.g., Leave an inheritance, travel, purchase a home..." {...field} /></FormControl><FormMessage /></FormItem>} />
-                    <FormField control={form.control} name="signature" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Digital Signature</FormLabel>
-                            <FormControl><Input placeholder="Type your full name" {...field} /></FormControl>
-                            <FormDescription>By typing your name, you are electronically signing this document.</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </div>
-            )}
-            
-            {step === 7 && ( // Review
-                 <div className="space-y-6">
-                    <ReviewSection title="General">
-                        <ReviewItem label="Greatest Financial Concern" value={form.getValues("greatestConcern")} />
-                        <ReviewItem label="Tax Filing Status" value={form.getValues("taxFilingStatus")} />
-                        <ReviewItem label="Has a Spouse" value={form.getValues("hasSpouse")} />
-                        {form.getValues("hasSpouse") === 'yes' && <ReviewItem label="Spouse Name" value={`${form.getValues("spouseFirstName")} ${form.getValues("spouseLastName")}`} />}
-                    </ReviewSection>
-                    <ReviewSection title="Insurance">
-                        <ReviewItem label="Other Policies" value={form.getValues("otherInsurancePolicies")} />
-                        <ReviewItem label="Has Life Insurance" value={form.getValues("hasLifeInsurance")} />
-                        <ReviewItem label="Has LTC" value={form.getValues("hasLTC")} />
-                    </ReviewSection>
-                     <ReviewSection title="Investments & Assets">
-                        <ReviewItem label="Risk Tolerance" value={form.getValues("riskTolerance")} />
-                        <ReviewItem label="Asset Types" value={form.getValues("assetTypes")} />
-                    </ReviewSection>
-                     <ReviewSection title="Goals">
-                        <ReviewItem label="Wants Fiduciary" value={form.getValues("wantsFiduciary")} />
-                        <ReviewItem label="Concerned about market loss" value={form.getValues("wantsMarketProtection")} />
-                        <ReviewItem label="Concerned about running out of money" value={form.getValues("concernedAboutOutOfMoney")} />
-                    </Section>
-                </div>
-            )}
+                  {step === 4 && ( // Assets & Income
+                      <div className="space-y-6">
+                          <FormField control={form.control} name="riskTolerance" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>What is your investment risk tolerance?</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                      <SelectContent>
+                                          <SelectItem value="low">Low (Conservative)</SelectItem>
+                                          <SelectItem value="medium">Medium (Moderate)</SelectItem>
+                                          <SelectItem value="high">High (Aggressive)</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                          <FormField control={form.control} name="assetTypes" render={() => (
+                              <FormItem>
+                                  <FormLabel>Where is your money currently?</FormLabel>
+                                  <FormDescription>Select all that apply.</FormDescription>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                                      {assetTypeOptions.map((item) => (
+                                          <FormField key={item.id} control={form.control} name="assetTypes" render={({ field }) => (
+                                              <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                  <FormControl>
+                                                      <Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {
+                                                          return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))
+                                                      }} />
+                                                  </FormControl>
+                                                  <FormLabel className="font-normal">{item.label}</FormLabel>
+                                              </FormItem>
+                                          )} />
+                                      ))}
+                                  </div>
+                                  <FormMessage />
+                              </FormItem>
+                          )}/>
+                          <FormField control={form.control} name="assetsHeldAt" render={({ field }) => <FormItem><FormLabel>Where are your assets held?</FormLabel><FormControl><Textarea placeholder="e.g., Fidelity, Vanguard, Local Bank..." {...field} /></FormControl><FormMessage /></FormItem>} />
+                          <FormField control={form.control} name="investmentExperience" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Have you experienced any of the following with your money?</FormLabel>
+                                  <div className="flex flex-col space-y-2 pt-2">
+                                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                          <FormControl><Checkbox checked={field.value?.includes('loss')} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), 'loss']) : field.onChange(field.value?.filter((v) => v !== 'loss'))}} /></FormControl>
+                                          <FormLabel className="font-normal">Loss or instability</FormLabel>
+                                      </FormItem>
+                                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                          <FormControl><Checkbox checked={field.value?.includes('no_growth')} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), 'no_growth']) : field.onChange(field.value?.filter((v) => v !== 'no_growth'))}} /></FormControl>
+                                          <FormLabel className="font-normal">Lack of growth</FormLabel>
+                                      </FormItem>
+                                  </div>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                          <FormField control={form.control} name="hasEmergencyFund" render={({ field }) => <FormItem><FormLabel>Do you have an emergency fund?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          {watchHasEmergencyFund === 'yes' && (
+                              <FormField control={form.control} name="emergencyFundMonths" render={({ field }) => <FormItem><FormLabel>How many months of expenses does it cover?</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                          )}
+                          <div>
+                              <h4 className="font-semibold mb-4">Monthly Income Sources ($)</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <FormField control={form.control} name="socialSecurityIncome" render={({ field }) => <FormItem><FormLabel>Social Security</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="pensionIncome" render={({ field }) => <FormItem><FormLabel>Pensions</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="rmdIncome" render={({ field }) => <FormItem><FormLabel>RMDs</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="annuityIncome" render={({ field }) => <FormItem><FormLabel>Annuity Payments</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="workIncome" render={({ field }) => <FormItem><FormLabel>Full-time Work</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="rentalIncome" render={({ field }) => <FormItem><FormLabel>Rental Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                          </div>
+                            <div>
+                              <h4 className="font-semibold mb-4">Monthly Totals ($)</h4>
+                              <div className="grid grid-cols-2 gap-4">
+                                  <FormField control={form.control} name="totalMonthlyIncome" render={({ field }) => <FormItem><FormLabel>Total Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField control={form.control} name="totalMonthlyExpenses" render={({ field }) => <FormItem><FormLabel>Total Expenses</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                            </div>
+                      </div>
+                  )}
 
-            </CardContent>
+                  {step === 5 && ( // Tax & Estate
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                          <div className="space-y-6">
+                              <h4 className="font-semibold text-lg">Tax Planning</h4>
+                              <FormField control={form.control} name="takesIraDistributions" render={({ field }) => <FormItem><FormLabel>Are you taking IRA distributions?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="makingRothConversions" render={({ field }) => <FormItem><FormLabel>Are you making Roth conversions?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="hasTaxFreeBonds" render={({ field }) => <FormItem><FormLabel>Do you have tax-free mutual bonds?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="wantsToLowerTaxes" render={({ field }) => <FormItem><FormLabel>Would you like to lower your taxes every year?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="isDonating" render={({ field }) => <FormItem><FormLabel>Are you donating anything?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          </div>
+                          <div className="space-y-6">
+                              <h4 className="font-semibold text-lg">Estate Planning</h4>
+                              <FormField control={form.control} name="hasEstatePlan" render={({ field }) => <FormItem><FormLabel>Do you have an estate plan in place?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="hasHealthCarePOA" render={({ field }) => <FormItem><FormLabel>Do you have a Power of Attorney for health care?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="hasLivingWill" render={({ field }) => <FormItem><FormLabel>Do you have a living will for advanced medical directives?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="wantsToAvoidProbate" render={({ field }) => <FormItem><FormLabel>Are you wanting to go through or avoid probate?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Avoid</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">Go Through / Unsure</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                              <FormField control={form.control} name="marriedMoreThanOnce" render={({ field }) => <FormItem><FormLabel>Have you been married more than once?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          </div>
+                      </div>
+                  )}
+
+                  {step === 6 && ( // Goals & Consent
+                      <div className="space-y-6">
+                          <FormField control={form.control} name="wantsFiduciary" render={({ field }) => <FormItem><FormLabel>Would it be valuable for you to work with a fiduciary?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          <FormField control={form.control} name="wantsMarketProtection" render={({ field }) => <FormItem><FormLabel>Do you want to know how to protect yourself from loss in the markets and still grow money?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          <FormField control={form.control} name="concernedAboutOutOfMoney" render={({ field }) => <FormItem><FormLabel>Are you concerned about running out of money?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                          <FormField control={form.control} name="otherGoals" render={({ field }) => <FormItem><FormLabel>Do you have any other financial goals?</FormLabel><FormControl><Textarea placeholder="e.g., Leave an inheritance, travel, purchase a home..." {...field} /></FormControl><FormMessage /></FormItem>} />
+                          <FormField control={form.control} name="signature" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Digital Signature</FormLabel>
+                                  <FormControl><Input placeholder="Type your full name" {...field} /></FormControl>
+                                  <FormDescription>By typing your name, you are electronically signing this document.</FormDescription>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                      </div>
+                  )}
+                  
+                  {step === 7 && ( // Review
+                      <div className="space-y-6">
+                          <ReviewSection title="General">
+                              <ReviewItem label="Greatest Financial Concern" value={form.getValues("greatestConcern")} />
+                              <ReviewItem label="Tax Filing Status" value={form.getValues("taxFilingStatus")} />
+                              <ReviewItem label="Has a Spouse" value={form.getValues("hasSpouse")} />
+                              {form.getValues("hasSpouse") === 'yes' && <ReviewItem label="Spouse Name" value={`${form.getValues("spouseFirstName")} ${form.getValues("spouseLastName")}`} />}
+                          </ReviewSection>
+                          <ReviewSection title="Insurance">
+                              <ReviewItem label="Other Policies" value={form.getValues("otherInsurancePolicies")} />
+                              <ReviewItem label="Has Life Insurance" value={form.getValues("hasLifeInsurance")} />
+                              <ReviewItem label="Has LTC" value={form.getValues("hasLTC")} />
+                          </ReviewSection>
+                          <ReviewSection title="Investments & Assets">
+                              <ReviewItem label="Risk Tolerance" value={form.getValues("riskTolerance")} />
+                              <ReviewItem label="Asset Types" value={form.getValues("assetTypes")} />
+                          </ReviewSection>
+                          <ReviewSection title="Goals">
+                              <ReviewItem label="Wants Fiduciary" value={form.getValues("wantsFiduciary")} />
+                              <ReviewItem label="Concerned about market loss" value={form.getValues("wantsMarketProtection")} />
+                              <ReviewItem label="Concerned about running out of money" value={form.getValues("concernedAboutOutOfMoney")} />
+                          </ReviewSection>
+                      </div>
+                  )}
+                </CardContent>
             </Card>
 
             <div className="flex justify-between">
@@ -650,14 +647,14 @@ export default function RetirementPlanPage() {
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 ) : (
-                    <Button type="button" onClick={form.handleSubmit(onSubmit)} className='bg-accent hover:bg-accent/90'>
+                    <Button type="button" onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90">
                         Generate My Plan
                         <ArrowRight className="ml-2 h-4 w-4"/>
                     </Button>
                 )}
             </div>
-        </form>
-      </Form>
+          </form>
+        </Form>
       </div>
     </div>
   )
