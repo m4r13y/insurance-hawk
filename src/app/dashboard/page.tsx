@@ -74,15 +74,6 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                         </span>
                     </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
-                    <Link href="/dashboard/plans">
-                        <ShieldCheck className="mr-3 h-6 w-6 text-primary" />
-                        <span className="flex flex-col">
-                            <span className="font-semibold">Just Browse Plans</span>
-                            <span className="text-xs text-muted-foreground">Explore all available options.</span>
-                        </span>
-                    </Link>
-                </Button>
             </CardContent>
             <CardFooter className="p-8">
                 <Button onClick={onDismiss} variant="ghost" className="w-full text-muted-foreground">

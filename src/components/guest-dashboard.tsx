@@ -11,7 +11,6 @@ export const GuestDashboard = () => (
             <p className="mt-4 text-lg text-slate-600 leading-relaxed">Welcome to HawkNest. Compare plans from top carriers, get personalized recommendations, and securely manage your insurance and financial plans from one convenient place.</p>
              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button size="lg" asChild><Link href="/?mode=signup">Create Your Account <UserPlus className="ml-2 h-4 w-4"/></Link></Button>
-                <Button size="lg" variant="outline" asChild><Link href="/dashboard/plans">Browse Plans</Link></Button>
             </div>
         </div>
 

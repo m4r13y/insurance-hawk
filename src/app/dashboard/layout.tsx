@@ -149,11 +149,6 @@ function DashboardLayoutComponent({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/plans")} tooltip="Browse Plans">
-                    <Link href="/dashboard/plans"><ShieldCheck /><span>Browse Plans</span></Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/health-quotes")} tooltip="Health Quotes">
                     <Link href="/dashboard/health-quotes"><Heart /><span>Health Quotes</span></Link>
                   </SidebarMenuButton>
