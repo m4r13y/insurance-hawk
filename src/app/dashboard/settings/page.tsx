@@ -35,6 +35,8 @@ const securityFormSchema = z.object({
 });
 
 
+const defaultHawkImage = "https://placehold.co/80x80.png";
+
 export default function SettingsPage() {
     const { toast } = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -86,7 +88,7 @@ export default function SettingsPage() {
         console.log(values)
         localStorage.setItem("userFirstName", values.firstName)
         localStorage.setItem("userLastName", values.lastName)
-        window.dispatchEvent(new Event("storage")) // To notify other tabs/components
+        window.dispatchEvent(new Event("profileUpdate"))
         toast({ title: "Profile Updated", description: "Your personal information has been saved." })
     }
 
@@ -109,7 +111,7 @@ export default function SettingsPage() {
                 const dataUrl = reader.result as string;
                 setImagePreview(dataUrl);
                 localStorage.setItem("userProfilePicture", dataUrl);
-                window.dispatchEvent(new Event("storage")); // To notify other tabs/components
+                window.dispatchEvent(new Event("profileUpdate"));
                 toast({ title: "Profile Picture Updated" })
             };
             reader.readAsDataURL(file);
@@ -128,7 +130,7 @@ export default function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
-                <AvatarImage src={imagePreview || "https://placehold.co/80x80.png"} alt="User avatar" data-ai-hint="person portrait"/>
+                <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" {...(!imagePreview && { 'data-ai-hint': 'hawk' })}/>
                 <AvatarFallback>SC</AvatarFallback>
             </Avatar>
             <div className="space-y-2">

@@ -16,10 +16,12 @@ import { CreditCard, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 
+const defaultHawkImage = "https://placehold.co/40x40.png";
+
 export function UserNav() {
   const [userName, setUserName] = useState("Sarah Connor");
   const [userEmail, setUserEmail] = useState("s.connor@email.com");
-  const [userImage, setUserImage] = useState("https://placehold.co/40x40.png");
+  const [userImage, setUserImage] = useState(defaultHawkImage);
 
   useEffect(() => {
     const updateUserData = () => {
@@ -35,13 +37,15 @@ export function UserNav() {
 
         if (storedImage) {
             setUserImage(storedImage);
+        } else {
+            setUserImage(defaultHawkImage);
         }
     };
 
     updateUserData();
-    window.addEventListener('storage', updateUserData);
+    window.addEventListener('profileUpdate', updateUserData);
     return () => {
-        window.removeEventListener('storage', updateUserData);
+        window.removeEventListener('profileUpdate', updateUserData);
     };
   }, []);
 
@@ -52,7 +56,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={userImage} alt="User avatar" data-ai-hint="person portrait" />
+            <AvatarImage src={userImage} alt="User avatar" {...(userImage === defaultHawkImage && { 'data-ai-hint': 'hawk' })} />
             <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
         </Button>
