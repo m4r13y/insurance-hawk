@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -98,11 +97,11 @@ export default function DashboardPage() {
               <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Deductible Progress</p>
-              <div className="mt-2 flex items-center gap-4">
-                <Progress value={25} aria-label="25% of deductible met" />
-                <span className="text-base font-medium text-slate-700">$125 / $500</span>
+              <div className="flex justify-between items-baseline text-sm mb-1">
+                <p className="text-slate-500">Deductible Progress</p>
+                <p className="font-medium text-slate-700">$125 / $500</p>
               </div>
+              <Progress value={25} aria-label="25% of deductible met" />
             </div>
           </CardContent>
           <CardFooter>
@@ -194,7 +193,7 @@ export default function DashboardPage() {
                 </div>
             </CardContent>
             {missingPlans.length > 0 && (
-                <CardFooter className="flex-col items-start border-t bg-slate-100/50">
+                <CardFooter className="flex-col items-start border-t bg-slate-100/50 p-6 sm:p-8">
                      <h4 className="font-semibold text-slate-800 text-lg">Areas for Improvement</h4>
                      <p className="text-sm text-slate-500 mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
                      <div className="flex flex-wrap gap-3">

@@ -68,9 +68,9 @@ export default function DocumentsPage() {
     };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 md:space-y-12">
        <div>
-        <h1 className="font-headline text-3xl sm:text-4xl font-bold tracking-tight">Policies & Documents</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Policies & Documents</h1>
         <p className="text-muted-foreground mt-2 text-lg">Manage your policies and upload related documents securely.</p>
       </div>
 
@@ -86,7 +86,7 @@ export default function DocumentsPage() {
                     return (
                         <Card key={policy.id} className="flex flex-col">
                             <CardHeader className="flex-row items-center gap-4 space-y-0 p-6">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600 shrink-0">
                                     <Icon className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1">
