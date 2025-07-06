@@ -10,12 +10,31 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: { plan: Plan, showSelectButton?: boolean, isFeatured?: boolean }) {
+  
+  const getApplicationType = (category: string) => {
+    switch (category) {
+      case 'Medicare Supplement':
+        return 'medicare-supplement';
+      case 'Dental':
+        return 'dental';
+      case 'Hospital Indemnity':
+        return 'hospital-indemnity';
+      case 'Life Insurance':
+        return 'life-insurance';
+      default:
+        return 'medicare-supplement';
+    }
+  }
+
+  const applicationType = getApplicationType(plan.category);
+  const applicationUrl = `/dashboard/apply?type=${applicationType}&planId=${plan.id}&planName=${encodeURIComponent(plan.name)}&provider=${encodeURIComponent(plan.provider)}&premium=${plan.premium}`;
+  
   return (
     <Card className={cn(
         "flex flex-col h-full transition-all duration-300 relative",
         isFeatured ? "border-sky-500 shadow-lg" : "hover:border-primary/50 hover:shadow-lg"
     )}>
-      {isFeatured && <Badge className="absolute top-0 -translate-y-1/2 left-8 bg-sky-500 text-white">Best Value</Badge>}
+      {isFeatured && <Badge className="absolute -top-3 left-8 bg-sky-500 text-white">Best Value</Badge>}
       <CardHeader className="p-8">
         <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-bold text-slate-900">{plan.name}</CardTitle>
@@ -49,7 +68,7 @@ export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: 
       {showSelectButton && (
         <CardFooter className="p-8 mt-auto">
           <Button asChild className="w-full" size="lg" variant={isFeatured ? 'default' : 'outline'}>
-            <Link href={`/dashboard/apply?planId=${plan.id}`}>Select Plan</Link>
+            <Link href={applicationUrl}>Select Plan</Link>
           </Button>
         </CardFooter>
       )}

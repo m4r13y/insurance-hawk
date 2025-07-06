@@ -31,8 +31,8 @@ export default function PlansPage() {
     const featuredPlanId = sortBy === 'rating' && filteredAndSortedPlans.length > 0 ? filteredAndSortedPlans[0].id : null;
 
   return (
-    <div className="space-y-8 md:space-y-12">
-       <div className="max-w-4xl">
+    <div className="space-y-8">
+       <div>
         <h1 className="text-2xl font-semibold">Browse Plans</h1>
         <p className="text-base text-muted-foreground mt-1">Compare and find the best plan for you.</p>
       </div>

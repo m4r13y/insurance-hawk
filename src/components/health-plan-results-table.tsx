@@ -73,7 +73,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-4">
                 <Label>Monthly Premium</Label>
-                <Slider defaultValue={[0, 1500]} max={1500} step={50} onValueChange={setPremium} />
+                <Slider defaultValue={[0, 1500]} max={1500} step={50} value={premium} onValueChange={setPremium} />
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>${premium[0]}</span>
                   <span>${premium[1] >= 1500 ? '1500+' : premium[1]}</span>
@@ -81,7 +81,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
               </div>
               <div className="space-y-4">
                 <Label>Annual Deductible</Label>
-                <Slider defaultValue={[0, 15000]} max={15000} step={500} onValueChange={setDeductible} />
+                <Slider defaultValue={[0, 15000]} max={15000} step={500} value={deductible} onValueChange={setDeductible} />
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>${deductible[0]}</span>
                   <span>${deductible[1] >= 15000 ? '15k+' : deductible[1]}</span>
@@ -115,8 +115,8 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
 
       <div>
           {plans.length > 0 ? (
-              <div className="w-full overflow-x-auto">
-                <Card>
+            <Card>
+                <div className="w-full overflow-x-auto">
                     <Table>
                     <TableHeader>
                         <TableRow>
@@ -162,14 +162,14 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                             <TableCell className="font-medium">${plan.deductible.toLocaleString()}</TableCell>
                             <TableCell className="font-medium">${plan.outOfPocketMax.toLocaleString()}</TableCell>
                             <TableCell className="text-right">
-                                <Button asChild><Link href={`/dashboard/apply?planName=${encodeURIComponent(plan.name)}&provider=${encodeURIComponent(plan.provider)}&premium=${plan.premium}`}>Select Plan</Link></Button>
+                                <Button asChild><Link href={`/dashboard/apply?type=health-insurance&planName=${encodeURIComponent(plan.name)}&provider=${encodeURIComponent(plan.provider)}&premium=${plan.premium}`}>Select Plan</Link></Button>
                             </TableCell>
                         </TableRow>
                         ))}
                     </TableBody>
                     </Table>
-                </Card>
-              </div>
+                </div>
+            </Card>
           ) : (
               <Card className="flex flex-col items-center justify-center text-center p-12">
                    <h3 className="text-xl font-semibold">No Plans Found</h3>

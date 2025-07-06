@@ -247,7 +247,7 @@ export default function QuotesPage() {
   const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
 
   return (
-    <div className="space-y-8 md:space-y-12">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Get Supplemental Quotes</h1>
         <p className="text-base text-muted-foreground mt-1">
@@ -546,12 +546,12 @@ export default function QuotesPage() {
                         <div className="mt-12">
                             {featuredQuote ? (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    <div className="lg:col-span-2 border rounded-xl p-0 overflow-hidden">
+                                    <div className="lg:col-span-2 overflow-hidden rounded-xl border">
                                         <div className="p-6">
                                         <h3 className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</h3>
                                         <p className="text-muted-foreground">{featuredQuote.plan_name}</p>
                                         </div>
-                                        <div className="p-6 mt-2 space-y-8 border-t">
+                                        <div className="space-y-8 border-t p-6">
                                             <div>
                                                 <Label htmlFor="base-benefit-select" className="text-base font-semibold">Hospital Confinement Benefit</Label>
                                                 <Select
@@ -582,11 +582,11 @@ export default function QuotesPage() {
                                                 {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
                                                     if (rider.included) {
                                                             return (
-                                                            <div key={i} className="flex items-center p-4 rounded-md border bg-green-50 border-green-200">
-                                                                <Check className="h-5 w-5 mr-4 text-green-600"/>
+                                                            <div key={i} className="flex items-center rounded-md border bg-green-50 p-4">
+                                                                <Check className="mr-4 h-5 w-5 text-green-600"/>
                                                                 <div className="flex-1">
                                                                     <p className="font-medium">{rider.name} (Included)</p>
-                                                                    {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                                    {rider.note && <p className="mt-1 text-xs text-muted-foreground">{rider.note}</p>}
                                                                 </div>
                                                             </div>
                                                             )
@@ -595,18 +595,18 @@ export default function QuotesPage() {
                                                     if (rider.benefits.length === 1) {
                                                         const benefit = rider.benefits[0];
                                                         return (
-                                                            <div key={i} className="flex items-center p-4 rounded-md border bg-background">
+                                                            <div key={i} className="flex items-center rounded-md border bg-background p-4">
                                                                 <Switch 
                                                                     id={`rider-${i}`}
                                                                     onCheckedChange={() => handleRiderToggle(rider)}
                                                                     checked={!!selectedRiders[rider.name]}
                                                                 />
-                                                                <Label htmlFor={`rider-${i}`} className="ml-4 flex justify-between w-full cursor-pointer">
+                                                                <Label htmlFor={`rider-${i}`} className="ml-4 flex w-full cursor-pointer justify-between">
                                                                     <div className="flex-1">
                                                                         <p className="font-medium">{rider.name}</p>
-                                                                        {rider.note && <p className="text-xs text-muted-foreground mt-1">{rider.note}</p>}
+                                                                        {rider.note && <p className="mt-1 text-xs text-muted-foreground">{rider.note}</p>}
                                                                     </div>
-                                                                    <span className="font-semibold pl-4 whitespace-nowrap">+ ${benefit.rate.toFixed(2)}</span>
+                                                                    <span className="whitespace-nowrap pl-4 font-semibold">+ ${benefit.rate.toFixed(2)}</span>
                                                                 </Label>
                                                             </div>
                                                         )
@@ -614,9 +614,9 @@ export default function QuotesPage() {
 
                                                     if (rider.benefits.length > 1) {
                                                         return (
-                                                            <div key={i} className="p-4 rounded-md border bg-background">
+                                                            <div key={i} className="rounded-md border bg-background p-4">
                                                                 <p className="font-medium">{rider.name}</p>
-                                                                {rider.note && <p className="text-xs text-muted-foreground mb-3 mt-1">{rider.note}</p>}
+                                                                {rider.note && <p className="mb-3 mt-1 text-xs text-muted-foreground">{rider.note}</p>}
                                                                 <RadioGroup
                                                                     onValueChange={(value) => {
                                                                         if (value === 'none') {
@@ -632,7 +632,7 @@ export default function QuotesPage() {
                                                                     {rider.benefits.map((benefit, j) => (
                                                                         <div key={j} className="flex items-center">
                                                                             <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
-                                                                            <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex justify-between w-full font-normal cursor-pointer">
+                                                                            <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex w-full cursor-pointer justify-between font-normal">
                                                                                 <span>${benefit.amount} / {benefit.quantifier}</span>
                                                                                 <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
                                                                             </Label>
@@ -640,7 +640,7 @@ export default function QuotesPage() {
                                                                     ))}
                                                                     <div className="flex items-center">
                                                                         <RadioGroupItem value="none" id={`rider-${i}-none`} />
-                                                                        <Label htmlFor={`rider-${i}-none`} className="ml-3 font-normal cursor-pointer">None</Label>
+                                                                        <Label htmlFor={`rider-${i}-none`} className="ml-3 cursor-pointer font-normal">None</Label>
                                                                     </div>
                                                                 </RadioGroup>
                                                             </div>
@@ -651,12 +651,12 @@ export default function QuotesPage() {
                                             </div>
                                             </div>
                                         </div>
-                                        <div className="flex-col items-stretch gap-4 border-t bg-muted/30 p-6 mt-8">
-                                            <div className="flex justify-between items-center">
-                                                <p className="font-semibold text-lg">Total Monthly Premium</p>
-                                                <p className="font-headline text-3xl sm:text-4xl font-bold">${totalPremium.toFixed(2)}</p>
+                                        <div className="mt-8 flex-col items-stretch gap-4 border-t bg-muted/30 p-6">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-lg font-semibold">Total Monthly Premium</p>
+                                                <p className="font-headline text-3xl font-bold sm:text-4xl">${totalPremium.toFixed(2)}</p>
                                             </div>
-                                            <Button size="lg" asChild className="w-full mt-4"><Link href={`/dashboard/apply?planName=${encodeURIComponent(featuredQuote.plan_name)}&provider=${encodeURIComponent(featuredQuote.carrier.name)}&premium=${totalPremium}`}>Select This Plan</Link></Button>
+                                            <Button size="lg" asChild className="mt-4 w-full"><Link href={`/dashboard/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name)}&provider=${encodeURIComponent(featuredQuote.carrier.name)}&premium=${totalPremium}`}>Select This Plan</Link></Button>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
@@ -669,15 +669,15 @@ export default function QuotesPage() {
                                                     return (
                                                         <Card 
                                                             key={quote.id} 
-                                                            className="p-6 flex justify-between items-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                                                            className="flex cursor-pointer items-center justify-between p-6 transition-colors hover:border-primary hover:bg-muted/50"
                                                             onClick={() => setFeaturedQuote(quote)}
                                                         >
                                                             <div>
-                                                                <p className="font-semibold text-lg">{quote.carrier.name}</p>
+                                                                <p className="text-lg font-semibold">{quote.carrier.name}</p>
                                                                 <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-semibold text-lg">${lowestRate.toFixed(2)}</p>
+                                                                <p className="text-lg font-semibold">${lowestRate.toFixed(2)}</p>
                                                                 <p className="text-xs text-muted-foreground">starts from</p>
                                                             </div>
                                                         </Card>
@@ -690,8 +690,8 @@ export default function QuotesPage() {
                                     </div>
                                 </div>
                             ) : (
-                            <div className="text-center py-16 text-muted-foreground">
-                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
+                            <div className="py-16 text-center text-muted-foreground">
+                                    <FileDigit className="mx-auto mb-4 h-10 w-10"/>
                                     <p>No quotes found for the selected criteria.</p>
                                     <p className="text-sm">Please try different options.</p>
                                 </div>
@@ -704,19 +704,19 @@ export default function QuotesPage() {
         <TabsContent value="life-insurance" className="mt-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Life Insurance Quotes</CardTitle>
-                    <CardDescription>An agent will prepare a personalized quote for you.</CardDescription>
+                    <CardTitle>Life Insurance</CardTitle>
+                    <CardDescription>This is a simplified application. For a real quote, a licensed agent would contact you.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Alert>
                         <Info className="h-4 w-4" />
-                        <AlertTitle>Instant Quotes Coming Soon!</AlertTitle>
+                        <AlertTitle>Full Application Coming Soon!</AlertTitle>
                         <AlertDescription>
-                            We are working to bring you instant online quotes for this plan type. For now, an agent will contact you.
+                            We are working to bring you a full online application for this plan type. For now, you can use this simplified version.
                         </AlertDescription>
                     </Alert>
                     <div className="mt-6 flex justify-end">
-                        <Button size="lg">Request Quote from Agent</Button>
+                        <Button asChild size="lg"><Link href="/dashboard/apply?type=life-insurance">Start Life Insurance Application</Link></Button>
                     </div>
                 </CardContent>
             </Card>
@@ -725,5 +725,3 @@ export default function QuotesPage() {
     </div>
   );
 }
-
-    
