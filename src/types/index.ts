@@ -1,4 +1,5 @@
 
+
 export type Plan = {
   id: string;
   name: string;
@@ -122,4 +123,25 @@ export type HealthPlan = {
     rating: number;
     benefits_url: string;
     formulary_url: string;
+    hsa_eligible: boolean;
+};
+
+export type Drug = {
+  id: string;
+  name: string;
+  rxcui: string;
+  strength: string;
+  route: string;
+  full_name: string;
+  rxterms_dose_form: string;
+  rxnorm_dose_form: string;
+};
+
+export type Provider = {
+  name: string;
+  gender: string;
+  specialties: string[];
+  type: string;
+  npi: string;
+  languages: string[];
 };

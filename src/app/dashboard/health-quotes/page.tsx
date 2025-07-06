@@ -1,7 +1,25 @@
 
-import { HealthInsuranceQuoter } from "@/components/health-insurance-quoter";
+"use client";
+
+import { useState } from "react";
+import { HealthInsuranceQuoter, type FormSchemaType } from "@/components/health-insurance-quoter";
+import { HealthPlanResultsTable } from "@/components/health-plan-results-table";
+import { HealthPlan } from "@/types";
 
 export default function HealthQuotesPage() {
+  const [results, setResults] = useState<HealthPlan[] | null>(null);
+  const [formValues, setFormValues] = useState<FormSchemaType | null>(null);
+
+  const handleShowResults = (plans: HealthPlan[], values: FormSchemaType) => {
+    setResults(plans);
+    setFormValues(values);
+  };
+
+  const handleStartOver = () => {
+    setResults(null);
+    setFormValues(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +28,15 @@ export default function HealthQuotesPage() {
           Find affordable health coverage for individuals and families under 65.
         </p>
       </div>
-      <HealthInsuranceQuoter />
+      {results && formValues ? (
+        <HealthPlanResultsTable
+          initialPlans={results}
+          searchParams={formValues}
+          onBack={handleStartOver}
+        />
+      ) : (
+        <HealthInsuranceQuoter onResults={handleShowResults} />
+      )}
     </div>
   );
 }

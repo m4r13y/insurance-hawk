@@ -11,15 +11,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, ArrowRight, ArrowLeft, ShieldCheck, Users, Wallet, MapPin, Cake, ShieldQuestion, Briefcase, Star, Search, Pill, PlusCircle, Info, FileText } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Loader2, ArrowRight, ArrowLeft, ShieldCheck, Users, Wallet, MapPin, ShieldQuestion } from "lucide-react";
 import { Label } from "./ui/label";
 import type { HealthPlan } from "@/types";
 import { getHealthQuotes } from "@/app/dashboard/health-quotes/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "./ui/switch";
-import { Badge } from "./ui/badge";
 
 export const healthQuoterFormSchema = z.object({
     zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code."),
@@ -32,9 +29,20 @@ export const healthQuoterFormSchema = z.object({
      })).min(1),
     hasInsurance: z.enum(["yes", "no"], {required_error: "Please select an option."}),
     hadUnemployment: z.enum(["yes", "no"], {required_error: "Please select an option."}),
+    filter: z.object({
+        premium_range: z.object({ min: z.number(), max: z.number() }).optional(),
+        deductible_range: z.object({ min: z.number(), max: z.number() }).optional(),
+        drugs: z.array(z.string()).optional(),
+        providers: z.array(z.string()).optional(),
+        hsa: z.boolean().optional(),
+    }).optional(),
 });
 
-type FormSchemaType = z.infer<typeof healthQuoterFormSchema>;
+export type FormSchemaType = z.infer<typeof healthQuoterFormSchema>;
+
+interface HealthInsuranceQuoterProps {
+  onResults: (plans: HealthPlan[], values: FormSchemaType) => void;
+}
 
 const steps: { id: number; name: string; icon: React.ElementType; fields: FieldPath<FormSchemaType>[] }[] = [
     { id: 1, name: "Location & Household Size", icon: MapPin, fields: ["zipCode", "householdSize"] },
@@ -43,46 +51,9 @@ const steps: { id: number; name: string; icon: React.ElementType; fields: FieldP
     { id: 4, name: "Coverage Status", icon: ShieldQuestion, fields: ["hasInsurance", "hadUnemployment"] },
 ];
 
-const HealthPlanCard = ({ plan }: { plan: HealthPlan }) => (
-    <Card className="w-full flex flex-col">
-        <CardHeader>
-            {plan.isBestMatch && <Badge className="w-fit bg-accent text-accent-foreground mb-2">Best Match</Badge>}
-            <CardTitle>{plan.name}</CardTitle>
-            <CardDescription>{plan.provider}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1">
-            <div className="flex justify-between items-baseline border-b pb-4">
-                <div>
-                    <p className="text-2xl sm:text-3xl font-bold">${plan.premium.toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                    {plan.taxCredit > 0 && <p className="text-sm text-green-600">After estimated ${plan.taxCredit.toFixed(2)} tax credit</p>}
-                </div>
-                {plan.rating > 0 && 
-                    <div className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="font-bold">{plan.rating}</span>
-                    </div>
-                }
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                <div><p className="text-muted-foreground">Deductible</p><p className="font-medium">${plan.deductible.toLocaleString()}</p></div>
-                <div><p className="text-muted-foreground">Max Out-of-Pocket</p><p className="font-medium">${plan.outOfPocketMax.toLocaleString()}</p></div>
-                <div><p className="text-muted-foreground">Network</p><p className="font-medium">{plan.network}</p></div>
-            </div>
-        </CardContent>
-        <CardFooter className="flex-col items-stretch gap-2 pt-4">
-            <Button className="w-full">Select Plan</Button>
-            <div className="flex justify-around text-xs pt-2">
-                {plan.benefits_url && <a href={plan.benefits_url} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Benefits Summary</a>}
-                {plan.formulary_url && <a href={plan.formulary_url} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Drug List</a>}
-            </div>
-        </CardFooter>
-    </Card>
-);
-
-export function HealthInsuranceQuoter() {
+export function HealthInsuranceQuoter({ onResults }: HealthInsuranceQuoterProps) {
     const [step, setStep] = useState(1);
     const [isPending, startTransition] = useTransition();
-    const [results, setResults] = useState<HealthPlan[] | null>(null);
     const { toast } = useToast();
 
     const form = useForm<FormSchemaType>({
@@ -120,7 +91,6 @@ export function HealthInsuranceQuoter() {
 
 
     async function onSubmit(values: FormSchemaType) {
-        setResults(null);
         startTransition(async () => {
             const result = await getHealthQuotes(values);
             if(result.error) {
@@ -130,7 +100,7 @@ export function HealthInsuranceQuoter() {
                     description: result.error
                 });
             } else {
-                setResults(result.plans || []);
+                onResults(result.plans || [], values);
             }
         });
     }
@@ -149,37 +119,6 @@ export function HealthInsuranceQuoter() {
 
     const handlePrev = () => { if (step > 1) setStep(step - 1); }
     
-    if(isPending) {
-        return (
-             <Card className="flex flex-col items-center justify-center p-12 text-center min-h-[400px]">
-                <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                <h3 className="mt-4 font-headline text-xl font-semibold">Finding the best plans for you...</h3>
-                <p className="mt-2 text-muted-foreground">This will just take a moment.</p>
-            </Card>
-        )
-    }
-    
-    if(results) {
-        return (
-            <div className="space-y-8">
-                <div>
-                     <h2 className="font-headline text-3xl font-bold">Your Health Plan Results</h2>
-                     {results.length > 0 ? (
-                        <p className="text-muted-foreground">We found {results.length} plans that match your needs. Here are the top matches.</p>
-                     ) : (
-                        <p className="text-muted-foreground">No plans found for your criteria. Please try different options or contact us for assistance.</p>
-                     )}
-                </div>
-                {results.length > 0 && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {results.map(plan => <HealthPlanCard key={plan.id} plan={plan}/>)}
-                    </div>
-                )}
-                <Button variant="outline" onClick={() => setResults(null)}>Start Over</Button>
-            </div>
-        )
-    }
-
     const currentStepInfo = steps[step - 1];
     const CurrentStepIcon = currentStepInfo.icon;
 
@@ -306,9 +245,10 @@ export function HealthInsuranceQuoter() {
                     {step > 1 ? (
                         <Button type="button" variant="outline" onClick={handlePrev}><ArrowLeft className="mr-2 h-4 w-4"/> Back</Button>
                     ) : <div/>}
-                    <Button type="button" onClick={handleNext}>
+                    <Button type="button" onClick={handleNext} disabled={isPending}>
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         {step === steps.length ? 'See My Plans' : 'Next'}
-                        <ArrowRight className="ml-2 h-4 w-4"/>
+                        {!isPending && step < steps.length && <ArrowRight className="ml-2 h-4 w-4"/>}
                     </Button>
                 </div>
                  <div className="flex items-center gap-2 pt-4 text-xs text-muted-foreground">

@@ -3,7 +3,7 @@
 
 import type { z } from "zod";
 import type { healthQuoterFormSchema } from "@/components/health-insurance-quoter";
-import type { HealthPlan } from "@/types";
+import type { HealthPlan, Drug, Provider } from "@/types";
 
 // Helper function to find the most relevant deductible from a plan's array of deductibles
 function findDeductible(plan: any): number {
@@ -53,7 +53,6 @@ function findOutOfPocketMax(plan: any): number {
   return plan.moops[0].amount || 0;
 }
 
-
 export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSchema>) {
     const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
     if (!apiKey) {
@@ -75,7 +74,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         }
 
         // Step 2: Construct the plan search payload
-        const searchPayload = {
+        const searchPayload: any = {
             market: "Individual",
             year: new Date().getFullYear(),
             place: {
@@ -93,8 +92,8 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
                 })),
                 unemployment_received: values.hadUnemployment === 'yes' ? 'Adult' : 'None',
             },
-            // Add a limit for performance
             limit: 50,
+            filter: values.filter || {},
         };
 
         // Step 3: Call the Plan Search API
@@ -137,6 +136,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
                 isBestMatch: false, // will be set in the next step
                 benefits_url: plan.benefits_url,
                 formulary_url: plan.formulary_url,
+                hsa_eligible: plan.hsa_eligible,
             };
         });
 
@@ -152,4 +152,36 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         console.error("An unexpected error occurred in getHealthQuotes:", e);
         return { error: 'An unexpected error occurred while fetching quotes.' };
     }
+}
+
+export async function searchDrugs(params: { query: string }) {
+  const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
+  if (!apiKey) return { error: 'Service unavailable', drugs: [] };
+
+  try {
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`);
+    if (!response.ok) return { drugs: [] };
+    const data = await response.json();
+    const drugs: Drug[] = data.drugs || [];
+    return { drugs };
+  } catch (e) {
+    console.error("Failed to search drugs", e);
+    return { error: 'Failed to search drugs', drugs: [] };
+  }
+}
+
+export async function searchProviders(params: { query: string, zipCode: string }) {
+   const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
+  if (!apiKey) return { error: 'Service unavailable', providers: [] };
+  
+  try {
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`);
+    if(!response.ok) return { providers: [] };
+    const data = await response.json();
+    const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);
+    return { providers };
+  } catch (e) {
+     console.error("Failed to search providers", e);
+    return { error: 'Failed to search providers', providers: [] };
+  }
 }
