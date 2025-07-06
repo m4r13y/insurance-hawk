@@ -25,6 +25,15 @@ export type Document = {
   size: string;
 };
 
+export type Policy = {
+  id: string;
+  category: string;
+  iconName: string;
+  provider: string;
+  planName: string;
+  premium?: number;
+};
+
 export type QuoteRequestValues = {
   zipCode: string;
   age: number;

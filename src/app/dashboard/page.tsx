@@ -5,18 +5,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, UserPlus, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-type PolicyInfo = {
-    provider: string;
-    planName: string;
-}
+import type { Policy } from "@/types";
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -24,13 +16,22 @@ const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const iconMap: { [key: string]: React.ElementType } = {
+    'Health/Medical Plan': Shield,
+    'Dental Coverage': DentalIcon,
+    'Cancer Insurance': Activity,
+    'Life Insurance': LifeBuoy,
+    'Long-Term Care': Home,
+    'Retirement Plan': PiggyBank
+};
+
 const planTypes = [
-    { id: 'health', label: 'Health/Medical Plan', icon: Shield },
-    { id: 'dental', label: 'Dental Coverage', icon: DentalIcon },
-    { id: 'cancer', label: 'Cancer Insurance', icon: Activity },
-    { id: 'life', label: 'Life Insurance', icon: LifeBuoy },
-    { id: 'ltc', label: 'Long-Term Care', icon: Home },
-    { id: 'financial', label: 'Retirement Plan', icon: PiggyBank }
+    { id: 'Health/Medical Plan', label: 'Health/Medical Plan', icon: Shield, href: '/dashboard/health-quotes' },
+    { id: 'Dental Coverage', label: 'Dental Coverage', icon: DentalIcon, href: '/dashboard/quotes?plan=dental' },
+    { id: 'Cancer Insurance', label: 'Cancer Insurance', icon: Activity, href: '/dashboard/quotes' },
+    { id: 'Life Insurance', label: 'Life Insurance', icon: LifeBuoy, href: '/dashboard/quotes' },
+    { id: 'Long-Term Care', label: 'Long-Term Care', icon: Home, href: '/dashboard/quotes' },
+    { id: 'Retirement Plan', label: 'Retirement Plan', icon: PiggyBank, href: '/dashboard/recommendations' }
 ];
 
 const GuestDashboard = () => (
@@ -153,72 +154,42 @@ export default function DashboardPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isNewUser, setIsNewUser] = useState(false);
-
-    const [policies, setPolicies] = useState<Record<string, PolicyInfo | null>>({
-        health: { provider: "Blue Shield", planName: "Secure PPO" },
-        dental: null,
-        cancer: null,
-        life: null,
-        ltc: null,
-        financial: null,
-    });
-    
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentPlan, setCurrentPlan] = useState<{id: string, label: string} | null>(null);
-    const [tempProvider, setTempProvider] = useState("");
-    const [tempPlanName, setTempPlanName] = useState("");
+    const [policies, setPolicies] = useState<Policy[]>([]);
     const [userName, setUserName] = useState("Sarah");
 
     useEffect(() => {
         const loggedInStatus = localStorage.getItem("hawk-auth") === "true";
         setIsLoggedIn(loggedInStatus);
 
-        if (loggedInStatus) {
-            const newUserStatus = localStorage.getItem("isNewUser") === "true";
-            setIsNewUser(newUserStatus);
-            
-            const updateName = () => {
+        const updateData = () => {
+             if (loggedInStatus) {
+                const newUserStatus = localStorage.getItem("isNewUser") === "true";
+                setIsNewUser(newUserStatus);
+                
                 const storedName = localStorage.getItem("userFirstName");
                 if (storedName) {
                     setUserName(storedName);
                 }
-            };
-            updateName();
-            window.addEventListener("storage", updateName);
-            setIsLoading(false);
-            return () => {
-                window.removeEventListener("storage", updateName);
-            };
-        } else {
-            setIsLoading(false);
-        }
+
+                const storedPolicies = localStorage.getItem("hawk-policies");
+                if (storedPolicies) {
+                    setPolicies(JSON.parse(storedPolicies));
+                }
+            }
+             setIsLoading(false);
+        };
+        
+        updateData();
+        window.addEventListener("storage", updateData);
+
+        return () => {
+            window.removeEventListener("storage", updateData);
+        };
     }, []);
 
     const handleDismissOnboarding = () => {
         localStorage.removeItem("isNewUser");
         setIsNewUser(false);
-    };
-
-    const handleSwitchChange = (planId: string, planLabel: string, checked: boolean) => {
-        if (checked) {
-            setCurrentPlan({ id: planId, label: planLabel });
-            setTempProvider("");
-            setTempPlanName("");
-            setIsDialogOpen(true);
-        } else {
-            setPolicies(prev => ({ ...prev, [planId]: null }));
-        }
-    };
-    
-    const handleSavePolicy = () => {
-        if (currentPlan && tempProvider && tempPlanName) {
-            setPolicies(prev => ({
-                ...prev,
-                [currentPlan.id]: { provider: tempProvider, planName: tempPlanName }
-            }));
-            setIsDialogOpen(false);
-            setCurrentPlan(null);
-        }
     };
 
     if (isLoading) {
@@ -233,9 +204,10 @@ export default function DashboardPage() {
         return <OnboardingGuide name={userName} onDismiss={handleDismissOnboarding} />;
     }
 
-    const ownedPlanCount = Object.values(policies).filter(p => p !== null).length;
-    const retirementScore = Math.round((ownedPlanCount / planTypes.length) * 100);
-    const missingPlans = planTypes.filter(p => !policies[p.id]);
+    const ownedPlanCategories = [...new Set(policies.map(p => p.category))];
+    const retirementScore = Math.round((ownedPlanCategories.length / planTypes.length) * 100);
+    const missingPlans = planTypes.filter(p => !ownedPlanCategories.includes(p.id));
+    const primaryHealthPlan = policies.find(p => p.category === 'Health/Medical Plan');
 
   return (
     <div className="space-y-8 md:space-y-12">
@@ -245,67 +217,50 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Your Current Plan</CardTitle>
-            <CardDescription>Blue Shield Secure PPO</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Premium</p>
-                <p className="text-3xl font-bold text-slate-900">$150/mo</p>
-              </div>
-              <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
-            </div>
-            <div>
-              <div className="flex justify-between items-baseline text-sm mb-1">
-                <p className="text-slate-500">Deductible Progress</p>
-                <p className="font-medium text-slate-700">$125 / $500</p>
-              </div>
-              <Progress value={25} aria-label="25% of deductible met" />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/plans">View Plan Details</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
-            <CardDescription>Complete these items for your coverage.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
-                <FileUp className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="font-semibold text-base text-slate-800">Upload Documents</p>
-                <p className="text-sm text-slate-500">Proof of residency needed.</p>
-              </div>
-              <Button size="icon" variant="ghost" className="ml-auto" asChild>
-                <Link href="/dashboard/documents"><ArrowRight className="h-5 w-5" /></Link>
-              </Button>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="font-semibold text-base text-slate-800">Application Submitted</p>
-                <p className="text-sm text-slate-500">Status: Pending Review</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:gap-8 lg:gap-10 lg:grid-cols-3">
-         <Card className="flex flex-col bg-slate-100/70">
+        {primaryHealthPlan ? (
+             <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Your Current Plan</CardTitle>
+                <CardDescription>{primaryHealthPlan.provider} {primaryHealthPlan.planName}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">Premium</p>
+                    <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 150).toFixed(2)}/mo</p>
+                  </div>
+                  <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
+                </div>
+                <div>
+                  <div className="flex justify-between items-baseline text-sm mb-1">
+                    <p className="text-slate-500">Deductible Progress</p>
+                    <p className="font-medium text-slate-700">$125 / $500</p>
+                  </div>
+                  <Progress value={25} aria-label="25% of deductible met" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" asChild>
+                  <Link href="/dashboard/documents">View All Policies</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+        ) : (
+             <Card className="lg:col-span-2 flex flex-col items-center justify-center text-center p-8">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6">
+                    <ShieldCheck className="h-10 w-10" />
+                </div>
+                <CardTitle className="font-headline text-2xl">Secure Your Health</CardTitle>
+                <CardDescription className="mt-2">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
+                <CardFooter className="mt-6 p-0">
+                    <Button asChild size="lg">
+                        <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        )}
+       
+        <Card className="flex flex-col bg-slate-100/70">
             <CardHeader>
               <CardTitle>Create Your Financial Plan</CardTitle>
               <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
@@ -323,10 +278,10 @@ export default function DashboardPage() {
              </CardFooter>
          </Card>
         
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle>Your Retirement Readiness Score</CardTitle>
-                <CardDescription>Based on your current coverage and financial planning.</CardDescription>
+                <CardDescription>Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                 <div className="flex flex-col items-center justify-center text-center p-4">
@@ -336,22 +291,22 @@ export default function DashboardPage() {
                 </div>
                 <div>
                     <h4 className="font-semibold mb-4 text-lg text-slate-800">Your Current Plans</h4>
-                    <p className="text-sm text-slate-500 mb-6">Toggle the switches for plans you currently have to update your score.</p>
-                    <div className="space-y-5">
-                        {planTypes.map(plan => (
-                            <div key={plan.id} className="flex items-center justify-between">
-                                <Label htmlFor={`plan-${plan.id}`} className="flex items-center gap-4 font-normal cursor-pointer text-base text-slate-700">
-                                    <plan.icon className="h-6 w-6 text-slate-400" />
-                                    {plan.label}
-                                </Label>
-                                <Switch 
-                                    id={`plan-${plan.id}`}
-                                    checked={!!policies[plan.id]}
-                                    onCheckedChange={(checked) => handleSwitchChange(plan.id, plan.label, checked)}
-                                />
-                            </div>
-                        ))}
-                    </div>
+                    {ownedPlanCategories.length > 0 ? (
+                        <div className="space-y-4">
+                            {ownedPlanCategories.map(category => {
+                                const planInfo = planTypes.find(p => p.id === category);
+                                const Icon = planInfo?.icon || FileDigit;
+                                return (
+                                    <div key={category} className="flex items-center gap-4 p-3 bg-green-50 rounded-md border border-green-200">
+                                        <Icon className="h-6 w-6 text-green-600" />
+                                        <p className="font-medium text-base text-green-800">{category}</p>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the Documents page to add your policies.</p>
+                    )}
                 </div>
             </CardContent>
             {missingPlans.length > 0 && (
@@ -361,7 +316,7 @@ export default function DashboardPage() {
                      <div className="flex flex-wrap gap-3">
                         {missingPlans.map(plan => (
                             <Button key={plan.id} variant="secondary" size="sm" asChild>
-                                <Link href={plan.id === 'financial' ? '/dashboard/financial-plan' : '/dashboard/quotes'}>
+                                <Link href={plan.href || '#'}>
                                     Add {plan.label}
                                 </Link>
                             </Button>
@@ -371,31 +326,6 @@ export default function DashboardPage() {
             )}
         </Card>
       </div>
-      
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>Add {currentPlan?.label}</DialogTitle>
-                  <DialogDescription>
-                      Please enter your policy details below.
-                  </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                      <Label htmlFor="provider">Provider / Company</Label>
-                      <Input id="provider" value={tempProvider} onChange={(e) => setTempProvider(e.target.value)} placeholder="e.g., Blue Shield" />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="planName">Plan Name</Label>
-                      <Input id="planName" value={tempPlanName} onChange={(e) => setTempPlanName(e.target.value)} placeholder="e.g., Secure PPO" />
-                  </div>
-              </div>
-              <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSavePolicy}>Save Policy</Button>
-              </DialogFooter>
-          </DialogContent>
-      </Dialog>
     </div>
   )
 }
