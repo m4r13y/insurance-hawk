@@ -5,46 +5,50 @@ import type { Plan } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Heart, Eye, Ear, Pill, Star } from 'lucide-react';
+import { Check, Pill, Star, Eye, Ear, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export function PlanCard({ plan, showSelectButton = true }: { plan: Plan, showSelectButton?: boolean }) {
+export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: { plan: Plan, showSelectButton?: boolean, isFeatured?: boolean }) {
   return (
-    <Card className="flex flex-col h-full hover:border-primary/50 transition-colors">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <Badge variant="secondary" className="mb-2">{plan.type}</Badge>
-            <CardTitle className="text-lg">{plan.name}</CardTitle>
-            <CardDescription>{plan.provider}</CardDescription>
-          </div>
-          <div className="flex items-center gap-1 text-sm font-bold text-amber-500">
-            <Star className="h-4 w-4 fill-current" />
-            <span>{plan.rating.toFixed(1)}</span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 space-y-4">
-        <div className="flex justify-between items-baseline border-b pb-4">
-          <p className="text-2xl sm:text-3xl font-bold">${plan.premium}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-        </div>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><p className="text-muted-foreground">Deductible</p><p className="font-medium">${plan.deductible}</p></div>
-            <div><p className="text-muted-foreground">Max Out-of-Pocket</p><p className="font-medium">${plan.maxOutOfPocket}</p></div>
-        </div>
-        <div>
-            <h4 className="text-sm font-medium mb-2">Key Features</h4>
-            <div className="flex flex-wrap gap-2">
-                {plan.features.prescriptionDrug && <Badge variant="outline"><Pill className="mr-1.5 h-3 w-3"/>Drugs</Badge>}
-                {plan.features.dental && <Badge variant="outline"><Heart className="mr-1.5 h-3 w-3"/>Dental</Badge>}
-                {plan.features.vision && <Badge variant="outline"><Eye className="mr-1.5 h-3 w-3"/>Vision</Badge>}
-                {plan.features.hearing && <Badge variant="outline"><Ear className="mr-1.5 h-3 w-3"/>Hearing</Badge>}
+    <Card className={cn(
+        "flex flex-col h-full transition-all duration-300 relative",
+        isFeatured ? "border-sky-500 shadow-2xl scale-[1.03]" : "hover:border-primary/50 hover:shadow-xl"
+    )}>
+      {isFeatured && <Badge className="absolute top-0 -translate-y-1/2 left-8 bg-sky-500 text-white">Best Value</Badge>}
+      <CardHeader className="p-8">
+        <div className="flex justify-between items-center">
+            <CardTitle className="text-xl font-bold text-slate-900">{plan.name}</CardTitle>
+            <div className="flex items-center gap-1 text-amber-500">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="font-bold">{plan.rating.toFixed(1)}</span>
             </div>
         </div>
+        <CardDescription>{plan.provider}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 space-y-6 px-8">
+        <div className="flex items-baseline gap-2">
+            <p className="text-5xl font-extrabold tracking-tight text-slate-900">${plan.premium}</p>
+            <span className="text-lg text-slate-500">/mo</span>
+        </div>
+        <ul className="space-y-3 text-sm text-slate-600">
+            <li className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+                <span>Deductible: <strong>${plan.deductible.toLocaleString()}</strong></span>
+            </li>
+            <li className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+                <span>Max Out-of-Pocket: <strong>${plan.maxOutOfPocket.toLocaleString()}</strong></span>
+            </li>
+            {plan.features.prescriptionDrug && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Prescription Drug Coverage</span></li>}
+            {plan.features.dental && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Dental Coverage</span></li>}
+            {plan.features.vision && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Vision Coverage</span></li>}
+            {plan.features.hearing && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Hearing Coverage</span></li>}
+        </ul>
       </CardContent>
       {showSelectButton && (
-        <CardFooter>
-          <Button asChild className="w-full">
+        <CardFooter className="p-8 mt-auto">
+          <Button asChild className="w-full" size="lg" variant={isFeatured ? 'default' : 'outline'}>
             <Link href="/dashboard/apply">Select Plan</Link>
           </Button>
         </CardFooter>
