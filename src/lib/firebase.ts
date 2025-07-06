@@ -15,28 +15,33 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let isFirebaseConfigured = false;
 
 // Check if the essential Firebase config keys are present
-export const isFirebaseConfigured = !!(
+const hasEssentialConfig = !!(
     firebaseConfig.apiKey && 
     firebaseConfig.authDomain && 
     firebaseConfig.projectId
 );
 
-if (isFirebaseConfigured) {
+if (hasEssentialConfig) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    isFirebaseConfigured = true; // Only set to true if initialization succeeds
   } catch (e) {
     console.error("Firebase initialization error:", e);
-    // If initialization fails, we treat it as not configured.
+    // Keep services as null and isFirebaseConfigured as false
     app = null;
     auth = null;
     db = null;
+    isFirebaseConfigured = false;
   }
-} else {
-    console.warn("Firebase is not configured. Please check your .env file. User-related features will be disabled.");
 }
 
-export { app, auth, db };
+if (!isFirebaseConfigured) {
+    console.warn("Firebase is not configured or failed to initialize. Please check your .env file and Firebase project setup. User-related features will be disabled.");
+}
+
+export { app, auth, db, isFirebaseConfigured };
