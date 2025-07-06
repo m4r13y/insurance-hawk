@@ -33,7 +33,7 @@ export async function getQuotes(values: QuoteRequestValues) {
         params.append('effective_date', values.effectiveDate);
     }
     
-    const url = `https://csgapi.appspot.com/v1/med_supp/quotes.json?${params.toString()}`;
+    const url = `https://private-anon-9ce7a8b71f-medigapapi.apiary-mock.com/v1/med_supp/quotes.json?${params.toString()}`;
 
     const response = await fetch(url, {
         headers: {
@@ -87,3 +87,4 @@ export async function getQuotes(values: QuoteRequestValues) {
     return { error: e.message || "Failed to fetch quotes. Please try again later." };
   }
 }
+
