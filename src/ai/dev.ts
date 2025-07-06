@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/plan-recommendation-reasoning.ts';
+import '@/ai/flows/initial-recommendation-prompt.ts';

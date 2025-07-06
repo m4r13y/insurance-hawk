@@ -1,5 +1,3 @@
-# Firebase Studio
+# MedicareAlly
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+This is a Next.js application for a Medicare insurance client portal. It allows clients to get quotes, submit applications, upload documents, and browse available coverage options.
