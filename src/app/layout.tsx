@@ -15,7 +15,7 @@ const merriweather_sans = Merriweather_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Policy Nest",
+  title: "HawkNest",
   description: "Your policies, all in one nest.",
 };
 
