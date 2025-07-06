@@ -221,7 +221,7 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                     <CardTitle className="font-headline text-3xl sm:text-4xl pt-6">Your Retirement Plan is Ready!</CardTitle>
                     <CardDescription className="text-lg">Here is your personalized plan, {name}.</CardDescription>
                 </CardHeader>
-                <CardContent ref={resultsRef} className="px-6 sm:px-12 py-10 bg-background">
+                <CardContent ref={resultsRef} className="px-6 sm:px-12 py-10 bg-card">
                     <div className="prose lg:prose-xl max-w-none text-card-foreground">
                         {plan.split('\n').map((line, index) => {
                             const trimmedLine = line.trim();
@@ -241,14 +241,15 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                             if (trimmedLine.startsWith('* ')) {
                                 return <li key={index} className="ml-6 list-disc">{trimmedLine.substring(2)}</li>;
                             }
-                            if (trimmedLine.startsWith('**Disclaimer:**')) {
+                            if (trimmedLine.includes('**Important Disclaimer:**')) {
+                                const disclaimerText = trimmedLine.replace('**Important Disclaimer:**', '').trim();
                                 return (
                                     <div key={index} className="mt-8 p-4 rounded-lg border border-amber-300 bg-amber-50/50 text-amber-800">
                                         <div className="flex items-center gap-3">
                                             <AlertTriangle className="h-5 w-5 shrink-0" />
                                             <span className="font-semibold text-base">Important Disclaimer</span>
                                         </div>
-                                        <p className="mt-2 text-sm">{trimmedLine.replace('**Disclaimer:**', '').trim()}</p>
+                                        {disclaimerText && <p className="mt-2 text-sm">{disclaimerText}</p>}
                                     </div>
                                 );
                             }
@@ -259,7 +260,7 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
                         })}
                     </div>
                 </CardContent>
-                 <CardFooter className="flex-col gap-8 bg-muted/50">
+                 <CardFooter className="flex-col gap-8 bg-muted/50 p-6 sm:p-8">
                     <div className="flex flex-col sm:flex-row gap-4 w-full">
                         <Button onClick={handleDownload} className="w-full" size="lg">
                             <Download className="mr-2 h-4 w-4" />
@@ -748,7 +749,7 @@ function RetirementPlanForm() {
                 ) : (
                     <Button type="button" onClick={form.handleSubmit(onSubmit)} className="bg-primary hover:bg-primary/90">
                         Generate My Plan
-                        <ArrowRight className="ml-2 h-4 w-4"/>
+                        <Sparkles className="ml-2 h-4 w-4"/>
                     </Button>
                 )}
             </div>
