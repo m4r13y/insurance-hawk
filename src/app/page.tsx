@@ -69,6 +69,17 @@ function LoginPageContent() {
     }
   }
 
+  const handleGuestContinue = () => {
+    // Clear all potential user data to ensure a clean guest session
+    localStorage.removeItem("hawk-auth");
+    localStorage.removeItem("userFirstName");
+    localStorage.removeItem("userLastName");
+    localStorage.removeItem("userProfilePicture");
+    localStorage.removeItem("isNewUser");
+    localStorage.removeItem("hawk-policies");
+    router.push("/dashboard");
+  };
+
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
       <div className="hidden bg-slate-100 lg:flex lg:flex-col lg:items-center lg:justify-between lg:p-12 xl:p-24">
@@ -155,12 +166,20 @@ function LoginPageContent() {
                 )}
             </CardContent>
           </Card>
-          <p className="text-center text-sm text-slate-600">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
-              <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-              </button>
-          </p>
+          <div className="text-center text-sm text-slate-600 space-y-2">
+            <p>
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{" "}
+                <button onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-sky-600 hover:underline">
+                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                </button>
+            </p>
+             <p>
+                or{" "}
+                <button onClick={handleGuestContinue} className="font-medium text-sky-600 hover:underline">
+                    Continue as a Guest
+                </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
