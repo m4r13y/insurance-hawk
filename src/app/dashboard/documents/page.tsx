@@ -9,8 +9,7 @@ import { mockDocuments as initialMockDocuments } from '@/lib/mock-data';
 import { UploadCloud, File, Trash2, Download, Shield, Activity, LifeBuoy, Home, PiggyBank, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Combobox } from '@/components/ui/combobox';
 
 
 // Custom icon for Dental since it's not in lucide-react
@@ -26,33 +25,54 @@ const initialMockPolicies = [
     { id: 'cancer', label: 'Cancer Insurance', icon: Activity, provider: 'Aflac', planName: 'Guaranteed Issue' },
 ];
 
+const allAvailablePolicies = [
+    { id: 'pol-aetna-ppo', label: 'Health/Medical Plan', icon: Shield, provider: 'Aetna', planName: 'PPO Plus' },
+    { id: 'pol-bs-secure-ppo', label: 'Health/Medical Plan', icon: Shield, provider: 'Blue Shield', planName: 'Secure PPO' },
+    { id: 'pol-delta-ppo', label: 'Dental Coverage', icon: DentalIcon, provider: 'Delta Dental', planName: 'PPO Plus' },
+    { id: 'pol-aflac-cancer', label: 'Cancer Insurance', icon: Activity, provider: 'Aflac', planName: 'Guaranteed Issue' },
+    { id: 'pol-prudential-life', label: 'Life Insurance', icon: LifeBuoy, provider: 'Prudential', planName: 'Term Life Essentials' },
+    { id: 'pol-metlife-ltc', label: 'Long-Term Care', icon: Home, provider: 'MetLife', planName: 'LTC Choice' },
+    { id: 'pol-vanguard-retirement', label: 'Retirement Plan', icon: PiggyBank, provider: 'Vanguard', planName: 'Target Retirement 2050' },
+];
+
+const policyOptions = allAvailablePolicies.map(p => ({
+    value: p.id,
+    label: `${p.provider} - ${p.planName}`
+}));
+
 export default function DocumentsPage() {
     const [files, setFiles] = useState(initialMockDocuments);
     const [policies, setPolicies] = useState(initialMockPolicies);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [newPolicy, setNewPolicy] = useState({ label: '', provider: '', planName: '' });
+    const [selectedPolicyId, setSelectedPolicyId] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
 
     const handleSavePolicy = () => {
-        if (newPolicy.label && newPolicy.provider && newPolicy.planName) {
-            const newPolicyWithIdAndIcon = {
-                ...newPolicy,
-                id: `policy-${Date.now()}`,
-                icon: LifeBuoy, // Use a default icon for newly added policies
-            };
-            setPolicies(prev => [...prev, newPolicyWithIdAndIcon]);
-            setNewPolicy({ label: '', provider: '', planName: '' }); // Reset form
+        if (selectedPolicyId) {
+            const policyToAdd = allAvailablePolicies.find(p => p.id === selectedPolicyId);
+            
+            if (policyToAdd && !policies.some(p => p.id === policyToAdd.id)) {
+                setPolicies(prev => [...prev, policyToAdd]);
+                toast({
+                    title: 'Policy Added',
+                    description: `${policyToAdd.provider} - ${policyToAdd.planName} has been added.`,
+                });
+            } else if (policies.some(p => p.id === policyToAdd?.id)) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Policy Already Exists',
+                    description: 'This policy is already in your list.',
+                });
+            }
+
+            setSelectedPolicyId(undefined); // Reset selection
             setIsDialogOpen(false); // Close dialog
-            toast({
-                title: 'Policy Added',
-                description: `${newPolicy.label} has been added to your policies.`,
-            });
         } else {
              toast({
                 variant: 'destructive',
-                title: 'Missing Information',
-                description: 'Please fill out all fields to add a policy.',
+                title: 'No Policy Selected',
+                description: 'Please select a policy to add.',
             });
         }
     };
@@ -217,37 +237,18 @@ export default function DocumentsPage() {
                 <DialogHeader>
                     <DialogTitle>Add New Policy</DialogTitle>
                     <DialogDescription>
-                        Enter the details of your new insurance policy below.
+                        Search for and select a policy to add to your list.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="policyLabel">Policy Type</Label>
-                        <Input
-                            id="policyLabel"
-                            value={newPolicy.label}
-                            onChange={(e) => setNewPolicy({ ...newPolicy, label: e.target.value })}
-                            placeholder="e.g., Life Insurance"
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="provider">Provider / Company</Label>
-                        <Input
-                            id="provider"
-                            value={newPolicy.provider}
-                            onChange={(e) => setNewPolicy({ ...newPolicy, provider: e.target.value })}
-                            placeholder="e.g., Prudential"
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="planName">Plan Name</Label>
-                        <Input
-                            id="planName"
-                            value={newPolicy.planName}
-                            onChange={(e) => setNewPolicy({ ...newPolicy, planName: e.target.value })}
-                            placeholder="e.g., Term Life Essentials"
-                        />
-                    </div>
+                    <Combobox
+                        options={policyOptions}
+                        value={selectedPolicyId}
+                        onChange={setSelectedPolicyId}
+                        placeholder="Select a policy..."
+                        searchPlaceholder="Search for a policy..."
+                        emptyPlaceholder="No matching policies found."
+                    />
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
