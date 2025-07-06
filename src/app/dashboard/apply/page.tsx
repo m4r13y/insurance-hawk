@@ -79,10 +79,12 @@ const hospitalIndemnitySchema = personalInfoSchema.merge(signatureSchema).extend
 });
 
 const lifeInsuranceSchema = personalInfoSchema.merge(signatureSchema).extend({
+    planId: z.string().optional(),
     coverageAmount: z.coerce.number().min(10000, "Minimum coverage is $10,000"),
-    tobaccoUse: z.enum(["none", "last_12_months", "over_12_months_ago"]),
+    tobaccoUse: z.enum(["none", "last_12_months", "over_12_months_ago"], { required_error: "Please select a tobacco use option."}),
     beneficiaryName: z.string().min(1, "Beneficiary name is required"),
     beneficiaryRelationship: z.string().min(1, "Beneficiary relationship is required"),
+    wantsAgentContact: z.enum(["yes", "no"], { required_error: "This field is required." }),
 });
 
 const healthInsuranceSchema = personalInfoSchema.merge(signatureSchema).extend({
@@ -171,6 +173,7 @@ function MedicareSupplementApplication() {
             firstName: "",
             lastName: "",
             dob: "",
+            gender: undefined,
             address: "",
             city: "",
             state: "",
@@ -180,6 +183,12 @@ function MedicareSupplementApplication() {
             medicareClaimNumber: "",
             partAEffectiveDate: "",
             partBEffectiveDate: "",
+            isReplacingCoverage: undefined,
+            hasPrescriptionPlan: undefined,
+            hasMajorIllness: undefined,
+            takesPrescriptions: undefined,
+            hasOtherInsurance: undefined,
+            hospitalizedLast12Months: undefined,
             signature: "",
             agreesToTerms: false,
             majorIllnessDetails: "",
@@ -321,8 +330,10 @@ function DentalApplication() {
     type FormSchema = z.infer<typeof dentalSchema>;
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const [step, setStep] = useState(0);
     const [isSubmitted, setIsSubmitted] = useState(false);
     
+    const planId = searchParams.get('planId');
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
@@ -330,11 +341,12 @@ function DentalApplication() {
     const form = useForm<FormSchema>({
         resolver: zodResolver(dentalSchema),
         defaultValues: {
-            planId: planName || '',
+            planId: planId || '',
             wantsAgentContact: "yes",
             firstName: "",
             lastName: "",
             dob: "",
+            gender: undefined,
             address: "",
             city: "",
             state: "",
@@ -346,6 +358,19 @@ function DentalApplication() {
         }
     });
 
+    const steps = [
+        { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
+        { id: 2, name: 'Agent & Signature', fields: ['wantsAgentContact', 'signature', 'agreesToTerms'] },
+    ];
+
+    const handleNext = async () => {
+        const fieldsToValidate = steps[step - 1].fields as FieldPath<FormSchema>[];
+        const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
+        if (output) setStep(s => s + 1);
+    };
+
+    const handlePrev = () => setStep(s => s - 1);
+
     function onSubmit(values: FormSchema) {
         console.log("Dental Application Submitted:", values);
         toast({ title: "Application Submitted!", description: "We've received your dental application." });
@@ -354,32 +379,314 @@ function DentalApplication() {
     
     if (isSubmitted) return <SuccessPage title="Dental Application" />;
     
+    if (step === 0) return (
+        <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
+            <Card className="w-full">
+                <CardHeader>
+                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                         <Smile className="h-6 w-6" />
+                    </div>
+                    <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Dental Insurance Application</CardTitle>
+                </CardHeader>
+                <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+            </Card>
+        </div>
+    );
+    
     return (
         <div className="space-y-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold">Dental Insurance Application</h1>
-                    <p className="text-base text-muted-foreground mt-1">Secure your smile with this quick application.</p>
+                    <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
                 <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
             </div>
+            <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                        <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
-                        <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
-                    </CardContent></Card>
-                     <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
-                        <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
-                        <FormField control={form.control} name="signature" render={({ field }) => <FormItem><FormLabel>Digital Signature</FormLabel><FormControl><Input placeholder="Type your full name" {...field} /></FormControl><FormDescription>By typing your name, you are electronically signing this application.</FormDescription><FormMessage /></FormItem>} />
-                    </CardContent></Card>
-                    <div className="flex justify-end">
-                        <Button type="submit">Submit Application</Button>
+                    {step === 1 && ( /* Personal Info */
+                        <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                            <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="city" render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="state" render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="zip" render={({ field }) => <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                     {step === 2 && ( /* Signature */
+                         <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
+                            <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
+                            <FormField control={form.control} name="signature" render={({ field }) => <FormItem><FormLabel>Digital Signature</FormLabel><FormControl><Input placeholder="Type your full name" {...field} /></FormControl><FormDescription>By typing your name, you are electronically signing this application.</FormDescription><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                    <div className="flex justify-between">
+                        {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                    </div>
+                </form>
+            </Form>
+        </div>
+    );
+}
+
+function HospitalIndemnityApplication() {
+    type FormSchema = z.infer<typeof hospitalIndemnitySchema>;
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
+    const [step, setStep] = useState(0);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+
+    const planId = searchParams.get('planId');
+    const planName = searchParams.get('planName');
+    const provider = searchParams.get('provider');
+    const premium = searchParams.get('premium');
+    
+    const form = useForm<FormSchema>({
+        resolver: zodResolver(hospitalIndemnitySchema),
+        defaultValues: {
+            planId: planId || '',
+            wantsAgentContact: "yes",
+            firstName: "",
+            lastName: "",
+            dob: "",
+            gender: undefined,
+            address: "",
+            city: "",
+            state: "",
+            zip: "",
+            phone: "",
+            email: "",
+            hasMajorIllness: undefined,
+            majorIllnessDetails: "",
+            signature: "",
+            agreesToTerms: false,
+        }
+    });
+
+    const steps = [
+        { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
+        { id: 2, name: 'Medical History', fields: ['hasMajorIllness', 'majorIllnessDetails'] },
+        { id: 3, name: 'Agent & Signature', fields: ['wantsAgentContact', 'signature', 'agreesToTerms'] },
+    ];
+
+    const handleNext = async () => {
+        const fieldsToValidate = steps[step - 1].fields as FieldPath<FormSchema>[];
+        const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
+        if (output) setStep(s => s + 1);
+    };
+
+    const handlePrev = () => setStep(s => s - 1);
+
+    function onSubmit(values: FormSchema) {
+        console.log("Hospital Indemnity Application Submitted:", values);
+        toast({ title: "Application Submitted!", description: "We've received your hospital indemnity application." });
+        setIsSubmitted(true);
+    }
+    
+    if (isSubmitted) return <SuccessPage title="Hospital Indemnity Application" />;
+    
+    if (step === 0) return (
+        <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
+            <Card className="w-full">
+                <CardHeader>
+                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                         <Hospital className="h-6 w-6" />
+                    </div>
+                    <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Hospital Indemnity Application</CardTitle>
+                </CardHeader>
+                <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+            </Card>
+        </div>
+    );
+    
+    return (
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold">Hospital Indemnity Application</h1>
+                    <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
+                </div>
+                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+            </div>
+            <Progress value={(step / steps.length) * 100} />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    {step === 1 && ( /* Personal Info */
+                        <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                            <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="city" render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="state" render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="zip" render={({ field }) => <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                    {step === 2 && ( /* Medical History */
+                        <Card><CardHeader><CardTitle>Medical History</CardTitle></CardHeader><CardContent className="space-y-8 pt-6">
+                            <FormField control={form.control} name="hasMajorIllness" render={({ field }) => <FormItem><FormLabel>Have you been diagnosed with or treated for heart disease, cancer, stroke, COPD, or kidney failure?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            {form.watch("hasMajorIllness") === "yes" && <FormField control={form.control} name="majorIllnessDetails" render={({ field }) => <FormItem><FormLabel>Please provide details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />}
+                        </CardContent></Card>
+                    )}
+                     {step === 3 && ( /* Signature */
+                         <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
+                            <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
+                            <FormField control={form.control} name="signature" render={({ field }) => <FormItem><FormLabel>Digital Signature</FormLabel><FormControl><Input placeholder="Type your full name" {...field} /></FormControl><FormDescription>By typing your name, you are electronically signing this application.</FormDescription><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                    <div className="flex justify-between">
+                        {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                    </div>
+                </form>
+            </Form>
+        </div>
+    );
+}
+
+function LifeInsuranceApplication() {
+    type FormSchema = z.infer<typeof lifeInsuranceSchema>;
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
+    const [step, setStep] = useState(0);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+
+    const planId = searchParams.get('planId');
+    const planName = searchParams.get('planName');
+    const provider = searchParams.get('provider');
+    const premium = searchParams.get('premium');
+    
+    const form = useForm<FormSchema>({
+        resolver: zodResolver(lifeInsuranceSchema),
+        defaultValues: {
+            planId: planId || '',
+            wantsAgentContact: "yes",
+            firstName: "",
+            lastName: "",
+            dob: "",
+            gender: undefined,
+            address: "",
+            city: "",
+            state: "",
+            zip: "",
+            phone: "",
+            email: "",
+            coverageAmount: 25000,
+            tobaccoUse: undefined,
+            beneficiaryName: "",
+            beneficiaryRelationship: "",
+            signature: "",
+            agreesToTerms: false,
+        }
+    });
+
+    const steps = [
+        { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
+        { id: 2, name: 'Coverage & Beneficiary', fields: ['coverageAmount', 'tobaccoUse', 'beneficiaryName', 'beneficiaryRelationship'] },
+        { id: 3, name: 'Agent & Signature', fields: ['wantsAgentContact', 'signature', 'agreesToTerms'] },
+    ];
+
+    const handleNext = async () => {
+        const fieldsToValidate = steps[step - 1].fields as FieldPath<FormSchema>[];
+        const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
+        if (output) setStep(s => s + 1);
+    };
+
+    const handlePrev = () => setStep(s => s - 1);
+
+    function onSubmit(values: FormSchema) {
+        console.log("Life Insurance Application Submitted:", values);
+        toast({ title: "Application Submitted!", description: "We've received your life insurance application." });
+        setIsSubmitted(true);
+    }
+    
+    if (isSubmitted) return <SuccessPage title="Life Insurance Application" />;
+    
+    if (step === 0) return (
+        <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
+            <Card className="w-full">
+                <CardHeader>
+                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                         <FileHeart className="h-6 w-6" />
+                    </div>
+                    <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Life Insurance Application</CardTitle>
+                </CardHeader>
+                <CardContent><p className="text-base text-muted-foreground">Protect your loved ones with this secure application.</p></CardContent>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+            </Card>
+        </div>
+    );
+    
+    return (
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold">Life Insurance Application</h1>
+                    <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
+                </div>
+                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+            </div>
+            <Progress value={(step / steps.length) * 100} />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    {step === 1 && ( /* Personal Info */
+                        <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                            <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="city" render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="state" render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="zip" render={({ field }) => <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                    {step === 2 && ( /* Coverage Details */
+                        <Card><CardHeader><CardTitle>Coverage & Beneficiary</CardTitle></CardHeader><CardContent className="space-y-8 pt-6">
+                             <FormField control={form.control} name="coverageAmount" render={({ field }) => <FormItem><FormLabel>Desired Coverage Amount</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                             <FormField control={form.control} name="tobaccoUse" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Tobacco/Nicotine Use</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select an option" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="none">None in the last 5 years</SelectItem>
+                                            <SelectItem value="last_12_months">Yes, in the last 12 months</SelectItem>
+                                            <SelectItem value="over_12_months_ago">Not in the last 12 months, but in the last 5 years</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                             <FormField control={form.control} name="beneficiaryName" render={({ field }) => <FormItem><FormLabel>Primary Beneficiary Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                             <FormField control={form.control} name="beneficiaryRelationship" render={({ field }) => <FormItem><FormLabel>Beneficiary Relationship</FormLabel><FormControl><Input placeholder="e.g., Spouse, Child, Sibling" {...field} /></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                     {step === 3 && ( /* Signature */
+                         <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
+                            <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
+                            <FormField control={form.control} name="signature" render={({ field }) => <FormItem><FormLabel>Digital Signature</FormLabel><FormControl><Input placeholder="Type your full name" {...field} /></FormControl><FormDescription>By typing your name, you are electronically signing this application.</FormDescription><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                    <div className="flex justify-between">
+                        {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
@@ -388,12 +695,6 @@ function DentalApplication() {
 }
 
 // Stubs for other forms
-function HospitalIndemnityApplication() {
-    return <GenericApplication title="Hospital Indemnity Application" icon={Hospital} />;
-}
-function LifeInsuranceApplication() {
-    return <GenericApplication title="Life Insurance Application" icon={FileHeart} />;
-}
 function HealthInsuranceApplication() {
     return <GenericApplication title="Health Insurance Application" icon={Heart} />;
 }
