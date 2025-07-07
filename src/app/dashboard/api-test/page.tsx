@@ -374,7 +374,10 @@ export default function ApiTestPage() {
                                 {dosages.length > 0 ? dosages.map(dosage => (
                                     <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
                                         <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
-                                        <span>{dosage.name}</span>
+                                        <div className="flex justify-between w-full items-center">
+                                            <span>{dosage.name}</span>
+                                            <span className="text-xs text-muted-foreground">ID: {dosage.rxcui}</span>
+                                        </div>
                                     </Label>
                                 )) : (
                                     <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
