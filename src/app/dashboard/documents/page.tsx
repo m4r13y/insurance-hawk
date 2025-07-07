@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
@@ -16,6 +16,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 const carriers = [
@@ -105,6 +106,8 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
     const [step, setStep] = useState(1);
     const [policy, setPolicy] = useState<Partial<PolicyType>>({});
     const [carrierSearch, setCarrierSearch] = useState('');
+
+    const benefitAmountCategories = ['life', 'cancer', 'heart', 'hospital', 'annuity', 'ltc', 'stc'];
 
     useEffect(() => {
         if (open) {
@@ -223,18 +226,20 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="planName">Plan / Policy Name</Label>
-                                <Input id="planName" value={policy.planName || ''} onChange={e => setPolicy(p => ({ ...p, planName: e.target.value }))} />
+                                <Label htmlFor="planName">Policy Nickname (optional)</Label>
+                                <Input id="planName" value={policy.planName || ''} onChange={e => setPolicy(p => ({ ...p, planName: e.target.value }))} placeholder="e.g., John's Medigap"/>
                             </div>
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="premium">Monthly Premium ($)</Label>
                                     <Input id="premium" type="number" value={policy.premium || ''} onChange={e => setPolicy(p => ({ ...p, premium: Number(e.target.value) }))} />
                                 </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="benefitAmount">Benefit Amount ($)</Label>
-                                    <Input id="benefitAmount" type="number" value={policy.benefitAmount || ''} onChange={e => setPolicy(p => ({ ...p, benefitAmount: Number(e.target.value) }))} />
-                                </div>
+                                {benefitAmountCategories.includes(policy.policyCategoryId || '') && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="benefitAmount">Benefit Amount ($)</Label>
+                                        <Input id="benefitAmount" type="number" value={policy.benefitAmount || ''} onChange={e => setPolicy(p => ({ ...p, benefitAmount: Number(e.target.value) }))} />
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="enrollmentDate">Enrollment Date</Label>
@@ -254,7 +259,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                     </div>
                      <div>
                         <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        {step === 4 && <Button onClick={handleSave} className="ml-2" disabled={!policy.planName?.trim()}>Save Policy</Button>}
+                        {step === 4 && <Button onClick={handleSave} className="ml-2">Save Policy</Button>}
                     </div>
                 </DialogFooter>
             </DialogContent>
@@ -273,20 +278,37 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                     <CardTitle className="text-lg">{policy.carrierName}</CardTitle>
                     <CardDescription className="text-sm">{policy.planName}</CardDescription>
                 </div>
-                <div className="flex items-center">
-                    <Button variant="ghost" size="icon" asChild>
-                        <a href={policy.carrierWebsite} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 text-muted-foreground" /></a>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(policy)}><Edit className="h-4 w-4 text-muted-foreground" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(policy.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => onEdit(policy)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <a href={policy.carrierWebsite} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                <span>Visit Site</span>
+                            </a>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem onSelect={() => onDelete(policy.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </CardHeader>
-            <CardContent className="flex-1 space-y-4 text-sm p-4 pt-0">
-                <div className="flex justify-between items-center border-t pt-4">
+            <CardContent className="flex-1 space-y-3 text-sm p-4 pt-0">
+                <Separator className="mb-3" />
+                <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Category</span>
                     <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
                 </div>
-                 <Separator />
                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <p className="text-muted-foreground">Premium</p>
@@ -439,7 +461,7 @@ export default function PoliciesAndDocumentsPage() {
   return (
         <div className="space-y-8 max-w-5xl mx-auto">
              <div>
-                <h1 className="text-2xl font-semibold">My Policies & Documents</h1>
+                <h1 className="text-2xl font-semibold">My Policies &amp; Documents</h1>
                 <p className="text-base text-muted-foreground mt-1">Manage your insurance policies and upload important documents.</p>
             </div>
         
