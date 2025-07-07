@@ -12,7 +12,27 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
+type SelectedDrug = Drug & {
+    quantity: number;
+    frequency: string;
+    package: string;
+};
+
+const frequencyLabels: { [key: string]: string } = {
+    monthly: 'Every month',
+    '3-months': 'Every 3 months',
+    'as-needed': 'As needed',
+};
+
+const packageLabels: { [key: string]: string } = {
+    '30-day': '30-day supply',
+    '60-day': '60-day supply',
+    '90-day': '90-day supply',
+    'bottle': '1 bottle',
+};
 
 export default function ApiTestPage() {
     // Provider State
@@ -32,13 +52,19 @@ export default function ApiTestPage() {
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [medicationLoading, setMedicationLoading] = useState(false);
     const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
-    const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+    const [selectedDrugs, setSelectedDrugs] = useState<SelectedDrug[]>([]);
     const [drugToConfirm, setDrugToConfirm] = useState<Drug | null>(null);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
     const [dosages, setDosages] = useState<Drug[]>([]);
     const [dosageLoading, setDosageLoading] = useState(false);
     const [selectedDosage, setSelectedDosage] = useState<Drug | null>(null);
+
+    // New state for details dialog
+    const [drugToAddDetails, setDrugToAddDetails] = useState<Drug | null>(null);
+    const [quantity, setQuantity] = useState(1);
+    const [frequency, setFrequency] = useState('monthly');
+    const [pkg, setPackage] = useState('30-day');
 
 
     const handleProviderQueryChange = (value: string) => {
@@ -119,12 +145,30 @@ export default function ApiTestPage() {
         setIsMedicationListVisible(false);
     };
 
-    const handleConfirmDrug = () => {
-        if (selectedDosage && !selectedDrugs.some(d => d.rxcui === selectedDosage.rxcui)) {
-            setSelectedDrugs(prev => [...prev, selectedDosage]);
+    const handleProceedToDetails = () => {
+        if (selectedDosage) {
+            setDrugToAddDetails(selectedDosage);
+            setDrugToConfirm(null);
         }
-        setDrugToConfirm(null);
     };
+    
+    const handleFinalAddDrug = () => {
+        if (!drugToAddDetails) return;
+        
+        const newDrug: SelectedDrug = {
+            ...drugToAddDetails,
+            quantity: quantity,
+            frequency: frequency,
+            package: pkg,
+        };
+
+        if (!selectedDrugs.some(d => d.rxcui === newDrug.rxcui)) {
+            setSelectedDrugs(prev => [...prev, newDrug]);
+        }
+        setDrugToAddDetails(null);
+        setSelectedDosage(null);
+    };
+
 
     const handleRemoveDrug = (rxcui: string) => {
         setSelectedDrugs(prev => prev.filter(d => d.rxcui !== rxcui));
@@ -351,7 +395,12 @@ export default function ApiTestPage() {
                         <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto">
                             {selectedDrugs.map(drug => (
                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                    <p className="text-sm font-medium">{drug.full_name}</p>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{drug.full_name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}
+                                        </p>
+                                    </div>
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}>
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                         <span className="sr-only">Remove {drug.full_name}</span>
@@ -402,10 +451,66 @@ export default function ApiTestPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button>
-                        <Button onClick={handleConfirmDrug} disabled={!selectedDosage && dosages.length > 0}>Confirm</Button>
+                        <Button onClick={handleProceedToDetails} disabled={!selectedDosage && dosages.length > 0}>Next</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Drug Details Dialog */}
+             <Dialog open={!!drugToAddDetails} onOpenChange={(open) => !open && setDrugToAddDetails(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tell us about this drug</DialogTitle>
+                        <DialogDescription>
+                            Provide the quantity and frequency for {drugToAddDetails?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="dosage">Dosage</Label>
+                            <Input id="dosage" value={drugToAddDetails?.full_name || ''} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="package">Package</Label>
+                            <Select value={pkg} onValueChange={setPackage}>
+                                <SelectTrigger id="package">
+                                    <SelectValue placeholder="Select package" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="30-day">30-day supply</SelectItem>
+                                    <SelectItem value="60-day">60-day supply</SelectItem>
+                                    <SelectItem value="90-day">90-day supply</SelectItem>
+                                    <SelectItem value="bottle">1 bottle</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="quantity">Quantity</Label>
+                                <Input id="quantity" type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} min={1} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="frequency">Frequency</Label>
+                                <Select value={frequency} onValueChange={setFrequency}>
+                                    <SelectTrigger id="frequency">
+                                        <SelectValue placeholder="Select frequency" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="monthly">Every month</SelectItem>
+                                        <SelectItem value="3-months">Every 3 months</SelectItem>
+                                        <SelectItem value="as-needed">As needed</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDrugToAddDetails(null)}>Cancel</Button>
+                        <Button onClick={handleFinalAddDrug}>Add to My Drug List</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
     );
-}
+
+    
