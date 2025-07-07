@@ -242,21 +242,29 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
   }
 }
 
-export async function searchProviders(params: { query: string, zipCode: string }) {
+export async function searchProviders(params: { query: string, zipCode: string }): Promise<{ providers?: Provider[], error?: string }> {
    const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
-  if (!apiKey) return { error: 'Service unavailable', providers: [] };
+  if (!apiKey) return { error: 'Service unavailable. Please contact support.' };
+  
+  if (!params.zipCode || params.zipCode.length !== 5) {
+      return { error: 'A valid 5-digit ZIP code is required. Please update your profile on the My Account page.' };
+  }
   
   const apiHeaders = { 'accept': 'application/json' };
   
   try {
     const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 } });
-    if(!response.ok) return { providers: [] };
+    if(!response.ok) {
+        const errorText = await response.text();
+        console.error("Provider search API error:", errorText);
+        return { error: 'Failed to retrieve provider information. Please try again later.' };
+    };
     const data = await response.json();
     const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);
     return { providers };
   } catch (e) {
      console.error("Failed to search providers", e);
-    return { error: 'Failed to search providers', providers: [] };
+    return { error: 'An unexpected error occurred while searching for providers.' };
   }
 }
 

@@ -97,7 +97,16 @@ export default function HealthInfoPage() {
         setProviderLoading(true);
         providerSearchTimeout.current = setTimeout(async () => {
             const result = await searchProviders({ query: value, zipCode: profile.zip || '' });
-            setProviderResults(result.providers || []);
+            if (result.error) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Provider Search Failed',
+                    description: result.error,
+                });
+                setProviderResults([]);
+            } else {
+                setProviderResults(result.providers || []);
+            }
             setProviderLoading(false);
         }, 300);
     };
