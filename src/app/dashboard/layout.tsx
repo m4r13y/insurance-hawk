@@ -162,11 +162,6 @@ function DashboardLayoutComponent({
                     <Link href="/dashboard/quotes"><FileDigit /><span>Supplemental Quotes</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/api-test")} tooltip="API Test">
-                    <Link href="/dashboard/api-test"><Beaker /><span>API Test</span></Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/apply")} tooltip="Submit Application">
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
