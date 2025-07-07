@@ -345,17 +345,7 @@ export default function ApiTestPage() {
                         )}
                         
                         {!medicationLoading && medications.length === 0 && suggestions.length === 0 && medicationQuery.length >= 3 && (
-                             <CommandEmpty>
-                                <div className="text-center px-4 py-8">
-                                    <p className="font-semibold">No Medications Found</p>
-                                    <p className="text-sm text-muted-foreground mt-2">If you're having trouble, try the following:</p>
-                                    <ul className="text-sm text-muted-foreground list-disc list-inside mt-2 text-left max-w-xs mx-auto">
-                                        <li>Check the spelling of the medication.</li>
-                                        <li>Try searching for the generic name.</li>
-                                        <li>The drug may be over-the-counter and not listed.</li>
-                                    </ul>
-                                </div>
-                            </CommandEmpty>
+                             <CommandEmpty>No medications found.</CommandEmpty>
                         )}
                         {medications.length > 0 && (
                             <CommandGroup>
@@ -377,28 +367,6 @@ export default function ApiTestPage() {
                     </CommandList>
                 )}
             </Command>
-
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button variant="link" className="text-sm text-muted-foreground">
-                        <HelpCircle className="mr-2 h-4 w-4" />
-                        Can't find your drug?
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Trouble Finding Your Medication?</DialogTitle>
-                         <DialogDescription>
-                            If you're having trouble finding your medication, try the following tips:
-                        </DialogDescription>
-                    </DialogHeader>
-                    <ul className="list-disc list-inside space-y-2 text-sm py-4">
-                        <li>Check the spelling of the medication.</li>
-                        <li>Try searching for the generic name instead of the brand name.</li>
-                        <li>Ensure you are searching for a prescription drug. Over-the-counter medications are not typically listed.</li>
-                    </ul>
-                </DialogContent>
-            </Dialog>
 
              <Button 
                 onClick={() => setIsMedicationDetailsVisible(!isMedicationDetailsVisible)} 
