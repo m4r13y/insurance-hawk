@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useTransition, useEffect, useCallback } from 'react';
+import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import type { HealthPlan, Drug, Provider, DrugCoverage, ProviderCoverage } from '@/types';
 import type { z } from 'zod';
 import type { healthQuoterFormSchema } from './health-insurance-quoter';
@@ -152,6 +152,7 @@ const ProviderSelector = ({ selectedProviders, setSelectedProviders, zipCode }: 
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [results, setResults] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (debouncedSearchTerm.length < 3) {
@@ -173,6 +174,7 @@ const ProviderSelector = ({ selectedProviders, setSelectedProviders, zipCode }: 
     }
     setSearchTerm('');
     setResults([]);
+    setIsOpen(false);
   };
 
   const handleRemoveProvider = (npi: string) => {
@@ -192,27 +194,39 @@ const ProviderSelector = ({ selectedProviders, setSelectedProviders, zipCode }: 
     setSelectedProviders(selectedProviders.map(p => ({ ...p, filterInNetwork: newValue })));
   };
 
+  const handleOnBlur = () => {
+      setTimeout(() => setIsOpen(false), 150);
+  }
+
   return (
     <div className="space-y-4">
-      <Command className="rounded-lg border shadow-sm">
+      <Command className="relative overflow-visible">
         <CommandInput 
           placeholder="Search by doctor or facility name..." 
           value={searchTerm}
-          onValueChange={setSearchTerm}
+          onValueChange={(search) => {
+              setSearchTerm(search);
+              if(search.length > 2) setIsOpen(true);
+              else setIsOpen(false);
+          }}
+          onBlur={handleOnBlur}
+          onFocus={() => { if(results.length > 0) setIsOpen(true)}}
         />
-        <CommandList>
-          {loading && <CommandItem disabled>Loading...</CommandItem>}
-          {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No providers found.</CommandEmpty>}
-          {results.length > 0 && (
-            <CommandGroup>
-              {results.map(provider => (
-                <CommandItem key={provider.npi} onSelect={() => handleAddProvider(provider)} className="cursor-pointer">
-                  {provider.name} <span className="text-xs ml-2 text-muted-foreground">{provider.specialties?.[0]}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
+        {isOpen && (
+            <CommandList className="absolute z-10 w-full rounded-md border bg-background shadow-md top-full mt-1">
+            {loading && <CommandItem disabled>Loading...</CommandItem>}
+            {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No providers found.</CommandEmpty>}
+            {results.length > 0 && (
+                <CommandGroup>
+                {results.map(provider => (
+                    <CommandItem key={provider.npi} onSelect={() => handleAddProvider(provider)} className="cursor-pointer">
+                    {provider.name} <span className="text-xs ml-2 text-muted-foreground">{provider.specialties?.[0]}</span>
+                    </CommandItem>
+                ))}
+                </CommandGroup>
+            )}
+            </CommandList>
+        )}
       </Command>
 
       {selectedProviders.length > 0 && (
@@ -250,6 +264,7 @@ const DrugSelector = ({ selectedDrugs, setSelectedDrugs }: {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [results, setResults] = useState<Drug[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (debouncedSearchTerm.length < 3) {
@@ -271,33 +286,46 @@ const DrugSelector = ({ selectedDrugs, setSelectedDrugs }: {
     }
     setSearchTerm('');
     setResults([]);
+    setIsOpen(false);
   };
   
   const handleRemoveDrug = (rxcui: string) => {
     setSelectedDrugs(selectedDrugs.filter(d => d.rxcui !== rxcui));
   };
 
+  const handleOnBlur = () => {
+      setTimeout(() => setIsOpen(false), 150);
+  }
+
   return (
     <div className="space-y-4">
-      <Command className="rounded-lg border shadow-sm">
+      <Command className="relative overflow-visible">
         <CommandInput 
           placeholder="Search by drug name..." 
           value={searchTerm}
-          onValueChange={setSearchTerm}
+           onValueChange={(search) => {
+              setSearchTerm(search);
+              if(search.length > 2) setIsOpen(true);
+              else setIsOpen(false);
+          }}
+          onBlur={handleOnBlur}
+          onFocus={() => { if(results.length > 0) setIsOpen(true)}}
         />
-        <CommandList>
-          {loading && <CommandItem disabled>Loading...</CommandItem>}
-          {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No drugs found.</CommandEmpty>}
-          {results.length > 0 && (
-            <CommandGroup>
-              {results.map(drug => (
-                <CommandItem key={drug.rxcui} onSelect={() => handleAddDrug(drug)} className="cursor-pointer">
-                  {drug.full_name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
+        {isOpen && (
+            <CommandList className="absolute z-10 w-full rounded-md border bg-background shadow-md top-full mt-1">
+            {loading && <CommandItem disabled>Loading...</CommandItem>}
+            {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No drugs found.</CommandEmpty>}
+            {results.length > 0 && (
+                <CommandGroup>
+                {results.map(drug => (
+                    <CommandItem key={drug.rxcui} onSelect={() => handleAddDrug(drug)} className="cursor-pointer">
+                    {drug.full_name}
+                    </CommandItem>
+                ))}
+                </CommandGroup>
+            )}
+            </CommandList>
+        )}
       </Command>
 
       {selectedDrugs.length > 0 && (
@@ -533,7 +561,7 @@ export function HealthPlanResultsTable({ initialResults, searchParams, onBack }:
                                         </TooltipTrigger>
                                         <TooltipContent>
                                         <p className="max-w-xs text-sm">
-                                            This is an estimated Advanced Premium Tax Credit (APTC) based on your income. It lowers your monthly health insurance payment.
+                                            This is an estimated Advanced Premium Tax Credit (APTC) based on your monthly health insurance payment.
                                         </p>
                                         </TooltipContent>
                                     </Tooltip>
