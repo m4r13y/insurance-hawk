@@ -171,7 +171,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
     }
 }
 
-export async function searchDrugs(params: { query: string }): Promise<{ drugs?: Drug[], error?: string }> {
+export async function searchDrugs(params: { query: string }): Promise<{ drugs?: Drug[], suggestions?: string[], error?: string }> {
   const { query } = params;
   if (!query || query.length < 3) return { drugs: [] };
 
@@ -184,42 +184,47 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
 
     const data = await response.json();
     const candidates = data.approximateGroup?.candidate || [];
+    
+    if (candidates.length === 0) {
+        const suggestionsResponse = await fetch(`https://rxnav.nlm.nih.gov/REST/spellingsuggestions.json?name=${encodeURIComponent(query)}`);
+        if (suggestionsResponse.ok) {
+            const suggestionsData = await suggestionsResponse.json();
+            const suggestions = suggestionsData.suggestionGroup?.suggestionList?.suggestion || [];
+            return { drugs: [], suggestions: suggestions.slice(0, 5) }; // Return top 5 suggestions
+        }
+        return { drugs: [] }; // No drugs, no suggestions
+    }
 
     const drugs: Drug[] = candidates
     .filter((candidate: any) => candidate.source === 'RXNORM')
     .map((candidate: any): Drug | null => {
         if (!candidate.rxcui) return null;
         
-        const drug: Drug = {
-            id: candidate.rxcui,
-            name: '', // Will be overwritten with the base name
-            rxcui: candidate.rxcui,
-            full_name: '', // Will be overwritten with the display name
-            is_generic: true, // Default, will be overwritten
-            generic: null, // This is for the generic alternative, not the drug itself
-            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '',
-        };
+        let baseName: string;
+        let fullName: string;
+        let isGeneric: boolean;
 
         const match = candidate.name.match(/^(.*)\[(.*)\]$/);
-        let baseName: string;
 
         if (match) {
-            // Brand name drug, e.g., "simvastatin 10 MG [Zocor]"
             const genericPart = match[1].trim().replace(/\s+\d.*$/, '').trim();
             baseName = match[2].trim();
-            
-            drug.is_generic = false;
-            drug.name = baseName;
-            drug.full_name = `${baseName} (${genericPart})`;
+            fullName = `${baseName} (${genericPart})`;
+            isGeneric = false;
         } else {
-            // Generic drug, e.g., "lisinopril 40 MG"
             baseName = candidate.name.replace(/\s+\d.*$/, '').trim();
-            drug.is_generic = true;
-            drug.name = baseName;
-            drug.full_name = baseName;
+            fullName = baseName;
+            isGeneric = true;
         }
         
-        return drug;
+        return {
+            id: candidate.rxcui,
+            name: baseName,
+            rxcui: candidate.rxcui,
+            full_name: fullName,
+            is_generic: isGeneric,
+            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', generic: null,
+        };
     }).filter((d: Drug | null): d is Drug => d !== null);
 
     // De-duplicate based on the extracted base name.

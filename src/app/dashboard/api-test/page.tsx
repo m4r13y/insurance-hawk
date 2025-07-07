@@ -29,6 +29,7 @@ export default function ApiTestPage() {
     // Medication State
     const [medicationQuery, setMedicationQuery] = useState('');
     const [medications, setMedications] = useState<Drug[]>([]);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
     const [medicationLoading, setMedicationLoading] = useState(false);
     const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
     const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
@@ -68,9 +69,9 @@ export default function ApiTestPage() {
         }, 300); // 300ms debounce
     };
     
-    // Medication Search Handler with Manual Debounce (from medicare.gov code)
     const handleMedicationQueryChange = (value: string) => {
         setMedicationQuery(value);
+        setSuggestions([]);
         
         if (medicationSearchTimeout.current) {
             clearTimeout(medicationSearchTimeout.current);
@@ -93,6 +94,7 @@ export default function ApiTestPage() {
         medicationSearchTimeout.current = setTimeout(async () => {
             const result = await searchDrugs({ query: value });
             setMedications(result.drugs || []);
+            setSuggestions(result.suggestions || []);
             setMedicationLoading(false);
         }, 300); // 300ms debounce
     };
@@ -259,7 +261,23 @@ export default function ApiTestPage() {
                             <CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>
                         )}
                         {medicationLoading && <CommandItem disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" />Searching...</CommandItem>}
-                        {!medicationLoading && medications.length === 0 && medicationQuery.length >= 3 && (
+                        
+                        {!medicationLoading && medications.length === 0 && suggestions.length > 0 && medicationQuery.length >= 3 && (
+                            <CommandGroup heading="Did you mean?">
+                                {suggestions.map(suggestion => (
+                                    <CommandItem
+                                        key={suggestion}
+                                        value={suggestion}
+                                        onSelect={() => handleMedicationQueryChange(suggestion)}
+                                        className="cursor-pointer"
+                                    >
+                                        {suggestion}
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        )}
+                        
+                        {!medicationLoading && medications.length === 0 && suggestions.length === 0 && medicationQuery.length >= 3 && (
                              <CommandEmpty>
                                 <div className="text-center px-4 py-8">
                                     <p className="font-semibold">No Medications Found</p>
@@ -390,5 +408,4 @@ export default function ApiTestPage() {
             </Dialog>
         </div>
     );
-
-    
+}
