@@ -309,30 +309,32 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent className="flex-1 space-y-3 text-sm p-4 pt-0">
+            <CardContent className="flex-1 p-4 pt-0">
                 <Separator/>
-                <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Category</span>
-                    <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
+                <div className="space-y-3 text-sm pt-4">
+                    <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Category</span>
+                        <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
+                    </div>
+                    {policy.premium != null && (
+                        <div className="flex justify-between items-center">
+                            <p className="text-muted-foreground">Premium</p>
+                            <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
+                        </div>
+                    )}
+                    {policy.benefitAmount != null && (
+                        <div className="flex justify-between items-center">
+                            <p className="text-muted-foreground">Benefit Amount</p>
+                            <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
+                        </div>
+                    )}
+                    {policy.enrollmentDate && (
+                        <div className="flex justify-between items-center">
+                            <p className="text-muted-foreground">Enrollment Date</p>
+                            <p className="font-semibold">{new Date(policy.enrollmentDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
+                        </div>
+                    )}
                 </div>
-                 {policy.premium != null && (
-                    <div className="flex justify-between items-center">
-                        <p className="text-muted-foreground">Premium</p>
-                        <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
-                    </div>
-                )}
-                 {policy.benefitAmount != null && (
-                    <div className="flex justify-between items-center">
-                        <p className="text-muted-foreground">Benefit Amount</p>
-                        <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
-                    </div>
-                )}
-                 {policy.enrollmentDate && (
-                    <div className="flex justify-between items-center">
-                        <p className="text-muted-foreground">Enrollment Date</p>
-                        <p className="font-semibold">{new Date(policy.enrollmentDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
-                    </div>
-                )}
             </CardContent>
         </Card>
     )
@@ -380,17 +382,22 @@ export default function PoliciesAndDocumentsPage() {
     const handleSavePolicy = async (policyData: Omit<PolicyType, 'id'>, id?: string) => {
         if (!user || !db) return;
         
+        const dataToSave: { [key: string]: any } = {};
+        Object.entries(policyData).forEach(([key, value]) => {
+            if (value !== undefined) {
+                dataToSave[key] = value;
+            }
+        });
+
         try {
             if (id) {
-                // Editing existing policy
                 const policyRef = doc(db, "users", user.uid, "policies", id);
-                await setDoc(policyRef, policyData, { merge: true });
-                toast({ title: 'Policy Updated', description: `${policyData.carrierName} policy has been updated.` });
+                await setDoc(policyRef, dataToSave, { merge: true });
+                toast({ title: 'Policy Updated', description: `${dataToSave.carrierName} policy has been updated.` });
             } else {
-                // Adding new policy
                 const policiesCol = collection(db, "users", user.uid, "policies");
-                await addDoc(policiesCol, { ...policyData, createdAt: serverTimestamp() });
-                toast({ title: 'Policy Added', description: `${policyData.carrierName} policy has been added.` });
+                await addDoc(policiesCol, { ...dataToSave, createdAt: serverTimestamp() });
+                toast({ title: 'Policy Added', description: `${dataToSave.carrierName} policy has been added.` });
             }
         } catch (error) {
             console.error("Error saving policy:", error);
@@ -570,3 +577,5 @@ export default function PoliciesAndDocumentsPage() {
         </div>
   )
 }
+
+    
