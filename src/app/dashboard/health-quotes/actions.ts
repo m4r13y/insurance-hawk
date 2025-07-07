@@ -287,14 +287,43 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
         if (!conceptGroups) return { drugs: [] };
         
         const drugs: Drug[] = conceptGroups.flatMap((group: any) => 
-            (group.conceptProperties || []).map((prop: any) => ({
-                id: prop.rxcui,
-                rxcui: prop.rxcui,
-                name: prop.name,
-                full_name: prop.name,
-                is_generic: prop.tty !== 'SBD', // Branded drugs are SBD
-                strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', generic: null
-            }))
+            (group.conceptProperties || []).map((prop: any) => {
+                const fullName: string = prop.name;
+                const isGeneric = prop.tty !== 'SBD';
+
+                let strength = '';
+                let form = '';
+                
+                // More robust regex for strength and unit
+                const strengthMatch = fullName.match(/(\d+(?:\.\d+)?\s*(?:MG|MCG|ML|%|UNT|MEQ|IU|HR)(?:\s*\/\s*[^ ]+)?)/i);
+
+                if (strengthMatch) {
+                    strength = strengthMatch[0].trim();
+                    // The form is whatever comes after the strength, cleaned up
+                    const strengthIndex = fullName.toLowerCase().indexOf(strength.toLowerCase());
+                    const formPart = fullName.substring(strengthIndex + strength.length).trim();
+                    form = formPart.replace(/\[.*?\]/, '').trim(); // Also remove brand name in brackets
+                } else {
+                    // Fallback for names without clear strength
+                    const baseNameMatch = fullName.match(/^([a-zA-Z\s-]+)/);
+                    if (baseNameMatch) {
+                       form = fullName.replace(baseNameMatch[0], '').replace(/\[.*?\]/, '').trim();
+                    }
+                }
+                
+                return {
+                    id: prop.rxcui,
+                    rxcui: prop.rxcui,
+                    name: prop.name, // Will be overwritten by search logic, but good to have
+                    full_name: fullName,
+                    is_generic: isGeneric,
+                    strength: strength,
+                    route: '', // Not available from this endpoint
+                    rxterms_dose_form: form,
+                    rxnorm_dose_form: form,
+                    generic: null
+                };
+            })
         );
         return { drugs };
 

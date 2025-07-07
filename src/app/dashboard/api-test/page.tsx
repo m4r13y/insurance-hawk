@@ -68,6 +68,8 @@ export default function ApiTestPage() {
     const [frequency, setFrequency] = useState('monthly');
     const [pkg, setPackage] = useState('30-day');
     const [isManualDrugEntryOpen, setIsManualDrugEntryOpen] = useState(false);
+    const [uniqueForms, setUniqueForms] = useState<string[]>([]);
+    const [selectedForm, setSelectedForm] = useState<string>('');
 
 
     const handleProviderQueryChange = (value: string) => {
@@ -257,6 +259,18 @@ export default function ApiTestPage() {
             fetchDosages();
         }
     }, [drugToConfirm, isGenericSelected]);
+    
+    // Process dosages into unique forms
+    useEffect(() => {
+        if (dosages.length > 0) {
+            const forms = [...new Set(dosages.map(d => d.rxnorm_dose_form).filter(Boolean))];
+            setUniqueForms(forms);
+            setSelectedForm('');
+            setSelectedDosage(null); // reset selections
+        } else {
+            setUniqueForms([]);
+        }
+    }, [dosages]);
 
     return (
         <div className="max-w-xl mx-auto py-24 space-y-8">
@@ -481,9 +495,9 @@ export default function ApiTestPage() {
              }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Select Strength for {drugToConfirm?.name}</DialogTitle>
+                        <DialogTitle>Configure {drugToConfirm?.name}</DialogTitle>
                         <DialogDescription>
-                            Choose the correct strength and form for this medication.
+                            Select the correct form and strength for this medication.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -499,7 +513,7 @@ export default function ApiTestPage() {
                         </div>
                     )}
 
-                    <div className="py-4">
+                    <div className="py-4 space-y-4">
                         {dosageLoading ? (
                             <div className="flex items-center justify-center p-8">
                                 <Loader2 className="h-6 w-6 animate-spin" />
@@ -511,22 +525,53 @@ export default function ApiTestPage() {
                                         Please select an option above to see available strengths.
                                     </p>
                                 ) : (
-                                    <RadioGroup 
-                                        onValueChange={(value) => {
-                                            const dosage = dosages.find(d => d.rxcui === value);
-                                            setSelectedDosage(dosage || null);
-                                        }}
-                                        className="space-y-2 max-h-60 overflow-y-auto"
-                                    >
-                                        {dosages.length > 0 ? dosages.map(dosage => (
-                                            <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
-                                                <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
-                                                <span>{dosage.full_name}</span>
-                                            </Label>
-                                        )) : (
-                                            <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="drug-form">Form</Label>
+                                            <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
+                                                <SelectTrigger id="drug-form">
+                                                    <SelectValue placeholder="Select a form..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {uniqueForms.map(form => (
+                                                        <SelectItem key={form} value={form}>{form || 'N/A'}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        {selectedForm && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="drug-strength">Strength</Label>
+                                                <Select 
+                                                    value={selectedDosage?.rxcui || ''} 
+                                                    onValueChange={(rxcui) => {
+                                                        const dosage = dosages.find(d => d.rxcui === rxcui);
+                                                        setSelectedDosage(dosage || null);
+                                                    }}
+                                                     disabled={dosages.filter(d => d.rxnorm_dose_form === selectedForm).length === 0}
+                                                >
+                                                    <SelectTrigger id="drug-strength">
+                                                        <SelectValue placeholder="Select a strength..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {dosages
+                                                            .filter(d => d.rxnorm_dose_form === selectedForm)
+                                                            .map(dosage => (
+                                                                <SelectItem key={dosage.rxcui} value={dosage.rxcui}>
+                                                                    {dosage.strength || dosage.full_name}
+                                                                </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         )}
-                                    </RadioGroup>
+                                         {dosages.length === 0 && !dosageLoading && (
+                                            <p className="text-center text-sm text-muted-foreground p-4">
+                                                No specific strengths found for this selection.
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
