@@ -37,9 +37,10 @@ export default function ApiTestPage() {
     useEffect(() => {
         if (debouncedQuery.length < 3) {
             setProviders([]);
+            setIsListVisible(false);
             return;
         }
-
+        setIsListVisible(true);
         const fetchProviders = async () => {
             setLoading(true);
             const result = await searchProviders({ query: debouncedQuery, zipCode });
@@ -54,9 +55,10 @@ export default function ApiTestPage() {
      useEffect(() => {
         if (debouncedMedicationQuery.length < 3) {
             setMedications([]);
+            setIsMedicationListVisible(false);
             return;
         }
-
+        setIsMedicationListVisible(true);
         const fetchDrugs = async () => {
             setMedicationLoading(true);
             const result = await searchDrugs({ query: debouncedMedicationQuery });
@@ -100,11 +102,8 @@ export default function ApiTestPage() {
                 <div className="relative">
                     <CommandInput
                         value={query}
-                        onValueChange={(value) => {
-                            setQuery(value);
-                            setIsListVisible(value.length > 0);
-                        }}
-                        onFocus={() => setIsListVisible(true)}
+                        onValueChange={setQuery}
+                        onFocus={() => { if(debouncedQuery.length >=3) setIsListVisible(true) }}
                         onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
                         placeholder="Search for a doctor or facility..."
                         className="h-12 text-lg"
@@ -181,11 +180,8 @@ export default function ApiTestPage() {
                 <div className="relative">
                     <CommandInput
                         value={medicationQuery}
-                        onValueChange={(value) => {
-                            setMedicationQuery(value);
-                            setIsMedicationListVisible(value.length > 0);
-                        }}
-                        onFocus={() => setIsMedicationListVisible(true)}
+                        onValueChange={setMedicationQuery}
+                        onFocus={() => { if(debouncedMedicationQuery.length >=3) setIsMedicationListVisible(true) }}
                         onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
                         placeholder="Search for a medication..."
                         className="h-12 text-lg"
