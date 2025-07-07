@@ -192,28 +192,38 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
         
         const drug: Drug = {
             id: candidate.rxcui,
-            name: candidate.name,
+            name: '', // Will be overwritten with the base name
             rxcui: candidate.rxcui,
-            full_name: candidate.name,
-            is_generic: true,
-            generic: null,
+            full_name: '', // Will be overwritten with the display name
+            is_generic: true, // Default, will be overwritten
+            generic: null, // This is for the generic alternative, not the drug itself
             strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '',
         };
 
         const match = candidate.name.match(/^(.*)\[(.*)\]$/);
+        let baseName: string;
+
         if (match) {
-            const genericName = match[1].trim();
-            const brandName = match[2].trim();
-            drug.name = brandName;
-            drug.full_name = `${brandName} (${genericName})`;
+            // Brand name drug, e.g., "simvastatin 10 MG [Zocor]"
+            const genericPart = match[1].trim().replace(/\s+\d.*$/, '').trim();
+            baseName = match[2].trim();
+            
             drug.is_generic = false;
+            drug.name = baseName;
+            drug.full_name = `${baseName} (${genericPart})`;
         } else {
-            drug.full_name = drug.name;
+            // Generic drug, e.g., "lisinopril 40 MG"
+            baseName = candidate.name.replace(/\s+\d.*$/, '').trim();
+            drug.is_generic = true;
+            drug.name = baseName;
+            drug.full_name = baseName;
         }
+        
         return drug;
     }).filter((d: Drug | null): d is Drug => d !== null);
 
-    const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.full_name, drug])).values());
+    // De-duplicate based on the extracted base name.
+    const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.name, drug])).values());
     
     return { drugs: uniqueDrugs };
   } catch (e) {
