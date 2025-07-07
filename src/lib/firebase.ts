@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type Storage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,12 +16,14 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let storage: Storage | null = null;
 let isFirebaseConfigured = false;
 
 const hasEssentialConfig = !!(
     firebaseConfig.apiKey && 
     firebaseConfig.authDomain && 
-    firebaseConfig.projectId
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket
 );
 
 if (hasEssentialConfig) {
@@ -28,12 +31,14 @@ if (hasEssentialConfig) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
     isFirebaseConfigured = true;
   } catch (e) {
     console.error("Firebase initialization error:", e);
     app = null;
     auth = null;
     db = null;
+    storage = null;
     isFirebaseConfigured = false;
   }
 }
@@ -42,4 +47,4 @@ if (!isFirebaseConfigured) {
     console.warn("Firebase is not configured or failed to initialize. Please check your .env file and Firebase project setup. User-related features will be disabled.");
 }
 
-export { app, auth, db, isFirebaseConfigured };
+export { app, auth, db, storage, isFirebaseConfigured };

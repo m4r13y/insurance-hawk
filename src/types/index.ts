@@ -22,7 +22,8 @@ export type Document = {
   name: string;
   uploadDate: string;
   size: string;
-  dataUrl: string;
+  downloadURL: string;
+  storagePath: string;
 };
 
 export type Policy = {

@@ -17,8 +17,9 @@ import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 
 const carriers = [
@@ -426,32 +427,42 @@ export default function PoliciesAndDocumentsPage() {
 
     // Document handlers
      const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0] && user && db) {
+        if (event.target.files && event.target.files[0] && user && db && storage) {
             const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = async (e) => {
+            const storagePath = `users/${user.uid}/documents/${file.name}`;
+            const storageRef = ref(storage, storagePath);
+
+            try {
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
                 const newDocument: Omit<DocumentType, 'id'> = {
                     name: file.name,
                     uploadDate: new Date().toISOString().split('T')[0],
                     size: `${(file.size / 1024).toFixed(2)} KB`,
-                    dataUrl: e.target?.result as string,
+                    downloadURL,
+                    storagePath,
                 };
-                try {
-                    await addDoc(collection(db, "users", user.uid, "documents"), newDocument);
-                    toast({ title: "Document Uploaded", description: file.name });
-                } catch (error) {
-                     console.error("Error uploading document:", error);
-                    toast({ variant: 'destructive', title: 'Error', description: 'Could not upload document.' });
-                }
-            };
-            reader.readAsDataURL(file);
+                
+                await addDoc(collection(db, "users", user.uid, "documents"), newDocument);
+                toast({ title: "Document Uploaded", description: file.name });
+
+            } catch (error) {
+                console.error("Error uploading document:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not upload document.' });
+            }
         }
     };
     
     const handleDeleteDocument = async () => {
-        if (documentToDelete && user && db) {
+        if (documentToDelete && user && db && storage) {
+            const storageRef = ref(storage, documentToDelete.storagePath);
             try {
+                // Delete file from storage first
+                await deleteObject(storageRef);
+                // Then delete the reference from Firestore
                 await deleteDoc(doc(db, "users", user.uid, "documents", documentToDelete.id));
+
                 toast({ title: "Document Removed", description: `${documentToDelete.name} has been removed.` });
                 setDocumentToDelete(null);
             } catch (error) {
@@ -519,7 +530,7 @@ export default function PoliciesAndDocumentsPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="icon" asChild><a href={doc.dataUrl} download={doc.name}><Download className="h-4 w-4" /></a></Button>
+                                        <Button variant="ghost" size="icon" asChild><a href={doc.downloadURL} download={doc.name} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4" /></a></Button>
                                         <Button variant="ghost" size="icon" onClick={() => setDocumentToDelete(doc)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                     </div>
                                 </div>
@@ -577,5 +588,3 @@ export default function PoliciesAndDocumentsPage() {
         </div>
   )
 }
-
-    
