@@ -10,7 +10,6 @@ export async function testGetCounty(zipCode: string) {
 
     const apiGetHeaders = {
         'accept': 'application/json',
-        'User-Agent': 'HawkNestApp/1.0',
     };
     
     const url = `https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${zipCode}?apikey=${apiKey}`;
