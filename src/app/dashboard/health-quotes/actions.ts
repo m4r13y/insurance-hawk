@@ -203,25 +203,23 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
         let baseName: string;
         let fullName: string;
         let isGeneric: boolean;
+        let genericInfo: { rxcui: string, name: string } | null = null;
 
-        const match = candidate.name.match(/^(.*)\[(.*)\]$/);
+        const match = candidate.name.match(/^(.*) \[(.*)\]$/);
 
         if (match) {
             const genericPart = match[1].trim().replace(/\s+\d.*$/, '').trim();
             baseName = match[2].trim();
-            fullName = candidate.name; // Use original full name
+            fullName = candidate.name; 
             isGeneric = false;
+            // This is a simplification; a real implementation would need another API call
+            // to definitively find the generic rxcui. For now, we simulate.
+            genericInfo = { rxcui: '', name: genericPart };
         } else {
-            // Handles cases like "lisinopril 20 MG Oral Tablet" or "levothyroxine Injection"
-            // First, remove dosage info to consolidate different strengths
             baseName = candidate.name.replace(/\s+\d.*$/, '').trim();
-            
-            // If there's no dosage info (e.g., "levothyroxine Injection"), 
-            // assume the first word is the base name to consolidate different forms.
-            if (baseName.indexOf(' ') > -1 && !/\d/.test(candidate.name)) {
+             if (baseName.indexOf(' ') > -1 && !/\d/.test(candidate.name)) {
                 baseName = baseName.split(' ')[0];
             }
-            
             fullName = candidate.name;
             isGeneric = true;
         }
@@ -232,7 +230,8 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
             rxcui: candidate.rxcui,
             full_name: fullName,
             is_generic: isGeneric,
-            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', generic: null,
+            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', 
+            generic: genericInfo,
         };
     }).filter((d: Drug | null): d is Drug => d !== null);
 
@@ -266,8 +265,21 @@ export async function searchProviders(params: { query: string, zipCode: string }
 
 export async function getRelatedDrugs(params: { rxcui: string }) {
     try {
-        // SBD = Semantic Branded Drug, SCD = Semantic Clinical Drug
-        const response = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui/${params.rxcui}/related.json?tty=SBD+SCD`, { next: { revalidate: 0 } });
+        // Step 1: Find the ingredient (IN) for the given rxcui to ensure we get all forms
+        const ingredientResponse = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui/${params.rxcui}/related.json?tty=IN`, { next: { revalidate: 0 } });
+
+        let rxcuiToFetchDosagesFrom = params.rxcui;
+
+        if (ingredientResponse.ok) {
+            const ingredientData = await ingredientResponse.json();
+            const ingredientConcept = ingredientData.relatedGroup?.conceptGroup?.[0]?.conceptProperties?.[0];
+            if (ingredientConcept?.rxcui) {
+                rxcuiToFetchDosagesFrom = ingredientConcept.rxcui;
+            }
+        }
+
+        // Step 2: Use the ingredient rxcui (or original if lookup failed) to find all related SBDs and SCDs
+        const response = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui/${rxcuiToFetchDosagesFrom}/related.json?tty=SBD+SCD`, { next: { revalidate: 0 } });
         if (!response.ok) return { error: 'Could not fetch drug forms.' };
         
         const data = await response.json();
@@ -281,7 +293,6 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
                 name: prop.name,
                 full_name: prop.name,
                 is_generic: prop.tty !== 'SBD', // Branded drugs are SBD
-                // Fill other properties to satisfy the Drug type
                 strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', generic: null
             }))
         );
@@ -363,3 +374,5 @@ export async function getProviderCoverage(params: { planIds: string[], providerI
         return { error: 'An unexpected error occurred while fetching provider coverage.' };
     }
 }
+
+    

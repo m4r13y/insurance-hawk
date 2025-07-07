@@ -141,20 +141,12 @@ export default function ApiTestPage() {
     
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
-        if (drug.generic) {
-            const query = medicationQuery.toLowerCase();
-            const genericName = drug.generic.name.toLowerCase();
-
-            if (genericName.includes(query)) {
-                // User likely searched for generic, pre-select it
-                setIsGenericSelected(true);
-            } else {
-                // User likely searched for brand, let them choose
-                setIsGenericSelected(null);
-            }
-        } else {
-            setIsGenericSelected(null); // No generic available
+        setIsGenericSelected(null); // Reset choice each time
+        
+        if (drug.is_generic) {
+             setIsGenericSelected(true); // Pre-select generic if that's what was searched
         }
+        
         setDrugToConfirm(drug);
         setMedicationQuery('');
         setIsMedicationListVisible(false);
@@ -196,7 +188,7 @@ export default function ApiTestPage() {
     // Fetch dosages when a drug is selected for confirmation
     useEffect(() => {
         if (drugToConfirm) {
-            // If a generic/brand choice hasn't been made, don't fetch yet
+            // If a generic/brand choice hasn't been made, and one is available, don't fetch yet
             if (isGenericSelected === null && drugToConfirm.generic) {
                 setDosages([]);
                 setDosageLoading(false);
@@ -207,13 +199,8 @@ export default function ApiTestPage() {
                 setDosageLoading(true);
                 setDosages([]);
                 setSelectedDosage(null);
-
-                let rxcuiToFetch = drugToConfirm.rxcui;
-                if (isGenericSelected === true && drugToConfirm.generic) {
-                    rxcuiToFetch = drugToConfirm.generic.rxcui;
-                }
                 
-                const result = await getRelatedDrugs({ rxcui: rxcuiToFetch });
+                const result = await getRelatedDrugs({ rxcui: drugToConfirm.rxcui });
 
                 if (result.drugs) {
                     const filtered = isGenericSelected !== null 
@@ -500,7 +487,7 @@ export default function ApiTestPage() {
                                         {dosages.length > 0 ? dosages.map(dosage => (
                                             <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
                                                 <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
-                                                <span>{dosage.name} {dosage.is_generic === false && ' (Brand)'}</span>
+                                                <span>{dosage.name} {dosage.is_generic === false && '(Brand)'}</span>
                                             </Label>
                                         )) : (
                                             <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
@@ -574,3 +561,5 @@ export default function ApiTestPage() {
         </div>
     );
 }
+
+    
