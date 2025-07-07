@@ -1,10 +1,10 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, X, ArrowLeft, Building, ListCollapse, Shield, ListTodo } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, X, ArrowLeft, Building, ListCollapse, Shield, ListTodo, Layers, Pencil, Eye, EyeOff, Save, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
@@ -15,6 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 const carriers = [
   { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "https://logo.clearbit.com/uhc.com", "website": "https://uhc.com" },
@@ -195,18 +199,18 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                         </Command>
                     )}
                     {step === 2 && (
-                         <div className="grid grid-cols-2 gap-4">
+                         <div className="flex flex-wrap justify-center gap-3">
                             {policyCategories.map(cat => (
-                                <Button key={cat.id} variant="outline" className="h-auto py-4" onClick={() => handleSelectCategory(cat.id)}>
+                                <Button key={cat.id} variant="outline" className="h-auto py-3 px-4 text-center whitespace-normal" onClick={() => handleSelectCategory(cat.id)}>
                                     {cat.name}
                                 </Button>
                             ))}
                         </div>
                     )}
                      {step === 3 && (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-wrap justify-center gap-3">
                             {medicareSubcategories.map(sub => (
-                                <Button key={sub.id} variant="outline" className="h-auto py-4" onClick={() => handleSelectSubcategory(sub.id)}>
+                                <Button key={sub.id} variant="outline" className="h-auto py-3 px-4 text-center whitespace-normal" onClick={() => handleSelectSubcategory(sub.id)}>
                                     {sub.name}
                                 </Button>
                             ))}
@@ -253,7 +257,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                     </div>
                      <div>
                         <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        {step === 4 && <Button onClick={handleSave} className="ml-2">Save Policy</Button>}
+                        {step === 4 && <Button onClick={handleSave} className="ml-2" disabled={!policy.planName?.trim()}>Save Policy</Button>}
                     </div>
                 </DialogFooter>
             </DialogContent>
@@ -305,17 +309,133 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
     )
 }
 
-export default function MyPoliciesPage() {
+// Editable Card Component
+const EditableCard = ({ title, children, form: FormComponent, onSave }: { title: string; children: React.ReactNode; form: React.FC<any>; onSave: (data: any) => void; }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-xl">{title}</CardTitle>
+                {!isEditing && (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                    </Button>
+                )}
+            </CardHeader>
+            <CardContent>
+                {isEditing ? (
+                    <FormComponent onSave={(data:any) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
+                ) : (
+                    children
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
+const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  dob: z.string().optional(),
+  email: z.string().email("Invalid email").optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip: z.string().optional(),
+  medicareId: z.string().optional(),
+});
+
+const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
+    const form = useForm({ resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })) });
+     useEffect(() => {
+        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        form.reset(profile);
+    }, [form]);
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField name="firstName" control={form.control} render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                    <FormField name="lastName" control={form.control} render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+                <FormField name="dob" control={form.control} render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
+            </form>
+        </Form>
+    );
+};
+
+const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
+    const form = useForm({ resolver: zodResolver(profileSchema.pick({ email: true, phone: true, address: true, city: true, state: true, zip: true })) });
+     useEffect(() => {
+        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        form.reset(profile);
+    }, [form]);
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField name="email" control={form.control} render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                    <FormField name="phone" control={form.control} render={({ field }) => <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+                 <FormField name="address" control={form.control} render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <div className="grid grid-cols-3 gap-4">
+                     <FormField name="city" control={form.control} render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                     <FormField name="state" control={form.control} render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                     <FormField name="zip" control={form.control} render={({ field }) => <FormItem><FormLabel>Zip</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
+            </form>
+        </Form>
+    );
+};
+
+const FinancialInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
+    const form = useForm({ resolver: zodResolver(profileSchema.pick({ medicareId: true })) });
+     useEffect(() => {
+        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        form.reset(profile);
+    }, [form]);
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+                <FormField name="medicareId" control={form.control} render={({ field }) => <FormItem><FormLabel>Medicare ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
+            </form>
+        </Form>
+    );
+};
+
+const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: string; isSensitive?: boolean; }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const displayValue = isSensitive ? (isVisible ? value : '•'.repeat(value.length || 10)) : value;
+    return (
+        <div className="flex justify-between items-center py-2">
+            <span className="text-muted-foreground">{label}</span>
+            <div className="flex items-center gap-2">
+                <span className="font-medium">{displayValue || 'N/A'}</span>
+                {isSensitive && value && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsVisible(!isVisible)}>
+                        {isVisible ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+export default function MyAccountPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [files, setFiles] = useState<DocumentType[]>([]);
     const [policies, setPolicies] = useState<PolicyType[]>([]);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [editingPolicy, setEditingPolicy] = useState<PolicyType | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
+    const [profile, setProfile] = useState<any>({});
+    
      useEffect(() => {
         const checkAuth = () => {
             const guestAuth = localStorage.getItem("hawk-auth") === "true";
@@ -324,20 +444,20 @@ export default function MyPoliciesPage() {
         };
         checkAuth();
 
-        const storedFiles = localStorage.getItem("hawk-documents");
-        if (storedFiles) setFiles(JSON.parse(storedFiles));
-
         const storedPolicies = localStorage.getItem("hawk-policies");
         if (storedPolicies) setPolicies(JSON.parse(storedPolicies));
+
+        const storedProfile = localStorage.getItem("userProfile");
+        if(storedProfile) setProfile(JSON.parse(storedProfile));
         
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "hawk-documents") {
-                const updatedFiles = localStorage.getItem("hawk-documents");
-                setFiles(updatedFiles ? JSON.parse(updatedFiles) : []);
-            }
             if (e.key === "hawk-policies") {
                 const updatedPolicies = localStorage.getItem("hawk-policies");
                 setPolicies(updatedPolicies ? JSON.parse(updatedPolicies) : []);
+            }
+            if (e.key === "userProfile") {
+                 const updatedProfile = localStorage.getItem("userProfile");
+                setProfile(updatedProfile ? JSON.parse(updatedProfile) : {});
             }
         };
 
@@ -350,6 +470,13 @@ export default function MyPoliciesPage() {
         setPolicies(updatedPolicies);
         localStorage.setItem("hawk-policies", JSON.stringify(updatedPolicies));
     }
+    
+    const handleSaveProfile = (newData: any) => {
+        const updatedProfile = { ...profile, ...newData };
+        setProfile(updatedProfile);
+        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+        toast({ title: "Profile Updated", description: "Your information has been saved." });
+    };
 
     const handleSavePolicy = (policy: PolicyType) => {
         if (!isLoggedIn) {
@@ -381,160 +508,80 @@ export default function MyPoliciesPage() {
         savePolicies(updatedPolicies);
         toast({ title: 'Policy Removed', description: `The policy has been removed from your list.` });
     }
-
-    const handleDeleteFile = async (fileId: string) => {
-        const updatedFiles = files.filter(f => f.id !== fileId);
-        setFiles(updatedFiles);
-        localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
-        toast({ title: "Document Deleted", description: "The file has been removed from this session." });
-    };
-
-    const handleFiles = (uploadedFiles: FileList) => {
-        if (!isLoggedIn) {
-            toast({ variant: 'destructive', title: 'Action Disabled', description: 'You must have an account to upload files.' });
-            return;
-        }
-
-        if (uploadedFiles && uploadedFiles.length > 0) {
-            const uploadedFile = uploadedFiles[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const dataUrl = e.target?.result as string;
-                if(dataUrl) {
-                    const newFile: DocumentType = {
-                        id: `doc-${Date.now()}`,
-                        name: uploadedFile.name,
-                        uploadDate: new Date().toISOString(),
-                        size: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
-                        dataUrl: dataUrl,
-                    };
-                    const updatedFiles = [newFile, ...files];
-                    setFiles(updatedFiles);
-                    localStorage.setItem("hawk-documents", JSON.stringify(updatedFiles));
-                    toast({ title: 'File Uploaded', description: `${uploadedFile.name} has been added for this session.` });
-                } else {
-                     toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not read the file.' });
-                }
-            };
-            
-            reader.onerror = () => { toast({ variant: 'destructive', title: 'Upload Failed', description: 'An error occurred while reading the file.' }); }
-            reader.readAsDataURL(uploadedFile);
-        }
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) handleFiles(e.target.files);
-        if(e.target) e.target.value = '';
-    };
-
-    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault(); e.stopPropagation(); setIsDragging(false);
-        if (e.dataTransfer.files) { handleFiles(e.dataTransfer.files); e.dataTransfer.clearData(); }
-    };
     
     if (loading) return <p>Loading...</p>;
     
     if (!isLoggedIn) {
         return (
             <div className="text-center">
-                <p>Please log in or continue as a guest to manage your policies.</p>
+                <p>Please log in or continue as a guest to manage your account.</p>
                 <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
             </div>
         );
     }
 
   return (
-    <div className="space-y-8">
-       <div>
-        <h1 className="text-2xl font-semibold">My Policies</h1>
-        <p className="text-base text-muted-foreground mt-1">Manage your policies and upload related documents securely.</p>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-start">
-            <div>
-                <CardTitle className="text-xl">Your Policies</CardTitle>
-                <CardDescription>Here are the policies you've added to your nest.</CardDescription>
+        <div className="space-y-8 max-w-4xl mx-auto">
+             <div>
+                <h1 className="text-2xl font-semibold">My Account</h1>
+                <p className="text-base text-muted-foreground mt-1">View and edit your profile information. All data is saved locally in your browser.</p>
             </div>
-            <Button onClick={() => { setEditingPolicy(null); setIsAddDialogOpen(true); }}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Policy
-            </Button>
-        </CardHeader>
-        <CardContent>
-            {policies.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {policies.map((policy) => (
-                        <PolicyCard key={policy.id} policy={policy} onEdit={handleEditPolicy} onDelete={handleDeletePolicy} />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mt-4">No Policies Added Yet</h3>
-                    <p className="text-muted-foreground mt-2">Click the 'Add Policy' button to add your first policy.</p>
-                </div>
-            )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Document Upload</CardTitle>
-          <CardDescription>Drag and drop files here or click to browse. Uploaded documents are associated with your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-          <div
-            onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${ isDragging ? 'border-primary bg-primary/10' : 'border-border' }`}
-          >
-            <UploadCloud className={`h-12 w-12 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
-            <p className="mt-4 text-center text-muted-foreground"> {isDragging ? 'Drop the file to upload' : 'Drag & drop file here, or click to select file'} </p>
-            <Button variant="outline" className="mt-4 pointer-events-none">Browse Files</Button>
-          </div>
-        </CardContent>
-        {files.length > 0 && (
-            <CardFooter className="flex-col items-start pt-4">
-                 <h3 className="font-semibold mb-2">Uploaded Documents</h3>
-                 <div className="w-full overflow-x-auto">
-                    <Table>
-                        <TableBody>
-                            {files.map((doc) => (
-                                <TableRow key={doc.id}>
-                                    <TableCell className="font-medium flex items-center gap-3 max-w-xs sm:max-w-md">
-                                        <File className="h-5 w-5 text-muted-foreground shrink-0" />
-                                        <span className="truncate">{doc.name}</span>
-                                    </TableCell>
-                                    <TableCell className="hidden sm:table-cell">{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{doc.size}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button asChild variant="ghost" size="icon">
-                                            <a href={doc.dataUrl} download={doc.name}><Download className="h-4 w-4" /><span className="sr-only">Download</span></a>
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteFile(doc.id)}>
-                                            <Trash2 className="h-4 w-4" /><span className="sr-only">Delete</span>
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardFooter>
-        )}
-      </Card>
+        
+             <div className="space-y-8">
+                 <EditableCard title="Personal Information" form={PersonalInfoForm} onSave={handleSaveProfile}>
+                     <InfoRow label="Name" value={`${profile.firstName || ''} ${profile.lastName || ''}`} />
+                     <Separator/>
+                     <InfoRow label="Date of Birth" value={profile.dob || ''} />
+                 </EditableCard>
 
-      <PolicyDialog 
-        open={isAddDialogOpen} 
-        onOpenChange={setIsAddDialogOpen} 
-        onSave={handleSavePolicy}
-        editingPolicy={editingPolicy}
-      />
-    </div>
+                 <EditableCard title="Contact Information" form={ContactInfoForm} onSave={handleSaveProfile}>
+                     <InfoRow label="Email" value={profile.email || ''} />
+                     <Separator/>
+                     <InfoRow label="Phone" value={profile.phone || ''} />
+                     <Separator/>
+                     <InfoRow label="Address" value={`${profile.address || ''} ${profile.city || ''} ${profile.state || ''} ${profile.zip || ''}`} />
+                 </EditableCard>
+
+                 <EditableCard title="Financial & Health IDs" form={FinancialInfoForm} onSave={handleSaveProfile}>
+                     <InfoRow label="Medicare ID" value={profile.medicareId || ''} isSensitive={true}/>
+                 </EditableCard>
+             </div>
+
+
+            <Card>
+                <CardHeader className="flex flex-row justify-between items-start">
+                    <div>
+                        <CardTitle className="text-xl">Your Policies</CardTitle>
+                        <CardDescription>Here are the policies you've added to your nest.</CardDescription>
+                    </div>
+                    <Button onClick={() => { setEditingPolicy(null); setIsAddDialogOpen(true); }}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Policy
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    {policies.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {policies.map((policy) => (
+                                <PolicyCard key={policy.id} policy={policy} onEdit={handleEditPolicy} onDelete={handleDeletePolicy} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                            <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <h3 className="text-lg font-semibold mt-4">No Policies Added Yet</h3>
+                            <p className="text-muted-foreground mt-2">Click the 'Add Policy' button to add your first policy.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <PolicyDialog 
+                open={isAddDialogOpen} 
+                onOpenChange={setIsAddDialogOpen} 
+                onSave={handleSavePolicy}
+                editingPolicy={editingPolicy}
+            />
+        </div>
   )
 }
