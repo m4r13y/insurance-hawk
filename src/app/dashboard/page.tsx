@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -36,7 +35,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 mb-6">
                     <CheckCircle2 className="h-10 w-10" />
                 </div>
-                <CardTitle className="font-headline text-3xl sm:text-4xl pt-2">Welcome to HawkNest, {name}!</CardTitle>
+                <CardTitle className="font-headline text-3xl sm:text-4xl pt-2">Welcome to Hawk<span className="text-primary">Nest</span>, {name}!</CardTitle>
                 <CardDescription className="text-lg mt-2">Let's get your nest set up. What would you like to do first?</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-8">

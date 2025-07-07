@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
@@ -69,7 +68,7 @@ function AuthFlow() {
             localStorage.setItem("userFirstName", firstName);
 
             router.push('/dashboard');
-            toast({ title: "Account Created!", description: "Welcome to HawkNest." });
+            toast({ title: "Account Created!", description: <>Welcome to Hawk<span className="text-primary">Nest</span>.</> });
 
         } else { // Sign In
             localStorage.removeItem("isNewUser");
@@ -96,7 +95,7 @@ function AuthFlow() {
         <>
             <div className="grid gap-2 text-center">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                  {isSignUp ? 'Create an Account' : 'Sign In to HawkNest'}
+                  {isSignUp ? 'Create an Account' : <>Sign In to Hawk<span className="text-primary">Nest</span></>}
                 </h1>
                 <p className="text-muted-foreground">
                   {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your dashboard.'}
