@@ -165,6 +165,8 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
     }
     
     const filteredCarriers = carriers.filter(c => c.name.toLowerCase().includes(carrierSearch.toLowerCase()));
+    
+    const isSaveDisabled = step === 4 && !policy.planName;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -310,19 +312,25 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                     <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
                 </div>
                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                        <p className="text-muted-foreground">Premium</p>
-                        <p className="font-semibold">{policy.premium ? `$${policy.premium.toFixed(2)}/mo` : 'N/A'}</p>
-                    </div>
-                     <div className="space-y-1">
-                        <p className="text-muted-foreground">Benefit Amount</p>
-                        <p className="font-semibold">{policy.benefitAmount ? `$${policy.benefitAmount.toLocaleString()}` : 'N/A'}</p>
-                    </div>
+                    {policy.premium != null && (
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">Premium</p>
+                            <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
+                        </div>
+                    )}
+                     {policy.benefitAmount != null && (
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">Benefit Amount</p>
+                            <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
+                        </div>
+                    )}
                  </div>
-                 <div className="space-y-1">
-                    <p className="text-muted-foreground">Enrollment Date</p>
-                    <p className="font-semibold">{policy.enrollmentDate ? new Date(policy.enrollmentDate).toLocaleDateString('en-US', { timeZone: 'UTC' }) : 'N/A'}</p>
-                </div>
+                 {policy.enrollmentDate && (
+                    <div className="space-y-1">
+                        <p className="text-muted-foreground">Enrollment Date</p>
+                        <p className="font-semibold">{new Date(policy.enrollmentDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     )
@@ -569,3 +577,5 @@ export default function PoliciesAndDocumentsPage() {
         </div>
   )
 }
+
+    
