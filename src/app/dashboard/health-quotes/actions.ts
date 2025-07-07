@@ -212,8 +212,6 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
             baseName = match[2].trim();
             fullName = candidate.name; 
             isGeneric = false;
-            // This is a simplification; a real implementation would need another API call
-            // to definitively find the generic rxcui. For now, we simulate.
             genericInfo = { rxcui: '', name: genericPart };
         } else {
             baseName = candidate.name.replace(/\s+\d.*$/, '').trim();
@@ -235,7 +233,6 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
         };
     }).filter((d: Drug | null): d is Drug => d !== null);
 
-    // De-duplicate based on the extracted base name.
     const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.name.toLowerCase(), drug])).values());
     
     return { drugs: uniqueDrugs.map(d => ({ ...d, full_name: d.name })) };
@@ -291,30 +288,42 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
                 const fullName: string = prop.name;
                 const isGeneric = prop.tty !== 'SBD';
 
-                let strength = '';
+                let strength = fullName;
                 let form = '';
                 
-                // More robust regex for strength and unit
-                const strengthMatch = fullName.match(/(\d+(?:\.\d+)?\s*(?:MG|MCG|ML|%|UNT|MEQ|IU|HR)(?:\s*\/\s*[^ ]+)?)/i);
+                // This list is ordered from most specific to least specific to ensure correct matching.
+                const knownForms = [
+                    'Extended Release Oral Capsule',
+                    'Extended Release Oral Tablet',
+                    'Transdermal System',
+                    'Oral Tablet',
+                    'Oral Capsule',
+                    'Oral Solution',
+                    'Injectable Solution',
+                    'Injection',
+                    'Tablet',
+                    'Capsule',
+                    'Solution',
+                    'Suspension',
+                    'Cream',
+                    'Ointment',
+                    'Gel',
+                    'Lotion',
+                    'Patch',
+                ];
 
-                if (strengthMatch) {
-                    strength = strengthMatch[0].trim();
-                    // The form is whatever comes after the strength, cleaned up
-                    const strengthIndex = fullName.toLowerCase().indexOf(strength.toLowerCase());
-                    const formPart = fullName.substring(strengthIndex + strength.length).trim();
-                    form = formPart.replace(/\[.*?\]/, '').trim(); // Also remove brand name in brackets
-                } else {
-                    // Fallback for names without clear strength
-                    const baseNameMatch = fullName.match(/^([a-zA-Z\s-]+)/);
-                    if (baseNameMatch) {
-                       form = fullName.replace(baseNameMatch[0], '').replace(/\[.*?\]/, '').trim();
+                for (const knownForm of knownForms) {
+                    if (fullName.endsWith(knownForm)) {
+                        form = knownForm;
+                        strength = fullName.substring(0, fullName.lastIndexOf(knownForm)).trim();
+                        break;
                     }
                 }
                 
                 return {
                     id: prop.rxcui,
                     rxcui: prop.rxcui,
-                    name: prop.name, // Will be overwritten by search logic, but good to have
+                    name: prop.name,
                     full_name: fullName,
                     is_generic: isGeneric,
                     strength: strength,
