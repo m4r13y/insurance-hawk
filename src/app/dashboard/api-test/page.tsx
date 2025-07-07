@@ -38,7 +38,6 @@ export default function ApiTestPage() {
     // Provider State
     const [query, setQuery] = useState('');
     const [zipCode, setZipCode] = useState('76116'); 
-    const [radius, setRadius] = useState('10');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isListVisible, setIsListVisible] = useState(false);
@@ -223,8 +222,8 @@ export default function ApiTestPage() {
                     <CardTitle>Find a Doctor or Facility</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
-                        <div className="relative sm:col-span-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
+                        <div className="relative">
                             <Label htmlFor="provider-search">Provider Name</Label>
                             <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                 <div className="relative">
@@ -269,24 +268,9 @@ export default function ApiTestPage() {
                                 </div>
                             </Command>
                         </div>
-                        <div className="hidden">
+                        <div>
                             <Label htmlFor="zip-code">ZIP Code</Label>
                             <Input id="zip-code" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="e.g. 90210" className="w-[120px]"/>
-                        </div>
-                         <div className="hidden">
-                             <Label htmlFor="radius">Radius</Label>
-                            <Select value={radius} onValueChange={setRadius}>
-                                <SelectTrigger id="radius" className="w-[120px]">
-                                    <SelectValue placeholder="Radius" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="5">5 miles</SelectItem>
-                                    <SelectItem value="10">10 miles</SelectItem>
-                                    <SelectItem value="25">25 miles</SelectItem>
-                                    <SelectItem value="50">50 miles</SelectItem>
-                                    <SelectItem value="100">100 miles</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
                     </div>
 
@@ -454,10 +438,11 @@ export default function ApiTestPage() {
                     {drugToConfirm && drugToConfirm.generic && isGenericSelected === null && (
                          <div className="p-4 border rounded-md bg-amber-50">
                             <p className="text-sm font-semibold">Generic Alternative Available</p>
-                            <p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} or the generic version, {drugToConfirm.generic.name}?</p>
+                            <p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} (Brand) or the generic version?</p>
+                            <p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p>
                             <div className="mt-3 flex gap-2">
                                 <Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button>
-                                <Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>{drugToConfirm.generic.name} (Generic)</Button>
+                                <Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button>
                             </div>
                         </div>
                     )}
