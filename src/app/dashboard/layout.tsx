@@ -43,7 +43,7 @@ import {
   LogIn,
   X,
   Beaker,
-  Layers,
+  User,
   Loader2,
 } from "lucide-react";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -168,8 +168,8 @@ function DashboardLayoutComponent({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="My Policies">
-                    <Link href="/dashboard/documents"><Layers /><span>My Policies</span></Link>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="My Account">
+                    <Link href="/dashboard/documents"><User /><span>My Account</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
@@ -227,3 +227,5 @@ export default function DashboardLayout({
     </Suspense>
   )
 }
+
+    

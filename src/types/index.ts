@@ -185,3 +185,15 @@ export type ProviderCoverage = {
   accepting: string;
   providerName?: string; // For UI display
 };
+
+export type SelectedDrug = Drug & {
+    quantity: number;
+    frequency: string;
+    package: string;
+};
+
+export type SelectedProvider = Provider & {
+    selectedAffiliation?: string;
+};
+
+    

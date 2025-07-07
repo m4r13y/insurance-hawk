@@ -1,5 +1,5 @@
 "use client"
-
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, UserPlus, Loader2 } from "lucide-react"
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { FcGoogle } from "react-icons/fc";
 import { getFirestore, doc, setDoc } from "firebase/firestore"
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 
@@ -21,6 +22,33 @@ function AuthFlow() {
   const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const handleGoogleSignIn = async () => {
+    if (!isFirebaseConfigured || !auth) {
+      toast({
+        variant: "destructive",
+        title: "Feature Disabled",
+        description: "This application is not configured for user authentication.",
+      });
+      return;
+    }
+  
+    setIsLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      router.push('/dashboard');
+      toast({ title: "Signed In", description: "Welcome back!" });
+    } catch (error: any) {
+      console.error("Firebase Google Auth Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: error.message?.replace('Firebase: ', '') || "An unknown error occurred.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
     if (searchParams.get('mode') === 'signup') {
@@ -136,6 +164,9 @@ function AuthFlow() {
                           {isLoading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
                       </Button>
                   </form>
+                  <Button variant="google" className="w-full mt-4" onClick={handleGoogleSignIn} disabled={isLoading}>
+                    <FcGoogle className="mr-2 h-5 w-5" /> {isSignUp ? 'Sign Up with Google' : 'Sign In with Google'}
+                  </Button>
               </CardContent>
             </Card>
             <div className="mt-4 text-center text-sm text-muted-foreground">
