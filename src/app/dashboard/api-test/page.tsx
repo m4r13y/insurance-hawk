@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useDebounce } from 'use-debounce';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 
@@ -18,13 +17,13 @@ export default function ApiTestPage() {
     // Provider State
     const [query, setQuery] = useState('');
     const [zipCode, setZipCode] = useState('76116'); 
-    const [debouncedQuery] = useDebounce(query, 500);
     const [providers, setProviders] = useState<Provider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isListVisible, setIsListVisible] = useState(false);
     const [selectedProviders, setSelectedProviders] = useState<Provider[]>([]);
     const [showInNetworkOnly, setShowInNetworkOnly] = useState(true);
     const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+    const providerSearchTimeout = useRef<NodeJS.Timeout | null>(null);
     
     // Medication State
     const [medicationQuery, setMedicationQuery] = useState('');
@@ -37,23 +36,33 @@ export default function ApiTestPage() {
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
 
 
-    // Fetch Providers
-    useEffect(() => {
-        if (debouncedQuery.length < 3) {
-            setProviders([]);
+    const handleProviderQueryChange = (value: string) => {
+        setQuery(value);
+
+        if (providerSearchTimeout.current) {
+            clearTimeout(providerSearchTimeout.current);
+        }
+
+        if (value.length > 0) {
+            setIsListVisible(true);
+        } else {
             setIsListVisible(false);
+        }
+
+        if (value.length < 3) {
+            setProviders([]);
+            setLoading(false);
             return;
         }
-        const fetchProviders = async () => {
-            setLoading(true);
-            const result = await searchProviders({ query: debouncedQuery, zipCode });
+
+        setLoading(true);
+
+        providerSearchTimeout.current = setTimeout(async () => {
+            const result = await searchProviders({ query: value, zipCode });
             setProviders(result.providers || []);
             setLoading(false);
-            setIsListVisible(true);
-        };
-
-        fetchProviders();
-    }, [debouncedQuery, zipCode]);
+        }, 300); // 300ms debounce
+    };
     
     // Medication Search Handler with Manual Debounce (from medicare.gov code)
     const handleMedicationQueryChange = (value: string) => {
@@ -63,13 +72,18 @@ export default function ApiTestPage() {
             clearTimeout(medicationSearchTimeout.current);
         }
 
+        if (value.length > 0) {
+            setIsMedicationListVisible(true);
+        } else {
+            setIsMedicationListVisible(false);
+        }
+
         if (value.length < 3) {
             setMedications([]);
-            setIsMedicationListVisible(false);
+            setMedicationLoading(false);
             return;
         }
         
-        setIsMedicationListVisible(true);
         setMedicationLoading(true);
         
         medicationSearchTimeout.current = setTimeout(async () => {
@@ -119,12 +133,8 @@ export default function ApiTestPage() {
                 <div className="relative">
                     <CommandInput
                         value={query}
-                        onValueChange={(val) => {
-                            setQuery(val);
-                            if(val.length > 2) setIsListVisible(true)
-                            else setIsListVisible(false);
-                        }}
-                        onFocus={() => { if(providers.length > 0) setIsListVisible(true) }}
+                        onValueChange={handleProviderQueryChange}
+                        onFocus={() => { if(query.length > 0) setIsListVisible(true) }}
                         onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
                         placeholder="Search for a doctor or facility..."
                         className="h-12 text-lg"
@@ -133,7 +143,10 @@ export default function ApiTestPage() {
                     
                     {isListVisible && (
                         <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                            {providers.length === 0 && debouncedQuery.length > 2 && !loading && (
+                            {query.length > 0 && query.length < 3 && !loading && (
+                                <CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>
+                            )}
+                            {providers.length === 0 && query.length >= 3 && !loading && (
                                 <CommandEmpty>No providers found.</CommandEmpty>
                             )}
                             {providers.length > 0 && (
@@ -203,7 +216,7 @@ export default function ApiTestPage() {
                         <CommandInput
                             value={medicationQuery}
                             onValueChange={handleMedicationQueryChange}
-                            onFocus={() => { if(medicationQuery.length >=3) setIsMedicationListVisible(true) }}
+                            onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }}
                             onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
                             placeholder="Search for a medication..."
                             className="h-12 text-lg"
@@ -223,8 +236,11 @@ export default function ApiTestPage() {
                 
                 {isMedicationListVisible && (
                     <CommandList className="border-t">
+                        {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (
+                            <CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>
+                        )}
                         {medicationLoading && <CommandItem disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" />Searching...</CommandItem>}
-                        {!medicationLoading && medications.length === 0 && medicationQuery.length > 2 && (
+                        {!medicationLoading && medications.length === 0 && medicationQuery.length >= 3 && (
                              <CommandEmpty>
                                 <div className="text-center px-4 py-8">
                                     <p className="font-semibold">No Medications Found</p>
