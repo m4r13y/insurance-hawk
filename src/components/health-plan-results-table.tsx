@@ -269,13 +269,13 @@ const CoverageDetailsDialog = ({ open, onOpenChange, plan, selectedDrugs, select
 
                 if (drugIds.length > 0) {
                     const res = await getDrugCoverage({ planIds: [plan.id], drugIds });
-                    if (res.error) setError(prev => (prev ? `${prev}\n${res.error}` : res.error!));
+                    if (res.error) setError(prev => (prev ? `${prev}\\n${res.error}` : res.error!));
                     else setDrugCoverage(res.coverage || []);
                 }
                 
                 if (providerIds.length > 0) {
                     const res = await getProviderCoverage({ planIds: [plan.id], providerIds });
-                     if (res.error) setError(prev => (prev ? `${prev}\n${res.error}` : res.error!));
+                     if (res.error) setError(prev => (prev ? `${prev}\\n${res.error}` : res.error!));
                     else setProviderCoverage(res.coverage || []);
                 }
                 setLoading(false);
@@ -620,5 +620,3 @@ export function HealthPlanResultsTable({ initialResults, searchParams, onBack }:
     </div>
   );
 }
-
-    
