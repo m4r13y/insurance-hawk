@@ -3,7 +3,7 @@
 
 import type { z } from "zod";
 import type { healthQuoterFormSchema } from "@/components/health-insurance-quoter";
-import type { HealthPlan, Drug, Provider } from "@/types";
+import type { HealthPlan, Drug, Provider, DrugCoverage, ProviderCoverage } from "@/types";
 
 // Helper function to find the most relevant deductible from a plan's array of deductibles
 function findDeductible(plan: any): number {
@@ -74,7 +74,8 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`, {
             method: 'GET',
             headers: apiGetHeaders,
- });
+            cache: 'no-store',
+        });
 
         if (!countyResponse.ok) {
             const errorBody = await countyResponse.text();
@@ -115,7 +116,8 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
             method: 'POST',
             headers: apiPostHeaders,
             body: JSON.stringify(searchPayload),
- });
+            cache: 'no-store',
+        });
 
         if (!planSearchResponse.ok) {
             const errorBody = await planSearchResponse.json();
@@ -202,4 +204,73 @@ export async function searchProviders(params: { query: string, zipCode: string }
      console.error("Failed to search providers", e);
     return { error: 'Failed to search providers', providers: [] };
   }
+}
+
+
+export async function getDrugCoverage(params: { planIds: string[], drugIds: string[] }) {
+    const { planIds, drugIds } = params;
+    if (planIds.length === 0 || drugIds.length === 0) return { coverage: [] };
+
+    const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
+    if (!apiKey) return { error: 'Service unavailable' };
+    
+    const apiHeaders = { 'accept': 'application/json' };
+    const planidsParam = planIds.join(',');
+    const drugsParam = drugIds.join(',');
+    const year = new Date().getFullYear();
+
+    try {
+        const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/covered?year=${year}&drugs=${drugsParam}&planids=${planidsParam}&apikey=${apiKey}`, { 
+            headers: apiHeaders, 
+            cache: 'no-store' 
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Drug coverage API error:', errorText);
+            return { error: 'Failed to fetch drug coverage.' };
+        }
+        
+        const data = await response.json();
+        const coverage: DrugCoverage[] = data["Provider & Drug Coverage"] || [];
+        return { coverage };
+
+    } catch (e: any) {
+        console.error("Failed to fetch drug coverage", e);
+        return { error: 'An unexpected error occurred while fetching drug coverage.' };
+    }
+}
+
+export async function getProviderCoverage(params: { planIds: string[], providerIds: string[] }) {
+    const { planIds, providerIds } = params;
+    if (planIds.length === 0 || providerIds.length === 0) return { coverage: [] };
+
+    const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
+    if (!apiKey) return { error: 'Service unavailable' };
+
+    const apiHeaders = { 'accept': 'application/json' };
+    const planidsParam = planIds.join(',');
+    const provideridsParam = providerIds.join(',');
+    const year = new Date().getFullYear();
+
+    try {
+        const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/covered?year=${year}&providerids=${provideridsParam}&planids=${planidsParam}&apikey=${apiKey}`, { 
+            headers: apiHeaders, 
+            cache: 'no-store' 
+        });
+
+        if (!response.ok) {
+             const errorText = await response.text();
+            console.error('Provider coverage API error:', errorText);
+            return { error: 'Failed to fetch provider coverage.' };
+        }
+
+        const data = await response.json();
+        const coverage: ProviderCoverage[] = data["Provider & Drug Coverage"] || [];
+        return { coverage };
+
+    } catch (e: any) {
+        console.error("Failed to fetch provider coverage", e);
+        return { error: 'An unexpected error occurred while fetching provider coverage.' };
+    }
 }

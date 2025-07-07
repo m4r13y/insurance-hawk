@@ -1,30 +1,327 @@
 
 "use client";
 
-import React, { useState, useTransition } from 'react';
-import type { HealthPlan } from '@/types';
+import React, { useState, useTransition, useEffect, useCallback } from 'react';
+import type { HealthPlan, Drug, Provider, DrugCoverage, ProviderCoverage } from '@/types';
 import type { z } from 'zod';
 import type { healthQuoterFormSchema } from './health-insurance-quoter';
+import { useDebouncedCallback } from 'use-debounce';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
-import { Loader2, RefreshCw, Info } from 'lucide-react';
+import { Loader2, RefreshCw, Info, Pill, Stethoscope, PlusCircle, Trash2, Check, X } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getHealthQuotes } from '@/app/dashboard/health-quotes/actions';
+import { getHealthQuotes, getDrugCoverage, getProviderCoverage, searchDrugs, searchProviders } from '@/app/dashboard/health-quotes/actions';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { Checkbox } from './ui/checkbox';
 import Link from 'next/link';
 
 type FormValues = z.infer<typeof healthQuoterFormSchema>;
-interface HealthPlanResultsTableProps {
-  initialPlans: HealthPlan[];
-  searchParams: FormValues;
-  onBack: () => void;
+type SelectedProvider = { provider: Provider; filterInNetwork: boolean; };
+
+// --- DIALOG COMPONENTS --- //
+
+const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSelectedProviders, zipCode }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedProviders: SelectedProvider[];
+  setSelectedProviders: (providers: SelectedProvider[]) => void;
+  zipCode: string;
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<Provider[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const debouncedSearch = useDebouncedCallback(async (query) => {
+    if (query.length < 3) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const { providers } = await searchProviders({ query, zipCode });
+    setResults(providers || []);
+    setLoading(false);
+  }, 500);
+
+  const handleAddProvider = (provider: Provider) => {
+    if (!selectedProviders.some(p => p.provider.npi === provider.npi)) {
+      setSelectedProviders([...selectedProviders, { provider, filterInNetwork: true }]);
+    }
+    setSearchTerm('');
+    setResults([]);
+  };
+
+  const handleRemoveProvider = (npi: string) => {
+    setSelectedProviders(selectedProviders.filter(p => p.provider.npi !== npi));
+  };
+  
+  const handleToggleInNetwork = (npi: string) => {
+    setSelectedProviders(selectedProviders.map(p => 
+        p.provider.npi === npi ? { ...p, filterInNetwork: !p.filterInNetwork } : p
+    ));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[625px]">
+        <DialogHeader>
+          <DialogTitle>Choose Your Doctors</DialogTitle>
+          <DialogDescription>Search for and select your preferred doctors and specialists to filter plans.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <Command className="rounded-lg border shadow-md">
+            <CommandInput 
+              placeholder="Search by doctor or facility name..." 
+              value={searchTerm}
+              onValueChange={(search) => {
+                setSearchTerm(search);
+                debouncedSearch(search);
+              }}
+            />
+            <CommandList>
+              {loading && <CommandEmpty>Loading...</CommandEmpty>}
+              {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No providers found.</CommandEmpty>}
+              {results.length > 0 && (
+                <CommandGroup>
+                  {results.map(provider => (
+                    <CommandItem key={provider.npi} onSelect={() => handleAddProvider(provider)} className="cursor-pointer">
+                      {provider.name} <span className="text-xs ml-2 text-muted-foreground">{provider.specialties?.[0]}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+
+          {selectedProviders.length > 0 && (
+            <div className="space-y-2">
+                <h4 className="font-medium text-sm">Selected Providers</h4>
+                <div className="space-y-2 rounded-md border p-2 max-h-48 overflow-y-auto">
+                    {selectedProviders.map(({provider, filterInNetwork}) => (
+                        <div key={provider.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                            <div className="flex items-center gap-2">
+                                <Checkbox id={`provider-${provider.npi}`} checked={filterInNetwork} onCheckedChange={() => handleToggleInNetwork(provider.npi)}/>
+                                <Label htmlFor={`provider-${provider.npi}`} className="font-normal text-sm cursor-pointer">{provider.name}</Label>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveProvider(provider.npi)}>
+                                <Trash2 className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+                 <p className="text-xs text-muted-foreground p-1">Checked providers will be used to filter for plans that include them in-network.</p>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+const DrugSelectionDialog = ({ open, onOpenChange, selectedDrugs, setSelectedDrugs }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedDrugs: Drug[];
+  setSelectedDrugs: (drugs: Drug[]) => void;
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<Drug[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const debouncedSearch = useDebouncedCallback(async (query) => {
+    if (query.length < 3) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const { drugs } = await searchDrugs({ query });
+    setResults(drugs || []);
+    setLoading(false);
+  }, 500);
+
+  const handleAddDrug = (drug: Drug) => {
+    if (!selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
+      setSelectedDrugs([...selectedDrugs, drug]);
+    }
+    setSearchTerm('');
+    setResults([]);
+  };
+  
+  const handleRemoveDrug = (rxcui: string) => {
+    setSelectedDrugs(selectedDrugs.filter(d => d.rxcui !== rxcui));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[625px]">
+        <DialogHeader>
+          <DialogTitle>Choose Your Medications</DialogTitle>
+          <DialogDescription>Search for your prescriptions to see how they're covered by different plans.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <Command className="rounded-lg border shadow-md">
+            <CommandInput 
+              placeholder="Search by drug name..." 
+              value={searchTerm}
+              onValueChange={(search) => {
+                setSearchTerm(search);
+                debouncedSearch(search);
+              }}
+            />
+            <CommandList>
+              {loading && <CommandEmpty>Loading...</CommandEmpty>}
+              {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No drugs found.</CommandEmpty>}
+              {results.length > 0 && (
+                <CommandGroup>
+                  {results.map(drug => (
+                    <CommandItem key={drug.rxcui} onSelect={() => handleAddDrug(drug)} className="cursor-pointer">
+                      {drug.full_name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+
+          {selectedDrugs.length > 0 && (
+             <div className="space-y-2">
+                <h4 className="font-medium text-sm">Selected Medications</h4>
+                <div className="space-y-2 rounded-md border p-2 max-h-48 overflow-y-auto">
+                    {selectedDrugs.map(drug => (
+                        <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                            <p className="text-sm">{drug.full_name}</p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveDrug(drug.rxcui)}>
+                                <Trash2 className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+          )}
+           <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                    <Label htmlFor="cost-toggle">Apply estimated drug costs</Label>
+                    <p className="text-xs text-muted-foreground">Adds estimated costs to plan premiums. (Coming Soon)</p>
+                </div>
+                <Switch id="cost-toggle" disabled/>
+            </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" disabled><PlusCircle className="mr-2 h-4 w-4"/> Add Pharmacy</Button>
+          <Button onClick={() => onOpenChange(false)}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const CoverageDetailsDialog = ({ open, onOpenChange, plan, selectedDrugs, selectedProviders }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    plan: HealthPlan | null;
+    selectedDrugs: Drug[];
+    selectedProviders: SelectedProvider[];
+}) => {
+    const [drugCoverage, setDrugCoverage] = useState<DrugCoverage[]>([]);
+    const [providerCoverage, setProviderCoverage] = useState<ProviderCoverage[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (open && plan) {
+            const fetchCoverage = async () => {
+                setLoading(true);
+                setError(null);
+                setDrugCoverage([]);
+                setProviderCoverage([]);
+
+                const drugIds = selectedDrugs.map(d => d.rxcui);
+                const providerIds = selectedProviders.map(p => p.provider.npi);
+
+                if (drugIds.length > 0) {
+                    const res = await getDrugCoverage({ planIds: [plan.id], drugIds });
+                    if (res.error) setError(prev => (prev ? `${prev}\n${res.error}` : res.error!));
+                    else setDrugCoverage(res.coverage || []);
+                }
+                
+                if (providerIds.length > 0) {
+                    const res = await getProviderCoverage({ planIds: [plan.id], providerIds });
+                     if (res.error) setError(prev => (prev ? `${prev}\n${res.error}` : res.error!));
+                    else setProviderCoverage(res.coverage || []);
+                }
+                setLoading(false);
+            };
+            fetchCoverage();
+        }
+    }, [open, plan, selectedDrugs, selectedProviders]);
+
+    const getDrugName = (rxcui: string) => selectedDrugs.find(d => d.rxcui === rxcui)?.full_name || rxcui;
+    const getProviderName = (npi: string) => selectedProviders.find(p => p.provider.npi === npi)?.provider.name || npi;
+
+    return (
+         <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Coverage Details for {plan?.name}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                    {loading && <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin"/></div>}
+                    {!loading && error && <p className="text-destructive text-sm">{error}</p>}
+                    {!loading && !error && (
+                        <div className="space-y-6">
+                            {selectedProviders.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><Stethoscope className="h-4 w-4"/> Doctor Coverage</h4>
+                                    <div className="space-y-2">
+                                        {providerCoverage.map(pc => (
+                                            <div key={pc.npi} className="flex items-center justify-between text-sm p-2 rounded-md border">
+                                                <span>{getProviderName(pc.npi)}</span>
+                                                {pc.coverage === 'Covered' ? 
+                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200"><Check className="mr-1 h-3 w-3"/>In-Network</Badge> : 
+                                                    <Badge variant="destructive"><X className="mr-1 h-3 w-3"/>Out-of-Network</Badge>
+                                                }
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                             {selectedDrugs.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><Pill className="h-4 w-4"/> Medication Coverage</h4>
+                                    <div className="space-y-2">
+                                       {drugCoverage.map(dc => (
+                                            <div key={dc.rxcui} className="flex items-center justify-between text-sm p-2 rounded-md border">
+                                                <span>{getDrugName(dc.rxcui)}</span>
+                                                 <Badge variant="secondary" className="capitalize bg-blue-100 text-blue-800 border-blue-200">{dc.coverage.replace(/([A-Z])/g, ' $1').trim()}</Badge>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground pt-2">Drug costs are estimates. Check the plan's official formulary for details.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+                 <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+         </Dialog>
+    )
 }
+
+// --- MAIN COMPONENT --- //
 
 export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: HealthPlanResultsTableProps) {
   const [plans, setPlans] = useState(initialPlans);
@@ -34,13 +331,26 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
   const [premium, setPremium] = useState([0, 1500]);
   const [deductible, setDeductible] = useState([0, 15000]);
   const [isHsa, setIsHsa] = useState(false);
+  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<SelectedProvider[]>([]);
+  const [isDoctorDialogOpen, setIsDoctorDialogOpen] = useState(false);
+  const [isMedicationDialogOpen, setIsMedicationDialogOpen] = useState(false);
+  const [isCoverageDetailsOpen, setIsCoverageDetailsOpen] = useState(false);
+  const [activePlanForDetails, setActivePlanForDetails] = useState<HealthPlan | null>(null);
+
   
-  const handleRefineSearch = () => {
+  const handleRefineSearch = useCallback(() => {
     startTransition(async () => {
+      const providersToFilter = selectedProviders
+        .filter(p => p.filterInNetwork)
+        .map(p => p.provider.npi);
+
       const filters = {
-        premium_range: { min: premium[0], max: premium[1] > 1499 ? 99999 : premium[1] },
-        deductible_range: { min: deductible[0], max: deductible[1] > 14999 ? 99999 : deductible[1] },
+        premium_range: { min: premium[0], max: premium[1] >= 1500 ? 99999 : premium[1] },
+        deductible_range: { min: deductible[0], max: deductible[1] >= 15000 ? 99999 : deductible[1] },
         hsa: isHsa,
+        providers: providersToFilter.length > 0 ? providersToFilter : undefined,
+        drugs: selectedDrugs.length > 0 ? selectedDrugs.map(d => d.rxcui) : undefined,
       };
 
       const updatedSearchParams = { ...searchParams, filter: filters };
@@ -61,6 +371,11 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
         })
       }
     });
+  }, [premium, deductible, isHsa, selectedProviders, selectedDrugs, searchParams, toast]);
+
+  const handleShowCoverage = (plan: HealthPlan) => {
+    setActivePlanForDetails(plan);
+    setIsCoverageDetailsOpen(true);
   };
 
   return (
@@ -68,6 +383,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
       <Card>
           <CardHeader>
             <CardTitle className="text-xl">Refine Results</CardTitle>
+            <CardDescription>Use the filters and choose your doctors/medications to narrow down the results.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -91,11 +407,19 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
             
             <Separator className="my-6" />
 
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center space-x-2">
-                    <Switch checked={isHsa} onCheckedChange={setIsHsa} id="hsa-filter"/>
-                    <Label htmlFor="hsa-filter">HSA Eligible Plans Only</Label>
-                </div>
+            <div className="flex items-center space-x-2 mb-6">
+                <Switch checked={isHsa} onCheckedChange={setIsHsa} id="hsa-filter"/>
+                <Label htmlFor="hsa-filter">HSA Eligible Plans Only</Label>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Button variant="outline" onClick={() => setIsDoctorDialogOpen(true)} className="w-full sm:w-auto">
+                    <Stethoscope className="mr-2 h-4 w-4"/> {selectedProviders.length > 0 ? 'Edit Doctors' : 'Choose Doctors'}
+                </Button>
+                 <Button variant="outline" onClick={() => setIsMedicationDialogOpen(true)} className="w-full sm:w-auto">
+                    <Pill className="mr-2 h-4 w-4"/> {selectedDrugs.length > 0 ? 'Edit Medications' : 'Choose Medications'}
+                </Button>
+                <div className="flex-grow"></div>
                 <Button onClick={handleRefineSearch} className="w-full sm:w-auto" disabled={isPending}>
                   {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                   Apply Filters
@@ -137,6 +461,32 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                                 <div className="flex items-center gap-2 text-xs mt-2 text-muted-foreground">
                                     <span>{plan.network}</span>
                                     {plan.hsa_eligible && <><span>•</span><span>HSA Eligible</span></>}
+                                    <div className="ml-2 flex gap-1">
+                                      {selectedProviders.length > 0 && (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShowCoverage(plan)}>
+                                                  <Stethoscope className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Doctor Coverage</p></TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                       {selectedDrugs.length > 0 && (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShowCoverage(plan)}>
+                                                  <Pill className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Drug Coverage</p></TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                    </div>
                                 </div>
                                 <div className="mt-4 sm:hidden">
                                      <p className="font-bold text-lg">${plan.premium.toFixed(2)}</p>
@@ -181,6 +531,28 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
               </Card>
           )}
       </div>
+
+       <ProviderSelectionDialog 
+            open={isDoctorDialogOpen}
+            onOpenChange={setIsDoctorDialogOpen}
+            selectedProviders={selectedProviders}
+            setSelectedProviders={setSelectedProviders}
+            zipCode={searchParams.zipCode}
+        />
+        <DrugSelectionDialog
+            open={isMedicationDialogOpen}
+            onOpenChange={setIsMedicationDialogOpen}
+            selectedDrugs={selectedDrugs}
+            setSelectedDrugs={setSelectedDrugs}
+        />
+        <CoverageDetailsDialog
+            open={isCoverageDetailsOpen}
+            onOpenChange={setIsCoverageDetailsOpen}
+            plan={activePlanForDetails}
+            selectedDrugs={selectedDrugs}
+            selectedProviders={selectedProviders}
+        />
+
     </div>
   );
 }

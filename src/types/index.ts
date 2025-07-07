@@ -155,3 +155,20 @@ export type Provider = {
   npi: string;
   languages: string[];
 };
+
+export type DrugCoverage = {
+  rxcui: string;
+  plan_id: string;
+  coverage: 'Covered' | 'NotCovered' | 'DataNotProvided' | 'GenericCovered';
+  generic_rxcui: string | null;
+  drugName?: string; // For UI display
+};
+
+export type ProviderCoverage = {
+  npi: string;
+  plan_id: string;
+  coverage: 'Covered' | 'NotCovered';
+  addresses: { city: string, state: string, street_1: string, zipcode: string }[];
+  accepting: string;
+  providerName?: string; // For UI display
+};
