@@ -304,10 +304,17 @@ const CoverageDetailsDialog = ({ open, onOpenChange, plan, selectedDrugs, select
                                     <div className="space-y-2">
                                         {providerCoverage.map(pc => (
                                             <div key={pc.npi} className="flex items-center justify-between text-sm p-2 rounded-md border">
-                                                <span>{getProviderName(pc.npi)}</span>
+                                                <span className="flex items-center gap-2">
+                                                    {pc.coverage === 'Covered' ? (
+                                                        <Check className="h-4 w-4 text-green-600" />
+                                                    ) : (
+                                                        <X className="h-4 w-4 text-destructive" />
+                                                    )}
+                                                    {getProviderName(pc.npi)}
+                                                </span>
                                                 {pc.coverage === 'Covered' ? 
-                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200"><Check className="mr-1 h-3 w-3"/>In-Network</Badge> : 
-                                                    <Badge variant="destructive"><X className="mr-1 h-3 w-3"/>Out-of-Network</Badge>
+                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">In-Network</Badge> : 
+                                                    <Badge variant="destructive">Out-of-Network</Badge>
                                                 }
                                             </div>
                                         ))}
@@ -613,3 +620,5 @@ export function HealthPlanResultsTable({ initialResults, searchParams, onBack }:
     </div>
   );
 }
+
+    
