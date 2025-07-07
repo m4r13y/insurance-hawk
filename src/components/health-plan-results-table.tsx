@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
 import { Checkbox } from './ui/checkbox';
 import Link from 'next/link';
+import { useDebounce } from 'use-debounce';
 
 type FormValues = z.infer<typeof healthQuoterFormSchema>;
 type SelectedProvider = { provider: Provider; filterInNetwork: boolean; };
@@ -41,30 +42,25 @@ const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSel
   zipCode: string;
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [results, setResults] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (searchTerm.length < 3) {
+    if (debouncedSearchTerm.length < 3) {
       setResults([]);
       return;
     }
 
     const fetchProviders = async () => {
       setLoading(true);
-      const { providers } = await searchProviders({ query: searchTerm, zipCode });
+      const { providers } = await searchProviders({ query: debouncedSearchTerm, zipCode });
       setResults(providers || []);
       setLoading(false);
     };
 
-    const timerId = setTimeout(() => {
-      fetchProviders();
-    }, 500);
-
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [searchTerm, zipCode]);
+    fetchProviders();
+  }, [debouncedSearchTerm, zipCode]);
 
 
   const handleAddProvider = (provider: Provider) => {
@@ -162,30 +158,25 @@ const DrugSelectionDialog = ({ open, onOpenChange, selectedDrugs, setSelectedDru
   setSelectedDrugs: (drugs: Drug[]) => void;
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [results, setResults] = useState<Drug[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (searchTerm.length < 3) {
+    if (debouncedSearchTerm.length < 3) {
       setResults([]);
       return;
     }
 
     const fetchDrugs = async () => {
       setLoading(true);
-      const { drugs } = await searchDrugs({ query: searchTerm });
+      const { drugs } = await searchDrugs({ query: debouncedSearchTerm });
       setResults(drugs || []);
       setLoading(false);
     };
 
-    const timerId = setTimeout(() => {
-      fetchDrugs();
-    }, 500);
-
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [searchTerm]);
+    fetchDrugs();
+  }, [debouncedSearchTerm]);
 
 
   const handleAddDrug = (drug: Drug) => {
@@ -637,5 +628,3 @@ export function HealthPlanResultsTable({ initialResults, searchParams, onBack }:
     </div>
   );
 }
-
-    
