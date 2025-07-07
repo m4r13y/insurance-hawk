@@ -62,8 +62,9 @@ function DashboardLayoutComponent({
   const applicationType = searchParams.get('type');
   const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
   const isRetirementPlanPage = pathname === '/dashboard/recommendations';
+  const isHealthInfoPage = pathname === '/dashboard/health-info';
 
-  const isFullScreenForm = isApplyFormPage || isRetirementPlanPage;
+  const isFullScreenForm = isApplyFormPage || isRetirementPlanPage || isHealthInfoPage;
 
   const isActive = (path: string) => pathname === path;
   
@@ -79,6 +80,8 @@ function DashboardLayoutComponent({
     setIsAlertOpen(false);
     if (isApplyFormPage) {
       router.push('/dashboard/apply');
+    } else if (isHealthInfoPage) {
+      router.push('/dashboard/documents');
     } else {
       router.push('/dashboard');
     }
@@ -227,5 +230,3 @@ export default function DashboardLayout({
     </Suspense>
   )
 }
-
-    
