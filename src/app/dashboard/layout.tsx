@@ -44,7 +44,8 @@ import {
   Heart,
   UserPlus,
   LogIn,
-  X
+  X,
+  Beaker
 } from "lucide-react";
 
 
@@ -156,6 +157,11 @@ function DashboardLayoutComponent({
                  <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/quotes")} tooltip="Supplemental Quotes">
                     <Link href="/dashboard/quotes"><FileDigit /><span>Supplemental Quotes</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/api-test")} tooltip="API Test">
+                    <Link href="/dashboard/api-test"><Beaker /><span>API Test</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>

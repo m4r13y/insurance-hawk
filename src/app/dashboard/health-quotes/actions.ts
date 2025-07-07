@@ -74,8 +74,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`, {
             method: 'GET',
             headers: apiGetHeaders,
-            cache: 'no-store',
-        });
+ });
 
         if (!countyResponse.ok) {
             const errorBody = await countyResponse.text();
@@ -116,8 +115,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
             method: 'POST',
             headers: apiPostHeaders,
             body: JSON.stringify(searchPayload),
-            cache: 'no-store',
-        });
+ });
 
         if (!planSearchResponse.ok) {
             const errorBody = await planSearchResponse.json();
