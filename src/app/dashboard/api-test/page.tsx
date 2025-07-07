@@ -2,18 +2,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { searchProviders, searchDrugs, getRelatedDrugs } from '@/app/dashboard/health-quotes/actions';
-import type { Provider, Drug } from '@/types';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Loader2, Trash2, Pill, HelpCircle, XIcon } from 'lucide-react';
+import { getRelatedDrugs, searchDrugs, searchProviders } from '@/app/dashboard/health-quotes/actions';
+import type { Drug, Provider } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { HelpCircle, Loader2, Pill, Trash2, XIcon } from 'lucide-react';
 
 type SelectedDrug = Drug & {
     quantity: number;
@@ -59,6 +59,7 @@ export default function ApiTestPage() {
     const [dosages, setDosages] = useState<Drug[]>([]);
     const [dosageLoading, setDosageLoading] = useState(false);
     const [selectedDosage, setSelectedDosage] = useState<Drug | null>(null);
+    const [isGenericSelected, setIsGenericSelected] = useState<boolean | null>(null);
 
     // New state for details dialog
     const [drugToAddDetails, setDrugToAddDetails] = useState<Drug | null>(null);
@@ -140,9 +141,27 @@ export default function ApiTestPage() {
     
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
+        if (drug.generic) {
+            const query = medicationQuery.toLowerCase();
+            const genericName = drug.generic.name.toLowerCase();
+
+            if (genericName.includes(query)) {
+                // User likely searched for generic, pre-select it
+                setIsGenericSelected(true);
+            } else {
+                // User likely searched for brand, let them choose
+                setIsGenericSelected(null);
+            }
+        } else {
+            setIsGenericSelected(null); // No generic available
+        }
         setDrugToConfirm(drug);
         setMedicationQuery('');
         setIsMedicationListVisible(false);
+    };
+
+    const handleGenericChoice = (isGeneric: boolean) => {
+        setIsGenericSelected(isGeneric);
     };
 
     const handleProceedToDetails = () => {
@@ -177,19 +196,36 @@ export default function ApiTestPage() {
     // Fetch dosages when a drug is selected for confirmation
     useEffect(() => {
         if (drugToConfirm) {
+            // If a generic/brand choice hasn't been made, don't fetch yet
+            if (isGenericSelected === null && drugToConfirm.generic) {
+                setDosages([]);
+                setDosageLoading(false);
+                return;
+            }
+
             const fetchDosages = async () => {
                 setDosageLoading(true);
                 setDosages([]);
                 setSelectedDosage(null);
-                const result = await getRelatedDrugs({ rxcui: drugToConfirm.rxcui });
+
+                let rxcuiToFetch = drugToConfirm.rxcui;
+                if (isGenericSelected === true && drugToConfirm.generic) {
+                    rxcuiToFetch = drugToConfirm.generic.rxcui;
+                }
+                
+                const result = await getRelatedDrugs({ rxcui: rxcuiToFetch });
+
                 if (result.drugs) {
-                    setDosages(result.drugs);
+                    const filtered = isGenericSelected !== null 
+                        ? result.drugs.filter(d => d.is_generic === isGenericSelected)
+                        : result.drugs;
+                    setDosages(filtered);
                 }
                 setDosageLoading(false);
             };
             fetchDosages();
         }
-    }, [drugToConfirm]);
+    }, [drugToConfirm, isGenericSelected]);
 
     return (
         <div className="max-w-xl mx-auto py-24 space-y-8">
@@ -417,7 +453,12 @@ export default function ApiTestPage() {
             )}
 
             {/* Dosage Selection Dialog */}
-             <Dialog open={!!drugToConfirm} onOpenChange={(open) => !open && setDrugToConfirm(null)}>
+             <Dialog open={!!drugToConfirm} onOpenChange={(open) => {
+                 if (!open) {
+                     setDrugToConfirm(null);
+                     setIsGenericSelected(null); // Reset on close
+                 }
+             }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Select Strength for {drugToConfirm?.name}</DialogTitle>
@@ -425,33 +466,53 @@ export default function ApiTestPage() {
                             Choose the correct strength and form for this medication.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {drugToConfirm && drugToConfirm.generic && isGenericSelected === null && (
+                         <div className="p-4 border rounded-md bg-amber-50">
+                            <p className="text-sm font-semibold">Generic Alternative Available</p>
+                            <p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} or the generic version, {drugToConfirm.generic.name}?</p>
+                            <div className="mt-3 flex gap-2">
+                                <Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button>
+                                <Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>{drugToConfirm.generic.name} (Generic)</Button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="py-4">
                         {dosageLoading ? (
                             <div className="flex items-center justify-center p-8">
                                 <Loader2 className="h-6 w-6 animate-spin" />
                             </div>
                         ) : (
-                            <RadioGroup 
-                                onValueChange={(value) => {
-                                    const dosage = dosages.find(d => d.rxcui === value);
-                                    setSelectedDosage(dosage || null);
-                                }}
-                                className="space-y-2 max-h-60 overflow-y-auto"
-                            >
-                                {dosages.length > 0 ? dosages.map(dosage => (
-                                    <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
-                                        <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
-                                        <span>{dosage.name}</span>
-                                    </Label>
-                                )) : (
-                                    <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
+                            <>
+                                {(isGenericSelected === null && drugToConfirm?.generic) ? (
+                                    <p className="text-center text-sm text-muted-foreground p-4">
+                                        Please select an option above to see available strengths.
+                                    </p>
+                                ) : (
+                                    <RadioGroup 
+                                        onValueChange={(value) => {
+                                            const dosage = dosages.find(d => d.rxcui === value);
+                                            setSelectedDosage(dosage || null);
+                                        }}
+                                        className="space-y-2 max-h-60 overflow-y-auto"
+                                    >
+                                        {dosages.length > 0 ? dosages.map(dosage => (
+                                            <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
+                                                <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
+                                                <span>{dosage.name} {dosage.is_generic === false && ' (Brand)'}</span>
+                                            </Label>
+                                        )) : (
+                                            <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
+                                        )}
+                                    </RadioGroup>
                                 )}
-                            </RadioGroup>
+                            </>
                         )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button>
-                        <Button onClick={handleProceedToDetails} disabled={!selectedDosage && dosages.length > 0}>Next</Button>
+                        <Button onClick={handleProceedToDetails} disabled={!selectedDosage || dosageLoading}>Next</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -512,5 +573,4 @@ export default function ApiTestPage() {
             </Dialog>
         </div>
     );
-
-    
+}
