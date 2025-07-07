@@ -16,15 +16,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { mockPlans } from "@/lib/mock-data"
+import { mockPlans, carriers } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
 import type { Plan, Drug, Provider } from "@/types"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions"
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog"
+import Image from "next/image"
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -150,16 +151,30 @@ const SuccessPage = ({ title }: { title: string }) => (
     </div>
 );
 
-const PlanDetailsCard = ({ planName, provider, premium }: { planName?: string, provider?: string, premium?: string }) => {
+const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierWebsite }: { planName?: string, provider?: string, premium?: string, carrierLogoUrl?: string, carrierWebsite?: string }) => {
     if (!planName) return null;
     return (
         <Card className="w-full max-w-sm shrink-0 hidden sm:block">
             <CardHeader className="p-4">
-                <CardDescription>Selected Plan</CardDescription>
-                <CardTitle className="text-lg">{planName}</CardTitle>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <CardDescription>Selected Plan</CardDescription>
+                        <CardTitle className="text-lg">{planName}</CardTitle>
+                    </div>
+                    {carrierLogoUrl && (
+                        <Image src={carrierLogoUrl} alt={provider || ''} width={60} height={40} className="object-contain" />
+                    )}
+                </div>
             </CardHeader>
-            <CardFooter className="p-4 pt-0 flex justify-between items-baseline">
-                <p className="text-sm text-muted-foreground">{provider}</p>
+            <CardFooter className="p-4 pt-0 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{provider}</p>
+                    {carrierWebsite && (
+                        <a href={carrierWebsite} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${provider} website`}>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                        </a>
+                    )}
+                </div>
                 {premium && <p className="font-bold text-xl">${parseFloat(premium).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>}
             </CardFooter>
         </Card>
@@ -393,6 +408,8 @@ function MedicareSupplementApplication() {
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
 
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
+
     if (isSubmitted) return <SuccessPage title="Application" />;
     
     if (step === 0) return (
@@ -417,7 +434,13 @@ function MedicareSupplementApplication() {
                     <h1 className="text-2xl font-semibold">Medicare Supplement Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
@@ -644,6 +667,8 @@ function DentalApplication() {
         setIsSubmitted(true);
     }
     
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
+    
     if (isSubmitted) return <SuccessPage title="Dental Application" />;
     
     if (step === 0) return (
@@ -668,7 +693,13 @@ function DentalApplication() {
                     <h1 className="text-2xl font-semibold">Dental Insurance Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                 <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
@@ -758,6 +789,8 @@ function HospitalIndemnityApplication() {
         setIsSubmitted(true);
     }
     
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
+
     if (isSubmitted) return <SuccessPage title="Hospital Indemnity Application" />;
     
     if (step === 0) return (
@@ -782,7 +815,13 @@ function HospitalIndemnityApplication() {
                     <h1 className="text-2xl font-semibold">Hospital Indemnity Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                 <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
@@ -880,6 +919,8 @@ function LifeInsuranceApplication() {
         setIsSubmitted(true);
     }
     
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
+    
     if (isSubmitted) return <SuccessPage title="Life Insurance Application" />;
     
     if (step === 0) return (
@@ -904,7 +945,13 @@ function LifeInsuranceApplication() {
                     <h1 className="text-2xl font-semibold">Life Insurance Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                 <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
@@ -1167,6 +1214,8 @@ function HealthInsuranceApplication() {
         }
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
+    
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
     if (isSubmitted) return <SuccessPage title="Health Insurance Application" />;
     
@@ -1192,7 +1241,13 @@ function HealthInsuranceApplication() {
                     <h1 className="text-2xl font-semibold">Health Insurance Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
@@ -1531,6 +1586,8 @@ function MedicareAdvantageApplication() {
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
 
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
+
     if (isSubmitted) return <SuccessPage title="Medicare Advantage Application" />;
     
     if (step === 0) return (
@@ -1555,7 +1612,13 @@ function MedicareAdvantageApplication() {
                     <h1 className="text-2xl font-semibold">Medicare Advantage Application</h1>
                     <p className="text-base text-muted-foreground mt-1">Step {step} of {steps.length}: <strong>{steps[step - 1].name}</strong></p>
                 </div>
-                <PlanDetailsCard planName={planName || undefined} provider={provider || undefined} premium={premium || undefined} />
+                <PlanDetailsCard 
+                    planName={planName || undefined} 
+                    provider={provider || undefined} 
+                    premium={premium || undefined}
+                    carrierLogoUrl={carrierInfo?.logoUrl}
+                    carrierWebsite={carrierInfo?.website}
+                />
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
