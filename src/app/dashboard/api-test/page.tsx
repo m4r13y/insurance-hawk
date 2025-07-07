@@ -5,17 +5,14 @@ import { useDebounce } from 'use-debounce';
 import { searchProviders } from '@/app/dashboard/health-quotes/actions';
 import type { Provider } from '@/types';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
 export default function ApiTestPage() {
     const [query, setQuery] = useState('');
-    const [zipCode, setZipCode] = useState('76116');
+    // Hardcoding ZIP for focused testing as requested
+    const [zipCode, setZipCode] = useState('76116'); 
     const [debouncedQuery] = useDebounce(query, 500);
     const [providers, setProviders] = useState<Provider[]>([]);
-    const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [loading, setLoading] = useState(false);
     const [isListVisible, setIsListVisible] = useState(false);
 
@@ -36,85 +33,58 @@ export default function ApiTestPage() {
     }, [debouncedQuery, zipCode]);
 
     const handleSelectProvider = (provider: Provider) => {
-        setSelectedProvider(provider);
         setQuery(provider.name);
         setIsListVisible(false);
+        // Optional: log to console to confirm selection since the display card is removed
+        console.log("Selected Provider:", provider);
     };
 
     return (
-        <>
-            <Card className="mb-8">
-                <CardHeader>
-                    <CardTitle>Provider Search Autocomplete Test</CardTitle>
-                    <CardDescription>
-                        This page isolates the provider search component to debug the autocomplete functionality.
-                        The search triggers automatically after you stop typing for 500ms.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="zip">ZIP Code</Label>
-                        <Input
-                            id="zip"
-                            value={zipCode}
-                            onChange={(e) => setZipCode(e.target.value)}
-                            placeholder="Enter a 5-digit ZIP code"
-                            maxLength={5}
-                            className="max-w-xs"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Provider Name</Label>
-                        <Command className="relative overflow-visible">
-                            <div className="relative">
-                                <CommandInput
-                                    value={query}
-                                    onValueChange={setQuery}
-                                    onFocus={() => setIsListVisible(true)}
-                                    onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
-                                    placeholder="Search for a doctor or facility..."
-                                />
-                                {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
-                            </div>
-                            {isListVisible && (
-                                <CommandList className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg">
-                                    {providers.length === 0 && debouncedQuery.length > 2 && !loading && (
-                                        <CommandEmpty>No providers found.</CommandEmpty>
-                                    )}
-                                    {providers.length > 0 && (
-                                        <CommandGroup>
-                                            {providers.map(provider => (
-                                                <CommandItem
-                                                    key={provider.npi}
-                                                    value={provider.name}
-                                                    onSelect={() => handleSelectProvider(provider)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {provider.name}
-                                                    <span className="text-xs ml-2 text-muted-foreground">{provider.specialties?.[0]}</span>
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    )}
-                                </CommandList>
-                            )}
-                        </Command>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {selectedProvider && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Selected Provider</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <pre className="p-4 bg-muted rounded-md overflow-x-auto text-sm">
-                            {JSON.stringify(selectedProvider, null, 2)}
-                        </pre>
-                    </CardContent>
-                </Card>
-            )}
-        </>
+        <div className="max-w-xl mx-auto py-24">
+            <Command className="relative overflow-visible rounded-lg border shadow-md">
+                <div className="relative">
+                    <CommandInput
+                        value={query}
+                        onValueChange={(value) => {
+                            setQuery(value);
+                            if (value.length > 0) {
+                                setIsListVisible(true);
+                            } else {
+                                setIsListVisible(false);
+                            }
+                        }}
+                        onFocus={() => setIsListVisible(true)}
+                        onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
+                        placeholder="Search for a doctor or facility..."
+                        className="h-12 text-lg"
+                    />
+                    {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                </div>
+                {isListVisible && (
+                    <CommandList className="absolute z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                        {providers.length === 0 && debouncedQuery.length > 2 && !loading && (
+                            <CommandEmpty>No providers found.</CommandEmpty>
+                        )}
+                        {providers.length > 0 && (
+                            <CommandGroup>
+                                {providers.map(provider => (
+                                    <CommandItem
+                                        key={provider.npi}
+                                        value={provider.name}
+                                        onSelect={() => handleSelectProvider(provider)}
+                                        className="cursor-pointer py-2 px-4"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{provider.name}</span>
+                                            <span className="text-sm text-muted-foreground">{provider.specialties?.[0]} - {provider.type}</span>
+                                        </div>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        )}
+                    </CommandList>
+                )}
+            </Command>
+        </div>
     );
 }
