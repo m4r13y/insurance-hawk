@@ -1,5 +1,4 @@
 
-
 export type Plan = {
   id: string;
   name: string;
@@ -28,11 +27,18 @@ export type Document = {
 
 export type Policy = {
   id: string;
-  category: string;
-  iconName: string;
-  provider: string;
+  carrierId: string;
+  carrierName: string;
+  carrierLogoUrl: string;
+  carrierWebsite: string;
+  policyCategoryId: string;
+  policyCategoryName: string;
+  policySubcategoryId?: string;
+  policySubcategoryName?: string;
   planName: string;
   premium?: number;
+  enrollmentDate?: string;
+  benefitAmount?: number;
 };
 
 export type QuoteRequestValues = {
@@ -178,5 +184,3 @@ export type ProviderCoverage = {
   accepting: string;
   providerName?: string; // For UI display
 };
-
-    

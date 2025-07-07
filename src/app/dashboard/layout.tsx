@@ -34,7 +34,6 @@ import {
   LayoutDashboard,
   ShieldCheck,
   FileText,
-  UploadCloud,
   Settings,
   LogOut,
   Search,
@@ -45,7 +44,8 @@ import {
   UserPlus,
   LogIn,
   X,
-  Beaker
+  Beaker,
+  Layers,
 } from "lucide-react";
 
 
@@ -171,8 +171,8 @@ function DashboardLayoutComponent({
                 </SidebarMenuItem>
                 {isLoggedIn && (
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="Documents">
-                      <Link href="/dashboard/documents"><UploadCloud /><span>Documents</span></Link>
+                    <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="My Policies">
+                      <Link href="/dashboard/documents"><Layers /><span>My Policies</span></Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
