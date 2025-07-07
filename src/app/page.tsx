@@ -64,12 +64,19 @@ function AuthFlow() {
                 lastName,
                 createdAt: new Date().toISOString(),
             });
+            
+            localStorage.setItem("isNewUser", "true");
+            localStorage.setItem("userFirstName", firstName);
 
             router.push('/dashboard');
             toast({ title: "Account Created!", description: "Welcome to HawkNest." });
 
         } else { // Sign In
-            await signInWithEmailAndPassword(auth, email, password);
+            localStorage.removeItem("isNewUser");
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            if (userCredential.user.displayName) {
+                localStorage.setItem("userFirstName", userCredential.user.displayName.split(' ')[0]);
+            }
             router.push('/dashboard');
             toast({ title: "Signed In", description: "Welcome back!" });
         }
@@ -89,10 +96,10 @@ function AuthFlow() {
         <>
             <div className="grid gap-2 text-center">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                {isSignUp ? 'Create an Account' : 'Welcome Back'}
+                  {isSignUp ? 'Create an Account' : 'Sign In to HawkNest'}
                 </h1>
                 <p className="text-muted-foreground">
-                {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your portal.'}
+                  {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your dashboard.'}
                 </p>
             </div>
             <Card>
