@@ -34,6 +34,7 @@ export default function ApiTestPage() {
     const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
     const [drugToConfirm, setDrugToConfirm] = useState<Drug | null>(null);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
 
 
     // Fetch Providers
