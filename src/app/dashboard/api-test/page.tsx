@@ -197,7 +197,17 @@ export default function ApiTestPage() {
                     {isMedicationListVisible && (
                         <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                             {medications.length === 0 && medicationQuery.length > 2 && !medicationLoading && (
-                                <CommandEmpty>No medications found.</CommandEmpty>
+                                <CommandEmpty>
+                                    <div className="text-center px-4 py-8">
+                                        <p className="font-semibold">No Medications Found</p>
+                                        <p className="text-sm text-muted-foreground mt-2">If you're having trouble, try the following:</p>
+                                        <ul className="text-sm text-muted-foreground list-disc list-inside mt-2 text-left max-w-xs mx-auto">
+                                            <li>Check the spelling of the medication.</li>
+                                            <li>Try searching for the generic name.</li>
+                                            <li>The drug may be over-the-counter and not listed.</li>
+                                        </ul>
+                                    </div>
+                                </CommandEmpty>
                             )}
                             {medications.length > 0 && (
                                 <CommandGroup>
