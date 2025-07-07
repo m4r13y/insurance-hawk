@@ -32,10 +32,8 @@ export default function ApiTestPage() {
     const [medicationLoading, setMedicationLoading] = useState(false);
     const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
     const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
-    const [stagedDrug, setStagedDrug] = useState<Drug | null>(null);
-    const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
+    const [drugToConfirm, setDrugToConfirm] = useState<Drug | null>(null);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
-    const [genericPrompt, setGenericPrompt] = useState<Drug | null>(null);
 
 
     // Fetch Providers
@@ -59,7 +57,6 @@ export default function ApiTestPage() {
     // Medication Search Handler with Manual Debounce (from medicare.gov code)
     const handleMedicationQueryChange = (value: string) => {
         setMedicationQuery(value);
-        setStagedDrug(null); // Clear staged drug on new input
         
         if (medicationSearchTimeout.current) {
             clearTimeout(medicationSearchTimeout.current);
@@ -96,42 +93,18 @@ export default function ApiTestPage() {
     
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
-        // This simulates the medicare.gov flow:
-        // 1. If it's a brand name with a generic, show a prompt.
-        // 2. Otherwise, stage it to be added.
-        if (!drug.is_generic && drug.generic) {
-            setGenericPrompt(drug);
-        } else {
-            setStagedDrug(drug);
-        }
+        setDrugToConfirm(drug);
         setMedicationQuery(drug.full_name);
         setIsMedicationListVisible(false);
     };
 
-    const handleAddDrug = (drugToAdd?: Drug) => {
-        const drug = drugToAdd || stagedDrug;
-        if (drug && !selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
-            setSelectedDrugs(prev => [...prev, drug]);
+    const handleConfirmDrug = (drugToAdd?: Drug) => {
+        if (drugToAdd && !selectedDrugs.some(d => d.rxcui === drugToAdd.rxcui)) {
+            setSelectedDrugs(prev => [...prev, drugToAdd]);
         }
-        setStagedDrug(null);
+        setDrugToConfirm(null);
         setMedicationQuery('');
         setMedications([]);
-    };
-
-    const handleGenericPromptSubmit = (useGeneric: boolean) => {
-        if (!genericPrompt) return;
-        const drugToAdd = useGeneric ? {
-            ...genericPrompt.generic!,
-            id: genericPrompt.generic!.rxcui,
-            full_name: genericPrompt.generic!.name,
-            is_generic: true,
-            generic: null,
-            // Add other fields to satisfy Drug type
-            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: ''
-        } as Drug : genericPrompt;
-
-        handleAddDrug(drugToAdd);
-        setGenericPrompt(null);
     };
 
     const handleRemoveDrug = (rxcui: string) => {
@@ -232,9 +205,9 @@ export default function ApiTestPage() {
                             onFocus={() => { if(medicationQuery.length >=3) setIsMedicationListVisible(true) }}
                             onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
                             placeholder="Search for a medication..."
-                            className="h-12 text-lg border-0 focus-visible:ring-0"
+                            className="h-12 text-lg"
                         />
-                         {medicationQuery && !stagedDrug && (
+                         {medicationQuery && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -245,7 +218,6 @@ export default function ApiTestPage() {
                             </Button>
                         )}
                     </div>
-                    <Button onClick={() => handleAddDrug()} disabled={!stagedDrug} className="h-10 m-1">Add Drug</Button>
                 </div>
                 
                 {isMedicationListVisible && (
@@ -337,27 +309,54 @@ export default function ApiTestPage() {
                             <Switch id="drug-cost-toggle" />
                             <Label htmlFor="drug-cost-toggle">Apply estimated drug costs to premium</Label>
                         </div>
-                         <Button variant="secondary" className="w-full">Add Pharmacy</Button>
                     </CardContent>
                 </Card>
             )}
 
-            {/* Generic Drug Prompt Dialog */}
-            <Dialog open={!!genericPrompt} onOpenChange={(open) => !open && setGenericPrompt(null)}>
+            {/* Confirmation and Generic Prompt Dialog */}
+             <Dialog open={!!drugToConfirm} onOpenChange={(open) => !open && setDrugToConfirm(null)}>
                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Generic Alternative Available</DialogTitle>
-                        <DialogDescription>
-                            A generic version of <strong>{genericPrompt?.name}</strong> is available. Generic drugs are typically cheaper and just as effective.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <p>Would you like to add the generic version, <strong>{genericPrompt?.generic?.name}</strong>, instead?</p>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="secondary" onClick={() => handleGenericPromptSubmit(false)}>Add Brand Name</Button>
-                        <Button onClick={() => handleGenericPromptSubmit(true)}>Add Generic</Button>
-                    </DialogFooter>
+                    {drugToConfirm?.is_generic === false && drugToConfirm.generic ? (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Generic Alternative Available</DialogTitle>
+                                <DialogDescription>
+                                    A generic version of <strong>{drugToConfirm.name}</strong> is available. Generic drugs are typically cheaper and just as effective.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <p>Would you like to add the generic version, <strong>{drugToConfirm.generic.name}</strong>, instead?</p>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="secondary" onClick={() => handleConfirmDrug(drugToConfirm)}>Add Brand Name</Button>
+                                <Button onClick={() => handleConfirmDrug({
+                                    ...drugToConfirm.generic!,
+                                    id: drugToConfirm.generic!.rxcui,
+                                    full_name: drugToConfirm.generic!.name,
+                                    is_generic: true,
+                                    generic: null,
+                                    // Add other fields to satisfy Drug type
+                                    strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: ''
+                                } as Drug)}>Add Generic</Button>
+                            </DialogFooter>
+                        </>
+                    ) : (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Confirm Medication</DialogTitle>
+                                <DialogDescription>
+                                    Add the following medication to your list?
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4 font-medium text-lg text-center bg-muted rounded-md">
+                                {drugToConfirm?.full_name}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button>
+                                <Button onClick={() => handleConfirmDrug(drugToConfirm!)}>Confirm</Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
