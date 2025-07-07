@@ -41,7 +41,7 @@ export default function ApiTestPage() {
 
     return (
         <div className="max-w-xl mx-auto py-24">
-            <Command className="relative overflow-visible rounded-lg border shadow-md">
+            <Command className="overflow-visible rounded-lg border shadow-md">
                 <div className="relative">
                     <CommandInput
                         value={query}
@@ -59,31 +59,32 @@ export default function ApiTestPage() {
                         className="h-12 text-lg"
                     />
                     {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                    
+                    {isListVisible && (
+                        <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                            {providers.length === 0 && debouncedQuery.length > 2 && !loading && (
+                                <CommandEmpty>No providers found.</CommandEmpty>
+                            )}
+                            {providers.length > 0 && (
+                                <CommandGroup>
+                                    {providers.map(provider => (
+                                        <CommandItem
+                                            key={provider.npi}
+                                            value={provider.name}
+                                            onSelect={() => handleSelectProvider(provider)}
+                                            className="cursor-pointer py-2 px-4"
+                                        >
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{provider.name}</span>
+                                                <span className="text-sm text-muted-foreground">{provider.specialties?.[0]} - {provider.type}</span>
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            )}
+                        </CommandList>
+                    )}
                 </div>
-                {isListVisible && (
-                    <CommandList className="absolute z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                        {providers.length === 0 && debouncedQuery.length > 2 && !loading && (
-                            <CommandEmpty>No providers found.</CommandEmpty>
-                        )}
-                        {providers.length > 0 && (
-                            <CommandGroup>
-                                {providers.map(provider => (
-                                    <CommandItem
-                                        key={provider.npi}
-                                        value={provider.name}
-                                        onSelect={() => handleSelectProvider(provider)}
-                                        className="cursor-pointer py-2 px-4"
-                                    >
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{provider.name}</span>
-                                            <span className="text-sm text-muted-foreground">{provider.specialties?.[0]} - {provider.type}</span>
-                                        </div>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        )}
-                    </CommandList>
-                )}
             </Command>
         </div>
     );
