@@ -25,6 +25,12 @@ import Link from 'next/link';
 
 type FormValues = z.infer<typeof healthQuoterFormSchema>;
 type SelectedProvider = { provider: Provider; filterInNetwork: boolean; };
+type HealthPlanResultsTableProps = {
+  initialResults: { plans: HealthPlan[], total: number };
+  searchParams: FormValues;
+  onBack: () => void;
+};
+
 
 // --- DIALOG COMPONENTS --- //
 
@@ -67,6 +73,14 @@ const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSel
         p.provider.npi === npi ? { ...p, filterInNetwork: !p.filterInNetwork } : p
     ));
   };
+  
+  const allInNetwork = selectedProviders.length > 0 && selectedProviders.every(p => p.filterInNetwork);
+
+  const handleToggleAllInNetwork = () => {
+    const newValue = !allInNetwork;
+    setSelectedProviders(selectedProviders.map(p => ({ ...p, filterInNetwork: newValue })));
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,6 +117,10 @@ const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSel
           {selectedProviders.length > 0 && (
             <div className="space-y-2">
                 <h4 className="font-medium text-sm">Selected Providers</h4>
+                <div className="flex items-center p-2 border-b">
+                  <Checkbox id="toggle-all-in-network" onCheckedChange={handleToggleAllInNetwork} checked={allInNetwork} />
+                  <Label htmlFor="toggle-all-in-network" className="ml-2 text-sm font-normal">Filter in-network for all</Label>
+                </div>
                 <div className="space-y-2 rounded-md border p-2 max-h-48 overflow-y-auto">
                     {selectedProviders.map(({provider, filterInNetwork}) => (
                         <div key={provider.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
@@ -323,8 +341,10 @@ const CoverageDetailsDialog = ({ open, onOpenChange, plan, selectedDrugs, select
 
 // --- MAIN COMPONENT --- //
 
-export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: HealthPlanResultsTableProps) {
-  const [plans, setPlans] = useState(initialPlans);
+export function HealthPlanResultsTable({ initialResults, searchParams, onBack }: HealthPlanResultsTableProps) {
+  const [plans, setPlans] = useState(initialResults.plans);
+  const [totalPlans, setTotalPlans] = useState(initialResults.total);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -338,8 +358,10 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
   const [isCoverageDetailsOpen, setIsCoverageDetailsOpen] = useState(false);
   const [activePlanForDetails, setActivePlanForDetails] = useState<HealthPlan | null>(null);
 
-  
-  const handleRefineSearch = useCallback(() => {
+  const PLANS_PER_PAGE = 50;
+  const totalPages = Math.ceil(totalPlans / PLANS_PER_PAGE);
+
+  const fetchPlans = useCallback(async (offset = 0) => {
     startTransition(async () => {
       const providersToFilter = selectedProviders
         .filter(p => p.filterInNetwork)
@@ -353,7 +375,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
         drugs: selectedDrugs.length > 0 ? selectedDrugs.map(d => d.rxcui) : undefined,
       };
 
-      const updatedSearchParams = { ...searchParams, filter: filters };
+      const updatedSearchParams = { ...searchParams, filter: filters, offset };
       
       const result = await getHealthQuotes(updatedSearchParams);
       
@@ -365,13 +387,27 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
         });
       } else {
         setPlans(result.plans || []);
-        toast({
-            title: 'Results updated',
-            description: `Found ${result.plans?.length || 0} plans matching your new criteria.`
-        })
+        setTotalPlans(result.total || 0);
+        if (offset === 0) { // Only show toast on filter, not page change
+             toast({
+                title: 'Results updated',
+                description: `Found ${result.total || 0} plans matching your new criteria.`
+            })
+        }
       }
     });
   }, [premium, deductible, isHsa, selectedProviders, selectedDrugs, searchParams, toast]);
+
+  const handleRefineSearch = () => {
+    setCurrentPage(1);
+    fetchPlans(0);
+  };
+  
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    fetchPlans((newPage - 1) * PLANS_PER_PAGE);
+  };
 
   const handleShowCoverage = (plan: HealthPlan) => {
     setActivePlanForDetails(plan);
@@ -432,7 +468,7 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-semibold">Your Health Plan Results</h2>
-          <p className="text-base text-muted-foreground mt-1">Found {plans.length} plans. Use the filters to refine your search.</p>
+          <p className="text-base text-muted-foreground mt-1">Found {totalPlans} plans. Use the filters to refine your search.</p>
         </div>
         <Button variant="outline" onClick={onBack}>New Search</Button>
       </div>
@@ -523,6 +559,27 @@ export function HealthPlanResultsTable({ initialPlans, searchParams, onBack }: H
                     </TableBody>
                     </Table>
                 </div>
+                 {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-4 p-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isPending}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || isPending}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
             </Card>
           ) : (
               <Card className="flex flex-col items-center justify-center text-center p-12">

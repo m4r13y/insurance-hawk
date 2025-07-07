@@ -53,7 +53,7 @@ function findOutOfPocketMax(plan: any): number {
   return plan.moops[0].amount || 0;
 }
 
-export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSchema>) {
+export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSchema> & { offset?: number }) {
     const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
     if (!apiKey) {
         console.error("Healthcare.gov API key is not configured.");
@@ -108,6 +108,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
                 unemployment_received: values.hadUnemployment === 'yes' ? 'Adult' : 'None',
             },
             limit: 50,
+            offset: values.offset || 0,
             filter: values.filter || {},
         };
 
@@ -128,7 +129,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         const planSearchData = await planSearchResponse.json();
         
         if (!planSearchData.plans || planSearchData.plans.length === 0) {
-            return { plans: [] };
+            return { plans: [], total: 0 };
         }
         
         // Step 4: Map the API response to our internal HealthPlan type
@@ -162,7 +163,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
             isBestMatch: p.premium === lowestPremium
         }));
 
-        return { plans: finalPlans };
+        return { plans: finalPlans, total: planSearchData.total || 0 };
 
     } catch (e) {
         console.error("An unexpected error occurred in getHealthQuotes:", e);

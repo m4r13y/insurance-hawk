@@ -41,7 +41,7 @@ export const healthQuoterFormSchema = z.object({
 export type FormSchemaType = z.infer<typeof healthQuoterFormSchema>;
 
 interface HealthInsuranceQuoterProps {
-  onResults: (plans: HealthPlan[], values: FormSchemaType) => void;
+  onResults: (results: { plans: HealthPlan[], total: number }, values: FormSchemaType) => void;
 }
 
 const steps: { id: number; name: string; icon: React.ElementType; fields: FieldPath<FormSchemaType>[] }[] = [
@@ -100,7 +100,7 @@ export function HealthInsuranceQuoter({ onResults }: HealthInsuranceQuoterProps)
                     description: result.error
                 });
             } else {
-                onResults(result.plans || [], values);
+                onResults({ plans: result.plans || [], total: result.total || 0 }, values);
             }
         });
     }

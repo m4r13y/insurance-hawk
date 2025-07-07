@@ -7,11 +7,11 @@ import { HealthPlanResultsTable } from "@/components/health-plan-results-table";
 import { HealthPlan } from "@/types";
 
 export default function HealthQuotesPage() {
-  const [results, setResults] = useState<HealthPlan[] | null>(null);
+  const [results, setResults] = useState<{ plans: HealthPlan[]; total: number } | null>(null);
   const [formValues, setFormValues] = useState<FormSchemaType | null>(null);
 
-  const handleShowResults = (plans: HealthPlan[], values: FormSchemaType) => {
-    setResults(plans);
+  const handleShowResults = (plansResult: { plans: HealthPlan[]; total: number }, values: FormSchemaType) => {
+    setResults(plansResult);
     setFormValues(values);
   };
 
@@ -30,7 +30,7 @@ export default function HealthQuotesPage() {
       </div>
       {results && formValues ? (
         <HealthPlanResultsTable
-          initialPlans={results}
+          initialResults={results}
           searchParams={formValues}
           onBack={handleStartOver}
         />
