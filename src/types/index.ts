@@ -159,6 +159,7 @@ export type Provider = {
   type: string;
   npi: string;
   languages: string[];
+  affiliations?: { name: string; type: string; }[];
 };
 
 export type DrugCoverage = {
@@ -177,3 +178,5 @@ export type ProviderCoverage = {
   accepting: string;
   providerName?: string; // For UI display
 };
+
+    

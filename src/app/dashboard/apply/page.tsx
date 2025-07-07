@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect, Suspense } from "react"
+import React, { useState, useEffect, Suspense, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { useForm, type FieldPath } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -17,10 +17,32 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
-import type { Plan } from "@/types"
+import type { Plan, Drug, Provider } from "@/types"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions"
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog"
+
+// --- TYPES FOR SEARCH COMPONENTS --- //
+type SelectedDrug = Drug & {
+    quantity: number;
+    frequency: string;
+    package: string;
+};
+
+type SelectedProvider = Provider & {
+    selectedAffiliation?: string;
+};
+
+const frequencyLabels: { [key: string]: string } = {
+    monthly: 'Every month', '3-months': 'Every 3 months', 'as-needed': 'As needed',
+};
+
+const packageLabels: { [key: string]: string } = {
+    '30-day': '30-day supply', '60-day': '60-day supply', '90-day': '90-day supply', 'bottle': '1 bottle',
+};
 
 // --- SCHEMAS --- //
 
@@ -55,8 +77,6 @@ const medSupplementSchema = personalInfoSchema.merge(medicareInfoSchema).merge(s
   hospitalizedLast12Months: z.enum(["yes", "no"], { required_error: "This field is required." }),
   hasMajorIllness: z.enum(["yes", "no"], { required_error: "This field is required." }),
   majorIllnessDetails: z.string().optional(),
-  takesPrescriptions: z.enum(["yes", "no"], { required_error: "This field is required." }),
-  prescriptionList: z.string().optional(),
   planId: z.string().min(1, "You must select a plan to apply for."),
   wantsAgentContact: z.enum(["yes", "no"], { required_error: "This field is required." }),
   wantsDental: z.boolean().default(false).optional(),
@@ -64,6 +84,8 @@ const medSupplementSchema = personalInfoSchema.merge(medicareInfoSchema).merge(s
   wantsLifeInsurance: z.boolean().default(false).optional(),
   wantsRetirementPlanning: z.boolean().default(false).optional(),
   wantsDrugPlan: z.boolean().default(false).optional(),
+  selectedProviders: z.array(z.any()).optional(),
+  selectedDrugs: z.array(z.any()).optional(),
 });
 
 const dentalSchema = personalInfoSchema.merge(signatureSchema).extend({
@@ -148,6 +170,35 @@ function MedicareSupplementApplication() {
     const [step, setStep] = useState(0);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
+    // --- State for Doctors/Meds Search ---
+    const [providerQuery, setProviderQuery] = useState('');
+    const [providerZipCode, setProviderZipCode] = useState('');
+    const [providerResults, setProviderResults] = useState<Provider[]>([]);
+    const [providerLoading, setProviderLoading] = useState(false);
+    const [isProviderListVisible, setIsProviderListVisible] = useState(false);
+    const [_selectedProviders, _setSelectedProviders] = useState<SelectedProvider[]>([]);
+    const providerSearchTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [providerToSelectAffiliation, setProviderToSelectAffiliation] = useState<Provider | null>(null);
+    
+    const [medicationQuery, setMedicationQuery] = useState('');
+    const [medicationResults, setMedicationResults] = useState<Drug[]>([]);
+    const [medicationSuggestions, setMedicationSuggestions] = useState<string[]>([]);
+    const [medicationLoading, setMedicationLoading] = useState(false);
+    const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
+    const [_selectedDrugs, _setSelectedDrugs] = useState<SelectedDrug[]>([]);
+    const [drugToConfirm, setDrugToConfirm] = useState<Drug | null>(null);
+    const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [dosages, setDosages] = useState<Drug[]>([]);
+    const [dosageLoading, setDosageLoading] = useState(false);
+    const [selectedDosage, setSelectedDosage] = useState<Drug | null>(null);
+    const [isGenericSelected, setIsGenericSelected] = useState<boolean | null>(null);
+    const [drugToAddDetails, setDrugToAddDetails] = useState<Drug | null>(null);
+    const [quantity, setQuantity] = useState(1);
+    const [frequency, setFrequency] = useState('monthly');
+    const [pkg, setPackage] = useState('30-day');
+    const [isManualDrugEntryOpen, setIsManualDrugEntryOpen] = useState(false);
+    // --- End State for Doctors/Meds Search ---
+
     const quotedPlanId = 'quoted-plan';
     const planId = searchParams.get('planId');
     const planName = searchParams.get('planName');
@@ -170,43 +221,37 @@ function MedicareSupplementApplication() {
         defaultValues: {
             planId: planId || (quotedPlan ? quotedPlanId : ''),
             wantsAgentContact: "yes",
-            firstName: "",
-            lastName: "",
-            dob: "",
-            gender: undefined,
-            address: "",
-            city: "",
-            state: "",
-            zip: "",
-            phone: "",
-            email: "",
-            medicareClaimNumber: "",
-            partAEffectiveDate: "",
-            partBEffectiveDate: "",
-            isReplacingCoverage: undefined,
-            hasPrescriptionPlan: undefined,
-            hasMajorIllness: undefined,
-            takesPrescriptions: undefined,
-            hasOtherInsurance: undefined,
-            hospitalizedLast12Months: undefined,
-            signature: "",
-            agreesToTerms: false,
-            majorIllnessDetails: "",
-            prescriptionList: "",
-            wantsDental: false,
-            wantsCancer: false,
-            wantsLifeInsurance: false,
-            wantsRetirementPlanning: false,
-            wantsDrugPlan: false,
+            firstName: "", lastName: "", dob: "", gender: undefined, address: "", city: "", state: "", zip: "", phone: "", email: "",
+            medicareClaimNumber: "", partAEffectiveDate: "", partBEffectiveDate: "",
+            isReplacingCoverage: undefined, hasPrescriptionPlan: undefined, hasMajorIllness: undefined, hasOtherInsurance: undefined, hospitalizedLast12Months: undefined,
+            signature: "", agreesToTerms: false, majorIllnessDetails: "",
+            wantsDental: false, wantsCancer: false, wantsLifeInsurance: false, wantsRetirementPlanning: false, wantsDrugPlan: false,
+            selectedProviders: [], selectedDrugs: [],
         }
     });
+
+    useEffect(() => {
+      setProviderZipCode(form.getValues('zip'));
+    }, [form.watch('zip')]);
+    
+    const updateSelectedProviders = (newProviders: SelectedProvider[]) => {
+        _setSelectedProviders(newProviders);
+        form.setValue('selectedProviders', newProviders);
+    };
+
+    const updateSelectedDrugs = (newDrugs: SelectedDrug[]) => {
+        _setSelectedDrugs(newDrugs);
+        form.setValue('selectedDrugs', newDrugs);
+    };
+
 
     const steps = [
         { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
         { id: 2, name: 'Medicare Details', fields: ['medicareClaimNumber', 'partAEffectiveDate', 'partBEffectiveDate'] },
-        { id: 3, name: 'Current & Medical History', fields: ['isReplacingCoverage', 'hasPrescriptionPlan', 'hasMajorIllness', 'takesPrescriptions'] },
-        { id: 4, name: 'Plan & Agent', fields: ['planId', 'wantsAgentContact'] },
-        { id: 5, name: 'Signature', fields: ['signature', 'agreesToTerms'] },
+        { id: 3, name: 'Current & Medical History', fields: ['isReplacingCoverage', 'hasPrescriptionPlan', 'hasMajorIllness'] },
+        { id: 4, name: 'Doctors & Medications', fields: ['selectedProviders', 'selectedDrugs'] },
+        { id: 5, name: 'Plan & Agent', fields: ['planId', 'wantsAgentContact'] },
+        { id: 6, name: 'Signature', fields: ['signature', 'agreesToTerms'] },
     ];
 
     const handleNext = async () => {
@@ -223,6 +268,109 @@ function MedicareSupplementApplication() {
         setIsSubmitted(true);
     }
     
+    // --- Handlers for Doctors/Meds Search ---
+    const handleProviderQueryChange = (value: string) => {
+        setProviderQuery(value);
+        if (providerSearchTimeout.current) clearTimeout(providerSearchTimeout.current);
+        if (value.length > 0) setIsProviderListVisible(true); else setIsProviderListVisible(false);
+        if (value.length < 3) { setProviderResults([]); setProviderLoading(false); return; }
+        setProviderLoading(true);
+        providerSearchTimeout.current = setTimeout(async () => {
+            const result = await searchProviders({ query: value, zipCode: providerZipCode });
+            setProviderResults(result.providers || []);
+            setProviderLoading(false);
+        }, 300);
+    };
+
+    const handleSelectProvider = (provider: Provider) => {
+        if (_selectedProviders.some(p => p.npi === provider.npi)) { setProviderQuery(''); setIsProviderListVisible(false); return; }
+        if (provider.affiliations && provider.affiliations.length > 1) {
+            setProviderToSelectAffiliation(provider);
+        } else {
+            const affiliation = provider.affiliations?.[0]?.name;
+            updateSelectedProviders([..._selectedProviders, { ...provider, selectedAffiliation: affiliation }]);
+        }
+        setProviderQuery(''); setIsProviderListVisible(false);
+    };
+
+    const handleAffiliationSelected = (provider: Provider, affiliationName: string) => {
+        updateSelectedProviders([..._selectedProviders, { ...provider, selectedAffiliation: affiliationName }]);
+        setProviderToSelectAffiliation(null);
+    }
+
+    const handleRemoveProvider = (npi: string) => {
+        updateSelectedProviders(_selectedProviders.filter(p => p.npi !== npi));
+    };
+
+    const handleMedicationQueryChange = (value: string) => {
+        setMedicationQuery(value);
+        setMedicationSuggestions([]);
+        if (medicationSearchTimeout.current) clearTimeout(medicationSearchTimeout.current);
+        if (value.length > 0) setIsMedicationListVisible(true); else setIsMedicationListVisible(false);
+        if (value.length < 3) { setMedicationResults([]); setMedicationLoading(false); return; }
+        setMedicationLoading(true);
+        medicationSearchTimeout.current = setTimeout(async () => {
+            const result = await searchDrugs({ query: value });
+            setMedicationResults(result.drugs || []);
+            setMedicationSuggestions(result.suggestions || []);
+            setMedicationLoading(false);
+        }, 300);
+    };
+
+    const handleSelectDrug = (drug: Drug) => {
+        setIsGenericSelected(null);
+        const wasBrandSearched = !drug.is_generic && drug.generic;
+        if (wasBrandSearched) { setIsGenericSelected(null); } else { setIsGenericSelected(true); }
+        setDrugToConfirm(drug);
+        setMedicationQuery('');
+        setIsMedicationListVisible(false);
+    };
+    
+    const handleGenericChoice = (isGeneric: boolean) => setIsGenericSelected(isGeneric);
+    const handleProceedToDetails = () => { if (selectedDosage) { setDrugToAddDetails(selectedDosage); setDrugToConfirm(null); } };
+    
+    const handleFinalAddDrug = () => {
+        if (!drugToAddDetails) return;
+        const newDrug: SelectedDrug = { ...drugToAddDetails, quantity, frequency, package: pkg };
+        if (!_selectedDrugs.some(d => d.rxcui === newDrug.rxcui)) {
+            updateSelectedDrugs([..._selectedDrugs, newDrug]);
+        }
+        setDrugToAddDetails(null); setSelectedDosage(null);
+    };
+
+    const handleRemoveDrug = (rxcui: string) => updateSelectedDrugs(_selectedDrugs.filter(d => d.rxcui !== rxcui));
+
+    const handleManualDrugAdd = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const name = formData.get('manual-drug-name') as string;
+        const dosage = formData.get('manual-drug-dosage') as string;
+        if (!name) return;
+        const newDrug: SelectedDrug = {
+            id: `manual-${Date.now()}`, rxcui: `manual-${Date.now()}`, name, full_name: `${name} ${dosage || ''}`.trim(), strength: dosage || '', is_generic: true, generic: null, route: '', rxterms_dose_form: '', rxnorm_dose_form: '',
+            quantity: 1, frequency: 'monthly', package: '30-day',
+        };
+        updateSelectedDrugs([..._selectedDrugs, newDrug]);
+        setIsManualDrugEntryOpen(false);
+    };
+
+    useEffect(() => {
+        if (drugToConfirm) {
+            if (isGenericSelected === null && !drugToConfirm.is_generic && drugToConfirm.generic) { setDosages([]); setDosageLoading(false); return; }
+            const fetchDosages = async () => {
+                setDosageLoading(true); setDosages([]); setSelectedDosage(null);
+                const result = await getRelatedDrugs({ rxcui: drugToConfirm.rxcui });
+                if (result.drugs) {
+                    const filtered = isGenericSelected !== null ? result.drugs.filter(d => d.is_generic === isGenericSelected) : result.drugs;
+                    setDosages(filtered);
+                }
+                setDosageLoading(false);
+            };
+            fetchDosages();
+        }
+    }, [drugToConfirm, isGenericSelected]);
+    // --- End Handlers for Doctors/Meds Search ---
+
     if (isSubmitted) return <SuccessPage title="Application" />;
     
     if (step === 0) return (
@@ -281,11 +429,83 @@ function MedicareSupplementApplication() {
                              <FormField control={form.control} name="hasPrescriptionPlan" render={({ field }) => <FormItem><FormLabel>Do you have a standalone Prescription Drug Plan (Part D)?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                              <FormField control={form.control} name="hasMajorIllness" render={({ field }) => <FormItem><FormLabel>Have you been diagnosed with or treated for heart disease, cancer, stroke, COPD, or kidney failure?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                              {form.watch("hasMajorIllness") === "yes" && <FormField control={form.control} name="majorIllnessDetails" render={({ field }) => <FormItem><FormLabel>Please provide details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />}
-                             <FormField control={form.control} name="takesPrescriptions" render={({ field }) => <FormItem><FormLabel>Are you currently taking any prescription medications?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                             {form.watch("takesPrescriptions") === "yes" && <FormField control={form.control} name="prescriptionList" render={({ field }) => <FormItem><FormLabel>Please list your prescriptions and dosages</FormLabel><FormControl><Textarea placeholder="e.g., Lisinopril 20mg" {...field} /></FormControl><FormMessage /></FormItem>} />}
                         </CardContent></Card>
                     )}
-                    {step === 4 && ( /* Plan & Agent */
+                    {step === 4 && ( /* Doctors & Medications */
+                        <div className="space-y-8">
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Your Doctors & Facilities</CardTitle>
+                                    <CardDescription>Add your preferred doctors to check if they are in-network with your new plan.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                     <div className="relative">
+                                        <Label htmlFor="provider-search">Provider Name</Label>
+                                        <Command shouldFilter={false} className="overflow-visible rounded-lg border">
+                                            <div className="relative">
+                                                <CommandInput id="provider-search" value={providerQuery} onValueChange={handleProviderQueryChange} onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} placeholder="Search for a doctor or facility..."/>
+                                                {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {isProviderListVisible && (
+                                                    <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                                                        {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
+                                                        {providerResults.length === 0 && providerQuery.length >= 3 && !providerLoading && (<CommandEmpty>No providers found.</CommandEmpty>)}
+                                                        {providerResults.length > 0 && (<CommandGroup>{providerResults.map(p => (<CommandItem key={p.npi} value={p.name} onSelect={() => handleSelectProvider(p)} className="cursor-pointer py-2 px-4"><div className="flex flex-col"><span className="font-medium">{p.name}</span><span className="text-sm text-muted-foreground">{p.specialties?.[0]} - {p.type}</span></div></CommandItem>))}</CommandGroup>)}
+                                                    </CommandList>
+                                                )}
+                                            </div>
+                                        </Command>
+                                    </div>
+                                    {_selectedProviders.length > 0 && (
+                                        <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
+                                            {_selectedProviders.map(p => (
+                                                <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                                    <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Your Medications</CardTitle>
+                                    <CardDescription>Add your current medications to ensure they are covered.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="relative">
+                                        <Label htmlFor="medication-search">Medication Name</Label>
+                                        <Command shouldFilter={false} className="overflow-visible rounded-lg border">
+                                            <div className="relative">
+                                                <CommandInput id="medication-search" value={medicationQuery} onValueChange={handleMedicationQueryChange} onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} placeholder="Search for a medication..."/>
+                                                {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {isMedicationListVisible && (
+                                                    <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                                                         {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
+                                                        {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
+                                                        {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length === 0 && medicationQuery.length >= 3 && ( <CommandEmpty>No medications found.</CommandEmpty> )}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                    </CommandList>
+                                                )}
+                                            </div>
+                                        </Command>
+                                    </div>
+                                    <Button variant="link" className="p-0 h-auto" onClick={() => setIsManualDrugEntryOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Enter medication manually</Button>
+                                    {_selectedDrugs.length > 0 && (
+                                        <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
+                                            {_selectedDrugs.map(drug => (
+                                                <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                                    <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                    {step === 5 && ( /* Plan & Agent */
                         <Card><CardHeader><CardTitle>Plan Selection & Agent Assistance</CardTitle></CardHeader><CardContent className="space-y-8 pt-6">
                             <FormField control={form.control} name="planId" render={({ field }) => (
                                 <FormItem>
@@ -309,7 +529,7 @@ function MedicareSupplementApplication() {
                             <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         </CardContent></Card>
                     )}
-                    {step === 5 && ( /* Signature */
+                    {step === 6 && ( /* Signature */
                          <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
                             <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
                             <FormField control={form.control} name="signature" render={({ field }) => <FormItem><FormLabel>Digital Signature</FormLabel><FormControl><Input placeholder="Type your full name" {...field} /></FormControl><FormDescription>By typing your name, you are electronically signing this application.</FormDescription><FormMessage /></FormItem>} />
@@ -322,6 +542,14 @@ function MedicareSupplementApplication() {
                     </div>
                 </form>
             </Form>
+             {/* Affiliation Selection Dialog */}
+            <Dialog open={!!providerToSelectAffiliation} onOpenChange={(open) => !open && setProviderToSelectAffiliation(null)}><DialogContent><DialogHeader><DialogTitle>Select Hospital Affiliation</DialogTitle><DialogDescription>{providerToSelectAffiliation?.name} is affiliated with multiple hospitals. Please choose the one you primarily visit.</DialogDescription></DialogHeader><div className="py-4"><RadioGroup onValueChange={(value) => { if (providerToSelectAffiliation) { handleAffiliationSelected(providerToSelectAffiliation, value); } }} className="space-y-2 max-h-60 overflow-y-auto">{providerToSelectAffiliation?.affiliations?.map((aff, index) => (<Label key={index} htmlFor={`aff-${index}`} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary"><RadioGroupItem value={aff.name} id={`aff-${index}`} /><span>{aff.name}</span></Label>))}</RadioGroup></div><DialogFooter><Button variant="outline" onClick={() => setProviderToSelectAffiliation(null)}>Cancel</Button></DialogFooter></DialogContent></Dialog>
+            {/* Dosage Selection Dialog */}
+            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Select Strength for {drugToConfirm?.name}</DialogTitle><DialogDescription>Choose the correct strength and form for this medication.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Alternative Available</p><p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} (Brand) or its generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option above to see available strengths.</p>) : (<RadioGroup onValueChange={(value) => { const dosage = dosages.find(d => d.rxcui === value); setSelectedDosage(dosage || null); }} className="space-y-2 max-h-60 overflow-y-auto">{dosages.length > 0 ? dosages.map(dosage => (<Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary"><RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} /><span>{dosage.full_name}</span></Label>)) : (<p className="text-center text-sm text-muted-foreground">No specific strengths found.</p>)}</RadioGroup>)}</>)}</div><DialogFooter><Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button><Button onClick={handleProceedToDetails} disabled={!selectedDosage || dosageLoading}>Next</Button></DialogFooter></DialogContent></Dialog>
+             {/* Drug Details Dialog */}
+            <Dialog open={!!drugToAddDetails} onOpenChange={(open) => !open && setDrugToAddDetails(null)}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Tell us about this drug</DialogTitle><DialogDescription>Provide the quantity and frequency for {drugToAddDetails?.name}.</DialogDescription></DialogHeader><div className="grid gap-4 py-4"><div className="space-y-2"><Label htmlFor="dosage">Dosage</Label><Input id="dosage" value={drugToAddDetails?.full_name || ''} disabled /></div><div className="space-y-2"><Label htmlFor="package">Package</Label><Select value={pkg} onValueChange={setPackage}><SelectTrigger id="package"><SelectValue placeholder="Select package" /></SelectTrigger><SelectContent><SelectItem value="30-day">30-day supply</SelectItem><SelectItem value="60-day">60-day supply</SelectItem><SelectItem value="90-day">90-day supply</SelectItem><SelectItem value="bottle">1 bottle</SelectItem></SelectContent></Select></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label htmlFor="quantity">Quantity</Label><Input id="quantity" type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} min={1} /></div><div className="space-y-2"><Label htmlFor="frequency">Frequency</Label><Select value={frequency} onValueChange={setFrequency}><SelectTrigger id="frequency"><SelectValue placeholder="Select frequency" /></SelectTrigger><SelectContent><SelectItem value="monthly">Every month</SelectItem><SelectItem value="3-months">Every 3 months</SelectItem><SelectItem value="as-needed">As needed</SelectItem></SelectContent></Select></div></div></div><DialogFooter><Button variant="outline" onClick={() => setDrugToAddDetails(null)}>Cancel</Button><Button onClick={handleFinalAddDrug}>Add to My Drug List</Button></DialogFooter></DialogContent></Dialog>
+            {/* Manual Drug Entry Dialog */}
+            <Dialog open={isManualDrugEntryOpen} onOpenChange={setIsManualDrugEntryOpen}><DialogContent><DialogHeader><DialogTitle>Enter Medication Manually</DialogTitle><DialogDescription>If you couldn't find your medication, you can add its details here.</DialogDescription></DialogHeader><form onSubmit={handleManualDrugAdd} className="space-y-4 py-4"><div className="space-y-2"><Label htmlFor="manual-drug-name">Drug Name</Label><Input id="manual-drug-name" name="manual-drug-name" required /></div><div className="space-y-2"><Label htmlFor="manual-drug-dosage">Dosage (optional)</Label><Input id="manual-drug-dosage" name="manual-drug-dosage" placeholder="e.g., 20mg" /></div><DialogFooter><Button variant="outline" type="button" onClick={() => setIsManualDrugEntryOpen(false)}>Cancel</Button><Button type="submit">Add Medication</Button></DialogFooter></form></DialogContent></Dialog>
         </div>
     );
 }
