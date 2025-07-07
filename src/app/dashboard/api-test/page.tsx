@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useDebounce } from 'use-debounce';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 
 export default function ApiTestPage() {
@@ -35,6 +35,8 @@ export default function ApiTestPage() {
     const [stagedDrug, setStagedDrug] = useState<Drug | null>(null);
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [genericPrompt, setGenericPrompt] = useState<Drug | null>(null);
+
 
     // Fetch Providers
     useEffect(() => {
@@ -93,17 +95,41 @@ export default function ApiTestPage() {
     
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
-        setStagedDrug(drug);
+        // This simulates the medicare.gov flow:
+        // 1. If it's a brand name with a generic, show a prompt.
+        // 2. Otherwise, stage it to be added.
+        if (!drug.is_generic && drug.generic) {
+            setGenericPrompt(drug);
+        } else {
+            setStagedDrug(drug);
+        }
         setMedicationQuery(drug.full_name);
         setIsMedicationListVisible(false);
     };
-    
-    const handleAddDrug = () => {
-        if (stagedDrug && !selectedDrugs.some(d => d.rxcui === stagedDrug.rxcui)) {
-            setSelectedDrugs(prev => [...prev, stagedDrug]);
+
+    const handleAddDrug = (drugToAdd?: Drug) => {
+        const drug = drugToAdd || stagedDrug;
+        if (drug && !selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
+            setSelectedDrugs(prev => [...prev, drug]);
         }
         setStagedDrug(null);
         setMedicationQuery('');
+    };
+
+    const handleGenericPromptSubmit = (useGeneric: boolean) => {
+        if (!genericPrompt) return;
+        const drugToAdd = useGeneric ? {
+            ...genericPrompt.generic!,
+            id: genericPrompt.generic!.rxcui,
+            full_name: genericPrompt.generic!.name,
+            is_generic: true,
+            generic: null,
+            // Add other fields to satisfy Drug type
+            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: ''
+        } : genericPrompt;
+
+        handleAddDrug(drugToAdd as Drug);
+        setGenericPrompt(null);
     };
 
     const handleRemoveDrug = (rxcui: string) => {
@@ -213,7 +239,7 @@ export default function ApiTestPage() {
                             </Button>
                         )}
                     </div>
-                    <Button onClick={handleAddDrug} disabled={!stagedDrug} className="h-10 m-1">Add</Button>
+                    <Button onClick={() => handleAddDrug()} disabled={!stagedDrug} className="h-10 m-1">Add</Button>
                 </div>
                 
                 {isMedicationListVisible && (
@@ -309,6 +335,25 @@ export default function ApiTestPage() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Generic Drug Prompt Dialog */}
+            <Dialog open={!!genericPrompt} onOpenChange={(open) => !open && setGenericPrompt(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Generic Alternative Available</DialogTitle>
+                        <DialogDescription>
+                            A generic version of <strong>{genericPrompt?.name}</strong> is available. Generic drugs are typically cheaper and just as effective.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p>Would you like to add the generic version, <strong>{genericPrompt?.generic?.name}</strong>, instead?</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => handleGenericPromptSubmit(false)}>Add Brand Name</Button>
+                        <Button onClick={() => handleGenericPromptSubmit(true)}>Add Generic</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

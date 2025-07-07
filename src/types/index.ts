@@ -145,6 +145,11 @@ export type Drug = {
   full_name: string;
   rxterms_dose_form: string;
   rxnorm_dose_form: string;
+  is_generic: boolean;
+  generic: {
+    rxcui: string;
+    name: string;
+  } | null;
 };
 
 export type Provider = {
