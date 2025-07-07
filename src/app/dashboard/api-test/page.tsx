@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { searchProviders, searchDrugs } from '@/app/dashboard/health-quotes/actions';
+import { searchProviders, searchDrugs, getRelatedDrugs } from '@/app/dashboard/health-quotes/actions';
 import type { Provider, Drug } from '@/types';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Loader2, Trash2, Pill, HelpCircle, XIcon } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 export default function ApiTestPage() {
@@ -34,6 +35,9 @@ export default function ApiTestPage() {
     const [drugToConfirm, setDrugToConfirm] = useState<Drug | null>(null);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
+    const [dosages, setDosages] = useState<Drug[]>([]);
+    const [dosageLoading, setDosageLoading] = useState(false);
+    const [selectedDosage, setSelectedDosage] = useState<Drug | null>(null);
 
 
     const handleProviderQueryChange = (value: string) => {
@@ -109,22 +113,37 @@ export default function ApiTestPage() {
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
         setDrugToConfirm(drug);
-        setMedicationQuery(drug.full_name);
+        setMedicationQuery('');
         setIsMedicationListVisible(false);
     };
 
-    const handleConfirmDrug = (drugToAdd?: Drug) => {
-        if (drugToAdd && !selectedDrugs.some(d => d.rxcui === drugToAdd.rxcui)) {
-            setSelectedDrugs(prev => [...prev, drugToAdd]);
+    const handleConfirmDrug = () => {
+        if (selectedDosage && !selectedDrugs.some(d => d.rxcui === selectedDosage.rxcui)) {
+            setSelectedDrugs(prev => [...prev, selectedDosage]);
         }
         setDrugToConfirm(null);
-        setMedicationQuery('');
-        setMedications([]);
     };
 
     const handleRemoveDrug = (rxcui: string) => {
         setSelectedDrugs(prev => prev.filter(d => d.rxcui !== rxcui));
     };
+
+    // Fetch dosages when a drug is selected for confirmation
+    useEffect(() => {
+        if (drugToConfirm) {
+            const fetchDosages = async () => {
+                setDosageLoading(true);
+                setDosages([]);
+                setSelectedDosage(null);
+                const result = await getRelatedDrugs({ rxcui: drugToConfirm.rxcui });
+                if (result.drugs) {
+                    setDosages(result.drugs);
+                }
+                setDosageLoading(false);
+            };
+            fetchDosages();
+        }
+    }, [drugToConfirm]);
 
     return (
         <div className="max-w-xl mx-auto py-24 space-y-8">
@@ -330,50 +349,43 @@ export default function ApiTestPage() {
                 </Card>
             )}
 
-            {/* Confirmation and Generic Prompt Dialog */}
+            {/* Dosage Selection Dialog */}
              <Dialog open={!!drugToConfirm} onOpenChange={(open) => !open && setDrugToConfirm(null)}>
                 <DialogContent>
-                    {drugToConfirm?.is_generic === false && drugToConfirm.generic ? (
-                        <>
-                            <DialogHeader>
-                                <DialogTitle>Generic Alternative Available</DialogTitle>
-                                <DialogDescription>
-                                    A generic version of <strong>{drugToConfirm.name}</strong> is available. Generic drugs are typically cheaper and just as effective.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="py-4">
-                                <p>Would you like to add the generic version, <strong>{drugToConfirm.generic.name}</strong>, instead?</p>
+                    <DialogHeader>
+                        <DialogTitle>Select Strength for {drugToConfirm?.name}</DialogTitle>
+                        <DialogDescription>
+                            Choose the correct strength and form for this medication.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        {dosageLoading ? (
+                            <div className="flex items-center justify-center p-8">
+                                <Loader2 className="h-6 w-6 animate-spin" />
                             </div>
-                            <DialogFooter>
-                                <Button variant="secondary" onClick={() => handleConfirmDrug(drugToConfirm)}>Add Brand Name</Button>
-                                <Button onClick={() => handleConfirmDrug({
-                                    ...drugToConfirm.generic!,
-                                    id: drugToConfirm.generic!.rxcui,
-                                    full_name: drugToConfirm.generic!.name,
-                                    is_generic: true,
-                                    generic: null,
-                                    // Add other fields to satisfy Drug type
-                                    strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: ''
-                                } as Drug)}>Add Generic</Button>
-                            </DialogFooter>
-                        </>
-                    ) : (
-                        <>
-                            <DialogHeader>
-                                <DialogTitle>Confirm Medication</DialogTitle>
-                                <DialogDescription>
-                                    Add the following medication to your list?
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="py-4 font-medium text-lg text-center bg-muted rounded-md">
-                                {drugToConfirm?.full_name}
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button>
-                                <Button onClick={() => handleConfirmDrug(drugToConfirm!)}>Confirm</Button>
-                            </DialogFooter>
-                        </>
-                    )}
+                        ) : (
+                            <RadioGroup 
+                                onValueChange={(value) => {
+                                    const dosage = dosages.find(d => d.rxcui === value);
+                                    setSelectedDosage(dosage || null);
+                                }}
+                                className="space-y-2 max-h-60 overflow-y-auto"
+                            >
+                                {dosages.length > 0 ? dosages.map(dosage => (
+                                    <Label key={dosage.rxcui} htmlFor={dosage.rxcui} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary">
+                                        <RadioGroupItem value={dosage.rxcui} id={dosage.rxcui} />
+                                        <span>{dosage.name}</span>
+                                    </Label>
+                                )) : (
+                                    <p className="text-center text-sm text-muted-foreground">No specific strengths found. You can add the base medication.</p>
+                                )}
+                            </RadioGroup>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDrugToConfirm(null)}>Cancel</Button>
+                        <Button onClick={handleConfirmDrug} disabled={!selectedDosage && dosages.length > 0}>Confirm</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

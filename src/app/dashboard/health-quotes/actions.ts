@@ -176,7 +176,7 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
   if (!query || query.length < 3) return { drugs: [] };
 
   try {
-    const response = await fetch(`https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${query}&maxEntries=20&option=1`, { next: { revalidate: 0 } });
+    const response = await fetch(`https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=40&option=1`, { next: { revalidate: 0 } });
     if (!response.ok) {
         console.error("NIH RxNav API error", response.status, response.statusText);
         return { drugs: [] };
@@ -186,41 +186,32 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
     const candidates = data.approximateGroup?.candidate || [];
 
     const drugs: Drug[] = candidates
-    .filter((c: any) => c.source === 'RXNORM') // Use only RXNORM source for consistency
-    .map((candidate: any) => {
-      const drug: Drug = {
-        id: candidate.rxcui,
-        name: candidate.name,
-        rxcui: candidate.rxcui,
-        full_name: candidate.name,
-        is_generic: true,
-        generic: null,
-        strength: '',
-        route: '',
-        rxterms_dose_form: '',
-        rxnorm_dose_form: '',
-      };
-
-      // Check if the name contains brand/generic info like "simvastatin [Zocor]"
-      const match = candidate.name.match(/^(.*)\[(.*)\]$/);
-      if (match) {
-        const genericName = match[1].trim();
-        const brandName = match[2].trim();
-        drug.name = brandName;
-        drug.full_name = `${brandName} (${genericName})`;
-        drug.is_generic = false;
-        drug.generic = {
-          // The API doesn't provide the generic's rxcui here, so we create a placeholder
-          rxcui: `g-${candidate.rxcui}`,
-          name: genericName,
+    .map((candidate: any): Drug | null => {
+        if (candidate.source !== 'RXNORM') return null;
+        
+        const drug: Drug = {
+            id: candidate.rxcui,
+            name: candidate.name,
+            rxcui: candidate.rxcui,
+            full_name: candidate.name,
+            is_generic: true,
+            generic: null,
+            strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '',
         };
-      } else {
-        drug.full_name = drug.name;
-      }
-      return drug;
-    });
 
-    // Deduplicate based on full name to provide a cleaner list
+        const match = candidate.name.match(/^(.*)\[(.*)\]$/);
+        if (match) {
+            const genericName = match[1].trim();
+            const brandName = match[2].trim();
+            drug.name = brandName;
+            drug.full_name = `${brandName} (${genericName})`;
+            drug.is_generic = false;
+        } else {
+            drug.full_name = drug.name;
+        }
+        return drug;
+    }).filter((d: Drug | null): d is Drug => d !== null);
+
     const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.full_name, drug])).values());
     
     return { drugs: uniqueDrugs };
@@ -246,6 +237,35 @@ export async function searchProviders(params: { query: string, zipCode: string }
      console.error("Failed to search providers", e);
     return { error: 'Failed to search providers', providers: [] };
   }
+}
+
+export async function getRelatedDrugs(params: { rxcui: string }) {
+    try {
+        // SBD = Semantic Branded Drug, SCD = Semantic Clinical Drug
+        const response = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui/${params.rxcui}/related.json?tty=SBD+SCD`, { next: { revalidate: 0 } });
+        if (!response.ok) return { error: 'Could not fetch drug forms.' };
+        
+        const data = await response.json();
+        const conceptGroups = data.relatedGroup?.conceptGroup;
+        if (!conceptGroups) return { drugs: [] };
+        
+        const drugs: Drug[] = conceptGroups.flatMap((group: any) => 
+            (group.conceptProperties || []).map((prop: any) => ({
+                id: prop.rxcui,
+                rxcui: prop.rxcui,
+                name: prop.name,
+                full_name: prop.name,
+                is_generic: prop.tty !== 'SBD', // Branded drugs are SBD
+                // Fill other properties to satisfy the Drug type
+                strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: '', generic: null
+            }))
+        );
+        return { drugs };
+
+    } catch (e) {
+        console.error("Failed to fetch related drugs", e);
+        return { error: 'An unexpected error occurred.' };
+    }
 }
 
 
