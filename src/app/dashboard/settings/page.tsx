@@ -16,6 +16,7 @@ import Link from "next/link"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Info, Pencil, Eye, EyeOff, Save, KeyRound } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 // --- Schemas --- //
 const notificationsFormSchema = z.object({
