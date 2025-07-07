@@ -98,7 +98,7 @@ export default function ApiTestPage() {
     return (
         <div className="max-w-xl mx-auto py-24 space-y-8">
             {/* Provider Search */}
-            <Command className="overflow-visible rounded-lg border shadow-md">
+            <Command shouldFilter={false} className="overflow-visible rounded-lg border shadow-md">
                 <div className="relative">
                     <CommandInput
                         value={query}
@@ -176,7 +176,7 @@ export default function ApiTestPage() {
             )}
 
             {/* Medication Search */}
-            <Command className="overflow-visible rounded-lg border shadow-md">
+            <Command shouldFilter={false} className="overflow-visible rounded-lg border shadow-md">
                 <div className="relative">
                     <CommandInput
                         value={medicationQuery}
@@ -252,4 +252,3 @@ export default function ApiTestPage() {
         </div>
     );
 }
-
