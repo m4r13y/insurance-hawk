@@ -265,7 +265,11 @@ export default function ApiTestPage() {
         if (dosages.length > 0) {
             const forms = [...new Set(dosages.map(d => d.rxnorm_dose_form).filter(Boolean))];
             setUniqueForms(forms);
-            setSelectedForm('');
+            if (forms.length === 1) {
+                setSelectedForm(forms[0]);
+            } else {
+                setSelectedForm('');
+            }
             setSelectedDosage(null); // reset selections
         } else {
             setUniqueForms([]);
@@ -396,7 +400,6 @@ export default function ApiTestPage() {
                                                 ))}
                                             </CommandGroup>
                                         )}
-                                        {!medicationLoading && medications.length === 0 && suggestions.length === 0 && medicationQuery.length >= 3 && ( <CommandEmpty>No medications found.</CommandEmpty> )}
                                         {medications.length > 0 && (
                                             <CommandGroup>
                                                 {medications.map(drug => (
@@ -414,9 +417,6 @@ export default function ApiTestPage() {
                             </div>
                         </Command>
                     </div>
-                    <Button variant="link" className="p-0 h-auto" onClick={() => setIsManualDrugEntryOpen(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Enter medication manually
-                    </Button>
                      <Button 
                         onClick={() => setIsMedicationDetailsVisible(!isMedicationDetailsVisible)} 
                         variant="outline"

@@ -376,7 +376,11 @@ function MedicareSupplementApplication() {
         if (dosages.length > 0) {
             const forms = [...new Set(dosages.map(d => d.rxnorm_dose_form).filter(Boolean))];
             setUniqueForms(forms);
-            setSelectedForm('');
+            if (forms.length === 1) {
+                setSelectedForm(forms[0]);
+            } else {
+                setSelectedForm('');
+            }
             setSelectedDosage(null); // reset selections
         } else {
             setUniqueForms([]);
@@ -496,14 +500,12 @@ function MedicareSupplementApplication() {
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length === 0 && medicationQuery.length >= 3 && ( <CommandEmpty>No medications found.</CommandEmpty> )}
                                                         {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
                                         </Command>
                                     </div>
-                                    <Button variant="link" className="p-0 h-auto" onClick={() => setIsManualDrugEntryOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Enter medication manually</Button>
                                     {_selectedDrugs.length > 0 && (
                                         <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
                                             {_selectedDrugs.map(drug => (

@@ -266,12 +266,14 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
         const ingredientResponse = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui/${params.rxcui}/related.json?tty=IN`, { next: { revalidate: 0 } });
 
         let rxcuiToFetchDosagesFrom = params.rxcui;
+        let ingredientName = '';
 
         if (ingredientResponse.ok) {
             const ingredientData = await ingredientResponse.json();
             const ingredientConcept = ingredientData.relatedGroup?.conceptGroup?.[0]?.conceptProperties?.[0];
             if (ingredientConcept?.rxcui) {
                 rxcuiToFetchDosagesFrom = ingredientConcept.rxcui;
+                ingredientName = ingredientConcept.name;
             }
         }
 
@@ -291,7 +293,11 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
                 let strength = fullName;
                 let form = '';
                 
-                // This list is ordered from most specific to least specific to ensure correct matching.
+                let remainingString = fullName;
+                if (ingredientName && remainingString.toLowerCase().startsWith(ingredientName.toLowerCase())) {
+                    remainingString = remainingString.substring(ingredientName.length).trim();
+                }
+                
                 const knownForms = [
                     'Extended Release Oral Capsule',
                     'Extended Release Oral Tablet',
@@ -313,21 +319,26 @@ export async function getRelatedDrugs(params: { rxcui: string }) {
                 ];
 
                 for (const knownForm of knownForms) {
-                    if (fullName.endsWith(knownForm)) {
+                    const regex = new RegExp(`\\s+${knownForm}$`, 'i');
+                    if (regex.test(remainingString)) {
                         form = knownForm;
-                        strength = fullName.substring(0, fullName.lastIndexOf(knownForm)).trim();
+                        strength = remainingString.replace(regex, '').trim();
                         break;
                     }
+                }
+
+                if (!form) {
+                    strength = remainingString;
                 }
                 
                 return {
                     id: prop.rxcui,
                     rxcui: prop.rxcui,
-                    name: prop.name,
+                    name: ingredientName || fullName.split(' ')[0],
                     full_name: fullName,
                     is_generic: isGeneric,
                     strength: strength,
-                    route: '', // Not available from this endpoint
+                    route: '',
                     rxterms_dose_form: form,
                     rxnorm_dose_form: form,
                     generic: null
