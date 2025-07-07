@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { searchProviders, searchDrugs } from '@/app/dashboard/health-quotes/actions';
 import type { Provider, Drug } from '@/types';
@@ -26,12 +26,12 @@ export default function ApiTestPage() {
     
     // Medication State
     const [medicationQuery, setMedicationQuery] = useState('');
-    const [debouncedMedicationQuery] = useDebounce(medicationQuery, 500);
     const [medications, setMedications] = useState<Drug[]>([]);
     const [medicationLoading, setMedicationLoading] = useState(false);
     const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
     const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
+    const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Fetch Providers
     useEffect(() => {
@@ -51,23 +51,29 @@ export default function ApiTestPage() {
         fetchProviders();
     }, [debouncedQuery, zipCode]);
 
-    // Fetch Medications
-     useEffect(() => {
-        if (debouncedMedicationQuery.length < 3) {
+    // Medication Search Handler with Manual Debounce
+    const handleMedicationQueryChange = (value: string) => {
+        setMedicationQuery(value);
+        
+        if (medicationSearchTimeout.current) {
+            clearTimeout(medicationSearchTimeout.current);
+        }
+
+        if (value.length < 3) {
             setMedications([]);
             setIsMedicationListVisible(false);
             return;
         }
+        
         setIsMedicationListVisible(true);
-        const fetchDrugs = async () => {
+        
+        medicationSearchTimeout.current = setTimeout(async () => {
             setMedicationLoading(true);
-            const result = await searchDrugs({ query: debouncedMedicationQuery });
+            const result = await searchDrugs({ query: value });
             setMedications(result.drugs || []);
             setMedicationLoading(false);
-        };
-
-        fetchDrugs();
-    }, [debouncedMedicationQuery]);
+        }, 300); // 300ms debounce
+    };
 
     // Provider Handlers
     const handleSelectProvider = (provider: Provider) => {
@@ -180,8 +186,8 @@ export default function ApiTestPage() {
                 <div className="relative">
                     <CommandInput
                         value={medicationQuery}
-                        onValueChange={setMedicationQuery}
-                        onFocus={() => { if(debouncedMedicationQuery.length >=3) setIsMedicationListVisible(true) }}
+                        onValueChange={handleMedicationQueryChange}
+                        onFocus={() => { if(medicationQuery.length >=3) setIsMedicationListVisible(true) }}
                         onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
                         placeholder="Search for a medication..."
                         className="h-12 text-lg"
@@ -190,7 +196,7 @@ export default function ApiTestPage() {
                     
                     {isMedicationListVisible && (
                         <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                            {medications.length === 0 && debouncedMedicationQuery.length > 2 && !medicationLoading && (
+                            {medications.length === 0 && medicationQuery.length > 2 && !medicationLoading && (
                                 <CommandEmpty>No medications found.</CommandEmpty>
                             )}
                             {medications.length > 0 && (

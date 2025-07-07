@@ -178,7 +178,7 @@ export async function searchDrugs(params: { query: string }) {
   const apiHeaders = { 'accept': 'application/json' };
 
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&limit=25&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 } });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&limit=50&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 }, cache: 'no-store' });
     if (!response.ok) return { drugs: [] };
     const data = await response.json();
     const drugs: Drug[] = data.drugs || [];
@@ -196,7 +196,7 @@ export async function searchProviders(params: { query: string, zipCode: string }
   const apiHeaders = { 'accept': 'application/json' };
   
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 } });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 }, cache: 'no-store' });
     if(!response.ok) return { providers: [] };
     const data = await response.json();
     const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);
@@ -223,7 +223,8 @@ export async function getDrugCoverage(params: { planIds: string[], drugIds: stri
     try {
         const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/covered?year=${year}&drugs=${drugsParam}&planids=${planidsParam}&apikey=${apiKey}`, { 
             headers: apiHeaders, 
-            next: { revalidate: 0 } 
+            next: { revalidate: 0 },
+            cache: 'no-store'
         });
 
         if (!response.ok) {
@@ -257,7 +258,8 @@ export async function getProviderCoverage(params: { planIds: string[], providerI
     try {
         const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/covered?year=${year}&providerids=${provideridsParam}&planids=${planidsParam}&apikey=${apiKey}`, { 
             headers: apiHeaders, 
-            next: { revalidate: 0 } 
+            next: { revalidate: 0 },
+            cache: 'no-store'
         });
 
         if (!response.ok) {
