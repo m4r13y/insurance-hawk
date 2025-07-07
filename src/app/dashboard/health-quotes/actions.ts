@@ -178,7 +178,7 @@ export async function searchDrugs(params: { query: string }) {
   const apiHeaders = { 'accept': 'application/json' };
 
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&apikey=${apiKey}`, { headers: apiHeaders, cache: 'no-store' });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&limit=25&apikey=${apiKey}`, { headers: apiHeaders, cache: 'no-store' });
     if (!response.ok) return { drugs: [] };
     const data = await response.json();
     const drugs: Drug[] = data.drugs || [];
