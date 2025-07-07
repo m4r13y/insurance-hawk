@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { db, storage } from '@/lib/firebase';
 import { collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp, getDoc } from 'firebase/firestore';
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from 'next/link';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 // --- MOCK DATA & CONFIGS (from original file) --- //
@@ -326,11 +327,32 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
 
                 <div className="py-4 space-y-4 min-h-[300px]">
                     {step === 1 && (
-                        <Input 
-                            placeholder="Search for a carrier..." 
-                            value={carrierSearch} 
-                            onChange={(e) => setCarrierSearch(e.target.value)}
-                        />
+                        <div className="space-y-4">
+                            <Input 
+                                placeholder="Search for a carrier..." 
+                                value={carrierSearch} 
+                                onChange={(e) => setCarrierSearch(e.target.value)}
+                            />
+                            <ScrollArea className="h-64">
+                                <div className="space-y-2">
+                                    {filteredCarriers.length > 0 ? (
+                                        filteredCarriers.map(c => (
+                                            <Button 
+                                                key={c.id} 
+                                                variant="ghost" 
+                                                className="w-full justify-start gap-4"
+                                                onClick={() => handleSelectCarrier(c.id)}
+                                            >
+                                                {c.logoUrl && <Image src={c.logoUrl} alt={c.name} width={24} height={24} />}
+                                                <span>{c.name}</span>
+                                            </Button>
+                                        ))
+                                    ) : (
+                                        <p className="text-center text-sm text-muted-foreground pt-4">No carriers found.</p>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </div>
                     )}
                     {step === 2 && (
                          <div className="flex flex-wrap justify-center gap-3">
@@ -804,3 +826,6 @@ export default function MyAccountPage() {
         </div>
   )
 }
+
+
+    
