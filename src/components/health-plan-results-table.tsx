@@ -5,7 +5,6 @@ import React, { useState, useTransition, useEffect, useCallback } from 'react';
 import type { HealthPlan, Drug, Provider, DrugCoverage, ProviderCoverage } from '@/types';
 import type { z } from 'zod';
 import type { healthQuoterFormSchema } from './health-insurance-quoter';
-import { useDebouncedCallback } from 'use-debounce';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Slider } from './ui/slider';
@@ -45,16 +44,28 @@ const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSel
   const [results, setResults] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const debouncedSearch = useDebouncedCallback(async (query) => {
-    if (query.length < 3) {
+  useEffect(() => {
+    if (searchTerm.length < 3) {
       setResults([]);
       return;
     }
-    setLoading(true);
-    const { providers } = await searchProviders({ query, zipCode });
-    setResults(providers || []);
-    setLoading(false);
-  }, 500);
+
+    const fetchProviders = async () => {
+      setLoading(true);
+      const { providers } = await searchProviders({ query: searchTerm, zipCode });
+      setResults(providers || []);
+      setLoading(false);
+    };
+
+    const timerId = setTimeout(() => {
+      fetchProviders();
+    }, 500);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm, zipCode]);
+
 
   const handleAddProvider = (provider: Provider) => {
     if (!selectedProviders.some(p => p.provider.npi === provider.npi)) {
@@ -94,13 +105,10 @@ const ProviderSelectionDialog = ({ open, onOpenChange, selectedProviders, setSel
             <CommandInput 
               placeholder="Search by doctor or facility name..." 
               value={searchTerm}
-              onValueChange={(search) => {
-                setSearchTerm(search);
-                debouncedSearch(search);
-              }}
+              onValueChange={setSearchTerm}
             />
             <CommandList>
-              {loading && <CommandEmpty>Loading...</CommandEmpty>}
+              {loading && <CommandItem disabled>Loading...</CommandItem>}
               {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No providers found.</CommandEmpty>}
               {results.length > 0 && (
                 <CommandGroup>
@@ -157,16 +165,28 @@ const DrugSelectionDialog = ({ open, onOpenChange, selectedDrugs, setSelectedDru
   const [results, setResults] = useState<Drug[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const debouncedSearch = useDebouncedCallback(async (query) => {
-    if (query.length < 3) {
+  useEffect(() => {
+    if (searchTerm.length < 3) {
       setResults([]);
       return;
     }
-    setLoading(true);
-    const { drugs } = await searchDrugs({ query });
-    setResults(drugs || []);
-    setLoading(false);
-  }, 500);
+
+    const fetchDrugs = async () => {
+      setLoading(true);
+      const { drugs } = await searchDrugs({ query: searchTerm });
+      setResults(drugs || []);
+      setLoading(false);
+    };
+
+    const timerId = setTimeout(() => {
+      fetchDrugs();
+    }, 500);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
 
   const handleAddDrug = (drug: Drug) => {
     if (!selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
@@ -192,13 +212,10 @@ const DrugSelectionDialog = ({ open, onOpenChange, selectedDrugs, setSelectedDru
             <CommandInput 
               placeholder="Search by drug name..." 
               value={searchTerm}
-              onValueChange={(search) => {
-                setSearchTerm(search);
-                debouncedSearch(search);
-              }}
+              onValueChange={setSearchTerm}
             />
             <CommandList>
-              {loading && <CommandEmpty>Loading...</CommandEmpty>}
+              {loading && <CommandItem disabled>Loading...</CommandItem>}
               {!loading && results.length === 0 && searchTerm.length > 2 && <CommandEmpty>No drugs found.</CommandEmpty>}
               {results.length > 0 && (
                 <CommandGroup>
@@ -620,3 +637,5 @@ export function HealthPlanResultsTable({ initialResults, searchParams, onBack }:
     </div>
   );
 }
+
+    
