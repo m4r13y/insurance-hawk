@@ -72,7 +72,9 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
     try {
         // Step 1: Get County FIPS and State from ZIP code
         const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`, {
+            method: 'GET',
             headers: apiGetHeaders,
+            cache: 'no-store',
         });
 
         if (!countyResponse.ok) {
@@ -114,6 +116,7 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
             method: 'POST',
             headers: apiPostHeaders,
             body: JSON.stringify(searchPayload),
+            cache: 'no-store',
         });
 
         if (!planSearchResponse.ok) {
@@ -174,7 +177,7 @@ export async function searchDrugs(params: { query: string }) {
   const apiHeaders = { 'accept': 'application/json' };
 
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`, { headers: apiHeaders });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`, { headers: apiHeaders, cache: 'no-store' });
     if (!response.ok) return { drugs: [] };
     const data = await response.json();
     const drugs: Drug[] = data.drugs || [];
@@ -192,7 +195,7 @@ export async function searchProviders(params: { query: string, zipCode: string }
   const apiHeaders = { 'accept': 'application/json' };
   
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, cache: 'no-store' });
     if(!response.ok) return { providers: [] };
     const data = await response.json();
     const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);
