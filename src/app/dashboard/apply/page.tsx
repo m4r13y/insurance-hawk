@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Checkbox } from "@/components/ui/checkbox"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
@@ -567,7 +568,7 @@ function MedicareSupplementApplication() {
             {/* Dosage Selection Dialog */}
             <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select the correct form and strength for this medication.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Alternative Available</p><p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} (Brand) or its generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option above to see available strengths.</p>) : (<>
                 <div className="space-y-2">
-                    <FormLabel htmlFor="drug-form">Form</FormLabel>
+                    <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
                         <SelectTrigger id="drug-form"><SelectValue placeholder="Select a form..." /></SelectTrigger>
                         <SelectContent>{uniqueForms.map(form => (<SelectItem key={form} value={form}>{form || 'N/A'}</SelectItem>))}</SelectContent>
@@ -575,7 +576,7 @@ function MedicareSupplementApplication() {
                 </div>
                 {selectedForm && (
                     <div className="space-y-2">
-                        <FormLabel htmlFor="drug-strength">Strength</FormLabel>
+                        <Label htmlFor="drug-strength">Strength</Label>
                         <Select value={selectedDosage?.rxcui || ''} onValueChange={(rxcui) => { const dosage = dosages.find(d => d.rxcui === rxcui); setSelectedDosage(dosage || null);}} disabled={dosages.filter(d => d.rxnorm_dose_form === selectedForm).length === 0}>
                             <SelectTrigger id="drug-strength"><SelectValue placeholder="Select a strength..." /></SelectTrigger>
                             <SelectContent>{dosages.filter(d => d.rxnorm_dose_form === selectedForm).map(dosage => (<SelectItem key={dosage.rxcui} value={dosage.rxcui}>{dosage.strength || dosage.full_name}</SelectItem>))}</SelectContent>
@@ -1296,7 +1297,7 @@ function HealthInsuranceApplication() {
             {/* Dosage Selection Dialog */}
             <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
                 <div className="space-y-2">
-                    <FormLabel htmlFor="drug-form">Form</FormLabel>
+                    <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
                         <SelectTrigger id="drug-form"><SelectValue placeholder="Select a form..." /></SelectTrigger>
                         <SelectContent>{uniqueForms.map(form => (<SelectItem key={form} value={form}>{form || 'N/A'}</SelectItem>))}</SelectContent>
@@ -1304,7 +1305,7 @@ function HealthInsuranceApplication() {
                 </div>
                 {selectedForm && (
                     <div className="space-y-2">
-                        <FormLabel htmlFor="drug-strength">Strength</FormLabel>
+                        <Label htmlFor="drug-strength">Strength</Label>
                         <Select value={selectedDosage?.rxcui || ''} onValueChange={(rxcui) => { const dosage = dosages.find(d => d.rxcui === rxcui); setSelectedDosage(dosage || null);}} disabled={dosages.filter(d => d.rxnorm_dose_form === selectedForm).length === 0}>
                             <SelectTrigger id="drug-strength"><SelectValue placeholder="Select a strength..." /></SelectTrigger>
                             <SelectContent>{dosages.filter(d => d.rxnorm_dose_form === selectedForm).map(dosage => (<SelectItem key={dosage.rxcui} value={dosage.rxcui}>{dosage.strength || dosage.full_name}</SelectItem>))}</SelectContent>
@@ -1683,7 +1684,7 @@ function MedicareAdvantageApplication() {
             {/* Dosage Selection Dialog */}
             <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
                 <div className="space-y-2">
-                    <FormLabel htmlFor="drug-form">Form</FormLabel>
+                    <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
                         <SelectTrigger id="drug-form"><SelectValue placeholder="Select a form..." /></SelectTrigger>
                         <SelectContent>{uniqueForms.map(form => (<SelectItem key={form} value={form}>{form || 'N/A'}</SelectItem>))}</SelectContent>
@@ -1691,7 +1692,7 @@ function MedicareAdvantageApplication() {
                 </div>
                 {selectedForm && (
                     <div className="space-y-2">
-                        <FormLabel htmlFor="drug-strength">Strength</FormLabel>
+                        <Label htmlFor="drug-strength">Strength</Label>
                         <Select value={selectedDosage?.rxcui || ''} onValueChange={(rxcui) => { const dosage = dosages.find(d => d.rxcui === rxcui); setSelectedDosage(dosage || null);}} disabled={dosages.filter(d => d.rxnorm_dose_form === selectedForm).length === 0}>
                             <SelectTrigger id="drug-strength"><SelectValue placeholder="Select a strength..." /></SelectTrigger>
                             <SelectContent>{dosages.filter(d => d.rxnorm_dose_form === selectedForm).map(dosage => (<SelectItem key={dosage.rxcui} value={dosage.rxcui}>{dosage.strength || dosage.full_name}</SelectItem>))}</SelectContent>
