@@ -178,7 +178,7 @@ export async function searchDrugs(params: { query: string }) {
   const apiHeaders = { 'accept': 'application/json' };
 
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&limit=50&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 }, cache: 'no-store' });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/search?q=${params.query}&limit=50&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 } });
     if (!response.ok) return { drugs: [] };
     const data = await response.json();
     const drugs: Drug[] = data.drugs || [];
@@ -196,7 +196,7 @@ export async function searchProviders(params: { query: string, zipCode: string }
   const apiHeaders = { 'accept': 'application/json' };
   
   try {
-    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 }, cache: 'no-store' });
+    const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders, next: { revalidate: 0 } });
     if(!response.ok) return { providers: [] };
     const data = await response.json();
     const providers: Provider[] = (data.providers || []).map((np: any) => np.provider);

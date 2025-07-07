@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useDebounce } from 'use-debounce';
 import { searchProviders, searchDrugs } from '@/app/dashboard/health-quotes/actions';
 import type { Provider, Drug } from '@/types';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useDebounce } from 'use-debounce';
 
 export default function ApiTestPage() {
     // Provider State
@@ -40,7 +40,6 @@ export default function ApiTestPage() {
             setIsListVisible(false);
             return;
         }
-        setIsListVisible(true);
         const fetchProviders = async () => {
             setLoading(true);
             const result = await searchProviders({ query: debouncedQuery, zipCode });
@@ -50,8 +49,8 @@ export default function ApiTestPage() {
 
         fetchProviders();
     }, [debouncedQuery, zipCode]);
-
-    // Medication Search Handler with Manual Debounce
+    
+    // Medication Search Handler with Manual Debounce (from medicare.gov code)
     const handleMedicationQueryChange = (value: string) => {
         setMedicationQuery(value);
         
