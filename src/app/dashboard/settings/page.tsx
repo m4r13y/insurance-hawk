@@ -17,9 +17,10 @@ import { Info, Pencil, Eye, EyeOff, Save, KeyRound, Loader2 } from "lucide-react
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
-import { db, auth } from "@/lib/firebase"
+import { db, auth, storage } from "@/lib/firebase"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
 // --- Schemas --- //
 const notificationsFormSchema = z.object({
@@ -52,7 +53,7 @@ const profileSchema = z.object({
 
 // --- Helper Components --- //
 
-const EditableCard = ({ title, children, FormComponent, onSave }: { title: string; children: React.ReactNode; FormComponent: React.FC<any>; onSave: (data: any) => void; }) => {
+const EditableCard = ({ title, children, FormComponent, onSave, profileData }: { title: string; children: React.ReactNode; FormComponent: React.FC<any>; onSave: (data: any) => void; profileData: any; }) => {
     const [isEditing, setIsEditing] = useState(false);
     return (
         <Card>
@@ -68,7 +69,7 @@ const EditableCard = ({ title, children, FormComponent, onSave }: { title: strin
             <CardContent>
                 <div className={cn(!isEditing ? "block" : "hidden")}>{children}</div>
                 <div className={cn(isEditing ? "block" : "hidden")}>
-                    <FormComponent onSave={(data:any) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
+                    <FormComponent profileData={profileData} onSave={(data:any) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
                 </div>
             </CardContent>
         </Card>
@@ -93,16 +94,15 @@ const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: 
     );
 };
 
-const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const [user] = useFirebaseAuth();
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })) });
-     useEffect(() => {
-        if(user && db) {
-            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
-                if(docSnap.exists()) form.reset(docSnap.data());
-            })
-        }
-    }, [user, form]);
+const PersonalInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
+    const form = useForm({ 
+      resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })),
+      defaultValues: {
+        firstName: profileData?.firstName || '',
+        lastName: profileData?.lastName || '',
+        dob: profileData?.dob || '',
+      }
+    });
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -117,16 +117,17 @@ const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; o
     );
 };
 
-const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const [user] = useFirebaseAuth();
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ phone: true, address: true, city: true, state: true, zip: true })) });
-     useEffect(() => {
-        if(user && db) {
-            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
-                if(docSnap.exists()) form.reset(docSnap.data());
-            })
-        }
-    }, [user, form]);
+const ContactInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
+    const form = useForm({ 
+      resolver: zodResolver(profileSchema.pick({ phone: true, address: true, city: true, state: true, zip: true })),
+      defaultValues: {
+        phone: profileData?.phone || '',
+        address: profileData?.address || '',
+        city: profileData?.city || '',
+        state: profileData?.state || '',
+        zip: profileData?.zip || '',
+      }
+    });
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -143,16 +144,13 @@ const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; on
     );
 };
 
-const FinancialInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const [user] = useFirebaseAuth();
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ medicareId: true })) });
-     useEffect(() => {
-        if(user && db) {
-            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
-                if(docSnap.exists()) form.reset(docSnap.data());
-            })
-        }
-    }, [user, form]);
+const FinancialInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
+    const form = useForm({ 
+      resolver: zodResolver(profileSchema.pick({ medicareId: true })),
+      defaultValues: {
+        medicareId: profileData?.medicareId || '',
+      }
+    });
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -173,6 +171,7 @@ export default function SettingsPage() {
     const [user, loading] = useFirebaseAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [profile, setProfile] = useState<any>({});
+    const [isUploading, setIsUploading] = useState(false);
 
     const notificationsForm = useForm<z.infer<typeof notificationsFormSchema>>({
         resolver: zodResolver(notificationsFormSchema),
@@ -191,10 +190,48 @@ export default function SettingsPage() {
                 if (docSnap.exists()) {
                     setProfile(docSnap.data());
                     notificationsForm.reset(docSnap.data().notifications || {});
+                } else {
+                    // Pre-fill from auth if no firestore doc exists yet
+                    setProfile({
+                        displayName: user.displayName,
+                        email: user.email,
+                        firstName: user.displayName?.split(' ')[0] || '',
+                        lastName: user.displayName?.split(' ')[1] || '',
+                    });
                 }
             });
         }
     }, [user, notificationsForm]);
+
+    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!user || !storage || !db || !auth.currentUser) return;
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const storagePath = `users/${user.uid}/profile/photo`;
+        const storageRef = ref(storage, storagePath);
+
+        try {
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            await updateProfile(auth.currentUser, { photoURL: downloadURL });
+            await setDoc(doc(db, 'users', user.uid), { photoURL: downloadURL }, { merge: true });
+
+            setProfile(prev => ({ ...prev, photoURL: downloadURL }));
+            
+            toast({ title: "Profile Photo Updated", description: "Your new photo has been saved." });
+        } catch (error) {
+            console.error("Error uploading photo:", error);
+            toast({ variant: 'destructive', title: "Upload Failed", description: "Could not upload your new photo." });
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    };
 
     const handleSaveProfile = async (newData: any) => {
         if (!user || !db) return;
@@ -203,9 +240,8 @@ export default function SettingsPage() {
             const updatedProfileData = { ...profile, ...newData };
             await setDoc(userDocRef, newData, { merge: true });
             
-            // Also update auth profile if name changed
-            if (newData.firstName || newData.lastName) {
-                await updateProfile(auth.currentUser!, { displayName: `${newData.firstName || profile.firstName} ${newData.lastName || profile.lastName}` });
+            if (auth.currentUser && (newData.firstName || newData.lastName)) {
+                 await updateProfile(auth.currentUser, { displayName: `${newData.firstName || profile.firstName} ${newData.lastName || profile.lastName}`.trim() });
             }
 
             setProfile(updatedProfileData);
@@ -250,6 +286,8 @@ export default function SettingsPage() {
   
     if (!user) { return null }
 
+    const displayName = profile.firstName ? `${profile.firstName} ${profile.lastName}` : user.displayName;
+
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       <div>
@@ -260,25 +298,36 @@ export default function SettingsPage() {
         <Card>
             <CardHeader className="flex flex-row items-center gap-6">
                 <Avatar className="h-20 w-20">
-                    <AvatarImage src={user.photoURL || defaultHawkImage} alt="User avatar" />
-                    <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                     {isUploading ? (
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                            <Loader2 className="h-8 w-8 animate-spin"/>
+                        </div>
+                    ) : (
+                        <>
+                            <AvatarImage src={profile.photoURL || user.photoURL || defaultHawkImage} alt="User avatar" />
+                            <AvatarFallback>{displayName?.[0]}</AvatarFallback>
+                        </>
+                    )}
                 </Avatar>
                 <div className="space-y-2">
-                    <CardTitle className="text-xl">{profile.displayName || user.displayName}</CardTitle>
+                    <CardTitle className="text-xl">{displayName}</CardTitle>
                     <CardDescription>{user.email}</CardDescription>
-                    <input type="file" ref={fileInputRef} onChange={() => {}} accept="image/*" className="hidden" />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled>Upload Photo</Button>
+                    <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                        Upload Photo
+                    </Button>
                 </div>
             </CardHeader>
         </Card>
 
-        <EditableCard title="Personal Information" FormComponent={PersonalInfoForm} onSave={handleSaveProfile}>
-            <InfoRow label="Name" value={`${profile.firstName || ''} ${profile.lastName || ''}`} />
+        <EditableCard title="Personal Information" FormComponent={PersonalInfoForm} onSave={handleSaveProfile} profileData={profile}>
+            <InfoRow label="Name" value={displayName || ''} />
             <Separator/>
             <InfoRow label="Date of Birth" value={profile.dob ? new Date(profile.dob).toLocaleDateString('en-US', { timeZone: 'UTC' }) : ''} />
         </EditableCard>
 
-        <EditableCard title="Contact Information" FormComponent={ContactInfoForm} onSave={handleSaveProfile}>
+        <EditableCard title="Contact Information" FormComponent={ContactInfoForm} onSave={handleSaveProfile} profileData={profile}>
             <InfoRow label="Email" value={profile.email || user.email || ''} />
             <Separator/>
             <InfoRow label="Phone" value={profile.phone || ''} />
@@ -286,7 +335,7 @@ export default function SettingsPage() {
             <InfoRow label="Address" value={`${profile.address || ''} ${profile.city || ''} ${profile.state || ''} ${profile.zip || ''}`.trim()} />
         </EditableCard>
 
-        <EditableCard title="Financial & Health IDs" FormComponent={FinancialInfoForm} onSave={handleSaveProfile}>
+        <EditableCard title="Financial & Health IDs" FormComponent={FinancialInfoForm} onSave={handleSaveProfile} profileData={profile}>
             <InfoRow label="Medicare ID" value={profile.medicareId || ''} isSensitive={true}/>
         </EditableCard>
 
@@ -355,7 +404,10 @@ export default function SettingsPage() {
                 </FormItem>
                 )} />
                 <div className="flex justify-end">
-                <Button type="submit" variant="destructive">Change Password</Button>
+                <Button type="submit" variant="destructive" disabled={securityForm.formState.isSubmitting}>
+                    {securityForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Change Password
+                </Button>
                 </div>
             </form>
            </Form>
