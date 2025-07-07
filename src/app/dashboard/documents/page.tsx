@@ -166,7 +166,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
     
     const filteredCarriers = carriers.filter(c => c.name.toLowerCase().includes(carrierSearch.toLowerCase()));
     
-    const isSaveDisabled = step === 4 && !policy.planName;
+    const isSaveDisabled = step === 4 && (!policy.policyCategoryId || !policy.carrierId);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -261,7 +261,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                     </div>
                      <div>
                         <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        {step === 4 && <Button onClick={handleSave} className="ml-2">Save Policy</Button>}
+                        {step === 4 && <Button onClick={handleSave} className="ml-2" disabled={isSaveDisabled}>Save Policy</Button>}
                     </div>
                 </DialogFooter>
             </DialogContent>
@@ -292,12 +292,14 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <a href={policy.carrierWebsite} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                <span>Visit Site</span>
-                            </a>
-                        </DropdownMenuItem>
+                        {policy.carrierWebsite && (
+                             <DropdownMenuItem asChild>
+                                <a href={policy.carrierWebsite} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    <span>Visit Site</span>
+                                </a>
+                            </DropdownMenuItem>
+                        )}
                          <DropdownMenuItem onSelect={() => onDelete(policy.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>
@@ -306,27 +308,25 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                 </DropdownMenu>
             </CardHeader>
             <CardContent className="flex-1 space-y-3 text-sm p-4 pt-0">
-                <Separator className="mb-3" />
+                <Separator/>
                 <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Category</span>
                     <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                    {policy.premium != null && (
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">Premium</p>
-                            <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
-                        </div>
-                    )}
-                     {policy.benefitAmount != null && (
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">Benefit Amount</p>
-                            <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
-                        </div>
-                    )}
-                 </div>
+                 {policy.premium != null && (
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground">Premium</p>
+                        <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
+                    </div>
+                )}
+                 {policy.benefitAmount != null && (
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground">Benefit Amount</p>
+                        <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
+                    </div>
+                )}
                  {policy.enrollmentDate && (
-                    <div className="space-y-1">
+                    <div className="flex justify-between items-center">
                         <p className="text-muted-foreground">Enrollment Date</p>
                         <p className="font-semibold">{new Date(policy.enrollmentDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
                     </div>
@@ -577,5 +577,3 @@ export default function PoliciesAndDocumentsPage() {
         </div>
   )
 }
-
-    
