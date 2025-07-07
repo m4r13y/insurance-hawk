@@ -5,12 +5,14 @@ import { useState, useEffect, useRef } from 'react';
 import { searchProviders, searchDrugs } from '@/app/dashboard/health-quotes/actions';
 import type { Provider, Drug } from '@/types';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Loader2, Trash2, Pill } from 'lucide-react';
+import { Loader2, Trash2, Pill, HelpCircle, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useDebounce } from 'use-debounce';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
 
 export default function ApiTestPage() {
     // Provider State
@@ -30,6 +32,7 @@ export default function ApiTestPage() {
     const [medicationLoading, setMedicationLoading] = useState(false);
     const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
     const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+    const [stagedDrug, setStagedDrug] = useState<Drug | null>(null);
     const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
     const medicationSearchTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -53,6 +56,7 @@ export default function ApiTestPage() {
     // Medication Search Handler with Manual Debounce (from medicare.gov code)
     const handleMedicationQueryChange = (value: string) => {
         setMedicationQuery(value);
+        setStagedDrug(null); // Clear staged drug on new input
         
         if (medicationSearchTimeout.current) {
             clearTimeout(medicationSearchTimeout.current);
@@ -89,11 +93,17 @@ export default function ApiTestPage() {
     
     // Medication Handlers
     const handleSelectDrug = (drug: Drug) => {
-        if (!selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
-            setSelectedDrugs(prev => [...prev, drug]);
-        }
-        setMedicationQuery('');
+        setStagedDrug(drug);
+        setMedicationQuery(drug.full_name);
         setIsMedicationListVisible(false);
+    };
+    
+    const handleAddDrug = () => {
+        if (stagedDrug && !selectedDrugs.some(d => d.rxcui === stagedDrug.rxcui)) {
+            setSelectedDrugs(prev => [...prev, stagedDrug]);
+        }
+        setStagedDrug(null);
+        setMedicationQuery('');
     };
 
     const handleRemoveDrug = (rxcui: string) => {
@@ -182,53 +192,88 @@ export default function ApiTestPage() {
 
             {/* Medication Search */}
             <Command shouldFilter={false} className="overflow-visible rounded-lg border shadow-md">
-                <div className="relative">
-                    <CommandInput
-                        value={medicationQuery}
-                        onValueChange={handleMedicationQueryChange}
-                        onFocus={() => { if(medicationQuery.length >=3) setIsMedicationListVisible(true) }}
-                        onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
-                        placeholder="Search for a medication..."
-                        className="h-12 text-lg"
-                    />
-                    {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
-                    
-                    {isMedicationListVisible && (
-                        <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                            {medications.length === 0 && medicationQuery.length > 2 && !medicationLoading && (
-                                <CommandEmpty>
-                                    <div className="text-center px-4 py-8">
-                                        <p className="font-semibold">No Medications Found</p>
-                                        <p className="text-sm text-muted-foreground mt-2">If you're having trouble, try the following:</p>
-                                        <ul className="text-sm text-muted-foreground list-disc list-inside mt-2 text-left max-w-xs mx-auto">
-                                            <li>Check the spelling of the medication.</li>
-                                            <li>Try searching for the generic name.</li>
-                                            <li>The drug may be over-the-counter and not listed.</li>
-                                        </ul>
-                                    </div>
-                                </CommandEmpty>
-                            )}
-                            {medications.length > 0 && (
-                                <CommandGroup>
-                                    {medications.map(drug => (
-                                        <CommandItem
-                                            key={drug.rxcui}
-                                            value={drug.full_name}
-                                            onSelect={() => handleSelectDrug(drug)}
-                                            className="cursor-pointer py-2 px-4"
-                                        >
-                                           <div className="flex items-center gap-3">
-                                                <Pill className="h-4 w-4 text-muted-foreground" />
-                                                <span className="font-medium">{drug.full_name}</span>
-                                           </div>
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            )}
-                        </CommandList>
-                    )}
+                 <div className="flex items-center">
+                    <div className="relative flex-grow">
+                        <CommandInput
+                            value={medicationQuery}
+                            onValueChange={handleMedicationQueryChange}
+                            onFocus={() => { if(medicationQuery.length >=3) setIsMedicationListVisible(true) }}
+                            onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
+                            placeholder="Search for a medication..."
+                            className="h-12 text-lg border-0 focus-visible:ring-0"
+                        />
+                         {medicationQuery && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full"
+                                onClick={() => handleMedicationQueryChange('')}
+                            >
+                                <XIcon className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                    <Button onClick={handleAddDrug} disabled={!stagedDrug} className="h-10 m-1">Add</Button>
                 </div>
+                
+                {isMedicationListVisible && (
+                    <CommandList className="border-t">
+                        {medicationLoading && <CommandItem disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" />Searching...</CommandItem>}
+                        {!medicationLoading && medications.length === 0 && medicationQuery.length > 2 && (
+                             <CommandEmpty>
+                                <div className="text-center px-4 py-8">
+                                    <p className="font-semibold">No Medications Found</p>
+                                    <p className="text-sm text-muted-foreground mt-2">If you're having trouble, try the following:</p>
+                                    <ul className="text-sm text-muted-foreground list-disc list-inside mt-2 text-left max-w-xs mx-auto">
+                                        <li>Check the spelling of the medication.</li>
+                                        <li>Try searching for the generic name.</li>
+                                        <li>The drug may be over-the-counter and not listed.</li>
+                                    </ul>
+                                </div>
+                            </CommandEmpty>
+                        )}
+                        {medications.length > 0 && (
+                            <CommandGroup>
+                                {medications.map(drug => (
+                                    <CommandItem
+                                        key={drug.rxcui}
+                                        value={drug.full_name}
+                                        onSelect={() => handleSelectDrug(drug)}
+                                        className="cursor-pointer py-2 px-4"
+                                    >
+                                       <div className="flex items-center gap-3">
+                                            <Pill className="h-4 w-4 text-muted-foreground" />
+                                            <span className="font-medium">{drug.full_name}</span>
+                                       </div>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        )}
+                    </CommandList>
+                )}
             </Command>
+
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="link" className="text-sm text-muted-foreground">
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Can't find your drug?
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Trouble Finding Your Medication?</DialogTitle>
+                         <DialogDescription>
+                            If you're having trouble finding your medication, try the following tips:
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ul className="list-disc list-inside space-y-2 text-sm py-4">
+                        <li>Check the spelling of the medication.</li>
+                        <li>Try searching for the generic name instead of the brand name.</li>
+                        <li>Ensure you are searching for a prescription drug. Over-the-counter medications are not typically listed.</li>
+                    </ul>
+                </DialogContent>
+            </Dialog>
 
              <Button 
                 onClick={() => setIsMedicationDetailsVisible(!isMedicationDetailsVisible)} 
