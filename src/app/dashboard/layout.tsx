@@ -32,7 +32,6 @@ import {
 import { UserNav } from "@/components/user-nav";
 import {
   LayoutDashboard,
-  ShieldCheck,
   FileText,
   Settings,
   LogOut,
@@ -41,12 +40,13 @@ import {
   FileDigit,
   PiggyBank,
   Heart,
-  UserPlus,
   LogIn,
   X,
   Beaker,
   Layers,
+  Loader2,
 } from "lucide-react";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
 
 function DashboardLayoutComponent({
@@ -57,6 +57,7 @@ function DashboardLayoutComponent({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [user, loading, error] = useFirebaseAuth();
   
   const applicationType = searchParams.get('type');
   const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
@@ -66,21 +67,13 @@ function DashboardLayoutComponent({
 
   const isActive = (path: string) => pathname === path;
   
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
-    // Check for guest auth status in localStorage
-    const guestAuth = localStorage.getItem("hawk-auth") === "true";
-    setIsLoggedIn(guestAuth);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("hawk-auth");
-    localStorage.removeItem("isNewUser");
-    localStorage.removeItem("userFirstName");
-    router.push("/");
-  };
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
   
   const handleExit = () => {
     setIsAlertOpen(false);
@@ -90,6 +83,18 @@ function DashboardLayoutComponent({
       router.push('/dashboard');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // or a redirect, but the effect handles it
+  }
 
   if (isFullScreenForm) {
     return (
@@ -137,13 +142,11 @@ function DashboardLayoutComponent({
                 <Logo />
               </SidebarHeader>
               <SidebarMenu>
-                {isLoggedIn && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Dashboard">
-                      <Link href="/dashboard"><LayoutDashboard /><span>Dashboard</span></Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Dashboard">
+                    <Link href="/dashboard"><LayoutDashboard /><span>Dashboard</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Retirement Plan">
                     <Link href="/dashboard/recommendations"><PiggyBank /><span>Retirement Plan</span></Link>
@@ -169,13 +172,11 @@ function DashboardLayoutComponent({
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {isLoggedIn && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="My Policies">
-                      <Link href="/dashboard/documents"><Layers /><span>My Policies</span></Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/documents")} tooltip="My Policies">
+                    <Link href="/dashboard/documents"><Layers /><span>My Policies</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/education")} tooltip="Education">
                     <Link href="/dashboard/education"><BookOpen /><span>Education</span></Link>
@@ -185,43 +186,14 @@ function DashboardLayoutComponent({
             </div>
             <SidebarFooter className="flex flex-col gap-2">
                <SidebarMenu>
-                {isLoggedIn ? (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")} tooltip="Settings">
-                        <Link href="/dashboard/settings">
-                          <Settings />
-                          <span>Settings</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
-                          <LogOut />
-                          <span>Log Out</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <SidebarMenuItem>
-                       <SidebarMenuButton asChild isActive={isActive("/") && !pathname.includes('signup')} tooltip="Login">
-                        <Link href="/">
-                          <LogIn />
-                          <span>Login</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                       <SidebarMenuButton asChild isActive={pathname.includes('signup')} tooltip="Sign Up">
-                        <Link href="/?mode=signup">
-                          <UserPlus />
-                          <span>Sign Up</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                )}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")} tooltip="Settings">
+                      <Link href="/dashboard/settings">
+                        <Settings />
+                        <span>Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
               </SidebarMenu>
             </SidebarFooter>
           </SidebarContent>
@@ -236,14 +208,7 @@ function DashboardLayoutComponent({
                 </div>
             </div>
             <div className="flex items-center gap-4">
-              {isLoggedIn ? (
-                <UserNav />
-              ) : (
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" asChild><Link href="/">Login</Link></Button>
-                    <Button asChild><Link href="/?mode=signup">Sign Up</Link></Button>
-                </div>
-              )}
+              <UserNav />
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">

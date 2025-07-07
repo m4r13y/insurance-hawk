@@ -1,6 +1,4 @@
-// Firebase has been temporarily disabled. To re-enable, add your configuration
-// to a .env.local file and uncomment the code below.
-/*
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -45,9 +43,3 @@ if (!isFirebaseConfigured) {
 }
 
 export { app, auth, db, isFirebaseConfigured };
-*/
-
-export const app = null;
-export const auth = null;
-export const db = null;
-export const isFirebaseConfigured = false;

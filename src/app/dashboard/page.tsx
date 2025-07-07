@@ -5,11 +5,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, UserPlus, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, ShieldCheck, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Policy } from "@/types";
-import { GuestDashboard } from "@/components/guest-dashboard";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -18,21 +20,12 @@ const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const iconMap: { [key: string]: React.ElementType } = {
-    'Health/Medical Plan': Shield,
-    'Dental Coverage': DentalIcon,
-    'Cancer Insurance': Activity,
-    'Life Insurance': LifeBuoy,
-    'Long-Term Care': Home,
-    'Retirement Plan': PiggyBank
-};
-
 const planTypes = [
-    { id: 'Health/Medical Plan', label: 'Health/Medical Plan', icon: Shield, href: '/dashboard/health-quotes' },
-    { id: 'Dental Coverage', label: 'Dental Coverage', icon: DentalIcon, href: '/dashboard/quotes?plan=dental' },
+    { id: 'Health Insurance', label: 'Health/Medical Plan', icon: Shield, href: '/dashboard/health-quotes' },
+    { id: 'Dental, Vision, Hearing (DVH)', label: 'Dental Coverage', icon: DentalIcon, href: '/dashboard/quotes?plan=dental' },
     { id: 'Cancer Insurance', label: 'Cancer Insurance', icon: Activity, href: '/dashboard/quotes' },
     { id: 'Life Insurance', label: 'Life Insurance', icon: LifeBuoy, href: '/dashboard/quotes' },
-    { id: 'Long-Term Care', label: 'Long-Term Care', icon: Home, href: '/dashboard/quotes' },
+    { id: 'Long-Term Care (LTC)', label: 'Long-Term Care', icon: Home, href: '/dashboard/quotes' },
     { id: 'Retirement Plan', label: 'Retirement Plan', icon: PiggyBank, href: '/dashboard/recommendations' }
 ];
 
@@ -86,49 +79,51 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
 
 
 export default function DashboardPage() {
-    const [loading, setLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, authLoading] = useFirebaseAuth();
     const [isNewUser, setIsNewUser] = useState(false);
     const [policies, setPolicies] = useState<Policy[]>([]);
-    const [userName, setUserName] = useState("Guest");
+    const [policiesLoading, setPoliciesLoading] = useState(true);
     
     useEffect(() => {
-        const guestAuth = localStorage.getItem("hawk-auth") === "true";
-        const newUser = localStorage.getItem("isNewUser") === "true";
-        const name = localStorage.getItem("userFirstName") || "Guest";
-        
-        setIsLoggedIn(guestAuth);
-        setIsNewUser(newUser);
-        setUserName(name);
-        
-        // In guest mode, we can use localStorage for policies or show none.
-        // For this example, we'll just show an empty state.
-        setPolicies([]);
-        setLoading(false);
-    }, []);
+        const newUserFlag = localStorage.getItem("isNewUser") === "true";
+        setIsNewUser(newUserFlag);
+
+        if (user && db) {
+            const q = query(collection(db, "users", user.uid, "policies"));
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const userPolicies: Policy[] = [];
+                querySnapshot.forEach((doc) => {
+                    userPolicies.push({ id: doc.id, ...doc.data() } as Policy);
+                });
+                setPolicies(userPolicies);
+                setPoliciesLoading(false);
+            });
+            return () => unsubscribe();
+        } else {
+            setPoliciesLoading(false);
+        }
+    }, [user]);
 
     const handleDismissOnboarding = () => {
         localStorage.removeItem("isNewUser");
         setIsNewUser(false);
     };
 
-    if (loading) {
-        return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    if (authLoading || policiesLoading) {
+        return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>;
     }
-
-    if (!isLoggedIn) {
-        return <GuestDashboard />;
-    }
+    
+    if (!user) return null; // Layout should redirect
 
     if (isNewUser) {
-        return <OnboardingGuide name={userName} onDismiss={handleDismissOnboarding} />;
+        return <OnboardingGuide name={user.displayName?.split(' ')[0] || 'there'} onDismiss={handleDismissOnboarding} />;
     }
 
-    const ownedPlanCategories = [...new Set(policies.map(p => p.category))];
+    const ownedPlanCategories = [...new Set(policies.map(p => p.policyCategoryName))];
     const retirementScore = Math.round((ownedPlanCategories.length / planTypes.length) * 100);
     const missingPlans = planTypes.filter(p => !ownedPlanCategories.includes(p.id));
-    const primaryHealthPlan = policies.find(p => p.category === 'Health/Medical Plan');
-    const displayName = userName.split(' ')[0];
+    const primaryHealthPlan = policies.find(p => p.policyCategoryName === 'Health Insurance');
+    const displayName = user.displayName?.split(' ')[0] || 'there';
 
   return (
     <div className="space-y-8 md:space-y-12">
@@ -147,15 +142,15 @@ export default function DashboardPage() {
                      <Card className="h-full">
                       <CardHeader>
                         <CardTitle>Your Current Plan</CardTitle>
-                        <CardDescription>{primaryHealthPlan.provider} {primaryHealthPlan.planName}</CardDescription>
+                        <CardDescription>{primaryHealthPlan.carrierName} {primaryHealthPlan.planName}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-slate-500">Premium</p>
-                            <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 150).toFixed(2)}/mo</p>
+                            <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 0).toFixed(2)}/mo</p>
                           </div>
-                          <Image src="https://placehold.co/100x40.png" data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />
+                          {primaryHealthPlan.carrierLogoUrl && <Image src={primaryHealthPlan.carrierLogoUrl} data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />}
                         </div>
                         <div>
                           <div className="flex justify-between items-baseline text-sm mb-1">
@@ -238,7 +233,7 @@ export default function DashboardPage() {
                                 })}
                             </div>
                         ) : (
-                            <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the Documents page to add your policies.</p>
+                            <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the "My Policies" page to add your policies.</p>
                         )}
                     </div>
                 </CardContent>

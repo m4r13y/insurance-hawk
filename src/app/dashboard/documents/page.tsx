@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +16,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { db } from '@/lib/firebase';
+import { collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp } from 'firebase/firestore';
 
 
 const carriers = [
@@ -100,7 +102,7 @@ const medicareSubcategories = [
 function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: { 
     open: boolean; 
     onOpenChange: (open: boolean) => void;
-    onSave: (policy: PolicyType) => void;
+    onSave: (policy: Omit<PolicyType, 'id'>, id?: string) => void;
     editingPolicy: PolicyType | null;
 }) {
     const [step, setStep] = useState(1);
@@ -111,7 +113,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
 
     useEffect(() => {
         if (open) {
-            setPolicy(editingPolicy || { id: `pol-${Date.now()}` });
+            setPolicy(editingPolicy || {});
             setStep(editingPolicy ? 4 : 1);
         } else {
             setPolicy({});
@@ -160,13 +162,13 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
     }
 
     const handleSave = () => {
-        onSave(policy as PolicyType);
+        onSave(policy as Omit<PolicyType, 'id'>, editingPolicy?.id);
         onOpenChange(false);
     }
     
     const filteredCarriers = carriers.filter(c => c.name.toLowerCase().includes(carrierSearch.toLowerCase()));
     
-    const isSaveDisabled = step === 4 && (!policy.policyCategoryId || !policy.carrierId);
+    const isSaveDisabled = step === 4 && (!policy.policyCategoryId || !policy.carrierId || !policy.planName);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -228,7 +230,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="planName">Policy Nickname (optional)</Label>
+                                <Label htmlFor="planName">Policy Nickname</Label>
                                 <Input id="planName" value={policy.planName || ''} onChange={e => setPolicy(p => ({ ...p, planName: e.target.value }))} placeholder="e.g., John's Medigap"/>
                             </div>
                              <div className="grid grid-cols-2 gap-4">
@@ -337,8 +339,7 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
 }
 
 export default function PoliciesAndDocumentsPage() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [user] = useFirebaseAuth();
     
     // Policy state
     const [policies, setPolicies] = useState<PolicyType[]>([]);
@@ -354,51 +355,46 @@ export default function PoliciesAndDocumentsPage() {
     const { toast } = useToast();
     
      useEffect(() => {
-        const checkAuth = () => {
-            const guestAuth = localStorage.getItem("hawk-auth") === "true";
-            setIsLoggedIn(guestAuth);
-            setLoading(false);
-        };
-        checkAuth();
+        if (user && db) {
+            const policiesQuery = query(collection(db, "users", user.uid, "policies"));
+            const docsQuery = query(collection(db, "users", user.uid, "documents"));
 
-        const storedPolicies = localStorage.getItem("hawk-policies");
-        if (storedPolicies) setPolicies(JSON.parse(storedPolicies));
-        
-        const storedDocuments = localStorage.getItem("hawk-documents");
-        if (storedDocuments) setDocuments(JSON.parse(storedDocuments));
-        
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "hawk-policies") {
-                const updatedPolicies = localStorage.getItem("hawk-policies");
-                setPolicies(updatedPolicies ? JSON.parse(updatedPolicies) : []);
+            const unsubPolicies = onSnapshot(policiesQuery, (snapshot) => {
+                const userPolicies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PolicyType));
+                setPolicies(userPolicies);
+            });
+
+            const unsubDocs = onSnapshot(docsQuery, (snapshot) => {
+                const userDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DocumentType));
+                setDocuments(userDocs);
+            });
+
+            return () => {
+                unsubPolicies();
+                unsubDocs();
             }
-             if (e.key === "hawk-documents") {
-                const updatedDocs = localStorage.getItem("hawk-documents");
-                setDocuments(updatedDocs ? JSON.parse(updatedDocs) : []);
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-
-    }, []);
+        }
+    }, [user]);
 
     // Policy handlers
-    const savePolicies = (updatedPolicies: PolicyType[]) => {
-        setPolicies(updatedPolicies);
-        localStorage.setItem("hawk-policies", JSON.stringify(updatedPolicies));
-    }
-
-    const handleSavePolicy = (policy: PolicyType) => {
-        const existingIndex = policies.findIndex(p => p.id === policy.id);
-        if (existingIndex > -1) {
-            const updatedPolicies = [...policies];
-            updatedPolicies[existingIndex] = policy;
-            savePolicies(updatedPolicies);
-            toast({ title: 'Policy Updated', description: `${policy.carrierName} policy has been updated.` });
-        } else {
-            savePolicies([...policies, policy]);
-            toast({ title: 'Policy Added', description: `${policy.carrierName} policy has been added to your list.` });
+    const handleSavePolicy = async (policyData: Omit<PolicyType, 'id'>, id?: string) => {
+        if (!user || !db) return;
+        
+        try {
+            if (id) {
+                // Editing existing policy
+                const policyRef = doc(db, "users", user.uid, "policies", id);
+                await setDoc(policyRef, policyData, { merge: true });
+                toast({ title: 'Policy Updated', description: `${policyData.carrierName} policy has been updated.` });
+            } else {
+                // Adding new policy
+                const policiesCol = collection(db, "users", user.uid, "policies");
+                await addDoc(policiesCol, { ...policyData, createdAt: serverTimestamp() });
+                toast({ title: 'Policy Added', description: `${policyData.carrierName} policy has been added.` });
+            }
+        } catch (error) {
+            console.error("Error saving policy:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save policy.' });
         }
         setEditingPolicy(null);
     };
@@ -408,46 +404,53 @@ export default function PoliciesAndDocumentsPage() {
         setIsAddPolicyDialogOpen(true);
     }
     
-    const handleDeletePolicy = () => {
-        if(policyToDelete) {
-            const updatedPolicies = policies.filter(p => p.id !== policyToDelete);
-            savePolicies(updatedPolicies);
-            toast({ title: 'Policy Removed', description: `The policy has been removed from your list.` });
-            setPolicyToDelete(null);
+    const handleDeletePolicy = async () => {
+        if(policyToDelete && user && db) {
+            try {
+                await deleteDoc(doc(db, "users", user.uid, "policies", policyToDelete));
+                toast({ title: 'Policy Removed', description: `The policy has been removed.` });
+                setPolicyToDelete(null);
+            } catch (error) {
+                console.error("Error deleting policy:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not delete policy.' });
+            }
         }
     }
 
     // Document handlers
-    const saveDocuments = (updatedDocs: DocumentType[]) => {
-        setDocuments(updatedDocs);
-        localStorage.setItem("hawk-documents", JSON.stringify(updatedDocs));
-    }
-
-     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
+     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0] && user && db) {
             const file = event.target.files[0];
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const newDocument: DocumentType = {
-                    id: `doc-${Date.now()}`,
+            reader.onload = async (e) => {
+                const newDocument: Omit<DocumentType, 'id'> = {
                     name: file.name,
                     uploadDate: new Date().toISOString().split('T')[0],
                     size: `${(file.size / 1024).toFixed(2)} KB`,
                     dataUrl: e.target?.result as string,
                 };
-                saveDocuments([...documents, newDocument]);
-                toast({ title: "Document Uploaded", description: file.name });
+                try {
+                    await addDoc(collection(db, "users", user.uid, "documents"), newDocument);
+                    toast({ title: "Document Uploaded", description: file.name });
+                } catch (error) {
+                     console.error("Error uploading document:", error);
+                    toast({ variant: 'destructive', title: 'Error', description: 'Could not upload document.' });
+                }
             };
             reader.readAsDataURL(file);
         }
     };
     
-    const handleDeleteDocument = () => {
-        if (documentToDelete) {
-            const updatedDocs = documents.filter(d => d.id !== documentToDelete.id);
-            saveDocuments(updatedDocs);
-            toast({ title: "Document Removed", description: `${documentToDelete.name} has been removed.` });
-            setDocumentToDelete(null);
+    const handleDeleteDocument = async () => {
+        if (documentToDelete && user && db) {
+            try {
+                await deleteDoc(doc(db, "users", user.uid, "documents", documentToDelete.id));
+                toast({ title: "Document Removed", description: `${documentToDelete.name} has been removed.` });
+                setDocumentToDelete(null);
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not delete document.' });
+            }
         }
     }
 
@@ -455,16 +458,6 @@ export default function PoliciesAndDocumentsPage() {
         fileInputRef.current?.click();
     };
 
-    if (loading) return <p>Loading...</p>;
-    
-    if (!isLoggedIn) {
-        return (
-            <div className="text-center">
-                <p>Please log in or continue as a guest to manage your account.</p>
-                <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
-            </div>
-        );
-    }
 
   return (
         <div className="space-y-8 max-w-5xl mx-auto">
@@ -515,7 +508,7 @@ export default function PoliciesAndDocumentsPage() {
                                         <File className="h-6 w-6 text-muted-foreground" />
                                         <div>
                                             <p className="font-medium">{doc.name}</p>
-                                            <p className="text-xs text-muted-foreground">Uploaded on {doc.uploadDate} &bull; {doc.size}</p>
+                                            <p className="text-xs text-muted-foreground">Uploaded on {new Date(doc.uploadDate).toLocaleDateString()} &bull; {doc.size}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">

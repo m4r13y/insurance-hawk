@@ -12,11 +12,14 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Info, Pencil, Eye, EyeOff, Save, KeyRound } from "lucide-react"
+import { Info, Pencil, Eye, EyeOff, Save, KeyRound, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
+import { db, auth } from "@/lib/firebase"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 
 // --- Schemas --- //
 const notificationsFormSchema = z.object({
@@ -74,7 +77,7 @@ const EditableCard = ({ title, children, FormComponent, onSave }: { title: strin
 
 const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: string; isSensitive?: boolean; }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const displayValue = isSensitive ? (isVisible ? value : '•'.repeat(value.length || 10)) : value;
+    const displayValue = isSensitive ? (isVisible ? value : '•'.repeat(value?.length || 10)) : value;
     return (
         <div className="flex justify-between items-center py-2">
             <span className="text-muted-foreground">{label}</span>
@@ -91,11 +94,15 @@ const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: 
 };
 
 const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
+    const [user] = useFirebaseAuth();
     const form = useForm({ resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })) });
      useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
+        if(user && db) {
+            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+                if(docSnap.exists()) form.reset(docSnap.data());
+            })
+        }
+    }, [user, form]);
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -111,19 +118,20 @@ const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; o
 };
 
 const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ email: true, phone: true, address: true, city: true, state: true, zip: true })) });
+    const [user] = useFirebaseAuth();
+    const form = useForm({ resolver: zodResolver(profileSchema.pick({ phone: true, address: true, city: true, state: true, zip: true })) });
      useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
+        if(user && db) {
+            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+                if(docSnap.exists()) form.reset(docSnap.data());
+            })
+        }
+    }, [user, form]);
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField name="email" control={form.control} render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                    <FormField name="phone" control={form.control} render={({ field }) => <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-                 <FormField name="address" control={form.control} render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name="phone" control={form.control} render={({ field }) => <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name="address" control={form.control} render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                 <div className="grid grid-cols-3 gap-4">
                      <FormField name="city" control={form.control} render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                      <FormField name="state" control={form.control} render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -136,11 +144,15 @@ const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; on
 };
 
 const FinancialInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
+    const [user] = useFirebaseAuth();
     const form = useForm({ resolver: zodResolver(profileSchema.pick({ medicareId: true })) });
      useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
+        if(user && db) {
+            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+                if(docSnap.exists()) form.reset(docSnap.data());
+            })
+        }
+    }, [user, form]);
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -157,82 +169,86 @@ const defaultHawkImage = "/hawk-profile.jpg";
 // --- Main Component --- //
 
 export default function SettingsPage() {
-    const { toast } = useToast()
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [loading, setLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [firstName, setFirstName] = useState("Guest");
+    const { toast } = useToast();
+    const [user, loading] = useFirebaseAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [profile, setProfile] = useState<any>({});
 
     const notificationsForm = useForm<z.infer<typeof notificationsFormSchema>>({
         resolver: zodResolver(notificationsFormSchema),
         defaultValues: { emailNotifications: true, smsNotifications: false },
-    })
+    });
 
     const securityForm = useForm<z.infer<typeof securityFormSchema>>({
         resolver: zodResolver(securityFormSchema),
         defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
-    })
+    });
 
-     useEffect(() => {
-        const guestAuth = localStorage.getItem("hawk-auth") === "true";
-        setIsLoggedIn(guestAuth);
-        
-        const name = localStorage.getItem("userFirstName") || "Guest";
-        setFirstName(name);
-        setImagePreview(defaultHawkImage);
-
-        const storedProfile = localStorage.getItem("userProfile");
-        if(storedProfile) {
-            setProfile(JSON.parse(storedProfile));
-        } else if (name !== "Guest") {
-             const defaultProfile = { firstName: name, lastName: "", dob: "" };
-             setProfile(defaultProfile);
-             localStorage.setItem("userProfile", JSON.stringify(defaultProfile));
-        }
-
-        setLoading(false);
-    }, [])
-    
     useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "userProfile") {
-                const updatedProfile = localStorage.getItem("userProfile");
-                setProfile(updatedProfile ? JSON.parse(updatedProfile) : {});
+        if (user && db) {
+            const userDocRef = doc(db, 'users', user.uid);
+            getDoc(userDocRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    setProfile(docSnap.data());
+                    notificationsForm.reset(docSnap.data().notifications || {});
+                }
+            });
+        }
+    }, [user, notificationsForm]);
+
+    const handleSaveProfile = async (newData: any) => {
+        if (!user || !db) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+            const updatedProfileData = { ...profile, ...newData };
+            await setDoc(userDocRef, newData, { merge: true });
+            
+            // Also update auth profile if name changed
+            if (newData.firstName || newData.lastName) {
+                await updateProfile(auth.currentUser!, { displayName: `${newData.firstName || profile.firstName} ${newData.lastName || profile.lastName}` });
             }
-        };
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
 
-    const handleDisabledSubmit = () => {
-         toast({
-            variant: "destructive",
-            title: "Feature Disabled",
-            description: "This feature is only available for registered users.",
-        })
-    }
+            setProfile(updatedProfileData);
+            toast({ title: "Profile Updated", description: "Your information has been saved." });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not save profile." });
+        }
+    };
 
-    const handleSaveProfile = (newData: any) => {
-        const updatedProfile = { ...profile, ...newData };
-        setProfile(updatedProfile);
-        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-        toast({ title: "Profile Updated", description: "Your information has been saved." });
+    const handleNotificationsSubmit = async (data: z.infer<typeof notificationsFormSchema>) => {
+        if (!user || !db) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+            await setDoc(userDocRef, { notifications: data }, { merge: true });
+            toast({ title: "Preferences Saved", description: "Your notification settings have been updated." });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not save preferences." });
+        }
     };
     
-    const handleImageChange = () => { handleDisabledSubmit(); };
+    const handleSecuritySubmit = async (data: z.infer<typeof securityFormSchema>) => {
+        if (!user || !auth.currentUser) return;
+        
+        try {
+            const credential = EmailAuthProvider.credential(user.email!, data.currentPassword);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+            await updatePassword(auth.currentUser, data.newPassword);
+            toast({ title: "Password Changed", description: "Your password has been successfully updated." });
+            securityForm.reset();
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Password Change Failed",
+                description: error.message?.replace('Firebase: ', '') || "An unknown error occurred.",
+            });
+        }
+    };
 
-  if (loading) { return <p>Loading settings...</p> }
+    if (loading) { return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div> }
   
-  if (!isLoggedIn) {
-      return (
-        <div className="text-center">
-            <p>You must be logged in to view settings.</p>
-            <Button asChild className="mt-4"><Link href="/">Login</Link></Button>
-        </div>
-      )
-  }
+    if (!user) { return null }
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
@@ -241,25 +257,17 @@ export default function SettingsPage() {
         <p className="text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
       </div>
 
-       <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>Guest Mode</AlertTitle>
-          <AlertDescription>
-            You are currently browsing as a guest. All data is stored locally in your browser and will not be saved to an account.
-          </AlertDescription>
-      </Alert>
-
         <Card>
             <CardHeader className="flex flex-row items-center gap-6">
                 <Avatar className="h-20 w-20">
-                    <AvatarImage src={imagePreview || defaultHawkImage} alt="User avatar" />
-                    <AvatarFallback>{firstName?.[0]}</AvatarFallback>
+                    <AvatarImage src={user.photoURL || defaultHawkImage} alt="User avatar" />
+                    <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                    <CardTitle className="text-xl">Your Profile</CardTitle>
-                    <CardDescription>This information helps us personalize your experience.</CardDescription>
-                    <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload Photo</Button>
+                    <CardTitle className="text-xl">{profile.displayName || user.displayName}</CardTitle>
+                    <CardDescription>{user.email}</CardDescription>
+                    <input type="file" ref={fileInputRef} onChange={() => {}} accept="image/*" className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled>Upload Photo</Button>
                 </div>
             </CardHeader>
         </Card>
@@ -271,7 +279,7 @@ export default function SettingsPage() {
         </EditableCard>
 
         <EditableCard title="Contact Information" FormComponent={ContactInfoForm} onSave={handleSaveProfile}>
-            <InfoRow label="Email" value={profile.email || ''} />
+            <InfoRow label="Email" value={profile.email || user.email || ''} />
             <Separator/>
             <InfoRow label="Phone" value={profile.phone || ''} />
             <Separator/>
@@ -290,30 +298,28 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
            <Form {...notificationsForm}>
-            <form onSubmit={notificationsForm.handleSubmit(handleDisabledSubmit)} className="space-y-6">
-                <fieldset disabled className="space-y-6">
-                    <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                            <div className="space-y-1.5">
-                                <FormLabel className="text-base">Email Notifications</FormLabel>
-                                <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
-                            </div>
-                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        </FormItem>
-                    )} />
-                     <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                            <div className="space-y-1.5">
-                                <FormLabel className="text-base">SMS Text Notifications</FormLabel>
-                                <FormDescription>Get important alerts and status updates via text message.</FormDescription>
-                            </div>
-                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        </FormItem>
-                    )} />
-                     <div className="flex justify-end">
-                        <Button type="submit">Save Preferences</Button>
-                    </div>
-                </fieldset>
+            <form onSubmit={notificationsForm.handleSubmit(handleNotificationsSubmit)} className="space-y-6">
+                <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
+                        <div className="space-y-1.5">
+                            <FormLabel className="text-base">Email Notifications</FormLabel>
+                            <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
+                        </div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                    </FormItem>
+                )} />
+                    <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
+                        <div className="space-y-1.5">
+                            <FormLabel className="text-base">SMS Text Notifications</FormLabel>
+                            <FormDescription>Get important alerts and status updates via text message.</FormDescription>
+                        </div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                    </FormItem>
+                )} />
+                    <div className="flex justify-end">
+                    <Button type="submit">Save Preferences</Button>
+                </div>
             </form>
            </Form>
         </CardContent>
@@ -326,33 +332,31 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
            <Form {...securityForm}>
-            <form onSubmit={securityForm.handleSubmit(handleDisabledSubmit)} className="space-y-8">
-                <fieldset disabled className="space-y-8">
-                     <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Current Password</FormLabel>
-                            <FormControl><Input type="password" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>New Password</FormLabel>
-                            <FormControl><Input type="password" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Confirm New Password</FormLabel>
-                            <FormControl><Input type="password" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <div className="flex justify-end">
-                        <Button type="submit" variant="destructive">Change Password</Button>
-                    </div>
-                </fieldset>
+            <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-8">
+                <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Current Password</FormLabel>
+                    <FormControl><Input type="password" {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+                )} />
+                <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl><Input type="password" {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+                )} />
+                <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl><Input type="password" {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+                )} />
+                <div className="flex justify-end">
+                <Button type="submit" variant="destructive">Change Password</Button>
+                </div>
             </form>
            </Form>
         </CardContent>
