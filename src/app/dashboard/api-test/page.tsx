@@ -3,28 +3,37 @@
 
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
-import { searchProviders } from '@/app/dashboard/health-quotes/actions';
-import type { Provider } from '@/types';
+import { searchProviders, searchDrugs } from '@/app/dashboard/health-quotes/actions';
+import type { Provider, Drug } from '@/types';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
 export default function ApiTestPage() {
+    // Provider State
     const [query, setQuery] = useState('');
     const [zipCode, setZipCode] = useState('76116'); 
     const [debouncedQuery] = useDebounce(query, 500);
     const [providers, setProviders] = useState<Provider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isListVisible, setIsListVisible] = useState(false);
-
-    // New state for selected providers and the UI
     const [selectedProviders, setSelectedProviders] = useState<Provider[]>([]);
     const [showInNetworkOnly, setShowInNetworkOnly] = useState(true);
     const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+    
+    // Medication State
+    const [medicationQuery, setMedicationQuery] = useState('');
+    const [debouncedMedicationQuery] = useDebounce(medicationQuery, 500);
+    const [medications, setMedications] = useState<Drug[]>([]);
+    const [medicationLoading, setMedicationLoading] = useState(false);
+    const [isMedicationListVisible, setIsMedicationListVisible] = useState(false);
+    const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+    const [isMedicationDetailsVisible, setIsMedicationDetailsVisible] = useState(false);
 
+    // Fetch Providers
     useEffect(() => {
         if (debouncedQuery.length < 3) {
             setProviders([]);
@@ -41,21 +50,52 @@ export default function ApiTestPage() {
         fetchProviders();
     }, [debouncedQuery, zipCode]);
 
+    // Fetch Medications
+     useEffect(() => {
+        if (debouncedMedicationQuery.length < 3) {
+            setMedications([]);
+            return;
+        }
+
+        const fetchDrugs = async () => {
+            setMedicationLoading(true);
+            const result = await searchDrugs({ query: debouncedMedicationQuery });
+            setMedications(result.drugs || []);
+            setMedicationLoading(false);
+        };
+
+        fetchDrugs();
+    }, [debouncedMedicationQuery]);
+
+    // Provider Handlers
     const handleSelectProvider = (provider: Provider) => {
-        // Add provider to selected list if not already there
         if (!selectedProviders.some(p => p.npi === provider.npi)) {
             setSelectedProviders(prev => [...prev, provider]);
         }
-        setQuery(''); // Clear input
+        setQuery('');
         setIsListVisible(false);
     };
 
     const handleRemoveProvider = (npi: string) => {
         setSelectedProviders(prev => prev.filter(p => p.npi !== npi));
     };
+    
+    // Medication Handlers
+    const handleSelectDrug = (drug: Drug) => {
+        if (!selectedDrugs.some(d => d.rxcui === drug.rxcui)) {
+            setSelectedDrugs(prev => [...prev, drug]);
+        }
+        setMedicationQuery('');
+        setIsMedicationListVisible(false);
+    };
+
+    const handleRemoveDrug = (rxcui: string) => {
+        setSelectedDrugs(prev => prev.filter(d => d.rxcui !== rxcui));
+    };
 
     return (
-        <div className="max-w-xl mx-auto py-24 space-y-4">
+        <div className="max-w-xl mx-auto py-24 space-y-8">
+            {/* Provider Search */}
             <Command className="overflow-visible rounded-lg border shadow-md">
                 <div className="relative">
                     <CommandInput
@@ -135,6 +175,85 @@ export default function ApiTestPage() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Medication Search */}
+            <Command className="overflow-visible rounded-lg border shadow-md">
+                <div className="relative">
+                    <CommandInput
+                        value={medicationQuery}
+                        onValueChange={(value) => {
+                            setMedicationQuery(value);
+                            setIsMedicationListVisible(value.length > 0);
+                        }}
+                        onFocus={() => setIsMedicationListVisible(true)}
+                        onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)}
+                        placeholder="Search for a medication..."
+                        className="h-12 text-lg"
+                    />
+                    {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                    
+                    {isMedicationListVisible && (
+                        <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                            {medications.length === 0 && debouncedMedicationQuery.length > 2 && !medicationLoading && (
+                                <CommandEmpty>No medications found.</CommandEmpty>
+                            )}
+                            {medications.length > 0 && (
+                                <CommandGroup>
+                                    {medications.map(drug => (
+                                        <CommandItem
+                                            key={drug.rxcui}
+                                            value={drug.full_name}
+                                            onSelect={() => handleSelectDrug(drug)}
+                                            className="cursor-pointer py-2 px-4"
+                                        >
+                                           <div className="flex items-center gap-3">
+                                                <Pill className="h-4 w-4 text-muted-foreground" />
+                                                <span className="font-medium">{drug.full_name}</span>
+                                           </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            )}
+                        </CommandList>
+                    )}
+                </div>
+            </Command>
+
+             <Button 
+                onClick={() => setIsMedicationDetailsVisible(!isMedicationDetailsVisible)} 
+                variant="outline"
+                className="w-full"
+                disabled={selectedDrugs.length === 0}
+            >
+                {isMedicationDetailsVisible ? 'Hide' : 'Show'} Selected Medications ({selectedDrugs.length})
+            </Button>
+
+            {isMedicationDetailsVisible && selectedDrugs.length > 0 && (
+                 <Card className="animate-in fade-in-50">
+                    <CardHeader>
+                        <CardTitle>Selected Medications</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto">
+                            {selectedDrugs.map(drug => (
+                                <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                    <p className="text-sm font-medium">{drug.full_name}</p>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                        <span className="sr-only">Remove {drug.full_name}</span>
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex items-center space-x-2 pt-4">
+                            <Switch id="drug-cost-toggle" />
+                            <Label htmlFor="drug-cost-toggle">Apply estimated drug costs to premium</Label>
+                        </div>
+                         <Button variant="secondary" className="w-full">Add Pharmacy</Button>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
+
