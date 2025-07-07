@@ -60,19 +60,19 @@ export async function getHealthQuotes(values: z.infer<typeof healthQuoterFormSch
         return { error: 'The quoting service is currently unavailable. Please contact support.' };
     }
     
-    const apiHeaders = {
-        'User-Agent': 'HawkNest/1.0',
+    const apiGetHeaders = {
+        'accept': 'application/json',
     };
 
     const apiPostHeaders = {
-        ...apiHeaders,
+        'accept': 'application/json',
         'Content-Type': 'application/json',
     };
 
     try {
         // Step 1: Get County FIPS and State from ZIP code
         const countyResponse = await fetch(`https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${values.zipCode}?apikey=${apiKey}`, {
-            headers: apiHeaders,
+            headers: apiGetHeaders,
         });
 
         if (!countyResponse.ok) {
@@ -171,7 +171,7 @@ export async function searchDrugs(params: { query: string }) {
   const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
   if (!apiKey) return { error: 'Service unavailable', drugs: [] };
   
-  const apiHeaders = { 'User-Agent': 'HawkNest/1.0' };
+  const apiHeaders = { 'accept': 'application/json' };
 
   try {
     const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/drugs/autocomplete?q=${params.query}&apikey=${apiKey}`, { headers: apiHeaders });
@@ -189,7 +189,7 @@ export async function searchProviders(params: { query: string, zipCode: string }
    const apiKey = process.env.HEALTHCARE_GOV_API_KEY;
   if (!apiKey) return { error: 'Service unavailable', providers: [] };
   
-  const apiHeaders = { 'User-Agent': 'HawkNest/1.0' };
+  const apiHeaders = { 'accept': 'application/json' };
   
   try {
     const response = await fetch(`https://marketplace.api.healthcare.gov/api/v1/providers/search?q=${params.query}&zipcode=${params.zipCode}&type=Individual,Facility&apikey=${apiKey}`, { headers: apiHeaders });
