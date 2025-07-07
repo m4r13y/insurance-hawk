@@ -209,11 +209,20 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
         if (match) {
             const genericPart = match[1].trim().replace(/\s+\d.*$/, '').trim();
             baseName = match[2].trim();
-            fullName = `${baseName} (${genericPart})`;
+            fullName = candidate.name; // Use original full name
             isGeneric = false;
         } else {
+            // Handles cases like "lisinopril 20 MG Oral Tablet" or "levothyroxine Injection"
+            // First, remove dosage info to consolidate different strengths
             baseName = candidate.name.replace(/\s+\d.*$/, '').trim();
-            fullName = baseName;
+            
+            // If there's no dosage info (e.g., "levothyroxine Injection"), 
+            // assume the first word is the base name to consolidate different forms.
+            if (baseName.indexOf(' ') > -1 && !/\d/.test(candidate.name)) {
+                baseName = baseName.split(' ')[0];
+            }
+            
+            fullName = candidate.name;
             isGeneric = true;
         }
         
@@ -228,9 +237,9 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
     }).filter((d: Drug | null): d is Drug => d !== null);
 
     // De-duplicate based on the extracted base name.
-    const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.name, drug])).values());
+    const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.name.toLowerCase(), drug])).values());
     
-    return { drugs: uniqueDrugs };
+    return { drugs: uniqueDrugs.map(d => ({ ...d, full_name: d.name })) };
   } catch (e) {
     console.error("Failed to search drugs", e);
     return { error: 'Failed to search drugs', drugs: [] };
