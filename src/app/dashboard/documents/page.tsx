@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, X, ArrowLeft, Building, ListCollapse, Shield, ListTodo, Layers, Pencil, Eye, EyeOff, Save, KeyRound } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,10 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
+
 
 const carriers = [
   { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "https://logo.clearbit.com/uhc.com", "website": "https://uhc.com" },
@@ -139,7 +137,6 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                 ...prev, 
                 policyCategoryId: category.id,
                 policyCategoryName: category.name,
-                // Reset subcategory if category changes
                 policySubcategoryId: undefined,
                 policySubcategoryName: undefined,
             }));
@@ -309,132 +306,22 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
     )
 }
 
-// Editable Card Component
-const EditableCard = ({ title, children, form: FormComponent, onSave }: { title: string; children: React.ReactNode; form: React.FC<any>; onSave: (data: any) => void; }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-xl">{title}</CardTitle>
-                {!isEditing && (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                    </Button>
-                )}
-            </CardHeader>
-            <CardContent>
-                {isEditing ? (
-                    <FormComponent onSave={(data:any) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
-                ) : (
-                    children
-                )}
-            </CardContent>
-        </Card>
-    );
-};
-
-const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  dob: z.string().optional(),
-  email: z.string().email("Invalid email").optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  zip: z.string().optional(),
-  medicareId: z.string().optional(),
-});
-
-const PersonalInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })) });
-     useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
-    return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField name="firstName" control={form.control} render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                    <FormField name="lastName" control={form.control} render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-                <FormField name="dob" control={form.control} render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
-                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
-            </form>
-        </Form>
-    );
-};
-
-const ContactInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ email: true, phone: true, address: true, city: true, state: true, zip: true })) });
-     useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
-    return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField name="email" control={form.control} render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                    <FormField name="phone" control={form.control} render={({ field }) => <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-                 <FormField name="address" control={form.control} render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                <div className="grid grid-cols-3 gap-4">
-                     <FormField name="city" control={form.control} render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                     <FormField name="state" control={form.control} render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                     <FormField name="zip" control={form.control} render={({ field }) => <FormItem><FormLabel>Zip</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
-            </form>
-        </Form>
-    );
-};
-
-const FinancialInfoForm = ({ onSave, onCancel }: { onSave: (data: any) => void; onCancel: () => void }) => {
-    const form = useForm({ resolver: zodResolver(profileSchema.pick({ medicareId: true })) });
-     useEffect(() => {
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        form.reset(profile);
-    }, [form]);
-    return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
-                <FormField name="medicareId" control={form.control} render={({ field }) => <FormItem><FormLabel>Medicare ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></div>
-            </form>
-        </Form>
-    );
-};
-
-const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: string; isSensitive?: boolean; }) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const displayValue = isSensitive ? (isVisible ? value : '•'.repeat(value.length || 10)) : value;
-    return (
-        <div className="flex justify-between items-center py-2">
-            <span className="text-muted-foreground">{label}</span>
-            <div className="flex items-center gap-2">
-                <span className="font-medium">{displayValue || 'N/A'}</span>
-                {isSensitive && value && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsVisible(!isVisible)}>
-                        {isVisible ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                    </Button>
-                )}
-            </div>
-        </div>
-    );
-};
-
-
-export default function MyAccountPage() {
+export default function PoliciesAndDocumentsPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
+    
+    // Policy state
     const [policies, setPolicies] = useState<PolicyType[]>([]);
-    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isAddPolicyDialogOpen, setIsAddPolicyDialogOpen] = useState(false);
     const [editingPolicy, setEditingPolicy] = useState<PolicyType | null>(null);
+    const [policyToDelete, setPolicyToDelete] = useState<string | null>(null);
+
+    // Document state
+    const [documents, setDocuments] = useState<DocumentType[]>([]);
+    const [documentToDelete, setDocumentToDelete] = useState<DocumentType | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
     const { toast } = useToast();
-    const [profile, setProfile] = useState<any>({});
     
      useEffect(() => {
         const checkAuth = () => {
@@ -446,18 +333,18 @@ export default function MyAccountPage() {
 
         const storedPolicies = localStorage.getItem("hawk-policies");
         if (storedPolicies) setPolicies(JSON.parse(storedPolicies));
-
-        const storedProfile = localStorage.getItem("userProfile");
-        if(storedProfile) setProfile(JSON.parse(storedProfile));
+        
+        const storedDocuments = localStorage.getItem("hawk-documents");
+        if (storedDocuments) setDocuments(JSON.parse(storedDocuments));
         
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "hawk-policies") {
                 const updatedPolicies = localStorage.getItem("hawk-policies");
                 setPolicies(updatedPolicies ? JSON.parse(updatedPolicies) : []);
             }
-            if (e.key === "userProfile") {
-                 const updatedProfile = localStorage.getItem("userProfile");
-                setProfile(updatedProfile ? JSON.parse(updatedProfile) : {});
+             if (e.key === "hawk-documents") {
+                const updatedDocs = localStorage.getItem("hawk-documents");
+                setDocuments(updatedDocs ? JSON.parse(updatedDocs) : []);
             }
         };
 
@@ -466,32 +353,20 @@ export default function MyAccountPage() {
 
     }, []);
 
+    // Policy handlers
     const savePolicies = (updatedPolicies: PolicyType[]) => {
         setPolicies(updatedPolicies);
         localStorage.setItem("hawk-policies", JSON.stringify(updatedPolicies));
     }
-    
-    const handleSaveProfile = (newData: any) => {
-        const updatedProfile = { ...profile, ...newData };
-        setProfile(updatedProfile);
-        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-        toast({ title: "Profile Updated", description: "Your information has been saved." });
-    };
 
     const handleSavePolicy = (policy: PolicyType) => {
-        if (!isLoggedIn) {
-            toast({ variant: 'destructive', title: 'Action Disabled', description: 'You must have an account to add policies.' });
-            return;
-        }
-        
         const existingIndex = policies.findIndex(p => p.id === policy.id);
-
-        if (existingIndex > -1) { // Editing existing policy
+        if (existingIndex > -1) {
             const updatedPolicies = [...policies];
             updatedPolicies[existingIndex] = policy;
             savePolicies(updatedPolicies);
-             toast({ title: 'Policy Updated', description: `${policy.carrierName} policy has been updated.` });
-        } else { // Adding new policy
+            toast({ title: 'Policy Updated', description: `${policy.carrierName} policy has been updated.` });
+        } else {
             savePolicies([...policies, policy]);
             toast({ title: 'Policy Added', description: `${policy.carrierName} policy has been added to your list.` });
         }
@@ -500,15 +375,56 @@ export default function MyAccountPage() {
 
     const handleEditPolicy = (policy: PolicyType) => {
         setEditingPolicy(policy);
-        setIsAddDialogOpen(true);
+        setIsAddPolicyDialogOpen(true);
     }
     
-    const handleDeletePolicy = (policyId: string) => {
-        const updatedPolicies = policies.filter(p => p.id !== policyId);
-        savePolicies(updatedPolicies);
-        toast({ title: 'Policy Removed', description: `The policy has been removed from your list.` });
+    const handleDeletePolicy = () => {
+        if(policyToDelete) {
+            const updatedPolicies = policies.filter(p => p.id !== policyToDelete);
+            savePolicies(updatedPolicies);
+            toast({ title: 'Policy Removed', description: `The policy has been removed from your list.` });
+            setPolicyToDelete(null);
+        }
     }
+
+    // Document handlers
+    const saveDocuments = (updatedDocs: DocumentType[]) => {
+        setDocuments(updatedDocs);
+        localStorage.setItem("hawk-documents", JSON.stringify(updatedDocs));
+    }
+
+     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const newDocument: DocumentType = {
+                    id: `doc-${Date.now()}`,
+                    name: file.name,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    size: `${(file.size / 1024).toFixed(2)} KB`,
+                    dataUrl: e.target?.result as string,
+                };
+                saveDocuments([...documents, newDocument]);
+                toast({ title: "Document Uploaded", description: file.name });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
     
+    const handleDeleteDocument = () => {
+        if (documentToDelete) {
+            const updatedDocs = documents.filter(d => d.id !== documentToDelete.id);
+            saveDocuments(updatedDocs);
+            toast({ title: "Document Removed", description: `${documentToDelete.name} has been removed.` });
+            setDocumentToDelete(null);
+        }
+    }
+
+    const triggerFileUpload = () => {
+        fileInputRef.current?.click();
+    };
+
     if (loading) return <p>Loading...</p>;
     
     if (!isLoggedIn) {
@@ -521,49 +437,28 @@ export default function MyAccountPage() {
     }
 
   return (
-        <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="space-y-8 max-w-5xl mx-auto">
              <div>
-                <h1 className="text-2xl font-semibold">My Account</h1>
-                <p className="text-base text-muted-foreground mt-1">View and edit your profile information. All data is saved locally in your browser.</p>
+                <h1 className="text-2xl font-semibold">My Policies & Documents</h1>
+                <p className="text-base text-muted-foreground mt-1">Manage your insurance policies and upload important documents.</p>
             </div>
         
-             <div className="space-y-8">
-                 <EditableCard title="Personal Information" form={PersonalInfoForm} onSave={handleSaveProfile}>
-                     <InfoRow label="Name" value={`${profile.firstName || ''} ${profile.lastName || ''}`} />
-                     <Separator/>
-                     <InfoRow label="Date of Birth" value={profile.dob || ''} />
-                 </EditableCard>
-
-                 <EditableCard title="Contact Information" form={ContactInfoForm} onSave={handleSaveProfile}>
-                     <InfoRow label="Email" value={profile.email || ''} />
-                     <Separator/>
-                     <InfoRow label="Phone" value={profile.phone || ''} />
-                     <Separator/>
-                     <InfoRow label="Address" value={`${profile.address || ''} ${profile.city || ''} ${profile.state || ''} ${profile.zip || ''}`} />
-                 </EditableCard>
-
-                 <EditableCard title="Financial & Health IDs" form={FinancialInfoForm} onSave={handleSaveProfile}>
-                     <InfoRow label="Medicare ID" value={profile.medicareId || ''} isSensitive={true}/>
-                 </EditableCard>
-             </div>
-
-
             <Card>
                 <CardHeader className="flex flex-row justify-between items-start">
                     <div>
                         <CardTitle className="text-xl">Your Policies</CardTitle>
                         <CardDescription>Here are the policies you've added to your nest.</CardDescription>
                     </div>
-                    <Button onClick={() => { setEditingPolicy(null); setIsAddDialogOpen(true); }}>
+                    <Button onClick={() => { setEditingPolicy(null); setIsAddPolicyDialogOpen(true); }}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Policy
                     </Button>
                 </CardHeader>
                 <CardContent>
                     {policies.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {policies.map((policy) => (
-                                <PolicyCard key={policy.id} policy={policy} onEdit={handleEditPolicy} onDelete={handleDeletePolicy} />
+                                <PolicyCard key={policy.id} policy={policy} onEdit={handleEditPolicy} onDelete={() => setPolicyToDelete(policy.id)} />
                             ))}
                         </div>
                     ) : (
@@ -576,12 +471,79 @@ export default function MyAccountPage() {
                 </CardContent>
             </Card>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-xl">Your Documents</CardTitle>
+                    <CardDescription>Upload and manage supporting documents like your Medicare card or proof of residence.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {documents.length > 0 ? (
+                        <div className="space-y-2">
+                             {documents.map(doc => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <File className="h-6 w-6 text-muted-foreground" />
+                                        <div>
+                                            <p className="font-medium">{doc.name}</p>
+                                            <p className="text-xs text-muted-foreground">Uploaded on {doc.uploadDate} &bull; {doc.size}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="ghost" size="icon" asChild><a href={doc.dataUrl} download={doc.name}><Download className="h-4 w-4" /></a></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => setDocumentToDelete(doc)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                    </div>
+                                </div>
+                             ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                            <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <h3 className="text-lg font-semibold mt-4">No Documents Uploaded</h3>
+                            <p className="text-muted-foreground mt-2">Click the button below to upload your first document.</p>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter>
+                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                     <Button onClick={triggerFileUpload}>
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Upload Document
+                    </Button>
+                </CardFooter>
+            </Card>
+
             <PolicyDialog 
-                open={isAddDialogOpen} 
-                onOpenChange={setIsAddDialogOpen} 
+                open={isAddPolicyDialogOpen} 
+                onOpenChange={setIsAddPolicyDialogOpen} 
                 onSave={handleSavePolicy}
                 editingPolicy={editingPolicy}
             />
+
+            <AlertDialog open={!!policyToDelete} onOpenChange={() => setPolicyToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This action will permanently delete this policy from your list. This cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeletePolicy}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+            <AlertDialog open={!!documentToDelete} onOpenChange={() => setDocumentToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This action will permanently delete this document. This cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteDocument}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
   )
 }
