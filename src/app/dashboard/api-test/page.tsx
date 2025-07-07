@@ -50,6 +50,7 @@ export default function ApiTestPage() {
             const result = await searchProviders({ query: debouncedQuery, zipCode });
             setProviders(result.providers || []);
             setLoading(false);
+            setIsListVisible(true);
         };
 
         fetchProviders();
@@ -71,9 +72,9 @@ export default function ApiTestPage() {
         }
         
         setIsMedicationListVisible(true);
+        setMedicationLoading(true);
         
         medicationSearchTimeout.current = setTimeout(async () => {
-            setMedicationLoading(true);
             const result = await searchDrugs({ query: value });
             setMedications(result.drugs || []);
             setMedicationLoading(false);
@@ -114,6 +115,7 @@ export default function ApiTestPage() {
         }
         setStagedDrug(null);
         setMedicationQuery('');
+        setMedications([]);
     };
 
     const handleGenericPromptSubmit = (useGeneric: boolean) => {
@@ -126,9 +128,9 @@ export default function ApiTestPage() {
             generic: null,
             // Add other fields to satisfy Drug type
             strength: '', route: '', rxterms_dose_form: '', rxnorm_dose_form: ''
-        } : genericPrompt;
+        } as Drug : genericPrompt;
 
-        handleAddDrug(drugToAdd as Drug);
+        handleAddDrug(drugToAdd);
         setGenericPrompt(null);
     };
 
@@ -143,8 +145,12 @@ export default function ApiTestPage() {
                 <div className="relative">
                     <CommandInput
                         value={query}
-                        onValueChange={setQuery}
-                        onFocus={() => { if(debouncedQuery.length >=3) setIsListVisible(true) }}
+                        onValueChange={(val) => {
+                            setQuery(val);
+                            if(val.length > 2) setIsListVisible(true)
+                            else setIsListVisible(false);
+                        }}
+                        onFocus={() => { if(providers.length > 0) setIsListVisible(true) }}
                         onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
                         placeholder="Search for a doctor or facility..."
                         className="h-12 text-lg"
@@ -228,7 +234,7 @@ export default function ApiTestPage() {
                             placeholder="Search for a medication..."
                             className="h-12 text-lg border-0 focus-visible:ring-0"
                         />
-                         {medicationQuery && (
+                         {medicationQuery && !stagedDrug && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -239,7 +245,7 @@ export default function ApiTestPage() {
                             </Button>
                         )}
                     </div>
-                    <Button onClick={() => handleAddDrug()} disabled={!stagedDrug} className="h-10 m-1">Add</Button>
+                    <Button onClick={() => handleAddDrug()} disabled={!stagedDrug} className="h-10 m-1">Add Drug</Button>
                 </div>
                 
                 {isMedicationListVisible && (

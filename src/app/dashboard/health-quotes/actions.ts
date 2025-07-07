@@ -176,49 +176,54 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
   if (!query || query.length < 3) return { drugs: [] };
 
   try {
-    // Using public NIH RxNorm API for more comprehensive results.
-    const response = await fetch(`https://rxnav.nlm.nih.gov/REST/spellingsuggestions.json?name=${query}`, { next: { revalidate: 0 } });
+    const response = await fetch(`https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${query}&maxEntries=20&option=1`, { next: { revalidate: 0 } });
     if (!response.ok) {
-        console.error("NIH RxNorm API error", response.status, response.statusText);
+        console.error("NIH RxNav API error", response.status, response.statusText);
         return { drugs: [] };
     };
 
     const data = await response.json();
-    const suggestions = data.suggestionGroup.suggestionList?.suggestion || [];
+    const candidates = data.approximateGroup?.candidate || [];
 
-    // Map suggestions to our Drug type and simulate generic data for the demo.
-    // In a real app, this logic to find generics would be more robust.
-    const drugs: Drug[] = suggestions.map((name: string, index: number) => {
-      const rxcui = `${Date.now()}${index}`; // Using a fake rxcui for demo purposes
+    const drugs: Drug[] = candidates
+    .filter((c: any) => c.source === 'RXNORM') // Use only RXNORM source for consistency
+    .map((candidate: any) => {
       const drug: Drug = {
-        id: rxcui,
-        name: name,
-        rxcui: rxcui,
-        full_name: name,
-        is_generic: !/Lipitor|Altace/i.test(name), // Simple logic for demo
+        id: candidate.rxcui,
+        name: candidate.name,
+        rxcui: candidate.rxcui,
+        full_name: candidate.name,
+        is_generic: true,
         generic: null,
-        // The fields below are not used in this specific search UI but are kept for type consistency
-        strength: '', 
+        strength: '',
         route: '',
         rxterms_dose_form: '',
         rxnorm_dose_form: '',
       };
 
-      // --- SIMULATION of generic data for demo ---
-      if (name.toLowerCase() === 'lipitor') {
+      // Check if the name contains brand/generic info like "simvastatin [Zocor]"
+      const match = candidate.name.match(/^(.*)\[(.*)\]$/);
+      if (match) {
+        const genericName = match[1].trim();
+        const brandName = match[2].trim();
+        drug.name = brandName;
+        drug.full_name = `${brandName} (${genericName})`;
         drug.is_generic = false;
-        drug.generic = { rxcui: 'g-atorvastatin', name: 'atorvastatin' };
+        drug.generic = {
+          // The API doesn't provide the generic's rxcui here, so we create a placeholder
+          rxcui: `g-${candidate.rxcui}`,
+          name: genericName,
+        };
+      } else {
+        drug.full_name = drug.name;
       }
-      if (name.toLowerCase() === 'altace') {
-        drug.is_generic = false;
-        drug.generic = { rxcui: 'g-ramipril', name: 'ramipril' };
-      }
-      // --- END SIMULATION ---
-
       return drug;
     });
+
+    // Deduplicate based on full name to provide a cleaner list
+    const uniqueDrugs = Array.from(new Map(drugs.map(drug => [drug.full_name, drug])).values());
     
-    return { drugs };
+    return { drugs: uniqueDrugs };
   } catch (e) {
     console.error("Failed to search drugs", e);
     return { error: 'Failed to search drugs', drugs: [] };
