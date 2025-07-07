@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, UserPlus, Loader2 } from "lucide-react"
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { FcGoogle } from "react-icons/fc";
-import { getFirestore, doc, setDoc } from "firebase/firestore"
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore"
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase"
 
 
@@ -22,31 +22,63 @@ function AuthFlow() {
   const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const handleGoogleSignIn = async () => {
-    if (!isFirebaseConfigured || !auth) {
-      toast({
-        variant: "destructive",
-        title: "Feature Disabled",
-        description: "This application is not configured for user authentication.",
-      });
-      return;
-    }
   
+  const handleGoogleSignIn = async () => {
+    if (!isFirebaseConfigured || !auth || !db) {
+        toast({
+            variant: "destructive",
+            title: "Feature Disabled",
+            description: "This application is not configured for user authentication.",
+        });
+        return;
+    }
+
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      router.push('/dashboard');
-      toast({ title: "Signed In", description: "Welcome back!" });
+        const userCredential = await signInWithPopup(auth, provider);
+        const user = userCredential.user;
+
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            const displayName = user.displayName || "";
+            const nameParts = displayName.split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
+
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: displayName,
+                firstName: firstName,
+                lastName: lastName,
+                photoURL: user.photoURL,
+                createdAt: new Date().toISOString(),
+            });
+
+            localStorage.setItem("isNewUser", "true");
+            localStorage.setItem("userFirstName", firstName);
+            toast({ title: "Account Created!", description: <>Welcome to Hawk<span className="text-primary">Nest</span>.</> });
+        } else {
+            const userData = userDoc.data();
+            localStorage.removeItem("isNewUser");
+            localStorage.setItem("userFirstName", userData.firstName || user.displayName?.split(' ')[0] || '');
+            toast({ title: "Signed In", description: "Welcome back!" });
+        }
+        
+        router.push('/dashboard');
+
     } catch (error: any) {
-      console.error("Firebase Google Auth Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: error.message?.replace('Firebase: ', '') || "An unknown error occurred.",
-      });
+        console.error("Firebase Google Auth Error:", error);
+        toast({
+            variant: "destructive",
+            title: "Authentication Failed",
+            description: error.message?.replace('Firebase: ', '') || "An unknown error occurred.",
+        });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
   
@@ -82,7 +114,6 @@ function AuthFlow() {
             
             await updateProfile(user, { displayName: `${firstName} ${lastName}` });
 
-            // Create a document in Firestore for the new user
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
@@ -98,7 +129,7 @@ function AuthFlow() {
             router.push('/dashboard');
             toast({ title: "Account Created!", description: <>Welcome to Hawk<span className="text-primary">Nest</span>.</> });
 
-        } else { // Sign In
+        } else {
             localStorage.removeItem("isNewUser");
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             if (userCredential.user.displayName) {
@@ -123,7 +154,7 @@ function AuthFlow() {
         <>
             <div className="grid gap-2 text-center">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                  {isSignUp ? 'Create an Account' : <>Sign In to Hawk<span className="text-primary">Nest</span></>}
+                  {isSignUp ? 'Create an Account' : 'Sign In'}
                 </h1>
                 <p className="text-muted-foreground">
                   {isSignUp ? 'Enter your details to get started.' : 'Enter your credentials to access your dashboard.'}
