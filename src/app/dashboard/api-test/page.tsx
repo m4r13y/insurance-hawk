@@ -38,6 +38,7 @@ export default function ApiTestPage() {
     // Provider State
     const [query, setQuery] = useState('');
     const [zipCode, setZipCode] = useState('76116'); 
+    const [radius, setRadius] = useState('10');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [loading, setLoading] = useState(false);
     const [isListVisible, setIsListVisible] = useState(false);
@@ -217,85 +218,113 @@ export default function ApiTestPage() {
     return (
         <div className="max-w-xl mx-auto py-24 space-y-8">
             {/* Provider Search */}
-            <Command shouldFilter={false} className="overflow-visible rounded-lg border shadow-md">
-                <div className="relative">
-                    <CommandInput
-                        value={query}
-                        onValueChange={handleProviderQueryChange}
-                        onFocus={() => { if(query.length > 0) setIsListVisible(true) }}
-                        onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
-                        placeholder="Search for a doctor or facility..."
-                        className="h-12 text-lg"
-                    />
-                    {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
-                    
-                    {isListVisible && (
-                        <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                            {query.length > 0 && query.length < 3 && !loading && (
-                                <CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>
-                            )}
-                            {providers.length === 0 && query.length >= 3 && !loading && (
-                                <CommandEmpty>No providers found.</CommandEmpty>
-                            )}
-                            {providers.length > 0 && (
-                                <CommandGroup>
-                                    {providers.map(provider => (
-                                        <CommandItem
-                                            key={provider.npi}
-                                            value={provider.name}
-                                            onSelect={() => handleSelectProvider(provider)}
-                                            className="cursor-pointer py-2 px-4"
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">{provider.name}</span>
-                                                <span className="text-sm text-muted-foreground">{provider.specialties?.[0]} - {provider.type}</span>
-                                            </div>
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            )}
-                        </CommandList>
-                    )}
-                </div>
-            </Command>
-
-            <Button 
-                onClick={() => setIsDetailsVisible(!isDetailsVisible)} 
-                variant="outline"
-                className="w-full"
-                disabled={selectedProviders.length === 0}
-            >
-                {isDetailsVisible ? 'Hide' : 'Show'} Selected Providers ({selectedProviders.length})
-            </Button>
-            
-            {isDetailsVisible && selectedProviders.length > 0 && (
-                <Card className="animate-in fade-in-50">
-                    <CardHeader>
-                        <CardTitle>Selected Providers</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto">
-                            {selectedProviders.map(provider => (
-                                <div key={provider.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                    <p className="text-sm font-medium">{provider.name}</p>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(provider.npi)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                        <span className="sr-only">Remove {provider.name}</span>
-                                    </Button>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Find a Doctor or Facility</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
+                        <div className="relative sm:col-span-3">
+                            <Label htmlFor="provider-search">Provider Name</Label>
+                            <Command shouldFilter={false} className="overflow-visible rounded-lg border">
+                                <div className="relative">
+                                    <CommandInput
+                                        id="provider-search"
+                                        value={query}
+                                        onValueChange={handleProviderQueryChange}
+                                        onFocus={() => { if(query.length > 0) setIsListVisible(true) }}
+                                        onBlur={() => setTimeout(() => setIsListVisible(false), 200)}
+                                        placeholder="Search for a doctor or facility..."
+                                        className="h-11"
+                                    />
+                                    {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                    
+                                    {isListVisible && (
+                                        <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                                            {query.length > 0 && query.length < 3 && !loading && (
+                                                <CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>
+                                            )}
+                                            {providers.length === 0 && query.length >= 3 && !loading && (
+                                                <CommandEmpty>No providers found.</CommandEmpty>
+                                            )}
+                                            {providers.length > 0 && (
+                                                <CommandGroup>
+                                                    {providers.map(provider => (
+                                                        <CommandItem
+                                                            key={provider.npi}
+                                                            value={provider.name}
+                                                            onSelect={() => handleSelectProvider(provider)}
+                                                            className="cursor-pointer py-2 px-4"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{provider.name}</span>
+                                                                <span className="text-sm text-muted-foreground">{provider.specialties?.[0]} - {provider.type}</span>
+                                                            </div>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            )}
+                                        </CommandList>
+                                    )}
                                 </div>
-                            ))}
+                            </Command>
                         </div>
-                        <div className="flex items-center space-x-2 pt-4">
-                            <Switch 
-                                id="in-network-toggle" 
-                                checked={showInNetworkOnly} 
-                                onCheckedChange={setShowInNetworkOnly}
-                            />
-                            <Label htmlFor="in-network-toggle">Only show plans where all selected providers are in-network</Label>
+                        <div className="hidden">
+                            <Label htmlFor="zip-code">ZIP Code</Label>
+                            <Input id="zip-code" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="e.g. 90210" className="w-[120px]"/>
                         </div>
-                    </CardContent>
-                </Card>
-            )}
+                         <div className="hidden">
+                             <Label htmlFor="radius">Radius</Label>
+                            <Select value={radius} onValueChange={setRadius}>
+                                <SelectTrigger id="radius" className="w-[120px]">
+                                    <SelectValue placeholder="Radius" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5 miles</SelectItem>
+                                    <SelectItem value="10">10 miles</SelectItem>
+                                    <SelectItem value="25">25 miles</SelectItem>
+                                    <SelectItem value="50">50 miles</SelectItem>
+                                    <SelectItem value="100">100 miles</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <Button 
+                        onClick={() => setIsDetailsVisible(!isDetailsVisible)} 
+                        variant="outline"
+                        className="w-full"
+                        disabled={selectedProviders.length === 0}
+                    >
+                        {isDetailsVisible ? 'Hide' : 'Show'} Selected Providers ({selectedProviders.length})
+                    </Button>
+                    
+                    {isDetailsVisible && selectedProviders.length > 0 && (
+                        <div className="animate-in fade-in-50 space-y-4">
+                            <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto">
+                                {selectedProviders.map(provider => (
+                                    <div key={provider.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <p className="text-sm font-medium">{provider.name}</p>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(provider.npi)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                            <span className="sr-only">Remove {provider.name}</span>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center space-x-2 pt-4">
+                                <Switch 
+                                    id="in-network-toggle" 
+                                    checked={showInNetworkOnly} 
+                                    onCheckedChange={setShowInNetworkOnly}
+                                />
+                                <Label htmlFor="in-network-toggle">Only show plans where all selected providers are in-network</Label>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
 
             {/* Medication Search */}
             <Command shouldFilter={false} className="overflow-visible rounded-lg border shadow-md">
@@ -529,5 +558,3 @@ export default function ApiTestPage() {
         </div>
     );
 }
-
-    
