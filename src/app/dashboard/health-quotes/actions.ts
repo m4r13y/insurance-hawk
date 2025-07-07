@@ -186,8 +186,9 @@ export async function searchDrugs(params: { query: string }): Promise<{ drugs?: 
     const candidates = data.approximateGroup?.candidate || [];
 
     const drugs: Drug[] = candidates
+    .filter((candidate: any) => candidate.source === 'RXNORM')
     .map((candidate: any): Drug | null => {
-        if (candidate.source !== 'RXNORM') return null;
+        if (!candidate.rxcui) return null;
         
         const drug: Drug = {
             id: candidate.rxcui,
