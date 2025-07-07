@@ -14,8 +14,6 @@ export async function testGetCounty(zipCode: string) {
     
     const url = `https://marketplace.api.healthcare.gov/api/v1/counties/by/zip/${zipCode}?apikey=${apiKey}`;
 
-    console.log(`Fetching county data from: ${url}`);
-
     try {
         const response = await fetch(url, {
             method: 'GET',
@@ -30,7 +28,6 @@ export async function testGetCounty(zipCode: string) {
         }
 
         const data = await response.json();
-        console.log("API Response OK:", data);
         return { data };
 
     } catch (e: any) {
