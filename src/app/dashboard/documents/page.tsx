@@ -375,7 +375,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                      {step === 4 && (
                         <div className="space-y-4">
                             <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted">
-                                {policy.carrierLogoUrl && <Image src={policy.carrierName || ''} alt={policy.carrierName || ''} width={32} height={32} />}
+                                {policy.carrierLogoUrl && <Image src={policy.carrierLogoUrl} alt={policy.carrierName || ''} width={32} height={32} />}
                                 <div className="font-semibold">
                                     <p>{policy.carrierName}</p>
                                     <p className="text-sm text-muted-foreground">{policy.policySubcategoryName || policy.policyCategoryName}</p>
@@ -828,4 +828,5 @@ export default function MyAccountPage() {
 }
 
 
+    
     
