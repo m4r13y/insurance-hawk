@@ -42,8 +42,8 @@ export default function ApiTestPage() {
     };
 
     return (
-        <div className="space-y-8 max-w-2xl mx-auto">
-            <Card>
+        <>
+            <Card className="mb-8">
                 <CardHeader>
                     <CardTitle>Provider Search Autocomplete Test</CardTitle>
                     <CardDescription>
@@ -115,6 +115,6 @@ export default function ApiTestPage() {
                     </CardContent>
                 </Card>
             )}
-        </div>
+        </>
     );
 }
