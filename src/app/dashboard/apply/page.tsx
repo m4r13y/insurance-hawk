@@ -155,27 +155,26 @@ const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierW
     if (!planName) return null;
     return (
         <Card className="w-full max-w-sm shrink-0 hidden sm:block">
-            <CardHeader className="p-4">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <CardDescription>Selected Plan</CardDescription>
-                        <CardTitle className="text-lg">{planName}</CardTitle>
-                    </div>
-                    {carrierLogoUrl && (
-                        <Image src={carrierLogoUrl} alt={provider || ''} width={60} height={40} className="object-contain" />
-                    )}
+            <CardHeader className="p-4 flex flex-row items-center gap-4">
+                {carrierLogoUrl && (
+                    <Image src={carrierLogoUrl} alt={provider || ''} width={48} height={48} className="rounded-full object-contain" />
+                )}
+                <div className="flex-1">
+                    <CardTitle className="text-lg">{provider}</CardTitle>
+                    <CardDescription>{planName}</CardDescription>
                 </div>
             </CardHeader>
             <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">{provider}</p>
-                    {carrierWebsite && (
+                {premium && (
+                    <p className="font-bold text-xl">${parseFloat(premium).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                )}
+                {carrierWebsite && (
+                    <Button asChild variant="ghost" size="sm" className="text-muted-foreground px-2">
                         <a href={carrierWebsite} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${provider} website`}>
-                            <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                           Visit Website <ExternalLink className="ml-1.5 h-4 w-4" />
                         </a>
-                    )}
-                </div>
-                {premium && <p className="font-bold text-xl">${parseFloat(premium).toFixed(2)}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>}
+                    </Button>
+                )}
             </CardFooter>
         </Card>
     );
