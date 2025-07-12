@@ -1,102 +1,193 @@
 const admin = require('firebase-admin');
 const fs = require('fs');
-const csvParser = require('csv-parser');
+const { getFirestore } = require('firebase-admin/firestore'); // Import getFirestore
+const readline = require('readline'); // Import readline
 const path = require('path');
 
-// Update: Use path.join for a more robust path
-// Assuming your service account JSON is in the same directory as this script,
-// or adjust the path accordingly.
-var serviceAccount = require(path.join(__dirname, "medicareally-firebase-adminsdk-fbsvc-76abf59110.json"));
-
 // Initialize Firebase Admin SDK
+// Replace '/home/user/studio/medicareally-firebase-adminsdk-fbsvc-76abf59110.json' with the full absolute path to your service account key file.
+// Make sure this file is secure and not publicly accessible.
+try {
+  var serviceAccount = require('/home/user/studio/medicareally-firebase-adminsdk-fbsvc-76abf59110.json');
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount)});
+  console.log('Firebase Admin SDK initialized successfully.');
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+  process.exit(1); // Exit the script if initialization fails
+}
+
+// Create readline interface
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
 });
 
-const db = admin.firestore();
-const collectionRef = db.collection('rates');
 
-const importData = async () => {
-  console.log('Starting CSV import...');
+const db = getFirestore(admin.app(), 'hawknest-database'); // Use getFirestore with app and database name
 
-  // ADD: Array to hold all parsed rows
-  const allRows = [];
 
-  // Wrap the CSV parsing in a Promise to await its completion
-  await new Promise((resolve, reject) => {
-    fs.createReadStream('your_rates.csv') // Make sure this CSV file is in the correct location
-      .pipe(csvParser())
-      .on('data', (row) => {
-        // Ensure data types are correct for ALL relevant fields
-        const rateData = {
-          plan: row.plan,
-          location: row.location,
-          age: parseInt(row.age, 10), // Always use a radix with parseInt
-          rate: parseFloat(row.rate),
-          // Add other fields from your CSV here, and ensure their types:
-          // e.g., isActive: row.isActive === 'TRUE', // for boolean
-          // e.g., startDate: admin.firestore.Timestamp.fromDate(new Date(row.startDate)), // for date/timestamp
-        };
-        allRows.push(rateData); // Add processed row to the array
-      })
-      .on('end', () => {
-        console.log(`Finished parsing CSV. Found ${allRows.length} rows.`);
-        resolve(); // Resolve the promise when parsing is complete
-      })
-      .on('error', (error) => {
-        console.error('Error reading CSV file:', error);
-        reject(error); // Reject the promise on error
-      });
-  });
+async function runImport() {
 
-  // Now that all rows are parsed, process them in batches
-  const batchLimit = 499; // Firestore batch limit is 500, so 499 is safe
-  let currentBatch = db.batch();
-  let batchCount = 0;
-  let totalDocumentsImported = 0;
+  // --- Prompt for CSV File Path ---
+  rl.question('Enter the absolute path to the CSV file to import: ', async (csvFilePath) => {
+    if (!csvFilePath) {
+      console.error('No CSV file path provided. Exiting.');
+      rl.close();
+      return;
+    }
 
-  console.log(`Starting Firestore writes in batches of up to ${batchLimit}...`);
+    // Optional: Check if the file exists
+    if (!fs.existsSync(csvFilePath)) {
+      console.error(`Error: CSV file not found at ${csvFilePath}. Exiting.`);
+      rl.close();
+      return;
+    }
 
-  for (let i = 0; i < allRows.length; i++) {
-    const rowData = allRows[i];
-    const docRef = collectionRef.doc(); // Automatically generate document ID
-
-    currentBatch.set(docRef, rowData);
-    batchCount++;
-
-    if (batchCount === batchLimit) {
-      try {
-        await currentBatch.commit(); // AWAIT THE COMMIT!
-        totalDocumentsImported += batchCount;
-        console.log(`Batch ${Math.ceil(totalDocumentsImported / batchLimit)} committed. Documents imported so far: ${totalDocumentsImported}`);
-        currentBatch = db.batch(); // Start a new batch
-        batchCount = 0; // Reset batch counter
-      } catch (error) {
-        console.error(`Error committing batch at index ${i}:`, error);
-        // Decide how to handle this critical error:
-        // You might want to throw the error to stop the whole process,
-        // or log it and continue if partial import is acceptable.
-        throw new Error('Batch commit failed. Stopping import.');
+    // --- Prompt for Confirmation for CSV File ---
+    rl.question(`You entered the CSV file path: ${csvFilePath}. Are you sure you want to import data from this file? (yes/no): `, async (csvConfirmation) => {
+      if (csvConfirmation.toLowerCase() !== 'yes') {
+        console.log('CSV file import cancelled by user.');
+        rl.close();
+        return;
       }
-    }
-  }
 
-  // Commit any remaining documents in the last batch
-  if (batchCount > 0) {
-    try {
-      await currentBatch.commit(); // AWAIT THE FINAL COMMIT!
-      totalDocumentsImported += batchCount;
-      console.log(`Final batch committed. Total documents imported: ${totalDocumentsImported}`);
-    } catch (error) {
-      console.error('Error committing final batch:', error);
-      throw new Error('Final batch commit failed. Partial import may have occurred.');
-    }
-  } else if (totalDocumentsImported === 0 && allRows.length === 0) {
-      console.log('CSV import complete: No rows found to import.');
-  }
+      console.log(`Proceeding with import from: ${csvFilePath}`);
 
-  console.log('CSV import process finished.');
+      // --- Prompt for Target Firestore Path ---
+      rl.question('Enter the target Firestore path (e.g., collection/document/subcollection): ', async (targetPath) => {
+        if (!targetPath) {
+          console.error('No target path provided. Exiting.');
+          rl.close();
+          return;
+        }
+
+        // --- Prompt for Confirmation for Firestore Path ---
+        rl.question(`You entered the Firestore path: ${targetPath}. Are you sure you want to import data to this path? (yes/no): `, async (firestoreConfirmation) => {
+          if (firestoreConfirmation.toLowerCase() !== 'yes') {
+            console.log('Firestore import cancelled by user.');
+            rl.close();
+            return;
+          }
+
+          console.log(`Proceeding with import to Firestore path: ${targetPath}`);
+
+          // --- Use the Provided Path for Firestore Operations ---
+          const pathSegments = targetPath.split('/');
+          let currentRef = db;
+
+          for (let i = 0; i < pathSegments.length; i++) {
+            if (i % 2 === 0) { // Collection segment
+              currentRef = currentRef.collection(pathSegments[i]);
+            } else { // Document segment
+              currentRef = currentRef.doc(pathSegments[i]);
+            }
+          }
+
+          // At this point, currentRef points to the target collection or a document within a collection/subcollection.
+          // We need to determine if the last segment was a collection or a document.
+          // If the number of path segments is odd, the last segment was a collection.
+          // If the number of path segments is even, the last segment was a document, and we should be writing to a subcollection under it.
+          // Assuming the user provides a path that ends in a collection or subcollection:
+          const targetCollectionRef = currentRef;
+
+          // --- CSV parsing and mapping logic ---
+          console.log('Starting CSV data processing...');
+          const allRows = [];
+          const csvParser = require('csv-parser'); // Require here to ensure it's within the async flow
+
+          await new Promise((resolve, reject) => {
+            fs.createReadStream(csvFilePath)
+              .pipe(csvParser())
+              .on('data', (row) => {
+                // Ensure data types are correct for ALL relevant fields
+                const rowData = {
+                  lookup: row.lookup,
+                  comp: row.comp,
+                  plan: row.plan,
+                  sex: row.sex,
+                  state: row.state,
+                  units: row.units,
+                  age: parseInt(row.age, 10),
+                  inprem: row.inprem,
+                  reprem: row.reprem,
+                  area: row.area,
+                  effdate: row.effdate,
+                  areach: row.areach,
+                  agetype: row.agetype,
+                  comm: row.comm,
+                  tobacco: row.tobacco,
+                  // e.g., isActive: row.isActive === 'TRUE', // for boolean
+                  // e.g., startDate: admin.firestore.Timestamp.fromDate(new Date(row.startDate)), // for date/timestamp
+                };
+                allRows.push(rowData); // Store the mapped row data
+              })
+              .on('end', () => {
+                console.log(`Finished parsing CSV. Found ${allRows.length} rows.`);
+                resolve(); // Resolve the promise when parsing is complete
+              })
+              .on('error', (error) => {
+                console.error('Error reading CSV file:', error);
+                reject(error); // Reject the promise on error
+              });
+          });
+
+          // --- Batch Writing Logic (use targetCollectionRef) ---
+          const batchLimit = 499; // Firestore batch limit is 500, so 499 is safe
+          let currentBatch = db.batch();
+          let batchCount = 0;
+          let totalDocumentsImported = 0;
+
+          console.log(`Starting Firestore writes in batches of up to ${batchLimit}...`);
+
+          for (let i = 0; i < allRows.length; i++) {
+            const rowData = allRows[i];
+            // Use the 'lookup' value from the CSV as the document ID
+            const docRef = targetCollectionRef.doc(rowData.lookup);
+
+            // Remove the lookup field from the document data itself if you don't want it repeated
+            const documentData = { ...rowData };
+            delete documentData.lookup;
+
+            currentBatch.set(docRef, documentData); // Use documentData here, not rowData
+            batchCount++;
+
+            if (batchCount === batchLimit || i === allRows.length - 1) { // Commit if batch limit reached or it's the last document
+              try {
+                await currentBatch.commit(); // AWAIT THE COMMIT!
+                totalDocumentsImported += batchCount;
+                console.log(`Batch committed. Documents imported so far: ${totalDocumentsImported}`);
+                currentBatch = db.batch(); // Start a new batch
+                batchCount = 0; // Reset batch counter
+              } catch (error) {
+                console.error(`Error committing batch at index ${i}:`, error);
+                console.error('Batch commit failed. Stopping import.');
+                // Log failed batch documents (optional, can be resource intensive for large batches)
+                // const failedBatchDocs = allRows.slice(i - batchCount + 1, i + 1);
+                // console.error('Lookup values in the failed batch:');
+                // failedBatchDocs.forEach(doc => console.error(doc.lookup));
+
+                rl.close(); // Close readline on error
+                return; // Exit the async function
+              }
+            }
+          }
+
+          // Check if there were any documents processed at all
+          if (totalDocumentsImported > 0) {
+            console.log(`Data import finished. Total documents imported: ${totalDocumentsImported}.`);
+          } else if (allRows.length > 0) {
+             console.log('CSV data parsed, but no documents were imported (e.g., issue in batch processing or data mapping).');
+          } else {
+            console.log('CSV file parsed, but no rows found to import.');
+          }
+
+          rl.close(); // Close readline on success
+
+        }); // End of Firestore confirmation question
+      }); // End of Firestore path question
+    }); // End of CSV file confirmation question
+  }); // End of CSV file path question
 };
 
-// Run the import function and catch any top-level errors
-importData().catch(console.error); // Catch any unhandled promise rejections
+runImport().catch(console.error);
