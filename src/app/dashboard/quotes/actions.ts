@@ -1,7 +1,7 @@
 
 
 "use server";
-import { getFirestore, doc, getDoc } from "firebase/admin/firestore";
+import { getFirestore, doc, getDoc } from "firebase-admin/firestore";
 import { getAdminApp } from "@/lib/firebase-admin";
 
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuoteRequestValues, CancerQuote } from "@/types";
