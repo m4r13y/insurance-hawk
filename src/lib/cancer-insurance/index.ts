@@ -50,9 +50,10 @@ const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestData['premiumMode'])
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(async (data: CancerQuoteRequestData): Promise<CancerQuoteResponse> => {
-    functions.logger.info("Starting getCancerInsuranceQuote with data:", { data });
+    functions.logger.info("--- Starting Cancer Quote Calculation ---");
+    functions.logger.info("1. Received input data:", { data });
 
-    // 1. Input Validation
+    // Input Validation
     if (!data.state || !["TX", "GA"].includes(data.state)) {
         throw new functions.https.HttpsError('invalid-argument', 'A valid state (TX or GA) is required.');
     }
@@ -69,14 +70,14 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         const inputVariablesRef = db.collection('bflic-cancer-quotes').doc('input-variables');
         const statesRef = db.collection('bflic-cancer-quotes').doc('states');
 
-        functions.logger.info("Fetching config documents...");
+        functions.logger.info("2. Fetching config documents: 'input-variables' and 'states'.");
         const [inputVariablesSnap, statesSnap] = await Promise.all([
             inputVariablesRef.get(),
             statesRef.get(),
         ]);
 
         if (!inputVariablesSnap.exists || !statesSnap.exists) {
-            functions.logger.error("Missing critical configuration documents in Firestore.");
+            functions.logger.error("CRITICAL: Missing configuration documents 'input-variables' or 'states' in Firestore.");
             throw new functions.https.HttpsError('failed-precondition', 'Server configuration is incomplete. Please contact support.');
         }
 
@@ -95,22 +96,22 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         const defaultUnit = inputVariables['default-unit'];
         const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(data.premiumMode)];
         
-        functions.logger.info("Mapped Inputs to Codes:", {cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue});
+        functions.logger.info("3. Mapped Inputs to Codes:", {cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue});
 
 
         // 4. Construct lookupId
         const lookupId = `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
-        functions.logger.info(`Constructed lookupId: ${lookupId}`);
+        functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
 
         // 5. Retrieve Rate Data Document
-        const rateDocumentPath = `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
-        functions.logger.info(`Attempting to fetch rate document at path: ${rateDocumentPath}`);
-        const rateDocRef = db.doc(rateDocumentPath);
+        const rateDocRef = db.collection('bflic-cancer-quotes').doc('states').collection(rateSheet).doc(lookupId);
+        functions.logger.info(`5. Attempting to fetch rate document at path: ${rateDocRef.path}`);
+        
         const rateDocSnap = await rateDocRef.get();
 
         if (!rateDocSnap.exists) {
-            functions.logger.error(`No rate document found for lookupId: ${lookupId}`);
+            functions.logger.error(`No rate document found for lookupId: ${lookupId} at path ${rateDocRef.path}`);
             throw new functions.https.HttpsError('not-found', `No rate found for the provided details. Please check your inputs or contact support. Lookup ID: ${lookupId}`);
         }
         
@@ -127,7 +128,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         // 7. Calculate Premium
         const premium = (((rateVariable * 0.01) * data.benefitAmount) / defaultUnit) * premiumModeValue;
         const roundedPremium = Math.round((premium + Number.EPSILON) * 100) / 100;
-        functions.logger.info(`Calculated premium: ${roundedPremium}`);
+        functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
 
         // 8. Return Successful Response
         return {
@@ -138,7 +139,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         };
 
     } catch (error) {
-        functions.logger.error("Error in getCancerInsuranceQuote cloud function:", error);
+        functions.logger.error("--- ERROR in Cancer Quote Calculation ---", error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
