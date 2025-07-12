@@ -1,4 +1,5 @@
 
+
 export type Plan = {
   id: string;
   name: string;
@@ -27,7 +28,7 @@ export type Document = {
 };
 
 export type Policy = {
-  id: string;
+  id:string;
   carrierId: string;
   carrierName: string;
   carrierLogoUrl: string;
@@ -196,4 +197,20 @@ export type SelectedProvider = Provider & {
     selectedAffiliation?: string;
 };
 
+export type CancerQuoteRequestValues = {
+  state: "TX" | "GA";
+  age: number;
+  familyType: "Applicant Only" | "Applicant and Spouse" | "Applicant and Child(ren)" | "Applicant and Spouse and Child(ren)";
+  tobaccoStatus: "Non-Tobacco" | "Tobacco";
+  premiumMode: "Monthly Bank Draft" | "Monthly Credit Card" | "Monthly Direct Mail" | "Annual";
+  carcinomaInSitu: "25%" | "100%";
+  benefitAmount: number;
+};
+
+export type CancerQuote = {
+  monthly_premium: number;
+  carrier: string;
+  plan_name: string;
+  benefit_amount: number;
+};
     

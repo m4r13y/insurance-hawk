@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useTransition, useEffect } from "react";
@@ -31,15 +32,16 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Terminal, FileDigit, Info, Check } from "lucide-react";
-import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
-import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit } from "@/types";
+import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack } from "lucide-react";
+import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes, getCancerQuotes } from "./actions";
+import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { MedigapQuoteCard } from "@/components/medigap-quote-card";
 import { DentalQuoteCard } from "@/components/dental-quote-card";
+import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
@@ -67,6 +69,16 @@ const hospitalIndemnityFormSchema = z.object({
   tobacco: z.enum(["false", "true"]),
 });
 
+const cancerFormSchema = z.object({
+    state: z.enum(["TX", "GA"]),
+    age: z.coerce.number().min(18, "Must be at least 18").max(99, "Age must be between 18 and 99."),
+    familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"]),
+    tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"]),
+    premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"]),
+    carcinomaInSitu: z.enum(["25%", "100%"]),
+    benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000"),
+});
+
 export default function QuotesPage() {
   const [isMedigapPending, startMedigapTransition] = useTransition();
   const [medigapQuotes, setMedigapQuotes] = useState<Quote[] | null>(null);
@@ -82,6 +94,10 @@ export default function QuotesPage() {
   const [featuredQuote, setFeaturedQuote] = useState<HospitalIndemnityQuote | null>(null);
   const [selectedBaseBenefit, setSelectedBaseBenefit] = useState<HospitalIndemnityBenefit | null>(null);
   const [selectedRiders, setSelectedRiders] = useState<Record<string, HospitalIndemnityBenefit>>({});
+  
+  const [isCancerPending, startCancerTransition] = useTransition();
+  const [cancerQuote, setCancerQuote] = useState<CancerQuote | null>(null);
+  const [cancerError, setCancerError] = useState<string | null>(null);
 
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
@@ -115,6 +131,19 @@ export default function QuotesPage() {
         tobacco: "false",
     },
   });
+
+   const cancerForm = useForm<z.infer<typeof cancerFormSchema>>({
+        resolver: zodResolver(cancerFormSchema),
+        defaultValues: {
+            state: "TX",
+            age: 65,
+            familyType: "Applicant Only",
+            tobaccoStatus: "Non-Tobacco",
+            premiumMode: "Monthly Bank Draft",
+            carcinomaInSitu: "25%",
+            benefitAmount: 25000,
+        },
+    });
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -208,6 +237,20 @@ export default function QuotesPage() {
         }
     });
   }
+  
+  function onCancerSubmit(values: z.infer<typeof cancerFormSchema>) {
+    setCancerError(null);
+    setCancerQuote(null);
+    startCancerTransition(async () => {
+      const result = await getCancerQuotes(values);
+       if (result.error) {
+        setCancerError(result.error);
+      }
+      if (result.quote) {
+        setCancerQuote(result.quote);
+      }
+    });
+  }
 
  const handleRiderToggle = (rider: HospitalIndemnityRider) => {
     const benefit = rider.benefits[0];
@@ -256,9 +299,10 @@ export default function QuotesPage() {
       </div>
 
        <Tabs defaultValue="medigap" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
             <TabsTrigger value="medigap" className="py-2.5">Medicare Supplement</TabsTrigger>
             <TabsTrigger value="dental" className="py-2.5">Dental</TabsTrigger>
+            <TabsTrigger value="cancer" className="py-2.5">Cancer</TabsTrigger>
             <TabsTrigger value="hospital-indemnity" className="py-2.5">Hospital Indemnity</TabsTrigger>
             <TabsTrigger value="life-insurance" className="py-2.5">Life Insurance</TabsTrigger>
         </TabsList>
@@ -473,6 +517,61 @@ export default function QuotesPage() {
                             )}
                         </div>
                     )}
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="cancer" className="mt-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Cancer Insurance Quote</CardTitle>
+                    <CardDescription>Fill out the fields below to get a personalized cancer insurance quote.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...cancerForm}>
+                        <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)} className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                 <FormField control={cancerForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="TX">Texas</SelectItem><SelectItem value="GA">Georgia</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => ( <FormItem><FormLabel>Tobacco Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem><SelectItem value="Tobacco">Tobacco</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( <FormItem className="lg:col-span-2"><FormLabel>Family Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Applicant Only">Applicant Only</SelectItem><SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem><SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem><SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => ( <FormItem><FormLabel>Premium Mode</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem><SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem><SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem><SelectItem value="Annual">Annual</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( <FormItem><FormLabel>Carcinoma In Situ</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="25%">25%</SelectItem><SelectItem value="100%">100%</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            </div>
+                            <div className="flex justify-end">
+                                <Button type="submit" disabled={isCancerPending} size="lg">
+                                {isCancerPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculating...</> : "Get Quote"}
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+
+                    {isCancerPending && (
+                        <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
+                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                            <h3 className="mt-4 font-headline text-xl font-semibold">Calculating your quote...</h3>
+                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
+                        </div>
+                    )}
+
+                    {cancerError && (
+                        <Alert variant="destructive" className="mt-8">
+                            <Terminal className="h-4 w-4" />
+                            <AlertTitle>Error Calculating Quote</AlertTitle>
+                            <AlertDescription>{cancerError}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    {cancerQuote && (
+                        <div className="mt-12">
+                             <h3 className="text-2xl font-semibold mb-2">Your Cancer Insurance Quote</h3>
+                            <p className="mb-6 text-muted-foreground">Here is your personalized quote from Bankers Fidelity.</p>
+                             <div className="flex justify-center">
+                                <CancerQuoteCard quote={cancerQuote} />
+                            </div>
+                        </div>
+                    )}
+
                 </CardContent>
             </Card>
         </TabsContent>
