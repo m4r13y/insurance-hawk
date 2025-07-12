@@ -1,4 +1,5 @@
 
+
 "use server";
 <<<<<<< HEAD
 import { getFirestore, doc, getDoc, initializeApp, getApps, App } from "firebase-admin/firestore";
@@ -202,9 +203,11 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
 const CANCER_QUOTER_APP_NAME = 'CANCER_QUOTER_APP';
 
 function getCancerQuoterAdminApp(): admin.app.App {
-    const existingApp = admin.apps.find(app => app?.name === CANCER_QUOTER_APP_NAME);
-    if (existingApp) {
-        return existingApp;
+    if (admin.apps.length > 0) {
+        const existingApp = admin.apps.find(app => app?.name === CANCER_QUOTER_APP_NAME);
+        if (existingApp) {
+            return existingApp;
+        }
     }
 
     try {
@@ -213,11 +216,10 @@ function getCancerQuoterAdminApp(): admin.app.App {
         
         return admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            databaseURL: `https://hawknest-database.firebaseio.com`
         }, CANCER_QUOTER_APP_NAME);
     } catch (error) {
         console.error('Error initializing dedicated Firebase Admin SDK for Cancer Quoter:', error);
-        throw new Error("Could not initialize Cancer Quoter Firebase Admin SDK. Please check service account credentials.");
+        throw new Error("Could not initialize Firebase Admin SDK. Please check service account credentials.");
     }
 }
 
