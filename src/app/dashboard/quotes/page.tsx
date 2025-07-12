@@ -33,7 +33,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack } from "lucide-react";
-import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes, getCancerQuotes } from "./actions";
+import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes, getCancerQuotes, testFirestoreFetch } from "./actions";
 import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
@@ -43,6 +43,7 @@ import { MedigapQuoteCard } from "@/components/medigap-quote-card";
 import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
 
 const medigapFormSchema = z.object({
@@ -98,6 +99,7 @@ export default function QuotesPage() {
   const [isCancerPending, startCancerTransition] = useTransition();
   const [cancerQuote, setCancerQuote] = useState<CancerQuote | null>(null);
   const [cancerError, setCancerError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
@@ -286,6 +288,27 @@ export default function QuotesPage() {
     return basePremium + riderPremium;
   };
   
+  const handleTestClick = async () => {
+    toast({ title: 'Testing Firestore Fetch...', description: 'Please wait.' });
+    const result = await testFirestoreFetch();
+    if (result.error) {
+      toast({
+        variant: 'destructive',
+        title: 'Test Failed',
+        description: result.error,
+      });
+    } else {
+      toast({
+        title: 'Test Successful!',
+        description: (
+          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+            <code className="text-white">{JSON.stringify(result.data, null, 2)}</code>
+          </pre>
+        ),
+      });
+    }
+  };
+
   const totalPremium = calculateTotalPremium();
   const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
 
@@ -538,7 +561,8 @@ export default function QuotesPage() {
                                  <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( <FormItem><FormLabel>Carcinoma In Situ</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="25%">25%</SelectItem><SelectItem value="100%">100%</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
-                            <div className="flex justify-end">
+                            <div className="flex justify-end items-center gap-4">
+                                <Button type="button" variant="outline" onClick={handleTestClick}>Test</Button>
                                 <Button type="submit" disabled={isCancerPending} size="lg">
                                 {isCancerPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculating...</> : "Get Quote"}
                                 </Button>
