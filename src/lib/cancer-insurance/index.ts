@@ -50,6 +50,8 @@ const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestData['premiumMode'])
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(async (data: CancerQuoteRequestData): Promise<CancerQuoteResponse> => {
+    functions.logger.info("Starting getCancerInsuranceQuote with data:", { data });
+
     // 1. Input Validation
     if (!data.state || !["TX", "GA"].includes(data.state)) {
         throw new functions.https.HttpsError('invalid-argument', 'A valid state (TX or GA) is required.');
@@ -67,18 +69,21 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         const inputVariablesRef = db.collection('bflic-cancer-quotes').doc('input-variables');
         const statesRef = db.collection('bflic-cancer-quotes').doc('states');
 
+        functions.logger.info("Fetching config documents...");
         const [inputVariablesSnap, statesSnap] = await Promise.all([
             inputVariablesRef.get(),
             statesRef.get(),
         ]);
 
         if (!inputVariablesSnap.exists || !statesSnap.exists) {
-            console.error("Missing critical configuration documents in Firestore.");
+            functions.logger.error("Missing critical configuration documents in Firestore.");
             throw new functions.https.HttpsError('failed-precondition', 'Server configuration is incomplete. Please contact support.');
         }
 
         const inputVariables = inputVariablesSnap.data()!;
         const statesData = statesSnap.data()!;
+        functions.logger.info("Successfully fetched config documents.");
+
 
         // 3. Map Inputs to Codes
         const cisKey = data.carcinomaInSitu === "100%" ? "1" : "25";
@@ -89,31 +94,40 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         const tobaccoCode = inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
         const defaultUnit = inputVariables['default-unit'];
         const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(data.premiumMode)];
+        
+        functions.logger.info("Mapped Inputs to Codes:", {cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue});
+
 
         // 4. Construct lookupId
         const lookupId = `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
+        functions.logger.info(`Constructed lookupId: ${lookupId}`);
+
 
         // 5. Retrieve Rate Data Document
-        const rateDocRef = db.collection('bflic-cancer-quotes').doc('states').collection(rateSheet).doc(lookupId);
+        const rateDocumentPath = `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
+        functions.logger.info(`Attempting to fetch rate document at path: ${rateDocumentPath}`);
+        const rateDocRef = db.doc(rateDocumentPath);
         const rateDocSnap = await rateDocRef.get();
 
         if (!rateDocSnap.exists) {
-            console.error(`No rate document found for lookupId: ${lookupId}`);
-            throw new functions.https.HttpsError('not-found', `No rate found for the provided details. Please check your inputs or contact support.`);
+            functions.logger.error(`No rate document found for lookupId: ${lookupId}`);
+            throw new functions.https.HttpsError('not-found', `No rate found for the provided details. Please check your inputs or contact support. Lookup ID: ${lookupId}`);
         }
-
+        
+        functions.logger.info("Successfully fetched rate document.");
         const rateData = rateDocSnap.data()!;
         const rateVariable = rateData.inprem;
 
         // 6. Data Verification (Optional logging)
-        if (rateData.plan !== cisCode) console.warn(`CIS code mismatch for ${lookupId}. Expected: ${cisCode}, Found: ${rateData.plan}`);
-        if (rateData.state !== premiumCode) console.warn(`Premium code mismatch for ${lookupId}. Expected: ${premiumCode}, Found: ${rateData.state}`);
-        if (rateData.age !== data.age) console.warn(`Age mismatch for ${lookupId}. Expected: ${data.age}, Found: ${rateData.age}`);
-        if (rateData.tobacco !== tobaccoCode) console.warn(`Tobacco code mismatch for ${lookupId}. Expected: ${tobaccoCode}, Found: ${rateData.tobacco}`);
+        if (rateData.plan !== cisCode) functions.logger.warn(`CIS code mismatch for ${lookupId}. Expected: ${cisCode}, Found: ${rateData.plan}`);
+        if (rateData.state !== premiumCode) functions.logger.warn(`Premium code mismatch for ${lookupId}. Expected: ${premiumCode}, Found: ${rateData.state}`);
+        if (rateData.age !== data.age) functions.logger.warn(`Age mismatch for ${lookupId}. Expected: ${data.age}, Found: ${rateData.age}`);
+        if (rateData.tobacco !== tobaccoCode) functions.logger.warn(`Tobacco code mismatch for ${lookupId}. Expected: ${tobaccoCode}, Found: ${rateData.tobacco}`);
 
         // 7. Calculate Premium
         const premium = (((rateVariable * 0.01) * data.benefitAmount) / defaultUnit) * premiumModeValue;
         const roundedPremium = Math.round((premium + Number.EPSILON) * 100) / 100;
+        functions.logger.info(`Calculated premium: ${roundedPremium}`);
 
         // 8. Return Successful Response
         return {
@@ -124,7 +138,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         };
 
     } catch (error) {
-        console.error("Error in getCancerInsuranceQuote cloud function:", error);
+        functions.logger.error("Error in getCancerInsuranceQuote cloud function:", error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
