@@ -71,7 +71,7 @@ const hospitalIndemnityFormSchema = z.object({
 
 const cancerFormSchema = z.object({
     state: z.enum(["TX", "GA"]),
-    age: z.coerce.number().min(18, "Must be at least 18").max(99, "Age must be between 18 and 99."),
+    age: z.coerce.number().min(18, "Age must be at least 18").max(99, "Age must be between 18 and 99."),
     familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"]),
     tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"]),
     premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"]),

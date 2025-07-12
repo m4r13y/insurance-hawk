@@ -28,7 +28,7 @@ export type Document = {
 };
 
 export type Policy = {
-  id:string;
+  id: string;
   carrierId: string;
   carrierName: string;
   carrierLogoUrl: string;
@@ -213,4 +213,3 @@ export type CancerQuote = {
   plan_name: string;
   benefit_amount: number;
 };
-    
