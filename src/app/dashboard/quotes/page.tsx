@@ -562,7 +562,6 @@ export default function QuotesPage() {
                                  <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
                             <div className="flex justify-end items-center gap-4">
-                                <Button type="button" variant="outline" onClick={handleTestClick}>Test</Button>
                                 <Button type="submit" disabled={isCancerPending} size="lg">
                                 {isCancerPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculating...</> : "Get Quote"}
                                 </Button>
@@ -595,8 +594,10 @@ export default function QuotesPage() {
                             </div>
                         </div>
                     )}
-
                 </CardContent>
+                <CardFooter>
+                    <Button type="button" variant="outline" onClick={handleTestClick}>Test</Button>
+                </CardFooter>
             </Card>
         </TabsContent>
         <TabsContent value="hospital-indemnity" className="mt-6">
