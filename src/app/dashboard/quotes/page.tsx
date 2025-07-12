@@ -33,8 +33,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack } from "lucide-react";
-import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes, getCancerQuotes, testFirestoreFetch } from "./actions";
-import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote } from "@/types";
+import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
+import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote, CancerQuoteRequestValues } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,8 @@ import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 
 const medigapFormSchema = z.object({
@@ -240,16 +242,93 @@ export default function QuotesPage() {
     });
   }
   
-  function onCancerSubmit(values: z.infer<typeof cancerFormSchema>) {
+  async function onCancerSubmit(values: z.infer<typeof cancerFormSchema>) {
     setCancerError(null);
     setCancerQuote(null);
+    
     startCancerTransition(async () => {
-      const result = await getCancerQuotes(values);
-       if (result.error) {
-        setCancerError(result.error);
+      if (!db) {
+        setCancerError("Database connection is not available.");
+        return;
       }
-      if (result.quote) {
-        setCancerQuote(result.quote);
+
+      try {
+        const dbFirestore = getFirestore(db.app, 'hawknest-database');
+        
+        // Fetch config data
+        const inputVariablesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'input-variables');
+        const statesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'states');
+        
+        const [inputVariablesSnap, statesSnap] = await Promise.all([
+          getDoc(inputVariablesRef),
+          getDoc(statesRef),
+        ]);
+
+        if (!inputVariablesSnap.exists() || !statesSnap.exists()) {
+          throw new Error("Server configuration is incomplete. Please contact support.");
+        }
+
+        const inputVariables = inputVariablesSnap.data()!;
+        const statesData = statesSnap.data()!;
+
+        // Mapping logic
+        const mapFamilyTypeToCode = (familyType: CancerQuoteRequestValues['familyType']): string => {
+            const mapping: Record<CancerQuoteRequestValues['familyType'], string> = {
+                "Applicant Only": "applicant-only",
+                "Applicant and Spouse": "applicant-and-spouse",
+                "Applicant and Child(ren)": "applicant-and-children",
+                "Applicant and Spouse and Child(ren)": "applicant-spouse-children",
+            };
+            return mapping[familyType];
+        };
+
+        const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestValues['premiumMode']): string => {
+            const mapping: Record<CancerQuoteRequestValues['premiumMode'], string> = {
+                "Monthly Bank Draft": "monthly-bank-draft",
+                "Monthly Credit Card": "monthly-credit-card",
+                "Monthly Direct Mail": "monthly-direct-mail",
+                "Annual": "annual",
+            };
+            return mapping[premiumMode];
+        };
+        
+        const cisKey = values.carcinomaInSitu === "100%" ? "1" : "25";
+        const cisCode = inputVariables.CIS[cisKey];
+        const premiumCode = statesData[values.state]['premium-code'];
+        const rateSheet = statesData[values.state]['rate-sheet'];
+        const familyCode = inputVariables.emptype[mapFamilyTypeToCode(values.familyType)];
+        const tobaccoCode = inputVariables.tobacco[values.tobaccoStatus === "Tobacco" ? "yes" : "no"];
+        const defaultUnit = inputVariables['default-unit'];
+        const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(values.premiumMode)];
+
+        // Construct lookupId
+        const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
+
+        // Get Rate Data
+        const rateDocRef = doc(dbFirestore, `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`);
+        const rateDocSnap = await getDoc(rateDocRef);
+
+        if (!rateDocSnap.exists()) {
+          throw new Error(`No rate found for the specified criteria. Lookup ID: ${lookupId}`);
+        }
+
+        const rateData = rateDocSnap.data();
+        const rateVariable = rateData.inprem;
+
+        // Calculate Premium
+        const premium = (((rateVariable * 0.01) * values.benefitAmount) / defaultUnit) * premiumModeValue;
+        const roundedPremium = Math.round(premium * 100) / 100;
+        
+        setCancerQuote({
+          monthly_premium: roundedPremium,
+          carrier: "Bankers Fidelity",
+          plan_name: "Cancer Insurance",
+          benefit_amount: values.benefitAmount,
+        });
+
+      } catch (error: any) {
+        console.error("Cancer Quote Error:", error);
+        setCancerError(error.message || "An unknown error occurred.");
       }
     });
   }
@@ -286,27 +365,6 @@ export default function QuotesPage() {
     const basePremium = selectedBaseBenefit.rate;
     const riderPremium = Object.values(selectedRiders).reduce((total, selection) => total + selection.rate, 0);
     return basePremium + riderPremium;
-  };
-  
-  const handleTestClick = async () => {
-    toast({ title: 'Testing Firestore Fetch...', description: 'Please wait.' });
-    const result = await testFirestoreFetch();
-    if (result.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Test Failed',
-        description: result.error,
-      });
-    } else {
-      toast({
-        title: 'Test Successful!',
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(result.data, null, 2)}</code>
-          </pre>
-        ),
-      });
-    }
   };
 
   const totalPremium = calculateTotalPremium();
@@ -595,9 +653,6 @@ export default function QuotesPage() {
                         </div>
                     )}
                 </CardContent>
-                <CardFooter>
-                    <Button type="button" variant="outline" onClick={handleTestClick}>Test</Button>
-                </CardFooter>
             </Card>
         </TabsContent>
         <TabsContent value="hospital-indemnity" className="mt-6">
