@@ -123,9 +123,21 @@ export const mockPlans: Plan[] = [
 ];
 
 export const mockDocuments: Document[] = [
-    { id: 'doc-1', name: 'Proof_of_Residency.pdf', uploadDate: '2023-10-15', size: '1.2MB' },
-    { id: 'doc-2', name: 'Medicare_Card_Scan.jpg', uploadDate: '2023-10-12', size: '850KB' },
-    { id: 'doc-3', name: 'Application_Form_Signed.pdf', uploadDate: '2023-10-11', size: '2.5MB' },
+    {
+      id: 'doc-1', name: 'Proof_of_Residency.pdf', uploadDate: '2023-10-15', size: '1.2MB',
+      downloadURL: '',
+      storagePath: ''
+    },
+    {
+      id: 'doc-2', name: 'Medicare_Card_Scan.jpg', uploadDate: '2023-10-12', size: '850KB',
+      downloadURL: '',
+      storagePath: ''
+    },
+    {
+      id: 'doc-3', name: 'Application_Form_Signed.pdf', uploadDate: '2023-10-11', size: '2.5MB',
+      downloadURL: '',
+      storagePath: ''
+    },
 ];
 
 export const carriers = [

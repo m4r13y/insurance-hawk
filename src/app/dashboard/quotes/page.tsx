@@ -70,13 +70,13 @@ const hospitalIndemnityFormSchema = z.object({
 });
 
 const cancerFormSchema = z.object({
-    state: z.enum(["TX", "GA"]),
+    state: z.enum(["TX", "GA"], { required_error: "Please select a state."}),
     age: z.coerce.number().min(18, "Age must be at least 18").max(99, "Age must be between 18 and 99."),
-    familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"]),
-    tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"]),
-    premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"]),
-    carcinomaInSitu: z.enum(["25%", "100%"]),
-    benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000"),
+    familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"], { required_error: "Please select a family type."}),
+    tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"], { required_error: "Please select a tobacco status."}),
+    premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"], { required_error: "Please select a premium mode."}),
+    carcinomaInSitu: z.enum(["25%", "100%"], { required_error: "Please select a Carcinoma In Situ option."}),
+    benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000").refine(val => val % 1000 === 0, { message: "Benefit amount must be in increments of $1000." }),
 });
 
 export default function QuotesPage() {

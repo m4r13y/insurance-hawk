@@ -1,5 +1,4 @@
 const admin = require('firebase-admin');
-const path = require('path');
 const { getFirestore } = require('firebase-admin/firestore');
 
 // Initialize Firebase Admin SDK
@@ -24,10 +23,10 @@ const countDocumentsInSubcollections = async () => {
 
   try {
     // Count documents in the 'rows' subcollection
-    const rowsSubcollectionRef = db.collection('bflic-cancer-quotes').doc('TX_44').collection('rows');
+    const rowsSubcollectionRef = db.collection('bflic-cancer-quotes').doc('states').collection('GA_11');
     const rowsSnapshot = await rowsSubcollectionRef.get();
     const rowsCount = rowsSnapshot.size;
-    console.log(`Documents in /bflic-cancer-quotes/TX_44/rows: ${rowsCount}`);
+    console.log(`Documents in /bflic-cancer-quotes/states/GA_11: ${rowsCount}`);
 
   } catch (error) {
     console.error('Error counting documents:', error);

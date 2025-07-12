@@ -1,11 +1,13 @@
 
-
 "use server";
+<<<<<<< HEAD
 import { getFirestore, doc, getDoc, initializeApp, getApps, App } from "firebase-admin/firestore";
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
 
+=======
+>>>>>>> 54a94b6 (Goal: Implement a New "Cancer Insurance" Quote Functionality for a Web A)
 
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuoteRequestValues, CancerQuote } from "@/types";
 
@@ -27,34 +29,37 @@ type CsgQuote = {
 
 const mockMedigapQuotes: Quote[] = [
     {
-      id: "quote-aetna-g",
-      monthly_premium: 125.50,
-      carrier: { name: "Aetna", logo_url: null },
-      plan_name: "Plan G",
-      plan_type: "Medigap",
-      discounts: [{ name: "Household Discount", value: 0.07, type: "percent", rule: "Must live with one other adult" }],
-      am_best_rating: "A",
-      rate_type: "Attained"
+        id: "quote-aetna-g",
+        monthly_premium: 125.50,
+        carrier: { name: "Aetna", logo_url: null },
+        plan_name: "Plan G",
+        plan_type: "Medigap",
+        discounts: [{ name: "Household Discount", value: 0.07, type: "percent", rule: "Must live with one other adult" }],
+        am_best_rating: "A",
+        rate_type: "Attained",
+        premium: 0
     },
     {
-      id: "quote-cigna-g",
-      monthly_premium: 130.00,
-      carrier: { name: "Cigna", logo_url: null },
-      plan_name: "Plan G",
-      plan_type: "Medigap",
-      discounts: [{ name: "Household Discount", value: 0.05, type: "percent", rule: "Must live with one other adult" }],
-      am_best_rating: "A-",
-      rate_type: "Issue-Age"
+        id: "quote-cigna-g",
+        monthly_premium: 130.00,
+        carrier: { name: "Cigna", logo_url: null },
+        plan_name: "Plan G",
+        plan_type: "Medigap",
+        discounts: [{ name: "Household Discount", value: 0.05, type: "percent", rule: "Must live with one other adult" }],
+        am_best_rating: "A-",
+        rate_type: "Issue-Age",
+        premium: 0
     },
     {
-      id: "quote-mutual-g",
-      monthly_premium: 142.75,
-      carrier: { name: "Mutual of Omaha", logo_url: null },
-      plan_name: "Plan G",
-      plan_type: "Medigap",
-      discounts: [],
-      am_best_rating: "A+",
-      rate_type: "Attained"
+        id: "quote-mutual-g",
+        monthly_premium: 142.75,
+        carrier: { name: "Mutual of Omaha", logo_url: null },
+        plan_name: "Plan G",
+        plan_type: "Medigap",
+        discounts: [],
+        am_best_rating: "A+",
+        rate_type: "Attained",
+        premium: 0
     },
 ];
 
@@ -186,93 +191,29 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
     }
 }
 
-
-export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise<{ quote?: CancerQuote; error?: string }> {
-    const serviceAccountPath = "/home/user/studio/medicareally-1646d176dbaa.json";
-    const appName = 'CANCER_QUOTER_APP';
-
+export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise<{ quote?: CancerQuote; error?: string; }> {
+    // This function is a client-side wrapper.
+    // It is NOT the Cloud Function itself but is responsible for calling it.
     try {
-        let app: App;
-        const existingApp = getApps().find(app => app.name === appName);
-        if (existingApp) {
-            app = existingApp;
-        } else {
-             const serviceAccountJSON = fs.readFileSync(serviceAccountPath, 'utf8');
-             const serviceAccount = JSON.parse(serviceAccountJSON);
-            app = initializeApp({
-                credential: credential.cert(serviceAccount)
-            }, appName);
+        // Dynamically import firebase/functions only when needed.
+        const { getFunctions, httpsCallable } = await import("firebase/functions");
+        const { app } = await import("@/lib/firebase");
+
+        if (!app) {
+            throw new Error("Firebase is not configured on the client.");
         }
         
-        const db = getFirestore(app, 'hawknest-database');
+        const functions = getFunctions(app);
+        const getCancerInsuranceQuote = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getCancerInsuranceQuote');
 
-        // 1. Fetch mapping data from Firestore
-        const inputVariablesDoc = await getDoc(doc(db, 'bflic-cancer-quotes', 'input-variables'));
-        const statesDoc = await getDoc(doc(db, 'bflic-cancer-quotes', 'states'));
-
-        if (!inputVariablesDoc.exists() || !statesDoc.exists()) {
-            return { error: "Configuration data is missing. Please contact support." };
-        }
-        const inputData = inputVariablesDoc.data()!;
-        const statesData = statesDoc.data()!;
-
-        // 2. Map user inputs to codes
-        const cisCode = inputData.CIS[values.carcinomaInSitu === '25%' ? '25' : '100'];
-        const premiumCode = statesData[values.state]?.['premium-code'];
-        const familyCodeMap = { 'Applicant Only': 'EE', 'Applicant and Spouse': 'ES', 'Applicant and Child(ren)': '1F', 'Applicant and Spouse and Child(ren)': '2F'};
-        const familyCode = inputData.emptype[values.familyType.toLowerCase().replace(/\s/g, '-').replace(/[()]/g, '')] || familyCodeMap[values.familyType];
-        const tobaccoCode = inputData.tobacco[values.tobaccoStatus === 'Tobacco' ? 'yes' : 'no'];
-        const rateSheet = statesData[values.state]?.['rate-sheet'];
-        const defaultUnit = inputData['default-unit'];
+        const result = await getCancerInsuranceQuote(values);
         
-        const paymentModeMap = { 'Monthly Bank Draft': 'monthly-bank-draft', 'Monthly Credit Card': 'monthly-credit-card', 'Monthly Direct Mail': 'monthly-direct-mail', 'Annual': 'annual' };
-        const paymentModeKey = paymentModeMap[values.premiumMode];
-        const paymentModeValue = inputData['payment-mode'][paymentModeKey];
+        return { quote: result.data };
 
-
-        if (!cisCode || !premiumCode || !familyCode || !tobaccoCode || !rateSheet || !defaultUnit || !paymentModeValue) {
-            console.error('Failed to map one or more inputs:', {cisCode, premiumCode, familyCode, tobaccoCode, rateSheet, defaultUnit, paymentModeValue});
-            return { error: "Could not process all inputs. Please check your selections and try again." };
-        }
-
-        // 3. Construct the lookup ID
-        const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
-        
-        // 4. Fetch the rate document
-        const rateDocRef = doc(db, `bflic-cancer-quotes/${rateSheet}/rows`, lookupId);
-        const rateDoc = await getDoc(rateDocRef);
-
-        if (!rateDoc.exists()) {
-            return { error: `No rate found for the selected criteria (Lookup ID: ${lookupId}). Please adjust your selections.` };
-        }
-        
-        const rateData = rateDoc.data()!;
-        const inprem = rateData.inprem;
-
-        // Optional: Verification step
-        if (String(rateData.plan) !== String(cisCode) || String(rateData.state) !== String(premiumCode) || Number(rateData.age) !== values.age) {
-             console.warn(`Verification failed for ${lookupId}. Data mismatch.`);
-        }
-
-        // 5. Calculate the premium
-        const rateVariable = parseFloat(inprem);
-        const premium = (((rateVariable * 0.01) * values.benefitAmount) / defaultUnit) * paymentModeValue;
-        const roundedPremium = Math.round(premium * 100) / 100;
-        
-        return {
-            quote: {
-                monthly_premium: roundedPremium,
-                carrier: "Bankers Fidelity",
-                plan_name: "Cancer Insurance",
-                benefit_amount: values.benefitAmount,
-            },
-        };
-
-    } catch (e: any) {
-        console.error("Error in getCancerQuotes:", e);
-        if (e.code === 'ENOENT') { // File not found error
-             return { error: "Could not find service account credentials. Please contact support." };
-        }
-        return { error: e.message || "An unexpected error occurred while fetching the cancer quote." };
+    } catch (error: any) {
+        console.error("Error calling getCancerInsuranceQuote cloud function:", error);
+        // The error object from a callable function has a `message` property.
+        const errorMessage = error.message || "An unexpected error occurred.";
+        return { error: errorMessage };
     }
 }
