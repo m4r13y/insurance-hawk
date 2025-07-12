@@ -12,7 +12,7 @@ import * as path from 'path';
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
 
 import * as admin from 'firebase-admin';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, doc, getDoc } from 'firebase-admin/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -208,7 +208,7 @@ function getCancerQuoterAdminApp(): admin.app.App {
     }
 
     try {
-        const serviceAccountPath = '/home/user/studio/medicareally-1646d176dbaa.json';
+        const serviceAccountPath = '/home/user/studio/medicareally-firebase-adminsdk-fbsvc-76abf59110.json';
         const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
         
         return admin.initializeApp({
