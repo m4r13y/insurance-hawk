@@ -6,7 +6,11 @@ import * as admin from "firebase-admin";
 
 // Initialize the Firebase Admin SDK.
 // This is done once when the function is deployed, and the instance is reused.
-admin.initializeApp();
+try {
+  admin.initializeApp();
+} catch (e) {
+  functions.logger.log("Admin SDK already initialized.");
+}
 const db = admin.firestore();
 
 // --- TYPE DEFINITIONS ---
@@ -50,7 +54,7 @@ const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestData['premiumMode'])
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(async (data: CancerQuoteRequestData): Promise<CancerQuoteResponse> => {
-    functions.logger.info("--- Starting Cancer Quote Calculation ---");
+    functions.logger.info("--- [DEBUG] Starting Cancer Quote Calculation ---");
     functions.logger.info("1. Received input data:", { data });
 
     // Input Validation
@@ -90,52 +94,25 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         const cisKey = data.carcinomaInSitu === "100%" ? "1" : "25";
         const cisCode = inputVariables.CIS[cisKey];
         const premiumCode = statesData[data.state]['premium-code'];
-        const rateSheet = statesData[data.state]['rate-sheet'];
+        // const rateSheet = statesData[data.state]['rate-sheet'];
         const familyCode = inputVariables.emptype[mapFamilyTypeToCode(data.familyType)];
         const tobaccoCode = inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
-        const defaultUnit = inputVariables['default-unit'];
-        const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(data.premiumMode)];
+        // const defaultUnit = inputVariables['default-unit'];
+        // const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(data.premiumMode)];
         
-        functions.logger.info("3. Mapped Inputs to Codes:", {cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue});
+        functions.logger.info("3. Mapped Inputs to Codes:", {cisCode, premiumCode, familyCode, tobaccoCode});
 
 
         // 4. Construct lookupId
         const lookupId = `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
         functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
-
-        // 5. Retrieve Rate Data Document
-        const rateDocRef = db.collection('bflic-cancer-quotes').doc('states').collection(rateSheet).doc(lookupId);
-        functions.logger.info(`5. Attempting to fetch rate document at path: ${rateDocRef.path}`);
-        
-        const rateDocSnap = await rateDocRef.get();
-
-        if (!rateDocSnap.exists) {
-            functions.logger.error(`No rate document found for lookupId: ${lookupId} at path ${rateDocRef.path}`);
-            throw new functions.https.HttpsError('not-found', `No rate found for the provided details. Please check your inputs or contact support. Lookup ID: ${lookupId}`);
-        }
-        
-        functions.logger.info("Successfully fetched rate document.");
-        const rateData = rateDocSnap.data()!;
-        const rateVariable = rateData.inprem;
-
-        // 6. Data Verification (Optional logging)
-        if (rateData.plan !== cisCode) functions.logger.warn(`CIS code mismatch for ${lookupId}. Expected: ${cisCode}, Found: ${rateData.plan}`);
-        if (rateData.state !== premiumCode) functions.logger.warn(`Premium code mismatch for ${lookupId}. Expected: ${premiumCode}, Found: ${rateData.state}`);
-        if (rateData.age !== data.age) functions.logger.warn(`Age mismatch for ${lookupId}. Expected: ${data.age}, Found: ${rateData.age}`);
-        if (rateData.tobacco !== tobaccoCode) functions.logger.warn(`Tobacco code mismatch for ${lookupId}. Expected: ${tobaccoCode}, Found: ${rateData.tobacco}`);
-
-        // 7. Calculate Premium
-        const premium = (((rateVariable * 0.01) * data.benefitAmount) / defaultUnit) * premiumModeValue;
-        const roundedPremium = Math.round((premium + Number.EPSILON) * 100) / 100;
-        functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
-
-        // 8. Return Successful Response
+        // [DEBUG] Return the lookupId for verification
         return {
-            monthly_premium: roundedPremium,
-            carrier: "Bankers Fidelity",
-            plan_name: "Cancer Insurance",
-            benefit_amount: data.benefitAmount,
+            monthly_premium: 0,
+            carrier: "DEBUG MODE",
+            plan_name: `lookupId: ${lookupId}`,
+            benefit_amount: 0,
         };
 
     } catch (error) {
