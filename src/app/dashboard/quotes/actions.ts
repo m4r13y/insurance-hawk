@@ -1,8 +1,11 @@
 
 
 "use server";
-import { getFirestore, doc, getDoc } from "firebase/admin/firestore";
-import { getAdminApp } from "@/lib/firebase-admin";
+import { getFirestore, doc, getDoc, initializeApp, getApps, App } from "firebase-admin/firestore";
+import * as admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuoteRequestValues, CancerQuote } from "@/types";
 
@@ -185,8 +188,22 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
 
 
 export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise<{ quote?: CancerQuote; error?: string }> {
+    const serviceAccountPath = "/home/user/studio/medicareally-1646d176dbaa.json";
+    const appName = 'CANCER_QUOTER_APP';
+
     try {
-        const app = getAdminApp();
+        let app: App;
+        const existingApp = getApps().find(app => app.name === appName);
+        if (existingApp) {
+            app = existingApp;
+        } else {
+             const serviceAccountJSON = fs.readFileSync(serviceAccountPath, 'utf8');
+             const serviceAccount = JSON.parse(serviceAccountJSON);
+            app = initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            }, appName);
+        }
+        
         const db = getFirestore(app, 'hawknest-database');
 
         // 1. Fetch mapping data from Firestore
@@ -253,6 +270,9 @@ export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise
 
     } catch (e: any) {
         console.error("Error in getCancerQuotes:", e);
+        if (e.code === 'ENOENT') { // File not found error
+             return { error: "Could not find service account credentials. Please contact support." };
+        }
         return { error: e.message || "An unexpected error occurred while fetching the cancer quote." };
     }
 }
