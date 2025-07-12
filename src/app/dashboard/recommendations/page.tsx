@@ -179,7 +179,7 @@ function PlanResults({ plan, name }: { plan: string, name: string }) {
         const input = resultsRef.current;
         if (!input) return;
 
-        html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
+        html2canvas(input, { scale: 2, useCORS: true, logging: false }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'pt', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
