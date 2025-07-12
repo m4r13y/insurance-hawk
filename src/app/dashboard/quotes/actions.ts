@@ -1,8 +1,8 @@
 
 
 "use server";
-import { getFirestore, doc, getDoc, initializeApp, getApps, App } from "firebase-admin/firestore";
-import * as admin from 'firebase-admin';
+import { getFirestore, doc, getDoc, App } from "firebase-admin/firestore";
+import { initializeApp, getApps, credential } from 'firebase-admin/app';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -200,7 +200,7 @@ export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise
              const serviceAccountJSON = fs.readFileSync(serviceAccountPath, 'utf8');
              const serviceAccount = JSON.parse(serviceAccountJSON);
             app = initializeApp({
-                credential: admin.credential.cert(serviceAccount)
+                credential: credential.cert(serviceAccount)
             }, appName);
         }
         
