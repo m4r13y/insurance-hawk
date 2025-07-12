@@ -45,7 +45,7 @@ import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 
 
 const medigapFormSchema = z.object({
@@ -247,7 +247,7 @@ export default function QuotesPage() {
     setCancerQuote(null);
     
     startCancerTransition(async () => {
-      if (!db) {
+      if (!db || !db.app) {
         setCancerError("Database connection is not available.");
         return;
       }
@@ -255,7 +255,6 @@ export default function QuotesPage() {
       try {
         const dbFirestore = getFirestore(db.app, 'hawknest-database');
         
-        // Fetch config data
         const inputVariablesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'input-variables');
         const statesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'states');
         
@@ -271,7 +270,6 @@ export default function QuotesPage() {
         const inputVariables = inputVariablesSnap.data()!;
         const statesData = statesSnap.data()!;
 
-        // Mapping logic
         const mapFamilyTypeToCode = (familyType: CancerQuoteRequestValues['familyType']): string => {
             const mapping: Record<CancerQuoteRequestValues['familyType'], string> = {
                 "Applicant Only": "applicant-only",
@@ -301,10 +299,8 @@ export default function QuotesPage() {
         const defaultUnit = inputVariables['default-unit'];
         const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(values.premiumMode)];
 
-        // Construct lookupId
         const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
 
-        // Get Rate Data
         const rateDocRef = doc(dbFirestore, `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`);
         const rateDocSnap = await getDoc(rateDocRef);
 
@@ -315,7 +311,6 @@ export default function QuotesPage() {
         const rateData = rateDocSnap.data();
         const rateVariable = rateData.inprem;
 
-        // Calculate Premium
         const premium = (((rateVariable * 0.01) * values.benefitAmount) / defaultUnit) * premiumModeValue;
         const roundedPremium = Math.round(premium * 100) / 100;
         
