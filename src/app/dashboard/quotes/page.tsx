@@ -44,8 +44,8 @@ import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { app as firebaseApp } from "@/lib/firebase";
 
 
 const medigapFormSchema = z.object({
@@ -139,7 +139,7 @@ export default function QuotesPage() {
    const cancerForm = useForm<z.infer<typeof cancerFormSchema>>({
         resolver: zodResolver(cancerFormSchema),
         defaultValues: {
-            state: "TX",
+            state: "GA",
             age: 65,
             familyType: "Applicant Only",
             tobaccoStatus: "Non-Tobacco",
@@ -247,83 +247,20 @@ export default function QuotesPage() {
     setCancerQuote(null);
     
     startCancerTransition(async () => {
-      if (!db || !db.app) {
-        setCancerError("Database connection is not available.");
+      if (!firebaseApp) {
+        setCancerError("Firebase is not configured. Please contact support.");
         return;
       }
-
       try {
-        const dbFirestore = getFirestore(db.app, 'hawknest-database');
+        const functions = getFunctions(firebaseApp);
+        const getCancerQuote = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getCancerInsuranceQuote');
         
-        const inputVariablesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'input-variables');
-        const statesRef = doc(dbFirestore, 'bflic-cancer-quotes', 'states');
+        const result = await getCancerQuote(values);
         
-        const [inputVariablesSnap, statesSnap] = await Promise.all([
-          getDoc(inputVariablesRef),
-          getDoc(statesRef),
-        ]);
-
-        if (!inputVariablesSnap.exists() || !statesSnap.exists()) {
-          throw new Error("Server configuration is incomplete. Please contact support.");
-        }
-
-        const inputVariables = inputVariablesSnap.data()!;
-        const statesData = statesSnap.data()!;
-
-        const mapFamilyTypeToCode = (familyType: CancerQuoteRequestValues['familyType']): string => {
-            const mapping: Record<CancerQuoteRequestValues['familyType'], string> = {
-                "Applicant Only": "applicant-only",
-                "Applicant and Spouse": "applicant-and-spouse",
-                "Applicant and Child(ren)": "applicant-and-children",
-                "Applicant and Spouse and Child(ren)": "applicant-spouse-children",
-            };
-            return mapping[familyType];
-        };
-
-        const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestValues['premiumMode']): string => {
-            const mapping: Record<CancerQuoteRequestValues['premiumMode'], string> = {
-                "Monthly Bank Draft": "monthly-bank-draft",
-                "Monthly Credit Card": "monthly-credit-card",
-                "Monthly Direct Mail": "monthly-direct-mail",
-                "Annual": "annual",
-            };
-            return mapping[premiumMode];
-        };
-        
-        const cisKey = values.carcinomaInSitu === "100%" ? "1" : "25";
-        const cisCode = inputVariables.CIS[cisKey];
-        const premiumCode = statesData[values.state]['premium-code'];
-        const rateSheet = statesData[values.state]['rate-sheet'];
-        const familyCode = inputVariables.emptype[mapFamilyTypeToCode(values.familyType)];
-        const tobaccoCode = inputVariables.tobacco[values.tobaccoStatus === "Tobacco" ? "yes" : "no"];
-        const defaultUnit = inputVariables['default-unit'];
-        const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(values.premiumMode)];
-
-        const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
-
-        const rateDocRef = doc(dbFirestore, `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`);
-        const rateDocSnap = await getDoc(rateDocRef);
-
-        if (!rateDocSnap.exists()) {
-          throw new Error(`No rate found for the specified criteria. Lookup ID: ${lookupId}`);
-        }
-
-        const rateData = rateDocSnap.data();
-        const rateVariable = rateData.inprem;
-
-        const premium = (((rateVariable * 0.01) * values.benefitAmount) / defaultUnit) * premiumModeValue;
-        const roundedPremium = Math.round(premium * 100) / 100;
-        
-        setCancerQuote({
-          monthly_premium: roundedPremium,
-          carrier: "Bankers Fidelity",
-          plan_name: "Cancer Insurance",
-          benefit_amount: values.benefitAmount,
-        });
-
+        setCancerQuote(result.data);
       } catch (error: any) {
-        console.error("Cancer Quote Error:", error);
-        setCancerError(error.message || "An unknown error occurred.");
+        console.error("Cancer Quote Cloud Function Error:", error);
+        setCancerError(error.message || "An unknown error occurred while fetching your quote.");
       }
     });
   }
@@ -899,3 +836,4 @@ export default function QuotesPage() {
     </div>
   );
 }
+

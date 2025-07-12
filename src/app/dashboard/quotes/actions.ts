@@ -10,7 +10,11 @@ import * as path from 'path';
 =======
 >>>>>>> 54a94b6 (Goal: Implement a New "Cancer Insurance" Quote Functionality for a Web A)
 
-import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
+
+// Note: As per the new architecture, firebase-admin is no longer needed here.
+// The cancer quote logic is now handled by a dedicated Cloud Function.
+
 
 const mockMedigapQuotes: Quote[] = [
     {
