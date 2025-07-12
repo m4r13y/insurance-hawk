@@ -1,7 +1,13 @@
 
 "use server";
 
-import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuoteRequestValues, CancerQuote } from "@/types";
+import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
+
+import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 // The raw response from the Medigap csgapi
 type CsgQuote = {
@@ -183,29 +189,111 @@ export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteR
     }
 }
 
-export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise<{ quote?: CancerQuote; error?: string; }> {
-    // This function is a client-side wrapper.
-    // It is NOT the Cloud Function itself but is responsible for calling it.
+// --- Cancer Quote Logic ---
+
+const CANCER_QUOTER_APP_NAME = 'CANCER_QUOTER_APP';
+
+function getCancerQuoterAdminApp(): admin.app.App {
+    const existingApp = admin.apps.find(app => app?.name === CANCER_QUOTER_APP_NAME);
+    if (existingApp) {
+        return existingApp;
+    }
+
     try {
-        // Dynamically import firebase/functions only when needed.
-        const { getFunctions, httpsCallable } = await import("firebase/functions");
-        const { app } = await import("@/lib/firebase");
+        const serviceAccountPath = '/home/user/studio/medicareally-1646d176dbaa.json';
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+        
+        return admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: `https://hawknest-database.firebaseio.com`
+        }, CANCER_QUOTER_APP_NAME);
+    } catch (error) {
+        console.error('Error initializing dedicated Firebase Admin SDK for Cancer Quoter:', error);
+        throw new Error("Could not initialize Cancer Quoter Firebase Admin SDK. Please check service account credentials.");
+    }
+}
 
-        if (!app) {
-            throw new Error("Firebase is not configured on the client.");
+
+export async function getCancerQuotes(values: CancerQuoteRequestValues): Promise<{ quote?: CancerQuote; error?: string; }> {
+    try {
+        const app = getCancerQuoterAdminApp();
+        const db = getFirestore(app);
+
+        // All the logic will go here...
+        // For now, let's just return the constructed lookupId for debugging.
+
+        const inputVariablesRef = db.collection('bflic-cancer-quotes').doc('input-variables');
+        const statesRef = db.collection('bflic-cancer-quotes').doc('states');
+        
+        const [inputVariablesSnap, statesSnap] = await Promise.all([
+            inputVariablesRef.get(),
+            statesRef.get(),
+        ]);
+
+        if (!inputVariablesSnap.exists || !statesSnap.exists) {
+            console.error("CRITICAL: Missing configuration documents 'input-variables' or 'states' in Firestore.");
+            return { error: 'Server configuration is incomplete. Please contact support.' };
         }
-        
-        const functions = getFunctions(app);
-        const getCancerInsuranceQuote = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getCancerInsuranceQuote');
 
-        const result = await getCancerInsuranceQuote(values);
+        const inputVariables = inputVariablesSnap.data()!;
+        const statesData = statesSnap.data()!;
+
+        const mapFamilyTypeToCode = (familyType: CancerQuoteRequestValues['familyType']): string => {
+            const mapping: Record<CancerQuoteRequestValues['familyType'], string> = {
+                "Applicant Only": "applicant-only",
+                "Applicant and Spouse": "applicant-and-spouse",
+                "Applicant and Child(ren)": "applicant-and-children",
+                "Applicant and Spouse and Child(ren)": "applicant-spouse-children",
+            };
+            return mapping[familyType];
+        };
         
-        return { quote: result.data };
+        const cisKey = values.carcinomaInSitu === "100%" ? "1" : "25";
+        const cisCode = inputVariables.CIS[cisKey];
+        const premiumCode = statesData[values.state]['premium-code'];
+        const familyCode = inputVariables.emptype[mapFamilyTypeToCode(values.familyType)];
+        const tobaccoCode = inputVariables.tobacco[values.tobaccoStatus === "Tobacco" ? "yes" : "no"];
+
+        const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
+
+        return {
+            quote: {
+                monthly_premium: 0,
+                carrier: "DEBUG MODE",
+                plan_name: `lookupId: ${lookupId}`,
+                benefit_amount: 0,
+            }
+        };
 
     } catch (error: any) {
         console.error("Error calling getCancerInsuranceQuote cloud function:", error);
-        // The error object from a callable function has a `message` property.
         const errorMessage = error.message || "An unexpected error occurred.";
         return { error: errorMessage };
+    }
+}
+
+export async function testFirestoreFetch(): Promise<{ data?: any; error?: string; }> {
+    try {
+        const app = getCancerQuoterAdminApp();
+        const db = getFirestore(app);
+        
+        const docRef = db.collection('bflic-cancer-quotes').doc('states').collection('TX_44').doc('577544371FS');
+        
+        console.log(`[testFirestoreFetch] Attempting to fetch document at path: ${docRef.path}`);
+
+        const docSnap = await docRef.get();
+
+        if (!docSnap.exists) {
+            console.log(`[testFirestoreFetch] Document not found at path: ${docRef.path}`);
+            return { error: 'Test document not found. Check the path and database.' };
+        }
+
+        const data = docSnap.data();
+        console.log('[testFirestoreFetch] Successfully fetched document:', data);
+        return { data };
+
+    } catch (error: any) {
+        console.error('[testFirestoreFetch] Error:', error);
+        return { error: error.message || 'An unknown error occurred during the test fetch.' };
     }
 }
