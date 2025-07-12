@@ -11,7 +11,7 @@ try {
 } catch (e) {
   functions.logger.info("Admin SDK already initialized.");
 }
-const db = admin.firestore().collection("bflic-cancer-quotes").parent;
+const db = admin.firestore();
 
 // --- TYPE DEFINITIONS ---
 interface CancerQuoteRequestData {
@@ -53,7 +53,9 @@ const mapPremiumModeToKey = (premiumMode: CancerQuoteRequestData['premiumMode'])
 };
 
 // --- MAIN CLOUD FUNCTION ---
-export const getCancerInsuranceQuote = functions.https.onCall(async (data: CancerQuoteRequestData, context): Promise<CancerQuoteResponse> => {
+export const getCancerInsuranceQuote = functions
+    .runWith({ failurePolicy: true })
+    .https.onCall(async (data: CancerQuoteRequestData, context): Promise<CancerQuoteResponse> => {
     functions.logger.info("--- Starting Cancer Quote Calculation ---", { structuredData: true });
     functions.logger.info("1. Received input data:", { data });
 
@@ -69,7 +71,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
     }
 
     try {
-        const dbFirestore = admin.firestore(db, 'hawknest-database');
+        const dbFirestore = admin.firestore(db.app.options.databaseId || 'hawknest-database');
         
         // 2. Fetch Firestore Configuration Data Concurrently
         const inputVariablesRef = dbFirestore.collection('bflic-cancer-quotes').doc('input-variables');
@@ -111,7 +113,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(async (data: Cance
         // 5. Retrieve Rate Data Document
         const rateDocPath = `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
         functions.logger.info(`5. Attempting to fetch rate document at path: ${rateDocPath}`);
-        const rateDocRef = dbFirestore.doc(rateDocPath);
+        const rateDocRef = dbFirestore.collection('bflic-cancer-quotes').doc('states').collection(rateSheet).doc(lookupId);
         const rateDocSnap = await rateDocRef.get();
 
         if (!rateDocSnap.exists) {
