@@ -8,10 +8,6 @@ import {getFirestore, DocumentData} from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
 // This is done once per function instance (cold start).
-// In Cloud Functions, `admin.initializeApp()` without arguments
-// automatically picks up credentials for the current project.
-// The try-catch block handles cases where it might be initialized
-// implicitly by other parts of the system or in a test environment.
 try {
   admin.initializeApp();
 } catch (e) {
@@ -19,17 +15,23 @@ try {
 }
 
 // Get a reference to the Firestore database instance.
-// Using the default app, and assuming "hawknest-database" is your named
-// database.
 const db = getFirestore(admin.app(), "hawknest-database");
 
 // --- TYPE DEFINITIONS ---
 interface CancerQuoteRequestData {
   state: "TX" | "GA";
   age: number;
-  familyType: "Applicant Only" | "Applicant and Spouse" | "Applicant and Child(ren)" | "Applicant and Spouse and Child(ren)";
+  familyType:
+    | "Applicant Only"
+    | "Applicant and Spouse"
+    | "Applicant and Child(ren)"
+    | "Applicant and Spouse and Child(ren)";
   tobaccoStatus: "Non-Tobacco" | "Tobacco";
-  premiumMode: "Monthly Bank Draft" | "Monthly Credit Card" | "Monthly Direct Mail" | "Annual";
+  premiumMode:
+    | "Monthly Bank Draft"
+    | "Monthly Credit Card"
+    | "Monthly Direct Mail"
+    | "Annual";
   carcinomaInSitu: "25%" | "100%";
   benefitAmount: number;
 }
@@ -68,9 +70,13 @@ const mapPremiumModeToKey = (
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(
-  async (request: functions.https.CallableRequest): Promise<CancerQuoteResponse> => {
+  async (
+    request: functions.https.CallableRequest
+  ): Promise<CancerQuoteResponse> => {
     const data = request.data as CancerQuoteRequestData;
-    functions.logger.info("--- Starting Cancer Quote Calculation ---", {structuredData: true});
+    functions.logger.info("--- Starting Cancer Quote Calculation ---", {
+      structuredData: true,
+    });
     functions.logger.info("1. Received input data:", {data});
 
     // Input Validation
@@ -94,16 +100,20 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     ) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Benefit amount must be between $5,000 and $75,000 in increments of $1000."
+        "Benefit must be between $5,000-$75,000 in $1000 increments."
       );
     }
 
     try {
       // 2. Fetch Firestore Configuration Data Concurrently
-      const inputVariablesRef = db.collection("bflic-cancer-quotes").doc("input-variables");
+      const inputVariablesRef = db
+        .collection("bflic-cancer-quotes")
+        .doc("input-variables");
       const statesRef = db.collection("bflic-cancer-quotes").doc("states");
 
-      functions.logger.info("2. Fetching config documents: 'input-variables' and 'states'.");
+      functions.logger.info(
+        "2. Fetching config: 'input-variables' and 'states'."
+      );
       const [inputVariablesSnap, statesSnap] = await Promise.all([
         inputVariablesRef.get(),
         statesRef.get(),
@@ -111,7 +121,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       if (!inputVariablesSnap.exists || !statesSnap.exists) {
         functions.logger.error(
-          "CRITICAL: Missing configuration documents 'input-variables' or 'states' in Firestore."
+          "CRITICAL: Missing config documents in Firestore."
         );
         throw new functions.https.HttpsError(
           "failed-precondition",
@@ -119,8 +129,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         );
       }
 
-      const inputVariables: DocumentData = inputVariablesSnap.data()!;
-      const statesData: DocumentData = statesSnap.data()!;
+      const inputVariables: DocumentData | undefined = inputVariablesSnap.data();
+      const statesData: DocumentData | undefined = statesSnap.data();
 
       if (!inputVariables || !statesData) {
         functions.logger.error("Configuration document data is undefined.");
@@ -138,15 +148,20 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       const stateConfig = statesData[data.state];
       const premiumCode = stateConfig["premium-code"];
       const rateSheet = statesData[data.state]["rate-sheet"];
-      const familyCode = inputVariables.emptype[mapFamilyTypeToCode(data.familyType)];
-      const tobaccoCode = inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
+      const familyCode =
+        inputVariables.emptype[mapFamilyTypeToCode(data.familyType)];
+      const tobaccoCode =
+        inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
       const defaultUnit = inputVariables["default-unit"];
-      const premiumModeValue = inputVariables["payment-mode"][mapPremiumModeToKey(data.premiumMode)];
+      const premiumModeValue =
+        inputVariables["payment-mode"][mapPremiumModeToKey(data.premiumMode)];
 
-      if (!cisCode || !stateConfig || !premiumCode || !rateSheet ||
-          !familyCode || !tobaccoCode || !defaultUnit || !premiumModeValue) {
-        functions.logger.error("Mapping failed for one or more critical variables.", {
-          cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue,
+      if (
+        !cisCode || !stateConfig || !premiumCode || !rateSheet ||
+        !familyCode || !tobaccoCode || !defaultUnit || !premiumModeValue
+      ) {
+        functions.logger.error("Mapping failed for one or more variables.", {
+          cisCode, premiumCode, rateSheet, familyCode, tobaccoCode,
         });
         throw new functions.https.HttpsError(
           "failed-precondition",
@@ -154,27 +169,36 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         );
       }
 
-      functions.logger.info("3. Mapped Inputs to Codes:", {cisCode, premiumCode, familyCode, tobaccoCode, rateSheet});
+      functions.logger.info("3. Mapped Inputs to Codes:", {
+        cisCode, premiumCode, familyCode, tobaccoCode, rateSheet,
+      });
 
       // 4. Construct lookupId
       const lookupId = `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
       functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
       // 5. Retrieve Rate Data Document
-      const rateDocPath = `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
-      functions.logger.info(`5. Attempting to fetch rate document at path: ${rateDocPath}`);
-      const rateDocRef = db.collection("bflic-cancer-quotes").doc("states").collection(rateSheet).doc(lookupId);
+      const rateDocPath =
+        `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
+      functions.logger.info(
+        `5. Attempting to fetch rate doc at path: ${rateDocPath}`
+      );
+      const rateDocRef = db
+        .collection("bflic-cancer-quotes")
+        .doc("states")
+        .collection(rateSheet)
+        .doc(lookupId);
       const rateDocSnap = await rateDocRef.get();
 
       if (!rateDocSnap.exists) {
         functions.logger.error(`Rate doc not found: ${rateDocPath}`);
         throw new functions.https.HttpsError(
           "not-found",
-          "No rate found for the selected criteria. Please check your inputs."
+          "No rate found for the selected criteria. Please check inputs."
         );
       }
 
-      const rateData: DocumentData = rateDocSnap.data()!;
+      const rateData: DocumentData | undefined = rateDocSnap.data();
       if (!rateData) {
         functions.logger.error("Rate document data is undefined.");
         throw new functions.https.HttpsError(
@@ -192,24 +216,12 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         );
       }
 
-      functions.logger.info(`Successfully fetched rate data. Inprem value: ${rateVariable}`);
-
-      // 6. Data Verification
-      if (String(rateData.plan) !== String(cisCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.plan (${rateData.plan}) vs cisCode (${cisCode})`);
-      }
-      if (String(rateData.state) !== String(premiumCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.state (${rateData.state}) vs premiumCode (${premiumCode})`);
-      }
-      if (parseInt(rateData.age) !== data.age) {
-        functions.logger.warn(`Verification mismatch: rateData.age (${rateData.age}) vs input age (${data.age})`);
-      }
-      if (String(rateData.tobacco) !== String(tobaccoCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.tobacco (${rateData.tobacco}) vs tobaccoCode (${tobaccoCode})`);
-      }
+      functions.logger.info(`Fetched rate data. Inprem: ${rateVariable}`);
 
       // 7. Calculate Premium
-      const premium = ((rateVariable * 0.01) * data.benefitAmount / defaultUnit) * premiumModeValue;
+      const premium =
+        ((rateVariable * 0.01) * data.benefitAmount / defaultUnit) *
+        premiumModeValue;
       const roundedPremium = Math.round(premium * 100) / 100;
       functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
 
@@ -232,4 +244,3 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     }
   }
 );
-
