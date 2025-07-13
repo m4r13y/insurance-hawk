@@ -4,23 +4,15 @@
  */
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import {getFirestore, DocumentData} from "firebase-admin/firestore";
+import {getFirestore} from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
-// This is done once per function instance (cold start).
-// In Cloud Functions, `admin.initializeApp()` without arguments
-// automatically picks up credentials for the current project.
-// The try-catch block handles cases where it might be initialized
-// implicitly by other parts of the system or in a test environment.
 try {
   admin.initializeApp();
 } catch (e) {
   functions.logger.info("Admin SDK already initialized.");
 }
 
-// Get a reference to the Firestore database instance.
-// Using the default app, and assuming "hawknest-database" is your named
-// database.
 const db = getFirestore(admin.app(), "hawknest-database");
 
 // --- TYPE DEFINITIONS ---
@@ -48,6 +40,22 @@ interface CancerQuoteResponse {
   plan_name: string;
   benefit_amount: number;
 }
+
+interface InputVariables {
+  CIS: { [key: string]: string };
+  emptype: { [key: string]: string };
+  tobacco: { [key: string]: string };
+  "default-unit": number;
+  "payment-mode": { [key: string]: number };
+}
+
+interface StatesData {
+  [key: string]: {
+    "premium-code": string;
+    "rate-sheet": string;
+  };
+}
+
 
 // --- HELPER FUNCTIONS ---
 const mapFamilyTypeToCode = (
@@ -105,7 +113,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     ) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Benefit must be between $5,000-$75,000 in $1000 increments.",
+        "Benefit must be $5,000-$75,000 in $1000 increments.",
       );
     }
 
@@ -114,7 +122,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       const inputVariablesRef =
         db.collection("bflic-cancer-quotes").doc("input-variables");
       const statesRef = db.collection("bflic-cancer-quotes").doc("states");
-      functions.logger.info("2. Fetching config documents'.");
+      functions.logger.info("2. Fetching config documents.");
+
       const [inputVariablesSnap, statesSnap] = await Promise.all([
         inputVariablesRef.get(),
         statesRef.get(),
@@ -129,11 +138,11 @@ export const getCancerInsuranceQuote = functions.https.onCall(
           "Server configuration is incomplete. Please contact support.",
         );
       }
-      const inputVariables = inputVariablesSnap.data();
-      const statesData = statesSnap.data();
+      const inputVariables = inputVariablesSnap.data() as InputVariables;
+      const statesData = statesSnap.data() as StatesData;
 
       if (!inputVariables || !statesData) {
-        functions.logger.error("Configuration document data is undefined.");
+        functions.logger.error("Config document data is undefined.");
         throw new functions.https.HttpsError(
           "internal",
           "Configuration data is empty.",
@@ -190,7 +199,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         functions.logger.error(`Rate doc not found: ${rateDocPath}`);
         throw new functions.https.HttpsError(
           "not-found",
-          "No rate found for the selected criteria. Please check your inputs.",
+          "No rate found for the selected criteria. Check inputs.",
         );
       }
 
