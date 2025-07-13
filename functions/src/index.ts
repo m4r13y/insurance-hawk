@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Calculating Cancer Insurance quotes.
  */
@@ -6,6 +7,11 @@ import * as admin from "firebase-admin";
 import { getFirestore, DocumentData } from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
+// This is done once per function instance (cold start).
+// In Cloud Functions, `admin.initializeApp()` without arguments
+// automatically picks up credentials for the current project.
+// The try-catch block handles cases where it might be initialized
+// implicitly by other parts of the system or in a test environment.
 try {
   admin.initializeApp();
 } catch (e) {
@@ -13,6 +19,8 @@ try {
 }
 
 // Get a reference to the Firestore database instance.
+// Using the default app, and assuming "hawknest-database" is your named
+// database.
 const db = getFirestore(admin.app(), "hawknest-database");
 
 // --- TYPE DEFINITIONS ---
@@ -223,3 +231,5 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     }
   }
 );
+
+    
