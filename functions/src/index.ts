@@ -27,9 +27,17 @@ const db = getFirestore(admin.app(), "hawknest-database");
 interface CancerQuoteRequestData {
   state: "TX" | "GA";
   age: number;
-  familyType: "Applicant Only" | "Applicant and Spouse" | "Applicant and Child(ren)" | "Applicant and Spouse and Child(ren)";
+  familyType:
+    | "Applicant Only"
+    | "Applicant and Spouse"
+    | "Applicant and Child(ren)"
+    | "Applicant and Spouse and Child(ren)";
   tobaccoStatus: "Non-Tobacco" | "Tobacco";
-  premiumMode: "Monthly Bank Draft" | "Monthly Credit Card" | "Monthly Direct Mail" | "Annual";
+  premiumMode:
+    | "Monthly Bank Draft"
+    | "Monthly Credit Card"
+    | "Monthly Direct Mail"
+    | "Annual";
   carcinomaInSitu: "25%" | "100%";
   benefitAmount: number;
 }
@@ -43,7 +51,7 @@ interface CancerQuoteResponse {
 
 // --- HELPER FUNCTIONS ---
 const mapFamilyTypeToCode = (
-  familyType: CancerQuoteRequestData["familyType"]
+  familyType: CancerQuoteRequestData["familyType"],
 ): string => {
   const mapping: Record<CancerQuoteRequestData["familyType"], string> = {
     "Applicant Only": "applicant-only",
@@ -55,7 +63,7 @@ const mapFamilyTypeToCode = (
 };
 
 const mapPremiumModeToKey = (
-  premiumMode: CancerQuoteRequestData["premiumMode"]
+  premiumMode: CancerQuoteRequestData["premiumMode"],
 ): string => {
   const mapping: Record<CancerQuoteRequestData["premiumMode"], string> = {
     "Monthly Bank Draft": "monthly-bank-draft",
@@ -68,22 +76,25 @@ const mapPremiumModeToKey = (
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(
-  async (request: functions.https.CallableRequest): Promise<CancerQuoteResponse> => {
+  async (request: functions.https.CallableRequest):
+  Promise<CancerQuoteResponse> => {
     const data = request.data as CancerQuoteRequestData;
-    functions.logger.info("--- Starting Cancer Quote Calculation ---", {structuredData: true});
+    functions.logger.info("--- Starting Cancer Quote ---", {
+      structuredData: true,
+    });
     functions.logger.info("1. Received input data:", {data});
 
     // Input Validation
     if (!data.state || !["TX", "GA"].includes(data.state)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "A valid state (TX or GA) is required."
+        "A valid state (TX or GA) is required.",
       );
     }
     if (typeof data.age !== "number" || data.age < 18 || data.age > 99) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Age must be between 18 and 99."
+        "Age must be between 18 and 99.",
       );
     }
     if (
@@ -94,16 +105,16 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     ) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Benefit amount must be between $5,000 and $75,000 in increments of $1000."
+        "Benefit must be between $5,000-$75,000 in $1000 increments.",
       );
     }
 
     try {
       // 2. Fetch Firestore Configuration Data Concurrently
-      const inputVariablesRef = db.collection("bflic-cancer-quotes").doc("input-variables");
+      const inputVariablesRef =
+        db.collection("bflic-cancer-quotes").doc("input-variables");
       const statesRef = db.collection("bflic-cancer-quotes").doc("states");
-
-      functions.logger.info("2. Fetching config documents: 'input-variables' and 'states'.");
+      functions.logger.info("2. Fetching config documents'.");
       const [inputVariablesSnap, statesSnap] = await Promise.all([
         inputVariablesRef.get(),
         statesRef.get(),
@@ -111,22 +122,21 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       if (!inputVariablesSnap.exists || !statesSnap.exists) {
         functions.logger.error(
-          "CRITICAL: Missing configuration documents 'input-variables' or 'states' in Firestore."
+          "CRITICAL: Missing 'input-variables' or 'states' in Firestore.",
         );
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Server configuration is incomplete. Please contact support."
+          "Server configuration is incomplete. Please contact support.",
         );
       }
-
-      const inputVariables: DocumentData = inputVariablesSnap.data()!;
-      const statesData: DocumentData = statesSnap.data()!;
+      const inputVariables = inputVariablesSnap.data();
+      const statesData = statesSnap.data();
 
       if (!inputVariables || !statesData) {
         functions.logger.error("Configuration document data is undefined.");
         throw new functions.https.HttpsError(
           "internal",
-          "Configuration data is empty."
+          "Configuration data is empty.",
         );
       }
 
@@ -138,48 +148,58 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       const stateConfig = statesData[data.state];
       const premiumCode = stateConfig["premium-code"];
       const rateSheet = statesData[data.state]["rate-sheet"];
-      const familyCode = inputVariables.emptype[mapFamilyTypeToCode(data.familyType)];
-      const tobaccoCode = inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
+      const familyCode =
+        inputVariables.emptype[mapFamilyTypeToCode(data.familyType)];
+      const tobaccoCode =
+        inputVariables.tobacco[data.tobaccoStatus === "Tobacco" ? "yes" : "no"];
       const defaultUnit = inputVariables["default-unit"];
-      const premiumModeValue = inputVariables["payment-mode"][mapPremiumModeToKey(data.premiumMode)];
+      const premiumModeValue =
+        inputVariables["payment-mode"][mapPremiumModeToKey(data.premiumMode)];
 
-      if (!cisCode || !stateConfig || !premiumCode || !rateSheet ||
-          !familyCode || !tobaccoCode || !defaultUnit || !premiumModeValue) {
-        functions.logger.error("Mapping failed for one or more critical variables.", {
-          cisCode, premiumCode, rateSheet, familyCode, tobaccoCode, defaultUnit, premiumModeValue,
+      if (
+        !cisCode || !stateConfig || !premiumCode || !rateSheet ||
+          !familyCode || !tobaccoCode || !defaultUnit || !premiumModeValue
+      ) {
+        functions.logger.error("Mapping failed.", {
+          cisCode, premiumCode, rateSheet,
+          familyCode, tobaccoCode, defaultUnit, premiumModeValue,
         });
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Could not process all inputs due to missing mapping data."
+          "Could not process all inputs due to missing mapping data.",
         );
       }
 
-      functions.logger.info("3. Mapped Inputs to Codes:", {cisCode, premiumCode, familyCode, tobaccoCode, rateSheet});
+      functions.logger.info("3. Mapped Inputs to Codes:",
+        {cisCode, premiumCode, familyCode, tobaccoCode, rateSheet});
 
       // 4. Construct lookupId
-      const lookupId = `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
+      const lookupId =
+        `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
       functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
       // 5. Retrieve Rate Data Document
-      const rateDocPath = `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
-      functions.logger.info(`5. Attempting to fetch rate document at path: ${rateDocPath}`);
-      const rateDocRef = db.collection("bflic-cancer-quotes").doc("states").collection(rateSheet).doc(lookupId);
+      const rateDocPath =
+        `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
+      functions.logger.info(`5. Attempting ${rateDocPath}`);
+      const rateDocRef = db.collection("bflic-cancer-quotes")
+        .doc("states").collection(rateSheet).doc(lookupId);
       const rateDocSnap = await rateDocRef.get();
 
       if (!rateDocSnap.exists) {
         functions.logger.error(`Rate doc not found: ${rateDocPath}`);
         throw new functions.https.HttpsError(
           "not-found",
-          "No rate found for the selected criteria. Please check your inputs."
+          "No rate found for the selected criteria. Please check your inputs.",
         );
       }
 
-      const rateData: DocumentData = rateDocSnap.data()!;
+      const rateData = rateDocSnap.data();
       if (!rateData) {
         functions.logger.error("Rate document data is undefined.");
         throw new functions.https.HttpsError(
           "internal",
-          "Rate data is empty for the selected criteria."
+          "Rate data is empty for the selected criteria.",
         );
       }
 
@@ -188,32 +208,19 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         functions.logger.error(`Invalid 'inprem' value: ${rateData.inprem}`);
         throw new functions.https.HttpsError(
           "internal",
-          "Rate data is malformed. Please contact support."
+          "Rate data is malformed. Please contact support.",
         );
       }
 
-      functions.logger.info(`Successfully fetched rate data. Inprem value: ${rateVariable}`);
+      functions.logger.info(`Successfully fetched rate: ${rateVariable}`);
 
-      // 6. Data Verification
-      if (String(rateData.plan) !== String(cisCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.plan (${rateData.plan}) vs cisCode (${cisCode})`);
-      }
-      if (String(rateData.state) !== String(premiumCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.state (${rateData.state}) vs premiumCode (${premiumCode})`);
-      }
-      if (parseInt(rateData.age) !== data.age) {
-        functions.logger.warn(`Verification mismatch: rateData.age (${rateData.age}) vs input age (${data.age})`);
-      }
-      if (String(rateData.tobacco) !== String(tobaccoCode)) {
-        functions.logger.warn(`Verification mismatch: rateData.tobacco (${rateData.tobacco}) vs tobaccoCode (${tobaccoCode})`);
-      }
-
-      // 7. Calculate Premium
-      const premium = ((rateVariable * 0.01) * data.benefitAmount / defaultUnit) * premiumModeValue;
+      // 6. Calculate Premium
+      const premium = ((rateVariable * 0.01) * data
+        .benefitAmount / defaultUnit) * premiumModeValue;
       const roundedPremium = Math.round(premium * 100) / 100;
       functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
 
-      // 8. Return result
+      // 7. Return result
       return {
         monthly_premium: roundedPremium,
         carrier: "Bankers Fidelity",
@@ -227,9 +234,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       }
       throw new functions.https.HttpsError(
         "internal",
-        "An unexpected error occurred while calculating the quote."
+        "An unexpected error occurred while calculating the quote.",
       );
     }
-  }
+  },
 );
-
