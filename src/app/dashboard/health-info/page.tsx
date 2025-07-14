@@ -4,8 +4,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { httpsCallable, getFunctions } from 'firebase/functions';
 import { useToast } from "@/hooks/use-toast";
 import type { Provider, Drug, SelectedProvider, SelectedDrug } from "@/types";
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions";
@@ -65,22 +64,43 @@ export default function HealthInfoPage() {
 
     useEffect(() => {
         if (user) {
-            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
-                if(docSnap.exists()){
-                    const data = docSnap.data();
-                    setProfile(data);
-                    setSelectedProviders(data.doctors || []);
-                    setSelectedDrugs(data.medications || []);
-                }
-            })
+            loadUserData();
         }
     }, [user]);
 
-    const handleSaveAndExit = async () => {
-        if (!user || !db) return;
-        const userDocRef = doc(db, 'users', user.uid);
+    const loadUserData = async () => {
+        if (!user) return;
+        
         try {
-            await setDoc(userDocRef, { doctors: selectedProviders, medications: selectedDrugs }, { merge: true });
+            const functions = getFunctions();
+            const getUserData = httpsCallable(functions, 'getUserData');
+            const result = await getUserData();
+            const data = result.data as any;
+            
+            setProfile(data.profile || {});
+            setSelectedProviders(data.profile?.doctors || []);
+            setSelectedDrugs(data.profile?.medications || []);
+            
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    };
+
+    const handleSaveAndExit = async () => {
+        if (!user) return;
+        
+        try {
+            const functions = getFunctions();
+            const saveUserData = httpsCallable(functions, 'saveUserData');
+            
+            await saveUserData({
+                step: 'profile',
+                personalInfo: { 
+                    doctors: selectedProviders, 
+                    medications: selectedDrugs 
+                },
+            });
+            
             toast({ title: "Health Info Saved" });
             router.push('/dashboard/documents');
         } catch (error) {

@@ -8,7 +8,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    
+    // Allow user-specific data access in user-data collection
+    match /user-data/{userId}/{dataType}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     // Allow read-only access specifically to the 'bflic-cancer-quotes' collection
     match /bflic-cancer-quotes/{docId} {
       allow get, list: if true; // Allows reading documents and listing them

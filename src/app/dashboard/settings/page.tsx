@@ -43,7 +43,12 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const [user, loading] = useFirebaseAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [profile, setProfile] = useState<any>({});
+    const [profile, setProfile] = useState<{
+        displayName?: string;
+        email?: string;
+        photoURL?: string;
+        emailVerified?: boolean;
+    }>({});
     const [isUploading, setIsUploading] = useState(false);
 
     const notificationsForm = useForm<z.infer<typeof notificationsFormSchema>>({
@@ -67,8 +72,8 @@ export default function SettingsPage() {
                 } else {
                     // Pre-fill from auth if no firestore doc exists yet
                     setProfile({
-                        displayName: user.displayName,
-                        email: user.email,
+                        displayName: user.displayName || undefined,
+                        email: user.email || undefined,
                     });
                 }
             });
@@ -76,7 +81,7 @@ export default function SettingsPage() {
     }, [user, notificationsForm]);
 
     const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!user || !storage || !db || !auth.currentUser) return;
+        if (!user || !storage || !db || !auth?.currentUser) return;
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -88,7 +93,9 @@ export default function SettingsPage() {
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            await updateProfile(auth.currentUser, { photoURL: downloadURL });
+            if (auth.currentUser) {
+                await updateProfile(auth.currentUser, { photoURL: downloadURL });
+            }
             await setDoc(doc(db, 'users', user.uid), { photoURL: downloadURL }, { merge: true });
 
             setProfile(prev => ({ ...prev, photoURL: downloadURL }));
@@ -118,12 +125,14 @@ export default function SettingsPage() {
     };
     
     const handleSecuritySubmit = async (data: z.infer<typeof securityFormSchema>) => {
-        if (!user || !auth.currentUser) return;
+        if (!user || !auth?.currentUser) return;
         
         try {
             const credential = EmailAuthProvider.credential(user.email!, data.currentPassword);
-            await reauthenticateWithCredential(auth.currentUser, credential);
-            await updatePassword(auth.currentUser, data.newPassword);
+            if (auth.currentUser) {
+                await reauthenticateWithCredential(auth.currentUser, credential);
+                await updatePassword(auth.currentUser, data.newPassword);
+            }
             toast({ title: "Password Changed", description: "Your password has been successfully updated." });
             securityForm.reset();
         } catch (error: any) {

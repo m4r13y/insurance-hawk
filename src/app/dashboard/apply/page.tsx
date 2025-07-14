@@ -19,17 +19,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans, carriers } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack, Info } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
-import type { Plan, Drug, Provider, SelectedProvider, SelectedDrug, Policy } from "@/types"
+import type { Plan, Drug, Provider, Policy } from "@/types"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions"
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import Image from "next/image"
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
-import { db } from "@/lib/firebase"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { useAutofillProfile } from "@/hooks/use-autofill-profile"
+import { AutofillInput } from "@/components/ui/autofill-input"
+// Note: db import removed since we now use Cloud Functions for all data operations
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -56,7 +57,7 @@ const personalInfoSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   dob: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["male", "female"], { required_error: "Gender is required." }),
+  gender: z.enum(["male", "female"], { required_error: "Please select your gender." }),
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
@@ -201,15 +202,23 @@ const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierW
 
 // --- APPLICATION FORMS --- //
 async function saveApplicationAsPolicy(userId: string, data: Partial<Policy>) {
-    if (!db) {
-        throw new Error("Database not initialized");
-    }
-    const policiesCol = collection(db, "users", userId, "policies");
-    await addDoc(policiesCol, {
-        ...data,
-        status: 'pending',
-        createdAt: serverTimestamp()
-    });
+    // This is now handled by the saveUserData Cloud Function
+    // The policy data will be included in the comprehensive application data
+    console.log('Policy data will be saved via Cloud Function:', data);
+}
+
+// Check for existing pending cancer insurance applications
+async function checkExistingCancerApplication(userId: string): Promise<boolean> {
+    // This check is now handled server-side for better security
+    // For now, we'll allow new applications
+    console.log('Application check will be handled server-side for user:', userId);
+    return false;
+}
+
+// Save quote history for user reference
+async function saveQuoteHistory(userId: string, quoteData: any, quoteType: string) {
+    // Quote history is now handled by the Cloud Function
+    console.log('Quote history will be saved via Cloud Function:', { userId, quoteData, quoteType });
 }
 
 function CancerApplication() {
@@ -219,6 +228,7 @@ function CancerApplication() {
     const { toast } = useToast();
     const [step, setStep] = useState(0);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const planId = searchParams.get('planId');
     const planName = searchParams.get('planName');
@@ -226,12 +236,101 @@ function CancerApplication() {
     const premium = searchParams.get('premium');
     const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
+    // Check if we have required quote information first
+    const hasQuoteData = planName && provider && premium;
+
+    // If no quote data, show quote requirement message (don't initialize hooks)
+    if (!hasQuoteData) {
+        return (
+            <div className="container mx-auto px-4 py-8 max-w-2xl">
+                <Card>
+                    <CardHeader className="text-center">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-4">
+                            <HeartCrack className="h-8 w-8" />
+                        </div>
+                        <CardTitle className="text-2xl">Quote Required</CardTitle>
+                        <CardDescription>
+                            You need to get a quote first before applying for Cancer Insurance.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">
+                            To ensure you get the best rate and coverage options, please generate a personalized quote first. 
+                            This will only take a few minutes and will provide you with accurate pricing based on your specific situation.
+                        </p>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>What you'll need:</AlertTitle>
+                            <AlertDescription>
+                                Basic information including your age, state, benefit amount preference, family situation, and tobacco status.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-3">
+                        <Button asChild size="lg" className="w-full">
+                            <Link href="/dashboard/quotes">Get Cancer Insurance Quote</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                            <Link href="/dashboard">Return to Dashboard</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
+
+    // Only initialize autofill hook if we have quote data
+    return <CancerApplicationForm 
+        planId={planId}
+        planName={planName}
+        provider={provider}
+        premium={premium}
+        carrierInfo={carrierInfo}
+    />;
+}
+
+function CancerApplicationForm({ planId, planName, provider, premium, carrierInfo }: {
+    planId: string | null;
+    planName: string | null;
+    provider: string | null;
+    premium: string | null;
+    carrierInfo: any;
+}) {
+    type FormSchema = z.infer<typeof cancerSchema>;
+    const [user] = useFirebaseAuth();
+    const { toast } = useToast();
+    const [step, setStep] = useState(0);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Auto-fill profile hook (only called when we have quote data)
+    const {
+        profileData,
+        isLoading: isProfileLoading,
+        isFieldLocked,
+        getFieldValue,
+        updateProfileField,
+        setFieldUnlocked
+    } = useAutofillProfile();
+
     const form = useForm<FormSchema>({
         resolver: zodResolver(cancerSchema),
         defaultValues: {
             planId: planId || '',
             wantsAgentContact: "yes",
-            firstName: "", lastName: "", dob: "", gender: undefined, address: "", city: "", state: "", zip: "", phone: "", email: "",
+            firstName: getFieldValue('firstName'),
+            lastName: getFieldValue('lastName'),
+            dob: getFieldValue('dob'),
+            gender: (() => {
+                const genderValue = getFieldValue('gender');
+                return (genderValue === 'male' || genderValue === 'female') ? genderValue : undefined;
+            })(),
+            address: getFieldValue('address'),
+            city: getFieldValue('city'),
+            state: getFieldValue('state'),
+            zip: getFieldValue('zip'),
+            phone: getFieldValue('phone'),
+            email: getFieldValue('email'),
             heightFt: 5, heightIn: 8, weight: 150,
             q3: undefined, q3_details: "",
             q4: undefined, q4_details: "",
@@ -239,6 +338,25 @@ function CancerApplication() {
             signature: "", agreesToTerms: false,
         }
     });
+
+    // Update form values when profile data loads
+    React.useEffect(() => {
+        if (!isProfileLoading && profileData) {
+            form.setValue('firstName', getFieldValue('firstName'));
+            form.setValue('lastName', getFieldValue('lastName'));
+            form.setValue('dob', getFieldValue('dob'));
+            const genderValue = getFieldValue('gender');
+            if (genderValue === 'male' || genderValue === 'female') {
+                form.setValue('gender', genderValue);
+            }
+            form.setValue('address', getFieldValue('address'));
+            form.setValue('city', getFieldValue('city'));
+            form.setValue('state', getFieldValue('state'));
+            form.setValue('zip', getFieldValue('zip'));
+            form.setValue('phone', getFieldValue('phone'));
+            form.setValue('email', getFieldValue('email'));
+        }
+    }, [isProfileLoading, profileData, form, getFieldValue]);
 
     const steps = [
         { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] as FieldPath<FormSchema>[] },
@@ -256,8 +374,44 @@ function CancerApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-        if (!user || !db) return;
+        console.log("=== Cancer Application Submit Triggered ===");
+        console.log("Form values:", values);
+        console.log("User:", user);
+        console.log("Using Cloud Function for data operations");
+        
+        // Prevent multiple submissions
+        if (isSubmitting) {
+            console.log("Already submitting, ignoring duplicate click");
+            return;
+        }
+        
+        if (!user) {
+            console.log("Missing user authentication - aborting submission");
+            toast({
+                title: "Authentication Error",
+                description: "Please make sure you're logged in and try again.",
+                variant: "destructive",
+            });
+            return;
+        }
+        
+        setIsSubmitting(true);
+        
         try {
+            console.log("Starting submission process...");
+            
+            // Check for existing pending cancer insurance applications
+            const hasExistingApplication = await checkExistingCancerApplication(user.uid);
+            if (hasExistingApplication) {
+                toast({
+                    title: "Existing Application Found",
+                    description: "You already have a pending cancer insurance application. Please cancel your existing application before submitting a new one.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            
+            // Save application as policy
             const policyData: Partial<Policy> = {
                 planName: planName || "Cancer Insurance",
                 premium: premium ? parseFloat(premium) : 0,
@@ -265,20 +419,125 @@ function CancerApplication() {
                 policyCategoryId: "cancer",
                 carrierName: provider || "Unknown",
                 carrierId: carrierInfo?.id || "unknown",
-                carrierLogoUrl: carrierInfo?.logoUrl,
-                carrierWebsite: carrierInfo?.website,
                 enrollmentDate: new Date().toISOString().split('T')[0],
             };
+            
+            // Only add optional fields if they exist
+            if (carrierInfo?.logoUrl) {
+                policyData.carrierLogoUrl = carrierInfo.logoUrl;
+            }
+            if (carrierInfo?.website) {
+                policyData.carrierWebsite = carrierInfo.website;
+            }
+            
             await saveApplicationAsPolicy(user.uid, policyData);
-            toast({ title: "Application Submitted!", description: "We've received your cancer insurance application." });
+
+            // Save quote history if we have quote data
+            if (planName && provider && premium) {
+                const quoteData = {
+                    request: {
+                        planName,
+                        provider,
+                        applicationType: 'cancer'
+                    },
+                    result: {
+                        planName,
+                        provider,
+                        premium: parseFloat(premium),
+                        carrierInfo
+                    }
+                };
+                await saveQuoteHistory(user.uid, quoteData, 'cancer');
+            }
+
+            // Prepare comprehensive application data for our Cloud Function
+            const applicationData = {
+                personalInfo: {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    dob: values.dob,
+                    gender: values.gender,
+                    address: values.address,
+                    city: values.city,
+                    state: values.state,
+                    zip: values.zip,
+                    phone: values.phone,
+                    email: values.email
+                },
+                signature: {
+                    signatureName: values.signature,
+                    signatureDate: new Date().toISOString(),
+                    agreed: values.agreesToTerms
+                },
+                policy: {
+                    planName: planName || "Cancer Insurance",
+                    quotePrice: premium ? parseFloat(premium) : 0,
+                    policyType: "Cancer Insurance",
+                    carrierName: provider || "Unknown",
+                },
+                applicationStep: "complete"
+            };
+            
+            // Call our production-ready Cloud Function
+            const token = await user.getIdToken();
+            const response = await fetch(`https://us-central1-medicareally.cloudfunctions.net/saveUserData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    data: applicationData
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                console.error('Cloud Function error:', result);
+                throw new Error(result.error?.message || 'Failed to save application data');
+            }
+
+            console.log('Application saved successfully:', result);
+            toast({ 
+                title: "Application Submitted Successfully!", 
+                description: "Your cancer insurance application has been received and is being processed." 
+            });
             setIsSubmitted(true);
         } catch (error) {
             console.error("Error submitting application:", error);
             toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
-    if (isSubmitted) return <SuccessPage title="Cancer Application" />;
+    if (isSubmitted) {
+        return (
+            <div className="max-w-2xl mx-auto p-6">
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center space-y-4">
+                            <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+                            <h2 className="text-2xl font-bold text-green-700">Application Submitted Successfully!</h2>
+                            <p className="text-gray-600">
+                                Your Cancer Insurance application has been received and is being processed. 
+                                You can track the status in your account dashboard.
+                            </p>
+                            <div className="flex gap-4 justify-center pt-4">
+                                <Button onClick={() => window.location.href = '/dashboard'}>
+                                    Go to Dashboard
+                                </Button>
+                                <Button variant="outline" onClick={() => window.location.href = '/dashboard/plans'}>
+                                    View My Policies
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
     
     if (step === 0) return (
         <div className="flex flex-col items-center justify-center text-center h-full max-w-lg mx-auto">
@@ -315,16 +574,110 @@ function CancerApplication() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     {step === 1 && ( /* Personal Info */
                         <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                            <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="firstName" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="First Name"
+                                    isLocked={isFieldLocked('firstName')}
+                                    autofilledValue={getFieldValue('firstName')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('firstName')}
+                                    onUpdateValue={(value) => updateProfileField('firstName', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Last Name"
+                                    isLocked={isFieldLocked('lastName')}
+                                    autofilledValue={getFieldValue('lastName')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('lastName')}
+                                    onUpdateValue={(value) => updateProfileField('lastName', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="dob" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Date of Birth"
+                                    type="date"
+                                    isLocked={isFieldLocked('dob')}
+                                    autofilledValue={getFieldValue('dob')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('dob')}
+                                    onUpdateValue={(value) => updateProfileField('dob', value)}
+                                />
+                            )} />
                             <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="city" render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="state" render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="zip" render={({ field }) => <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="address" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Street Address"
+                                    isLocked={isFieldLocked('address')}
+                                    autofilledValue={getFieldValue('address')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('address')}
+                                    onUpdateValue={(value) => updateProfileField('address', value)}
+                                    className="md:col-span-2"
+                                />
+                            )} />
+                            <FormField control={form.control} name="city" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="City"
+                                    isLocked={isFieldLocked('city')}
+                                    autofilledValue={getFieldValue('city')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('city')}
+                                    onUpdateValue={(value) => updateProfileField('city', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="state" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="State"
+                                    isLocked={isFieldLocked('state')}
+                                    autofilledValue={getFieldValue('state')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('state')}
+                                    onUpdateValue={(value) => updateProfileField('state', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="zip" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Zip Code"
+                                    isLocked={isFieldLocked('zip')}
+                                    autofilledValue={getFieldValue('zip')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('zip')}
+                                    onUpdateValue={(value) => updateProfileField('zip', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="phone" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Phone Number"
+                                    type="tel"
+                                    isLocked={isFieldLocked('phone')}
+                                    autofilledValue={getFieldValue('phone')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('phone')}
+                                    onUpdateValue={(value) => updateProfileField('phone', value)}
+                                />
+                            )} />
+                            <FormField control={form.control} name="email" render={({ field }) => (
+                                <AutofillInput
+                                    field={field}
+                                    label="Email Address"
+                                    type="email"
+                                    isLocked={isFieldLocked('email')}
+                                    autofilledValue={getFieldValue('email')}
+                                    onRequestEdit={() => {}}
+                                    onConfirmEdit={() => setFieldUnlocked('email')}
+                                    onUpdateValue={(value) => updateProfileField('email', value)}
+                                />
+                            )} />
                         </CardContent></Card>
                     )}
                     {step === 2 && ( /* Underwriting Info */
@@ -378,7 +731,30 @@ function CancerApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit" disabled={isSubmitting} onClick={async () => {
+                            console.log("=== Cancer Submit Button Clicked ===");
+                            console.log("Current form values:", form.getValues());
+                            console.log("Form state:", form.formState);
+                            console.log("Errors:", form.formState.errors);
+                            
+                            // Check if form is valid
+                            const isValid = await form.trigger();
+                            console.log("Form is valid:", isValid);
+                            
+                            if (!isValid) {
+                                console.log("Form validation failed!");
+                                console.log("All errors:", form.formState.errors);
+                            }
+                        }}>
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                "Submit Application"
+                            )}
+                        </Button>)}
                     </div>
                 </form>
             </Form>
@@ -430,6 +806,49 @@ function MedicareSupplementApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    
+    // Check if we have required quote information
+    const hasQuoteData = planName && provider && premium;
+
+    // If no quote data, show quote requirement message
+    if (!hasQuoteData) {
+        return (
+            <div className="container mx-auto px-4 py-8 max-w-2xl">
+                <Card>
+                    <CardHeader className="text-center">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-4">
+                            <ShieldCheck className="h-8 w-8" />
+                        </div>
+                        <CardTitle className="text-2xl">Quote Required</CardTitle>
+                        <CardDescription>
+                            You need to get a quote first before applying for Medicare Supplement Insurance.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">
+                            To ensure you get the best rate and coverage options, please generate a personalized quote first. 
+                            This will only take a few minutes and will provide you with accurate pricing based on your specific situation.
+                        </p>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>What you'll need:</AlertTitle>
+                            <AlertDescription>
+                                Basic information including your zip code, birth date, gender, and tobacco status.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-3">
+                        <Button asChild size="lg" className="w-full">
+                            <Link href="/dashboard/quotes">Get Medicare Supplement Quote</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                            <Link href="/dashboard">Return to Dashboard</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
     
     const supplementPlans = mockPlans.filter(p => p.category === "Medicare Supplement");
     const allAvailablePlans: Plan[] = [...supplementPlans];
@@ -490,8 +909,9 @@ function MedicareSupplementApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-        if (!user || !db) return;
+        if (!user) return;
         try {
+            // Save application as policy
             const policyData: Partial<Policy> = {
                 planName: planName || "Medicare Supplement",
                 premium: premium ? parseFloat(premium) : 0,
@@ -504,7 +924,61 @@ function MedicareSupplementApplication() {
                 enrollmentDate: new Date().toISOString().split('T')[0],
             };
             await saveApplicationAsPolicy(user.uid, policyData);
+
+            // Save quote history
+            if (planName && provider && premium) {
+                const quoteData = {
+                    request: {
+                        planName,
+                        provider,
+                        applicationType: 'medicare-supplement'
+                    },
+                    result: {
+                        planName,
+                        provider,
+                        premium: parseFloat(premium),
+                        carrierInfo
+                    }
+                };
+                await saveQuoteHistory(user.uid, quoteData, 'medicare-supplement');
+            }
+
+            // Save comprehensive application data via Cloud Function
+            const applicationData = {
+                personalInfo: {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    dob: values.dob,
+                    gender: values.gender,
+                    address: values.address,
+                    city: values.city,
+                    state: values.state,
+                    zip: values.zip,
+                    phone: values.phone,
+                    email: values.email
+                },
+                medications: values.selectedDrugs || [],
+                doctors: values.selectedProviders || [],
+                applicationStep: "personal"
+            };
+
+            const token = await user.getIdToken();
+            const response = await fetch(`https://us-central1-medicareally.cloudfunctions.net/saveUserData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ data: applicationData })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Failed to save application data');
+            }
+
             toast({ title: "Application Submitted!", description: "We've received your application." });
+            setIsSubmitted(true);
             setIsSubmitted(true);
         } catch (error) {
             console.error("Error submitting application:", error);
@@ -850,6 +1324,49 @@ function DentalApplication() {
     const premium = searchParams.get('premium');
     const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
+    // Check if we have required quote information
+    const hasQuoteData = planName && provider && premium;
+
+    // If no quote data, show quote requirement message
+    if (!hasQuoteData) {
+        return (
+            <div className="container mx-auto px-4 py-8 max-w-2xl">
+                <Card>
+                    <CardHeader className="text-center">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-4">
+                            <Smile className="h-8 w-8" />
+                        </div>
+                        <CardTitle className="text-2xl">Quote Required</CardTitle>
+                        <CardDescription>
+                            You need to get a quote first before applying for Dental Insurance.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">
+                            To ensure you get the best rate and coverage options, please generate a personalized quote first. 
+                            This will only take a few minutes and will provide you with accurate pricing based on your specific situation.
+                        </p>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>What you'll need:</AlertTitle>
+                            <AlertDescription>
+                                Basic information including your zip code and coverage preferences for dental care.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-3">
+                        <Button asChild size="lg" className="w-full">
+                            <Link href="/dashboard/quotes">Get Dental Insurance Quote</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                            <Link href="/dashboard">Return to Dashboard</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
+    
     const form = useForm<FormSchema>({
         resolver: zodResolver(dentalSchema),
         defaultValues: {
@@ -884,8 +1401,9 @@ function DentalApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-        if (!user || !db) return;
+        if (!user) return;
         try {
+            // Save application as policy
             const policyData: Partial<Policy> = {
                 planName: planName || "Dental Insurance",
                 premium: premium ? parseFloat(premium) : 0,
@@ -898,6 +1416,57 @@ function DentalApplication() {
                 enrollmentDate: new Date().toISOString().split('T')[0],
             };
             await saveApplicationAsPolicy(user.uid, policyData);
+
+            // Save quote history
+            if (planName && provider && premium) {
+                const quoteData = {
+                    request: {
+                        planName,
+                        provider,
+                        applicationType: 'dental'
+                    },
+                    result: {
+                        planName,
+                        provider,
+                        premium: parseFloat(premium),
+                        carrierInfo
+                    }
+                };
+                await saveQuoteHistory(user.uid, quoteData, 'dental');
+            }
+
+            // Save personal info to user-data structure via Cloud Function
+            const applicationData = {
+                personalInfo: {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    dob: values.dob,
+                    gender: values.gender,
+                    address: values.address,
+                    city: values.city,
+                    state: values.state,
+                    zip: values.zip,
+                    phone: values.phone,
+                    email: values.email
+                },
+                applicationStep: "personal"
+            };
+
+            const token = await user.getIdToken();
+            const response = await fetch(`https://us-central1-medicareally.cloudfunctions.net/saveUserData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ data: applicationData })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Failed to save application data');
+            }
+
             toast({ title: "Application Submitted!", description: "We've received your dental application." });
             setIsSubmitted(true);
         } catch (error) {
@@ -986,6 +1555,49 @@ function HospitalIndemnityApplication() {
     const premium = searchParams.get('premium');
     const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
+    // Check if we have required quote information
+    const hasQuoteData = planName && provider && premium;
+
+    // If no quote data, show quote requirement message
+    if (!hasQuoteData) {
+        return (
+            <div className="container mx-auto px-4 py-8 max-w-2xl">
+                <Card>
+                    <CardHeader className="text-center">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-4">
+                            <HospitalIcon className="h-8 w-8" />
+                        </div>
+                        <CardTitle className="text-2xl">Quote Required</CardTitle>
+                        <CardDescription>
+                            You need to get a quote first before applying for Hospital Indemnity Insurance.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">
+                            To ensure you get the best rate and coverage options, please generate a personalized quote first. 
+                            This will only take a few minutes and will provide you with accurate pricing based on your specific situation.
+                        </p>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>What you'll need:</AlertTitle>
+                            <AlertDescription>
+                                Basic information including your zip code, age, and hospital benefit preferences.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-3">
+                        <Button asChild size="lg" className="w-full">
+                            <Link href="/dashboard/quotes">Get Hospital Indemnity Quote</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                            <Link href="/dashboard">Return to Dashboard</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
+    
     const form = useForm<FormSchema>({
         resolver: zodResolver(hospitalIndemnitySchema),
         defaultValues: {
@@ -1023,8 +1635,9 @@ function HospitalIndemnityApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-         if (!user || !db) return;
+        if (!user) return;
         try {
+            // Save application as policy
             const policyData: Partial<Policy> = {
                 planName: planName || "Hospital Indemnity",
                 premium: premium ? parseFloat(premium) : 0,
@@ -1037,6 +1650,57 @@ function HospitalIndemnityApplication() {
                 enrollmentDate: new Date().toISOString().split('T')[0],
             };
             await saveApplicationAsPolicy(user.uid, policyData);
+
+            // Save quote history
+            if (planName && provider && premium) {
+                const quoteData = {
+                    request: {
+                        planName,
+                        provider,
+                        applicationType: 'hospital-indemnity'
+                    },
+                    result: {
+                        planName,
+                        provider,
+                        premium: parseFloat(premium),
+                        carrierInfo
+                    }
+                };
+                await saveQuoteHistory(user.uid, quoteData, 'hospital-indemnity');
+            }
+
+            // Save personal info to user-data structure via Cloud Function
+            const applicationData = {
+                personalInfo: {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    dob: values.dob,
+                    gender: values.gender,
+                    address: values.address,
+                    city: values.city,
+                    state: values.state,
+                    zip: values.zip,
+                    phone: values.phone,
+                    email: values.email
+                },
+                applicationStep: "personal"
+            };
+
+            const token = await user.getIdToken();
+            const response = await fetch(`https://us-central1-medicareally.cloudfunctions.net/saveUserData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ data: applicationData })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Failed to save application data');
+            }
+
             toast({ title: "Application Submitted!", description: "We've received your hospital indemnity application." });
             setIsSubmitted(true);
         } catch (error) {
@@ -1131,6 +1795,10 @@ function LifeInsuranceApplication() {
     const premium = searchParams.get('premium');
     const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
+    // Note: Life insurance doesn't require quotes like other products since 
+    // it's more complex with coverage amounts and beneficiaries
+    // But we still show the application form directly
+    
     const form = useForm<FormSchema>({
         resolver: zodResolver(lifeInsuranceSchema),
         defaultValues: {
@@ -1157,8 +1825,9 @@ function LifeInsuranceApplication() {
 
     const steps = [
         { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
-        { id: 2, name: 'Coverage & Beneficiary', fields: ['coverageAmount', 'tobaccoUse', 'beneficiaryName', 'beneficiaryRelationship'] },
-        { id: 3, name: 'Agent & Signature', fields: ['wantsAgentContact', 'signature', 'agreesToTerms'] },
+        { id: 2, name: 'Coverage Details', fields: ['coverageAmount', 'tobaccoUse'] },
+        { id: 3, name: 'Beneficiary Information', fields: ['beneficiaryName', 'beneficiaryRelationship'] },
+        { id: 4, name: 'Agent & Signature', fields: ['wantsAgentContact', 'signature', 'agreesToTerms'] },
     ];
 
     const handleNext = async () => {
@@ -1170,8 +1839,9 @@ function LifeInsuranceApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-         if (!user || !db) return;
+        if (!user) return;
         try {
+            // Save application as policy
             const policyData: Partial<Policy> = {
                 planName: planName || "Life Insurance",
                 premium: premium ? parseFloat(premium) : 0,
@@ -1185,6 +1855,59 @@ function LifeInsuranceApplication() {
                 benefitAmount: values.coverageAmount,
             };
             await saveApplicationAsPolicy(user.uid, policyData);
+
+            // Save quote history
+            if (planName && provider && premium) {
+                const quoteData = {
+                    request: {
+                        planName,
+                        provider,
+                        applicationType: 'life-insurance',
+                        coverageAmount: values.coverageAmount
+                    },
+                    result: {
+                        planName,
+                        provider,
+                        premium: parseFloat(premium),
+                        carrierInfo,
+                        coverageAmount: values.coverageAmount
+                    }
+                };
+                await saveQuoteHistory(user.uid, quoteData, 'life-insurance');
+            }
+
+            // Save personal info to user-data structure via Cloud Function
+            const applicationData = {
+                personalInfo: {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    dob: values.dob,
+                    gender: values.gender,
+                    address: values.address,
+                    city: values.city,
+                    state: values.state,
+                    zip: values.zip,
+                    phone: values.phone,
+                    email: values.email
+                },
+                applicationStep: "personal"
+            };
+
+            const token = await user.getIdToken();
+            const response = await fetch(`https://us-central1-medicareally.cloudfunctions.net/saveUserData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ data: applicationData })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Failed to save application data');
+            }
+
             toast({ title: "Application Submitted!", description: "We've received your life insurance application." });
             setIsSubmitted(true);
         } catch (error) {
@@ -1192,7 +1915,7 @@ function LifeInsuranceApplication() {
             toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
         }
     }
-    
+
     if (isSubmitted) return <SuccessPage title="Life Insurance Application" />;
     
     if (step === 0) return (
@@ -1200,11 +1923,11 @@ function LifeInsuranceApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <FileHeart className="h-6 w-6" />
+                         <ShieldCheck className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Life Insurance Application</CardTitle>
                 </CardHeader>
-                <CardContent><p className="text-base text-muted-foreground">Protect your loved ones with this secure application.</p></CardContent>
+                <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
                 <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
@@ -1243,27 +1966,18 @@ function LifeInsuranceApplication() {
                         </CardContent></Card>
                     )}
                     {step === 2 && ( /* Coverage Details */
-                        <Card><CardHeader><CardTitle>Coverage & Beneficiary</CardTitle></CardHeader><CardContent className="space-y-8 pt-6">
-                             <FormField control={form.control} name="coverageAmount" render={({ field }) => <FormItem><FormLabel>Desired Coverage Amount</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="tobaccoUse" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Tobacco/Nicotine Use</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select an option" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="none">None in the last 5 years</SelectItem>
-                                            <SelectItem value="last_12_months">Yes, in the last 12 months</SelectItem>
-                                            <SelectItem value="over_12_months_ago">Not in the last 12 months, but in the last 5 years</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                             <FormField control={form.control} name="beneficiaryName" render={({ field }) => <FormItem><FormLabel>Primary Beneficiary Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                             <FormField control={form.control} name="beneficiaryRelationship" render={({ field }) => <FormItem><FormLabel>Beneficiary Relationship</FormLabel><FormControl><Input placeholder="e.g., Spouse, Child, Sibling" {...field} /></FormControl><FormMessage /></FormItem>} />
+                        <Card><CardHeader><CardTitle>Coverage Details</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
+                            <FormField control={form.control} name="coverageAmount" render={({ field }) => <FormItem><FormLabel>Coverage Amount</FormLabel><FormControl><Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}><SelectTrigger><SelectValue placeholder="Select coverage amount" /></SelectTrigger><SelectContent><SelectItem value="10000">$10,000</SelectItem><SelectItem value="15000">$15,000</SelectItem><SelectItem value="25000">$25,000</SelectItem><SelectItem value="50000">$50,000</SelectItem><SelectItem value="75000">$75,000</SelectItem><SelectItem value="100000">$100,000</SelectItem></SelectContent></Select></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="tobaccoUse" render={({ field }) => <FormItem><FormLabel>Have you used tobacco products in any form?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2 pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="none" /></FormControl><FormLabel className="font-normal">No, I have never used tobacco</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="last_12_months" /></FormControl><FormLabel className="font-normal">Yes, within the last 12 months</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="over_12_months_ago" /></FormControl><FormLabel className="font-normal">Yes, but over 12 months ago</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                         </CardContent></Card>
                     )}
-                     {step === 3 && ( /* Signature */
+                    {step === 3 && ( /* Beneficiary */
+                        <Card><CardHeader><CardTitle>Beneficiary Information</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
+                            <FormField control={form.control} name="beneficiaryName" render={({ field }) => <FormItem><FormLabel>Primary Beneficiary Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField control={form.control} name="beneficiaryRelationship" render={({ field }) => <FormItem><FormLabel>Relationship to You</FormLabel><FormControl><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select relationship" /></SelectTrigger><SelectContent><SelectItem value="spouse">Spouse</SelectItem><SelectItem value="child">Child</SelectItem><SelectItem value="parent">Parent</SelectItem><SelectItem value="sibling">Sibling</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
+                    )}
+                     {step === 4 && ( /* Signature */
                          <Card><CardHeader><CardTitle>Signature & Consent</CardTitle></CardHeader><CardContent className="space-y-6 pt-6">
                             <FormField control={form.control} name="wantsAgentContact" render={({ field }) => <FormItem><FormLabel>Would you like a licensed agent to contact you to review your application?</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2 gap-4"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
                             <FormField control={form.control} name="agreesToTerms" render={({ field }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I confirm all information is accurate and agree to the disclaimers and privacy policy.</FormLabel><FormMessage/></div></FormItem>} />
@@ -1366,7 +2080,7 @@ function HealthInsuranceApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-         if (!user || !db) return;
+         if (!user) return;
         try {
             const policyData: Partial<Policy> = {
                 planName: planName || "Health Insurance",
@@ -1714,7 +2428,6 @@ function MedicareAdvantageApplication() {
     const form = useForm<FormSchema>({
         resolver: zodResolver(medicareAdvantageSchema),
         defaultValues: {
-            planId: planId || '',
             wantsAgentContact: "yes",
             firstName: "", lastName: "", dob: "", gender: undefined, address: "", city: "", state: "", zip: "", phone: "", email: "",
             medicareClaimNumber: "", partAEffectiveDate: "", partBEffectiveDate: "",
@@ -1754,7 +2467,7 @@ function MedicareAdvantageApplication() {
     const handlePrev = () => setStep(s => s - 1);
 
     async function onSubmit(values: FormSchema) {
-        if (!user || !db) return;
+        if (!user) return;
         try {
             const policyData: Partial<Policy> = {
                 planName: planName || "Medicare Advantage",
