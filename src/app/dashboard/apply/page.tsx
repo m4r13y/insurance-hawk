@@ -22,11 +22,14 @@ import { Progress } from "@/components/ui/progress"
 import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
-import type { Plan, Drug, Provider } from "@/types"
+import type { Plan, Drug, Provider, SelectedProvider, SelectedDrug, Policy } from "@/types"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions"
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import Image from "next/image"
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
+import { db } from "@/lib/firebase"
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -156,11 +159,11 @@ const SuccessPage = ({ title }: { title: string }) => (
                 <CardDescription className="text-base">Thank you for submitting your application.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground">A licensed agent will be in contact with you shortly to finalize your enrollment. You will also receive a confirmation email with a copy of your application.</p>
+                <p className="text-muted-foreground">A licensed agent will be in contact with you shortly to finalize your enrollment. Your new policy has been added to your account with a "Pending" status.</p>
             </CardContent>
             <CardFooter>
                 <Button asChild className="w-full" size="lg">
-                    <Link href="/dashboard">Return to Dashboard</Link>
+                    <Link href="/dashboard/documents">Return to My Account</Link>
                 </Button>
             </CardFooter>
         </Card>
@@ -197,9 +200,21 @@ const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierW
 };
 
 // --- APPLICATION FORMS --- //
+async function saveApplicationAsPolicy(userId: string, data: Partial<Policy>) {
+    if (!db) {
+        throw new Error("Database not initialized");
+    }
+    const policiesCol = collection(db, "users", userId, "policies");
+    await addDoc(policiesCol, {
+        ...data,
+        status: 'pending',
+        createdAt: serverTimestamp()
+    });
+}
 
 function CancerApplication() {
     type FormSchema = z.infer<typeof cancerSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -209,6 +224,7 @@ function CancerApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
     const form = useForm<FormSchema>({
         resolver: zodResolver(cancerSchema),
@@ -239,13 +255,28 @@ function CancerApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Cancer Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your cancer insurance application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+        if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Cancer Insurance",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Cancer Insurance",
+                policyCategoryId: "cancer",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your cancer insurance application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
-    
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
     if (isSubmitted) return <SuccessPage title="Cancer Application" />;
     
@@ -357,6 +388,7 @@ function CancerApplication() {
 
 function MedicareSupplementApplication() {
     type FormSchema = z.infer<typeof medSupplementSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -409,6 +441,7 @@ function MedicareSupplementApplication() {
             allAvailablePlans.unshift(quotedPlan);
         }
     }
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(medSupplementSchema),
@@ -456,10 +489,27 @@ function MedicareSupplementApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Medicare Supplement Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+        if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Medicare Supplement",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Medicare Supplement",
+                policyCategoryId: "medicare",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
     
     // --- Handlers for Doctors/Meds Search ---
@@ -579,8 +629,6 @@ function MedicareSupplementApplication() {
         }
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
-
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
     if (isSubmitted) return <SuccessPage title="Application" />;
     
@@ -790,6 +838,7 @@ function MedicareSupplementApplication() {
 
 function DentalApplication() {
     type FormSchema = z.infer<typeof dentalSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -799,6 +848,7 @@ function DentalApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(dentalSchema),
@@ -833,13 +883,28 @@ function DentalApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Dental Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your dental application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+        if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Dental Insurance",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Dental Insurance",
+                policyCategoryId: "dvh",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your dental application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
-    
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     if (isSubmitted) return <SuccessPage title="Dental Application" />;
     
@@ -909,6 +974,7 @@ function DentalApplication() {
 
 function HospitalIndemnityApplication() {
     type FormSchema = z.infer<typeof hospitalIndemnitySchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -918,6 +984,7 @@ function HospitalIndemnityApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(hospitalIndemnitySchema),
@@ -955,14 +1022,29 @@ function HospitalIndemnityApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Hospital Indemnity Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your hospital indemnity application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+         if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Hospital Indemnity",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Hospital Indemnity",
+                policyCategoryId: "hospital",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your hospital indemnity application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
     
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
-
     if (isSubmitted) return <SuccessPage title="Hospital Indemnity Application" />;
     
     if (step === 0) return (
@@ -1037,6 +1119,7 @@ function HospitalIndemnityApplication() {
 
 function LifeInsuranceApplication() {
     type FormSchema = z.infer<typeof lifeInsuranceSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -1046,6 +1129,7 @@ function LifeInsuranceApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(lifeInsuranceSchema),
@@ -1085,13 +1169,29 @@ function LifeInsuranceApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Life Insurance Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your life insurance application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+         if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Life Insurance",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Life Insurance",
+                policyCategoryId: "life",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+                benefitAmount: values.coverageAmount,
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your life insurance application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
-    
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     if (isSubmitted) return <SuccessPage title="Life Insurance Application" />;
     
@@ -1182,6 +1282,7 @@ function LifeInsuranceApplication() {
 
 function HealthInsuranceApplication() {
     type FormSchema = z.infer<typeof healthInsuranceSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -1222,6 +1323,7 @@ function HealthInsuranceApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(healthInsuranceSchema),
@@ -1263,10 +1365,27 @@ function HealthInsuranceApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Health Insurance Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your health insurance application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+         if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Health Insurance",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Health Insurance",
+                policyCategoryId: "health",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your health insurance application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
     
      // --- Handlers for Doctors/Meds Search ---
@@ -1387,8 +1506,6 @@ function HealthInsuranceApplication() {
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
     
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
-
     if (isSubmitted) return <SuccessPage title="Health Insurance Application" />;
     
     if (step === 0) return (
@@ -1551,6 +1668,7 @@ function HealthInsuranceApplication() {
 
 function MedicareAdvantageApplication() {
     type FormSchema = z.infer<typeof medicareAdvantageSchema>;
+    const [user] = useFirebaseAuth();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const [step, setStep] = useState(0);
@@ -1591,6 +1709,7 @@ function MedicareAdvantageApplication() {
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
     
     const form = useForm<FormSchema>({
         resolver: zodResolver(medicareAdvantageSchema),
@@ -1634,10 +1753,27 @@ function MedicareAdvantageApplication() {
 
     const handlePrev = () => setStep(s => s - 1);
 
-    function onSubmit(values: FormSchema) {
-        console.log("Medicare Advantage Application Submitted:", values);
-        toast({ title: "Application Submitted!", description: "We've received your application." });
-        setIsSubmitted(true);
+    async function onSubmit(values: FormSchema) {
+        if (!user || !db) return;
+        try {
+            const policyData: Partial<Policy> = {
+                planName: planName || "Medicare Advantage",
+                premium: premium ? parseFloat(premium) : 0,
+                policyCategoryName: "Medicare Advantage",
+                policyCategoryId: "medicare",
+                carrierName: provider || "Unknown",
+                carrierId: carrierInfo?.id || "unknown",
+                carrierLogoUrl: carrierInfo?.logoUrl,
+                carrierWebsite: carrierInfo?.website,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+            };
+            await saveApplicationAsPolicy(user.uid, policyData);
+            toast({ title: "Application Submitted!", description: "We've received your application." });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
+        }
     }
     
      // --- Handlers for Doctors/Meds Search ---
@@ -1757,8 +1893,6 @@ function MedicareAdvantageApplication() {
         }
     }, [dosages]);
     // --- End Handlers for Doctors/Meds Search ---
-
-    const carrierInfo = carriers.find(c => provider && c.name.includes(provider));
 
     if (isSubmitted) return <SuccessPage title="Medicare Advantage Application" />;
     
@@ -2054,3 +2188,5 @@ export default function ApplyPage() {
     </Suspense>
   )
 }
+
+    
