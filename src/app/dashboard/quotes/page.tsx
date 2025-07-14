@@ -46,6 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
+import { getFirestore, doc, getDoc, collection } from "firebase/firestore";
 
 
 const medigapFormSchema = z.object({
@@ -81,6 +82,28 @@ const cancerFormSchema = z.object({
     carcinomaInSitu: z.enum(["25%", "100%"], { required_error: "Please select a Carcinoma In Situ option."}),
     benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000").refine(val => val % 1000 === 0, { message: "Benefit amount must be in increments of $1000." }),
 });
+
+// --- HELPER FUNCTIONS for Cancer Quote ---
+const mapFamilyTypeToCode = (familyType: z.infer<typeof cancerFormSchema>['familyType']): string => {
+    const mapping: Record<z.infer<typeof cancerFormSchema>['familyType'], string> = {
+        "Applicant Only": "applicant-only",
+        "Applicant and Spouse": "applicant-and-spouse",
+        "Applicant and Child(ren)": "applicant-and-children",
+        "Applicant and Spouse and Child(ren)": "applicant-spouse-children",
+    };
+    return mapping[familyType];
+};
+
+const mapPremiumModeToKey = (premiumMode: z.infer<typeof cancerFormSchema>['premiumMode']): string => {
+    const mapping: Record<z.infer<typeof cancerFormSchema>['premiumMode'], string> = {
+        "Monthly Bank Draft": "monthly-bank-draft",
+        "Monthly Credit Card": "monthly-credit-card",
+        "Monthly Direct Mail": "monthly-direct-mail",
+        "Annual": "annual",
+    };
+    return mapping[premiumMode];
+};
+
 
 export default function QuotesPage() {
   const [isMedigapPending, startMedigapTransition] = useTransition();
@@ -245,21 +268,64 @@ export default function QuotesPage() {
   async function onCancerSubmit(values: z.infer<typeof cancerFormSchema>) {
     setCancerError(null);
     setCancerQuote(null);
-    
     startCancerTransition(async () => {
-      if (!firebaseApp) {
-        setCancerError("Firebase is not configured. Please contact support.");
-        return;
-      }
       try {
-        const functions = getFunctions(firebaseApp);
-        const getCancerQuote = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getCancerInsuranceQuote');
+        if (!firebaseApp) {
+          throw new Error("Firebase is not configured. Please contact support.");
+        }
         
-        const result = await getCancerQuote(values);
+        // Explicitly connect to the named 'hawknest-database'
+        const db = getFirestore(firebaseApp, 'hawknest-database');
+
+        const inputVariablesRef = doc(db, 'bflic-cancer-quotes', 'input-variables');
+        const statesRef = doc(db, 'bflic-cancer-quotes', 'states');
+
+        const [inputVariablesSnap, statesSnap] = await Promise.all([
+            getDoc(inputVariablesRef),
+            getDoc(statesRef),
+        ]);
+
+        if (!inputVariablesSnap.exists() || !statesSnap.exists()) {
+          throw new Error("Server configuration is incomplete. Please contact support.");
+        }
         
-        setCancerQuote(result.data);
+        const inputVariables = inputVariablesSnap.data()!;
+        const statesData = statesSnap.data()!;
+
+        const cisKey = values.carcinomaInSitu === "100%" ? "1" : "25";
+        const cisCode = inputVariables.CIS[cisKey];
+        const premiumCode = statesData[values.state]['premium-code'];
+        const rateSheet = statesData[values.state]['rate-sheet'];
+        const familyCode = inputVariables.emptype[mapFamilyTypeToCode(values.familyType)];
+        const tobaccoCode = inputVariables.tobacco[values.tobaccoStatus === "Tobacco" ? "yes" : "no"];
+        const defaultUnit = inputVariables['default-unit'];
+        const premiumModeValue = inputVariables['payment-mode'][mapPremiumModeToKey(values.premiumMode)];
+        
+        const lookupId = `${cisCode}${premiumCode}${values.age}${familyCode}${tobaccoCode}`;
+        
+        const rateDocRef = doc(collection(db, 'bflic-cancer-quotes', 'states', rateSheet), lookupId);
+        const rateDocSnap = await getDoc(rateDocRef);
+
+        if (!rateDocSnap.exists()) {
+            throw new Error("No rate found for the selected criteria. Please check your inputs.");
+        }
+
+        const rateData = rateDocSnap.data()!;
+        const rateVariable = rateData.inprem;
+
+        const premium = (((rateVariable * 0.01) * values.benefitAmount) / defaultUnit) * premiumModeValue;
+        const roundedPremium = Math.round(premium * 100) / 100;
+
+        const result: CancerQuote = {
+            monthly_premium: roundedPremium,
+            carrier: "Bankers Fidelity",
+            plan_name: "Cancer Insurance",
+            benefit_amount: values.benefitAmount,
+        };
+        
+        setCancerQuote(result);
       } catch (error: any) {
-        console.error("Cancer Quote Cloud Function Error:", error);
+        console.error("Cancer Quote Error:", error);
         setCancerError(error.message || "An unknown error occurred while fetching your quote.");
       }
     });
@@ -836,4 +902,3 @@ export default function QuotesPage() {
     </div>
   );
 }
-
