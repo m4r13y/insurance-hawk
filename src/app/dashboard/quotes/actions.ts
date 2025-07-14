@@ -1,6 +1,14 @@
 
 
 "use server";
+<<<<<<< HEAD
+import { getFirestore, doc, getDoc, initializeApp, getApps, App } from "firebase-admin/firestore";
+import * as admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
+
+=======
+>>>>>>> 54a94b6 (Goal: Implement a New "Cancer Insurance" Quote Functionality for a Web A)
 
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
 
