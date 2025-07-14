@@ -2,6 +2,7 @@
 
 
 
+
 export type Plan = {
   id: string;
   name: string;
@@ -43,6 +44,7 @@ export type Policy = {
   premium?: number;
   enrollmentDate?: string;
   benefitAmount?: number;
+  status: 'active' | 'pending' | 'declined';
 };
 
 export type QuoteRequestValues = {
