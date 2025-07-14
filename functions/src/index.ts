@@ -1,16 +1,15 @@
-
 /**
- * @fileOverview Calculating Cancer Insurance quotes.
+ * @fileOverview Calculating Cancer Insurance quotes using Firebase Cloud Functions v2.
  */
-import * as functions from "firebase-functions/v2";
+import * as v2 from "firebase-functions/v2";
 import * as admin from "firebase-admin";
-import {getFirestore, DocumentData} from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
 try {
   admin.initializeApp();
 } catch (e) {
-  functions.logger.info("Admin SDK already initialized.");
+  v2.logger.info("Admin SDK already initialized.");
 }
 
 const db = getFirestore(admin.app(), "hawknest-database");
@@ -57,7 +56,7 @@ interface StatesData {
 }
 
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER v2 ---
 const mapFamilyTypeToCode = (
   familyType: CancerQuoteRequestData["familyType"],
 ): string => {
@@ -83,24 +82,24 @@ const mapPremiumModeToKey = (
 };
 
 // --- MAIN CLOUD FUNCTION ---
-export const getCancerInsuranceQuote = functions.https.onCall(
-  async (request: functions.https.CallableRequest<CancerQuoteRequestData>):
+export const getcancerinsurancequote = v2.https.onCall(
+  async (request: v2.https.CallableRequest<CancerQuoteRequestData>):
   Promise<CancerQuoteResponse> => {
     const data = request.data;
-    functions.logger.info("--- Starting Cancer Quote ---", {
+    v2.logger.info("--- Starting Cancer Quote ---", {
       structuredData: true,
     });
-    functions.logger.info("1. Received input data:", {data});
+    v2.logger.info("1. Received input data:", {data});
 
     // Input Validation
     if (!data.state || !["TX", "GA"].includes(data.state)) {
-      throw new functions.https.HttpsError(
+      throw new v2.https.HttpsError(
         "invalid-argument",
         "A valid state (TX or GA) is required.",
       );
     }
     if (typeof data.age !== "number" || data.age < 18 || data.age > 99) {
-      throw new functions.https.HttpsError(
+      throw new v2.https.HttpsError(
         "invalid-argument",
         "Age must be between 18 and 99.",
       );
@@ -111,7 +110,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       data.benefitAmount > 75000 ||
       data.benefitAmount % 1000 !== 0
     ) {
-      throw new functions.https.HttpsError(
+      throw new v2.https.HttpsError(
         "invalid-argument",
         "Benefit must be $5,000-$75,000 in $1000 increments.",
       );
@@ -122,7 +121,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       const inputVariablesRef =
         db.collection("bflic-cancer-quotes").doc("input-variables");
       const statesRef = db.collection("bflic-cancer-quotes").doc("states");
-      functions.logger.info("2. Fetching config documents.");
+      v2.logger.info("2. Fetching config documents.");
 
       const [inputVariablesSnap, statesSnap] = await Promise.all([
         inputVariablesRef.get(),
@@ -130,10 +129,10 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       ]);
 
       if (!inputVariablesSnap.exists || !statesSnap.exists) {
-        functions.logger.error(
+        v2.logger.error(
           "CRITICAL: Missing 'input-variables' or 'states' in Firestore.",
         );
-        throw new functions.https.HttpsError(
+        throw new v2.https.HttpsError(
           "failed-precondition",
           "Server configuration is incomplete. Please contact support.",
         );
@@ -142,14 +141,14 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       const statesData = statesSnap.data() as StatesData;
 
       if (!inputVariables || !statesData) {
-        functions.logger.error("Config document data is undefined.");
-        throw new functions.https.HttpsError(
+        v2.logger.error("Config document data is undefined.");
+        throw new v2.https.HttpsError(
           "internal",
           "Configuration data is empty.",
         );
       }
 
-      functions.logger.info("Successfully fetched config documents.");
+      v2.logger.info("Successfully fetched config documents.");
 
       // 3. Map Inputs to Codes and Get Rate Sheet Name
       const cisKey = data.carcinomaInSitu === "100%" ? "1" : "25";
@@ -169,35 +168,35 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         !cisCode || !stateConfig || !premiumCode || !rateSheet ||
           !familyCode || !tobaccoCode || !defaultUnit || !premiumModeValue
       ) {
-        functions.logger.error("Mapping failed.", {
+        v2.logger.error("Mapping failed.", {
           cisCode, premiumCode, rateSheet,
           familyCode, tobaccoCode, defaultUnit, premiumModeValue,
         });
-        throw new functions.https.HttpsError(
+        throw new v2.https.HttpsError(
           "failed-precondition",
           "Could not process all inputs due to missing mapping data.",
         );
       }
 
-      functions.logger.info("3. Mapped Inputs to Codes:",
+      v2.logger.info("3. Mapped Inputs to Codes:",
         {cisCode, premiumCode, familyCode, tobaccoCode, rateSheet});
 
       // 4. Construct lookupId
       const lookupId =
         `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
-      functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
+      v2.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
       // 5. Retrieve Rate Data Document
       const rateDocPath =
         `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
-      functions.logger.info(`5. Attempting ${rateDocPath}`);
+      v2.logger.info(`5. Attempting ${rateDocPath}`);
       const rateDocRef = db.collection("bflic-cancer-quotes")
         .doc("states").collection(rateSheet).doc(lookupId);
       const rateDocSnap = await rateDocRef.get();
 
       if (!rateDocSnap.exists) {
-        functions.logger.error(`Rate doc not found: ${rateDocPath}`);
-        throw new functions.https.HttpsError(
+        v2.logger.error(`Rate doc not found: ${rateDocPath}`);
+        throw new v2.https.HttpsError(
           "not-found",
           "No rate found for the selected criteria. Check inputs.",
         );
@@ -205,8 +204,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       const rateData = rateDocSnap.data();
       if (!rateData) {
-        functions.logger.error("Rate document data is undefined.");
-        throw new functions.https.HttpsError(
+        v2.logger.error("Rate document data is undefined.");
+        throw new v2.https.HttpsError(
           "internal",
           "Rate data is empty for the selected criteria.",
         );
@@ -214,20 +213,20 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       const rateVariable = parseFloat(rateData.inprem.toString());
       if (isNaN(rateVariable)) {
-        functions.logger.error(`Invalid 'inprem' value: ${rateData.inprem}`);
-        throw new functions.https.HttpsError(
+        v2.logger.error(`Invalid 'inprem' value: ${rateData.inprem}`);
+        throw new v2.https.HttpsError(
           "internal",
           "Rate data is malformed. Please contact support.",
         );
       }
 
-      functions.logger.info(`Successfully fetched rate: ${rateVariable}`);
+      v2.logger.info(`Successfully fetched rate: ${rateVariable}`);
 
       // 6. Calculate Premium
       const premium = ((rateVariable * 0.01) * data
         .benefitAmount / defaultUnit) * premiumModeValue;
       const roundedPremium = Math.round(premium * 100) / 100;
-      functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
+      v2.logger.info(`7. Calculated premium: ${roundedPremium}`);
 
       // 7. Return result
       return {
@@ -237,11 +236,11 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         benefit_amount: data.benefitAmount,
       };
     } catch (error) {
-      functions.logger.error("--- ERROR in Quote Calculation ---", error);
-      if (error instanceof functions.https.HttpsError) {
+      v2.logger.error("--- ERROR in Quote Calculation ---", error);
+      if (error instanceof v2.https.HttpsError) {
         throw error;
       }
-      throw new functions.https.HttpsError(
+      throw new v2.https.HttpsError(
         "internal",
         "An unexpected error occurred while calculating the quote.",
       );
