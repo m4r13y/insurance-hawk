@@ -251,7 +251,7 @@ export default function QuotesPage() {
           throw new Error("Firebase is not configured. Please contact support.");
         }
         const functions = getFunctions(firebaseApp);
-        const getCancerQuoteFunction = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getcancerinsurancequote');
+        const getCancerQuoteFunction = httpsCallable<CancerQuoteRequestValues, CancerQuote>(functions, 'getCancerInsuranceQuote');
         
         const result = await getCancerQuoteFunction(values);
         setCancerQuote(result.data);

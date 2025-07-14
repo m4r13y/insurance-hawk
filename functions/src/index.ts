@@ -84,7 +84,7 @@ const mapPremiumModeToKey = (
 };
 
 // --- MAIN CLOUD FUNCTION ---
-export const getcancerinsurancequote = v2.https.onCall(
+export const getCancerInsuranceQuote = v2.https.onCall(
   async (request: v2.https.CallableRequest<CancerQuoteRequestData>):
   Promise<CancerQuoteResponse> => {
     const data = request.data;
@@ -121,7 +121,7 @@ export const getcancerinsurancequote = v2.https.onCall(
     try {
       // 2. Fetch Firestore Configuration Data Concurrently
       const inputVariablesRef =
-        db.collection("bflic-cancer-quotes").doc("input-variables");
+        db.collection("bflic-cancer-quotes").doc("input-variable-id");
       const statesRef = db.collection("bflic-cancer-quotes").doc("states");
       v2.logger.info("2. Fetching config documents.");
 
@@ -132,7 +132,7 @@ export const getcancerinsurancequote = v2.https.onCall(
 
       if (!inputVariablesSnap.exists || !statesSnap.exists) {
         v2.logger.error(
-          "CRITICAL: Missing 'input-variables' or 'states' in Firestore.",
+          "CRITICAL: Missing 'input-variable-id' or 'states' in Firestore.",
         );
         throw new v2.https.HttpsError(
           "failed-precondition",
