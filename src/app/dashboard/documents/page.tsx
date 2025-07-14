@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical, User, Pencil, Eye, EyeOff, Stethoscope, Pill, Loader2 } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical, User, Pencil, Eye, EyeOff, Stethoscope, Pill, Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType, Provider, Drug, SelectedProvider, SelectedDrug } from '@/types';
@@ -204,7 +204,7 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
 
     useEffect(() => {
         if (open) {
-            setPolicy(editingPolicy || {});
+            setPolicy(editingPolicy || { status: 'pending' });
             setStep(editingPolicy ? 4 : 1);
         } else {
             setPolicy({});
@@ -350,6 +350,19 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
                                 <Label htmlFor="enrollmentDate">Enrollment Date</Label>
                                 <Input id="enrollmentDate" type="date" value={policy.enrollmentDate || ''} onChange={e => setPolicy(p => ({ ...p, enrollmentDate: e.target.value }))} />
                             </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="status">Policy Status</Label>
+                                <Select value={policy.status} onValueChange={(value: PolicyType['status']) => setPolicy(p => ({ ...p, status: value }))}>
+                                    <SelectTrigger id="status">
+                                        <SelectValue placeholder="Set status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="declined">Declined</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -373,8 +386,16 @@ function PolicyDialog({ open, onOpenChange, onSave, editingPolicy }: {
 }
 
 function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: (policy: PolicyType) => void; onDelete: (policyId: string) => void; }) {
+    
+    const statusClasses = {
+        active: "from-green-400 to-emerald-500",
+        pending: "from-yellow-400 to-amber-500",
+        declined: "from-red-500 to-rose-600",
+    }
+    
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col relative overflow-hidden">
+            <div className={cn("absolute inset-x-0 top-0 h-1 bg-gradient-to-r", statusClasses[policy.status])} />
             <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
                 {policy.carrierLogoUrl && (
                     <Image src={policy.carrierLogoUrl} alt={policy.carrierName} width={40} height={40} className="rounded-md" />
@@ -413,6 +434,14 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
             <CardContent className="flex-1 p-4 pt-0">
                 <Separator/>
                 <div className="space-y-3 text-sm pt-4">
+                     <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Status</span>
+                        <Badge variant={policy.status === 'active' ? 'default' : policy.status === 'pending' ? 'secondary' : 'destructive'} className={cn(
+                            policy.status === 'active' && 'bg-green-100 text-green-800',
+                            policy.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                            policy.status === 'declined' && 'bg-red-100 text-red-800',
+                        )}>{policy.status}</Badge>
+                    </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Category</span>
                         <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
@@ -755,7 +784,7 @@ export default function MyAccountPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeletePolicy}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDeletePolicy} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -768,7 +797,7 @@ export default function MyAccountPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteDocument}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDeleteDocument} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -776,6 +805,4 @@ export default function MyAccountPage() {
   )
 }
 
-
-    
     
