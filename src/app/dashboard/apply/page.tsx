@@ -241,14 +241,14 @@ function CancerApplication() {
     });
 
     const steps = [
-        { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] },
-        { id: 2, name: 'Underwriting Information', fields: ['heightFt', 'heightIn', 'weight'] },
-        { id: 3, name: 'Medical Questions', fields: ['q3', 'q4', 'q5'] },
-        { id: 4, name: 'Signature', fields: ['signature', 'agreesToTerms', 'wantsAgentContact'] },
+        { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] as FieldPath<FormSchema>[] },
+        { id: 2, name: 'Underwriting Information', fields: ['heightFt', 'heightIn', 'weight'] as FieldPath<FormSchema>[] },
+        { id: 3, name: 'Medical Questions', fields: ['q3', 'q4', 'q5'] as FieldPath<FormSchema>[] },
+        { id: 4, name: 'Signature', fields: ['signature', 'agreesToTerms', 'wantsAgentContact'] as FieldPath<FormSchema>[] },
     ];
 
     const handleNext = async () => {
-        const fieldsToValidate = steps[step - 1].fields as FieldPath<FormSchema>[];
+        const fieldsToValidate = steps[step - 1].fields;
         const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
         if (output) setStep(s => s + 1);
     };
@@ -277,6 +277,15 @@ function CancerApplication() {
             toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
         }
     }
+    
+    const handleSubmitClick = async () => {
+        const fieldsToValidate = steps[step - 1].fields;
+        const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
+        if (output) {
+            await onSubmit(form.getValues());
+        }
+    };
+
 
     if (isSubmitted) return <SuccessPage title="Cancer Application" />;
     
@@ -312,7 +321,7 @@ function CancerApplication() {
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
                     {step === 1 && ( /* Personal Info */
                         <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                             <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -333,8 +342,8 @@ function CancerApplication() {
                                 <FormItem>
                                     <FormLabel>Height</FormLabel>
                                     <div className="flex gap-2">
-                                        <FormField control={form.control} name="heightFt" render={({ field }) => <FormItem className="flex-1"><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField control={form.control} name="heightIn" render={({ field }) => <FormItem className="flex-1"><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField control={form.control} name="heightFt" render={({ field }) => <FormItem className="flex-1"><FormControl><Input type="number" {...field} placeholder="ft." /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField control={form.control} name="heightIn" render={({ field }) => <FormItem className="flex-1"><FormControl><Input type="number" {...field} placeholder="in." /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </FormItem>
                                  <FormField control={form.control} name="weight" render={({ field }) => <FormItem><FormLabel>Weight (lbs)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -378,7 +387,7 @@ function CancerApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="button" onClick={handleSubmitClick}>Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
@@ -2188,5 +2197,3 @@ export default function ApplyPage() {
     </Suspense>
   )
 }
-
-    
