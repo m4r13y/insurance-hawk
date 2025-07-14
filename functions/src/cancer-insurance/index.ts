@@ -1,5 +1,6 @@
 /**
- * @fileOverview Firebase Cloud Function for calculating quotes.
+ * @fileOverview Firebase Cloud Function for calculating Cancer Insurance
+ * quotes.
  */
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
@@ -16,20 +17,26 @@ try {
 interface CancerQuoteRequestData {
   state: "TX" | "GA";
   age: number;
-  familyType: "Applicant Only" | "Applicant and Spouse" |
-    "Applicant and Child(ren)" | "Applicant and Spouse and Child(ren)";
+  familyType:
+    | "Applicant Only"
+    | "Applicant and Spouse"
+    | "Applicant and Child(ren)"
+    | "Applicant and Spouse and Child(ren)";
   tobaccoStatus: "Non-Tobacco" | "Tobacco";
-  premiumMode: "Monthly Bank Draft" | "Monthly Credit Card" |
-    "Monthly Direct Mail" | "Annual";
+  premiumMode:
+    | "Monthly Bank Draft"
+    | "Monthly Credit Card"
+    | "Monthly Direct Mail"
+    | "Annual";
   carcinomaInSitu: "25%" | "100%";
   benefitAmount: number;
 }
 
 interface CancerQuoteResponse {
-    monthly_premium: number;
-    carrier: string;
-    plan_name: string;
-    benefit_amount: number;
+  monthly_premium: number;
+  carrier: string;
+  plan_name: string;
+  benefit_amount: number;
 }
 
 // --- HELPER FUNCTIONS ---
@@ -65,7 +72,7 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     });
     functions.logger.info("1. Received input data:", {data});
 
-    // Input Validation (Example)
+    // Input Validation
     if (!data.state || !["TX", "GA"].includes(data.state)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
@@ -86,8 +93,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
     ) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Benefit amount must be between $5,000 and $75,000 in " +
-        "increments of $1000."
+        "Benefit amount must be between $5,000 and $75,000 in increments " +
+          "of $1000."
       );
     }
 
@@ -112,8 +119,8 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       if (!inputVariablesSnap.exists || !statesSnap.exists) {
         functions.logger.error(
-          "CRITICAL: Missing configuration documents " +
-          "'input-variables' or 'states' in Firestore."
+          "CRITICAL: Missing configuration documents 'input-variables' " +
+            "or 'states' in Firestore."
         );
         throw new functions.https.HttpsError(
           "failed-precondition",
@@ -121,31 +128,35 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         );
       }
 
-      const inputVariables = inputVariablesSnap.data();
-      const statesData = statesSnap.data();
-      if (!inputVariables || !statesData) {
-        throw new functions.https.HttpsError(
-          "failed-precondition",
-          "Configuration data is invalid."
-        );
-      }
+      const inputVariables = inputVariablesSnap.data() as Record<
+        string,
+        Record<string, unknown>
+      >;
+      const statesData = statesSnap.data() as Record<
+        string,
+        Record<string, unknown>
+      >;
       functions.logger.info("Successfully fetched config documents.");
 
       // 3. Map Inputs to Codes
       const cisKey = data.carcinomaInSitu === "100%" ? "1" : "25";
-      const cisCode = inputVariables.CIS[cisKey];
-      const premiumCode = statesData[data.state]["premium-code"];
-      const rateSheet = statesData[data.state]["rate-sheet"];
-      const familyCode = inputVariables.emptype[
-        mapFamilyTypeToCode(data.familyType)
+      const cisCode = (inputVariables.CIS as Record<string, unknown>)[cisKey];
+      const premiumCode = (statesData[data.state] as Record<string, unknown>)[
+        "premium-code"
       ];
-      const tobaccoCode = inputVariables.tobacco[
+      const rateSheet = (statesData[data.state] as Record<string, unknown>)[
+        "rate-sheet"
+      ];
+      const familyCode = (
+        inputVariables.emptype as Record<string, unknown>
+      )[mapFamilyTypeToCode(data.familyType)];
+      const tobaccoCode = (inputVariables.tobacco as Record<string, unknown>)[
         data.tobaccoStatus === "Tobacco" ? "yes" : "no"
       ];
-      const defaultUnit = inputVariables["default-unit"];
-      const premiumModeValue = inputVariables["payment-mode"][
-        mapPremiumModeToKey(data.premiumMode)
-      ];
+      const defaultUnit = inputVariables["default-unit"] as unknown as number;
+      const premiumModeValue = (
+        inputVariables["payment-mode"] as Record<string, unknown>
+      )[mapPremiumModeToKey(data.premiumMode)] as unknown as number;
 
       functions.logger.info("3. Mapped Inputs to Codes:", {
         cisCode,
@@ -156,13 +167,13 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       });
 
       // 4. Construct lookupId
-      const lookupId = `${cisCode}${premiumCode}${data.age}` +
-        `${familyCode}${tobaccoCode}`;
+      const lookupId =
+        `${cisCode}${premiumCode}${data.age}${familyCode}${tobaccoCode}`;
       functions.logger.info(`4. Constructed lookupId: ${lookupId}`);
 
       // 5. Retrieve Rate Data Document
-      const rateDocPath = `bflic-cancer-quotes/states/${rateSheet}/` +
-        `${lookupId}`;
+      const rateDocPath =
+        `bflic-cancer-quotes/states/${rateSheet}/${lookupId}`;
       functions.logger.info(
         `5. Attempting to fetch rate document at path: ${rateDocPath}`
       );
@@ -175,19 +186,12 @@ export const getCancerInsuranceQuote = functions.https.onCall(
         );
         throw new functions.https.HttpsError(
           "not-found",
-          "No rate found for the selected criteria. " +
-          "Please check your inputs."
+          "No rate found for the selected criteria. Please check your inputs."
         );
       }
 
-      const rateData = rateDocSnap.data();
-      if (!rateData) {
-        throw new functions.https.HttpsError(
-          "not-found",
-          "Rate data is invalid."
-        );
-      }
-      const rateVariable = rateData.inprem;
+      const rateData = rateDocSnap.data() as Record<string, unknown>;
+      const rateVariable = rateData.inprem as unknown as number;
       functions.logger.info(
         `Successfully fetched rate data. Inprem value: ${rateVariable}`
       );
@@ -195,32 +199,33 @@ export const getCancerInsuranceQuote = functions.https.onCall(
       // 6. Data Verification
       if (rateData.plan !== cisCode) {
         functions.logger.warn(
-          `Verification mismatch: plan (${rateData.plan}) vs ` +
-          `cisCode (${cisCode})`
+          `Verification mismatch: plan (${rateData.plan}) vs cisCode ` +
+            `(${cisCode})`
         );
       }
       if (rateData.state !== premiumCode) {
         functions.logger.warn(
-          `Verification mismatch: state (${rateData.state}) vs ` +
-          `premiumCode (${premiumCode})`
+          `Verification mismatch: state (${rateData.state}) vs premiumCode ` +
+            `(${premiumCode})`
         );
       }
       if (rateData.age !== data.age) {
         functions.logger.warn(
-          `Verification mismatch: age (${rateData.age}) vs ` +
-          `input age (${data.age})`
+          `Verification mismatch: age (${rateData.age}) vs input age ` +
+            `(${data.age})`
         );
       }
       if (rateData.tobacco !== tobaccoCode) {
         functions.logger.warn(
           `Verification mismatch: tobacco (${rateData.tobacco}) vs ` +
-          `tobaccoCode (${tobaccoCode})`
+            `tobaccoCode (${tobaccoCode})`
         );
       }
 
       // 7. Calculate Premium
-      const premium = (((rateVariable * 0.01) * data.benefitAmount) /
-        defaultUnit) * premiumModeValue;
+      const premium =
+        (((rateVariable * 0.01) * data.benefitAmount) / defaultUnit) *
+        premiumModeValue;
       const roundedPremium = Math.round(premium * 100) / 100;
       functions.logger.info(`7. Calculated premium: ${roundedPremium}`);
 
@@ -234,8 +239,10 @@ export const getCancerInsuranceQuote = functions.https.onCall(
 
       return result;
     } catch (error) {
-      functions.logger.error("--- ERROR in Cancer Quote Calculation ---",
-        error);
+      functions.logger.error(
+        "--- ERROR in Cancer Quote Calculation ---",
+        error
+      );
       if (error instanceof functions.https.HttpsError) {
         throw error;
       }

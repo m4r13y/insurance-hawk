@@ -94,8 +94,25 @@ export function AutofillInput({
                 type={type}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
+                onInput={(e) => {
+                  // Handle browser autofill which bypasses onChange
+                  const target = e.target as HTMLInputElement;
+                  if (target.value !== editValue) {
+                    setEditValue(target.value);
+                  }
+                }}
                 placeholder={placeholder}
                 className="border-blue-300 focus:border-blue-500"
+                autoComplete={type === "tel" ? "tel" : 
+                             label.toLowerCase().includes("address") || label.toLowerCase().includes("street") ? "street-address" :
+                             label.toLowerCase().includes("city") ? "address-level2" :
+                             label.toLowerCase().includes("state") ? "address-level1" :
+                             label.toLowerCase().includes("zip") ? "postal-code" :
+                             label.toLowerCase().includes("phone") ? "tel" :
+                             label.toLowerCase().includes("email") ? "email" :
+                             label.toLowerCase().includes("first") ? "given-name" :
+                             label.toLowerCase().includes("last") ? "family-name" :
+                             "on"}
               />
               <div className="flex gap-2">
                 <Button
@@ -152,6 +169,23 @@ export function AutofillInput({
               autofilledValue && !isLocked ? "bg-blue-50 border-blue-200" : "",
               className
             )}
+            onInput={(e) => {
+              // Handle browser autofill which bypasses onChange
+              const target = e.target as HTMLInputElement;
+              if (target.value !== field.value) {
+                field.onChange(target.value);
+              }
+            }}
+            autoComplete={type === "tel" ? "tel" : 
+                         label.toLowerCase().includes("address") || label.toLowerCase().includes("street") ? "street-address" :
+                         label.toLowerCase().includes("city") ? "address-level2" :
+                         label.toLowerCase().includes("state") ? "address-level1" :
+                         label.toLowerCase().includes("zip") ? "postal-code" :
+                         label.toLowerCase().includes("phone") ? "tel" :
+                         label.toLowerCase().includes("email") ? "email" :
+                         label.toLowerCase().includes("first") ? "given-name" :
+                         label.toLowerCase().includes("last") ? "family-name" :
+                         "on"}
           />
         </FormControl>
         {autofilledValue && !isLocked && (
@@ -173,6 +207,23 @@ export function AutofillInput({
             {...field}
             type={type}
             placeholder={placeholder}
+            onInput={(e) => {
+              // Handle browser autofill which bypasses onChange
+              const target = e.target as HTMLInputElement;
+              if (target.value !== field.value) {
+                field.onChange(target.value);
+              }
+            }}
+            autoComplete={type === "tel" ? "tel" : 
+                         label.toLowerCase().includes("address") || label.toLowerCase().includes("street") ? "street-address" :
+                         label.toLowerCase().includes("city") ? "address-level2" :
+                         label.toLowerCase().includes("state") ? "address-level1" :
+                         label.toLowerCase().includes("zip") ? "postal-code" :
+                         label.toLowerCase().includes("phone") ? "tel" :
+                         label.toLowerCase().includes("email") ? "email" :
+                         label.toLowerCase().includes("first") ? "given-name" :
+                         label.toLowerCase().includes("last") ? "family-name" :
+                         "on"}
           />
         </FormControl>
         <FormMessage />

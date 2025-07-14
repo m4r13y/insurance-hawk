@@ -16,8 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
-import { httpsCallable, getFunctions } from 'firebase/functions';
-import { storage } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, serverTimestamp, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,14 +78,9 @@ const profileSchema = z.object({
   medicareId: z.string().optional(),
 });
 
-type ProfileData = z.infer<typeof profileSchema> & {
-  doctors?: SelectedProvider[];
-  medications?: SelectedDrug[];
-};
-
 
 // --- HELPER COMPONENTS FOR PROFILE INFO --- //
-const EditableCard = ({ title, children, FormComponent, onSave, profileData }: { title: string; children: React.ReactNode; FormComponent: React.FC<any>; onSave: (data: Partial<ProfileData>) => void; profileData: Partial<ProfileData>; }) => {
+const EditableCard = ({ title, children, FormComponent, onSave, profileData }: { title: string; children: React.ReactNode; FormComponent: React.FC<any>; onSave: (data: any) => void; profileData: any; }) => {
     const [isEditing, setIsEditing] = useState(false);
     return (
         <Card>
@@ -101,7 +96,7 @@ const EditableCard = ({ title, children, FormComponent, onSave, profileData }: {
             <CardContent>
                 <div className={cn(!isEditing ? "block" : "hidden")}>{children}</div>
                 <div className={cn(isEditing ? "block" : "hidden")}>
-                    <FormComponent profileData={profileData} onSave={(data: Partial<ProfileData>) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
+                    <FormComponent profileData={profileData} onSave={(data:any) => { onSave(data); setIsEditing(false); }} onCancel={() => setIsEditing(false)} />
                 </div>
             </CardContent>
         </Card>
@@ -126,7 +121,7 @@ const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: 
     );
 };
 
-const PersonalInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: Partial<ProfileData>) => void; onCancel: () => void, profileData: Partial<ProfileData> }) => {
+const PersonalInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
     const form = useForm({ 
       resolver: zodResolver(profileSchema.pick({ firstName: true, lastName: true, dob: true })),
       defaultValues: {
@@ -149,7 +144,7 @@ const PersonalInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: Pa
     );
 };
 
-const ContactInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: Partial<ProfileData>) => void; onCancel: () => void, profileData: Partial<ProfileData> }) => {
+const ContactInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
     const form = useForm({ 
       resolver: zodResolver(profileSchema.pick({ phone: true, address: true, city: true, state: true, zip: true })),
       defaultValues: {
@@ -176,7 +171,7 @@ const ContactInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: Par
     );
 };
 
-const FinancialInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: Partial<ProfileData>) => void; onCancel: () => void, profileData: Partial<ProfileData> }) => {
+const FinancialInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any) => void; onCancel: () => void, profileData: any }) => {
     const form = useForm({ 
       resolver: zodResolver(profileSchema.pick({ medicareId: true })),
       defaultValues: {
@@ -490,55 +485,42 @@ export default function MyAccountPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Profile state
-    const [profile, setProfile] = useState<Partial<ProfileData>>({});
+    const [profile, setProfile] = useState<any>({});
 
     const { toast } = useToast();
     
      useEffect(() => {
-        // Load user data using Cloud Function
-        if (user) {
-            loadUserData();
+        if (user && db) {
+            // Firestore listeners
+            const policiesQuery = query(collection(db, "users", user.uid, "policies"));
+            const docsQuery = query(collection(db, "users", user.uid, "documents"));
+            const unsubPolicies = onSnapshot(policiesQuery, (snapshot) => setPolicies(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PolicyType))));
+            const unsubDocs = onSnapshot(docsQuery, (snapshot) => setDocuments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DocumentType))));
+
+            // Fetch user profile data
+            const userDocRef = doc(db, 'users', user.uid);
+            const unsubProfile = onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setProfile(docSnap.data());
+                }
+            });
+
+            return () => {
+                unsubPolicies();
+                unsubDocs();
+                unsubProfile();
+            }
         }
     }, [user]);
-
-    const loadUserData = async () => {
-        if (!user) return;
-        
-        try {
-            const functions = getFunctions();
-            const getUserData = httpsCallable(functions, 'getUserData');
-            const result = await getUserData();
-            const data = result.data as any;
-            
-            setPolicies(data.policies || []);
-            setDocuments(data.documents || []);
-            setProfile(data.profile || {});
-            
-        } catch (error) {
-            console.error('Error loading user data:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load your data. Please refresh the page.",
-                variant: "destructive",
-            });
-        }
-    };
 
     // --- HANDLERS --- //
 
     const handleSaveProfile = async (newData: any) => {
-        if (!user) return;
-        
+        if (!user || !db) return;
+        const userDocRef = doc(db, 'users', user.uid);
         try {
-            const functions = getFunctions();
-            const saveUserData = httpsCallable(functions, 'saveUserData');
-            
-            await saveUserData({
-                step: 'profile',
-                personalInfo: newData,
-            });
-            
-            setProfile(prev => ({ ...prev, ...newData }));
+            await setDoc(userDocRef, newData, { merge: true });
+            setProfile((prev: any) => ({ ...prev, ...newData }));
             toast({ title: "Profile Updated", description: "Your information has been saved." });
         } catch (error) {
             console.error(error);
@@ -548,14 +530,29 @@ export default function MyAccountPage() {
 
     // Policy handlers
     const handleSavePolicy = async (policyData: Omit<PolicyType, 'id'>, id?: string) => {
-        if (!user) return;
+        if (!user || !db) return;
         
-        // TODO: Implement policy saving through Cloud Function
-        toast({ 
-            variant: 'destructive', 
-            title: 'Feature Coming Soon', 
-            description: 'Manual policy entry will be available soon. For now, policies are automatically added when you complete applications.' 
+        const dataToSave: { [key: string]: any } = {};
+        Object.entries(policyData).forEach(([key, value]) => {
+            if (value !== undefined) {
+                dataToSave[key] = value;
+            }
         });
+
+        try {
+            if (id) {
+                const policyRef = doc(db, "users", user.uid, "policies", id);
+                await setDoc(policyRef, dataToSave, { merge: true });
+                toast({ title: 'Policy Updated', description: `${dataToSave.carrierName} policy has been updated.` });
+            } else {
+                const policiesCol = collection(db, "users", user.uid, "policies");
+                await addDoc(policiesCol, { ...dataToSave, createdAt: serverTimestamp() });
+                toast({ title: 'Policy Added', description: `${dataToSave.carrierName} policy has been added.` });
+            }
+        } catch (error) {
+            console.error("Error saving policy:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save policy.' });
+        }
         setEditingPolicy(null);
     };
 
@@ -565,35 +562,63 @@ export default function MyAccountPage() {
     }
     
     const handleDeletePolicy = async () => {
-        if(policyToDelete && user) {
-            // TODO: Implement policy deletion through Cloud Function
-            toast({ 
-                variant: 'destructive', 
-                title: 'Feature Coming Soon', 
-                description: 'Policy deletion will be available soon. Please contact support if you need to remove a policy.' 
-            });
-            setPolicyToDelete(null);
+        if(policyToDelete && user && db) {
+            try {
+                await deleteDoc(doc(db, "users", user.uid, "policies", policyToDelete));
+                toast({ title: 'Policy Removed', description: `The policy has been removed.` });
+                setPolicyToDelete(null);
+            } catch (error) {
+                console.error("Error deleting policy:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not delete policy.' });
+            }
         }
     }
 
     // Document handlers
      const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        // TODO: Implement document upload through Cloud Function
-        toast({ 
-            variant: 'destructive', 
-            title: 'Feature Coming Soon', 
-            description: 'Document upload will be available soon.' 
-        });
+        if (event.target.files && event.target.files[0] && user && db && storage) {
+            const file = event.target.files[0];
+            const storagePath = `users/${user.uid}/documents/${file.name}`;
+            const storageRef = ref(storage, storagePath);
+
+            try {
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
+                const newDocument: Omit<DocumentType, 'id'> = {
+                    name: file.name,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    size: `${(file.size / 1024).toFixed(2)} KB`,
+                    downloadURL,
+                    storagePath,
+                };
+                
+                await addDoc(collection(db, "users", user.uid, "documents"), newDocument);
+                toast({ title: "Document Uploaded", description: file.name });
+
+            } catch (error) {
+                console.error("Error uploading document:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not upload document.' });
+            }
+        }
     };
     
     const handleDeleteDocument = async () => {
-        // TODO: Implement document deletion through Cloud Function
-        toast({ 
-            variant: 'destructive', 
-            title: 'Feature Coming Soon', 
-            description: 'Document deletion will be available soon.' 
-        });
-        setDocumentToDelete(null);
+        if (documentToDelete && user && db && storage) {
+            const storageRef = ref(storage, documentToDelete.storagePath);
+            try {
+                // Delete file from storage first
+                await deleteObject(storageRef);
+                // Then delete the reference from Firestore
+                await deleteDoc(doc(db, "users", user.uid, "documents", documentToDelete.id));
+
+                toast({ title: "Document Removed", description: `${documentToDelete.name} has been removed.` });
+                setDocumentToDelete(null);
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not delete document.' });
+            }
+        }
     }
 
     const triggerFileUpload = () => {

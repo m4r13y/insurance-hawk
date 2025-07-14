@@ -44,8 +44,6 @@ import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAutofillProfile } from "@/hooks/use-autofill-profile";
-import { AutofillInput } from "@/components/ui/autofill-input";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
 
@@ -85,134 +83,6 @@ const cancerFormSchema = z.object({
 });
 
 export default function QuotesPage() {
-  const { toast } = useToast();
-  const { profileData, isLoading: isProfileLoading, getFieldValue } = useAutofillProfile();
-  
-  // Helper function to get autofilled cancer form values
-  const getAutofillCancerDefaults = () => {
-    const profileState = getFieldValue('state');
-    const profileDob = getFieldValue('dob');
-    
-    // Calculate age from date of birth if available
-    let age = 65; // default
-    if (profileDob) {
-      const birthDate = new Date(profileDob);
-      const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age = calculatedAge - 1;
-      } else {
-        age = calculatedAge;
-      }
-      // Ensure age is within valid range
-      age = Math.max(18, Math.min(99, age));
-    }
-    
-    return {
-      state: (profileState === 'TX' || profileState === 'GA') ? profileState as 'TX' | 'GA' : 'TX',
-      age,
-      familyType: "Applicant Only" as const,
-      tobaccoStatus: "Non-Tobacco" as const,
-      premiumMode: "Monthly Bank Draft" as const,
-      carcinomaInSitu: "25%" as const,
-      benefitAmount: 25000,
-    };
-  };
-
-  // Helper function to get autofilled medigap form values
-  const getAutofillMedigapDefaults = () => {
-    const profileZip = getFieldValue('zip');
-    const profileDob = getFieldValue('dob');
-    const profileGender = getFieldValue('gender');
-    
-    // Calculate age from date of birth if available
-    let age = 65; // default
-    if (profileDob) {
-      const birthDate = new Date(profileDob);
-      const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age = calculatedAge - 1;
-      } else {
-        age = calculatedAge;
-      }
-      // Ensure age is within valid range
-      age = Math.max(18, Math.min(99, age));
-    }
-    
-    return {
-      zipCode: profileZip || "",
-      age,
-      gender: (profileGender === 'male' || profileGender === 'female') ? profileGender as "male" | "female" : "female" as const,
-      tobacco: "false" as const,
-      plan: "G" as const,
-      effectiveDate: new Date().toISOString().split("T")[0],
-      apply_discounts: true,
-    };
-  };
-
-  // Helper function to get autofilled dental form values
-  const getAutofillDentalDefaults = () => {
-    const profileZip = getFieldValue('zip');
-    const profileDob = getFieldValue('dob');
-    const profileGender = getFieldValue('gender');
-    
-    // Calculate age from date of birth if available
-    let age = 65; // default
-    if (profileDob) {
-      const birthDate = new Date(profileDob);
-      const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age = calculatedAge - 1;
-      } else {
-        age = calculatedAge;
-      }
-      // Ensure age is within valid range
-      age = Math.max(18, Math.min(99, age));
-    }
-    
-    return {
-      zipCode: profileZip || "",
-      age,
-      gender: (profileGender === 'male' || profileGender === 'female') ? profileGender as "male" | "female" : "female" as const,
-      tobacco: "false" as const,
-    };
-  };
-
-  // Helper function to get autofilled hospital indemnity form values
-  const getAutofillHospitalIndemnityDefaults = () => {
-    const profileZip = getFieldValue('zip');
-    const profileDob = getFieldValue('dob');
-    const profileGender = getFieldValue('gender');
-    
-    // Calculate age from date of birth if available
-    let age = 65; // default
-    if (profileDob) {
-      const birthDate = new Date(profileDob);
-      const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age = calculatedAge - 1;
-      } else {
-        age = calculatedAge;
-      }
-      // Ensure age is within valid range
-      age = Math.max(18, Math.min(99, age));
-    }
-    
-    return {
-      zipCode: profileZip || "",
-      age,
-      gender: (profileGender === 'male' || profileGender === 'female') ? profileGender as "male" | "female" : "female" as const,
-      tobacco: "false" as const,
-    };
-  };
-  
   const [isMedigapPending, startMedigapTransition] = useTransition();
   const [medigapQuotes, setMedigapQuotes] = useState<Quote[] | null>(null);
   const [medigapError, setMedigapError] = useState<string | null>(null);
@@ -230,27 +100,53 @@ export default function QuotesPage() {
   
   const [isCancerPending, startCancerTransition] = useTransition();
   const [cancerQuote, setCancerQuote] = useState<CancerQuote | null>(null);
-  const [cancerQuoteInputs, setCancerQuoteInputs] = useState<CancerQuoteRequestValues | null>(null);
   const [cancerError, setCancerError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
-    defaultValues: getAutofillMedigapDefaults(),
+    defaultValues: {
+      zipCode: "",
+      age: 65,
+      gender: "female",
+      tobacco: "false",
+      plan: "G",
+      effectiveDate: new Date().toISOString().split("T")[0],
+      apply_discounts: true,
+    },
   });
 
   const dentalForm = useForm<z.infer<typeof dentalFormSchema>>({
     resolver: zodResolver(dentalFormSchema),
-    defaultValues: getAutofillDentalDefaults(),
+    defaultValues: {
+      zipCode: "",
+      age: 65,
+      gender: "female",
+      tobacco: "false",
+    },
   });
 
   const hospitalIndemnityForm = useForm<z.infer<typeof hospitalIndemnityFormSchema>>({
     resolver: zodResolver(hospitalIndemnityFormSchema),
-    defaultValues: getAutofillHospitalIndemnityDefaults(),
+    defaultValues: {
+        zipCode: "",
+        age: 65,
+        gender: "female",
+        tobacco: "false",
+    },
   });
 
    const cancerForm = useForm<z.infer<typeof cancerFormSchema>>({
         resolver: zodResolver(cancerFormSchema),
-        defaultValues: getAutofillCancerDefaults(),
+        defaultValues: {
+            state: "GA",
+            age: 65,
+            familyType: "Applicant Only",
+            tobaccoStatus: "Non-Tobacco",
+            premiumMode: "Monthly Bank Draft",
+            carcinomaInSitu: "25%",
+            benefitAmount: 25000,
+        },
     });
 
   useEffect(() => {
@@ -271,54 +167,6 @@ export default function QuotesPage() {
     }
     setSelectedRiders({});
   }, [featuredQuote]);
-
-  // Update cancer form with autofill data when profile loads
-  useEffect(() => {
-    if (!isProfileLoading && profileData) {
-      const autofillDefaults = getAutofillCancerDefaults();
-      cancerForm.setValue('state', autofillDefaults.state);
-      cancerForm.setValue('age', autofillDefaults.age);
-    }
-  }, [isProfileLoading, profileData, cancerForm]);
-
-  // Update medigap form with autofill data when profile loads
-  useEffect(() => {
-    if (!isProfileLoading && profileData) {
-      const autofillDefaults = getAutofillMedigapDefaults();
-      medigapForm.setValue('zipCode', autofillDefaults.zipCode);
-      medigapForm.setValue('age', autofillDefaults.age);
-      const genderValue = getFieldValue('gender');
-      if (genderValue === 'male' || genderValue === 'female') {
-        medigapForm.setValue('gender', genderValue);
-      }
-    }
-  }, [isProfileLoading, profileData, medigapForm]);
-
-  // Update dental form with autofill data when profile loads
-  useEffect(() => {
-    if (!isProfileLoading && profileData) {
-      const autofillDefaults = getAutofillDentalDefaults();
-      dentalForm.setValue('zipCode', autofillDefaults.zipCode);
-      dentalForm.setValue('age', autofillDefaults.age);
-      const genderValue = getFieldValue('gender');
-      if (genderValue === 'male' || genderValue === 'female') {
-        dentalForm.setValue('gender', genderValue);
-      }
-    }
-  }, [isProfileLoading, profileData, dentalForm]);
-
-  // Update hospital indemnity form with autofill data when profile loads
-  useEffect(() => {
-    if (!isProfileLoading && profileData) {
-      const autofillDefaults = getAutofillHospitalIndemnityDefaults();
-      hospitalIndemnityForm.setValue('zipCode', autofillDefaults.zipCode);
-      hospitalIndemnityForm.setValue('age', autofillDefaults.age);
-      const genderValue = getFieldValue('gender');
-      if (genderValue === 'male' || genderValue === 'female') {
-        hospitalIndemnityForm.setValue('gender', genderValue);
-      }
-    }
-  }, [isProfileLoading, profileData, hospitalIndemnityForm]);
 
 
   function onMedigapSubmit(values: z.infer<typeof medigapFormSchema>) {
@@ -397,7 +245,6 @@ export default function QuotesPage() {
   async function onCancerSubmit(values: z.infer<typeof cancerFormSchema>) {
     setCancerError(null);
     setCancerQuote(null);
-    setCancerQuoteInputs(null);
     startCancerTransition(async () => {
       try {
         if (!firebaseApp) {
@@ -408,20 +255,12 @@ export default function QuotesPage() {
         
         const result = await getCancerQuoteFunction(values);
         setCancerQuote(result.data);
-        setCancerQuoteInputs(values); // Store the input data
 
       } catch (error: any) {
         console.error("Cancer Quote Error:", error);
         setCancerError(error.message || "An unknown error occurred while fetching your quote.");
       }
     });
-  }
-
-  function handleEditCancerQuote() {
-    // Clear the quote to show the form again with existing values
-    setCancerQuote(null);
-    setCancerError(null);
-    // The form will retain its values since we're not resetting it
   }
 
  const handleRiderToggle = (rider: HospitalIndemnityRider) => {
@@ -488,43 +327,15 @@ export default function QuotesPage() {
                     <Form {...medigapForm}>
                         <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>ZIP Code {getFieldValue('zip') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., 90210" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
-                            <FormField control={medigapForm.control} name="age" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Age {getFieldValue('dob') && <span className="text-xs text-muted-foreground">(calculated from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
+                            <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={medigapForm.control} name="gender" render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Gender {getFieldValue('gender') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="female" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Female</FormLabel>
-                                            </FormItem>
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="male" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Male</FormLabel>
-                                            </FormItem>
+                                <FormLabel>Gender</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
                                     </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
@@ -642,44 +453,16 @@ export default function QuotesPage() {
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>ZIP Code {getFieldValue('zip') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., 90210" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
-                            <FormField control={dentalForm.control} name="age" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Age {getFieldValue('dob') && <span className="text-xs text-muted-foreground">(calculated from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
+                            <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={dentalForm.control} name="gender" render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Gender {getFieldValue('gender') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="female" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Female</FormLabel>
-                                            </FormItem>
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="male" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Male</FormLabel>
-                                            </FormItem>
-                                        </RadioGroup>
+                                <FormLabel>Gender</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                    </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -758,119 +541,13 @@ export default function QuotesPage() {
                     <Form {...cancerForm}>
                         <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)} className="space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <FormField control={cancerForm.control} name="state" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>State {getFieldValue('state') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue/>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="TX">Texas</SelectItem>
-                                                <SelectItem value="GA">Georgia</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="age" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>Age {getFieldValue('dob') && <span className="text-xs text-muted-foreground">(calculated from profile)</span>}</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>Tobacco Status</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue/>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem>
-                                                <SelectItem value="Tobacco">Tobacco</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( 
-                                    <FormItem className="lg:col-span-2">
-                                        <FormLabel>Family Type</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue/>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="Applicant Only">Applicant Only</SelectItem>
-                                                <SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem>
-                                                <SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem>
-                                                <SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>Premium Mode</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue/>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem>
-                                                <SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem>
-                                                <SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem>
-                                                <SelectItem value="Annual">Annual</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>Carcinoma In Situ</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue/>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="25%">25%</SelectItem>
-                                                <SelectItem value="100%">100%</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
-                                
-                                <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( 
-                                    <FormItem>
-                                        <FormLabel>Benefit Amount</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" step="1000" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem> 
-                                )} />
+                                 <FormField control={cancerForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="TX">Texas</SelectItem><SelectItem value="GA">Georgia</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => ( <FormItem><FormLabel>Tobacco Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem><SelectItem value="Tobacco">Tobacco</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( <FormItem className="lg:col-span-2"><FormLabel>Family Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Applicant Only">Applicant Only</SelectItem><SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem><SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem><SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => ( <FormItem><FormLabel>Premium Mode</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem><SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem><SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem><SelectItem value="Annual">Annual</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( <FormItem><FormLabel>Carcinoma In Situ</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="25%">25%</SelectItem><SelectItem value="100%">100%</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
                             <div className="flex justify-end items-center gap-4">
                                 <Button type="submit" disabled={isCancerPending} size="lg">
@@ -901,11 +578,7 @@ export default function QuotesPage() {
                              <h3 className="text-2xl font-semibold mb-2">Your Cancer Insurance Quote</h3>
                             <p className="mb-6 text-muted-foreground">Here is your personalized quote from Bankers Fidelity.</p>
                              <div className="flex justify-center">
-                                <CancerQuoteCard 
-                                  quote={cancerQuote} 
-                                  quoteInputs={cancerQuoteInputs || undefined} 
-                                  onEdit={handleEditCancerQuote}
-                                />
+                                <CancerQuoteCard quote={cancerQuote} />
                             </div>
                         </div>
                     )}
@@ -922,44 +595,16 @@ export default function QuotesPage() {
                     <Form {...hospitalIndemnityForm}>
                         <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>ZIP Code {getFieldValue('zip') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., 90210" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
-                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Age {getFieldValue('dob') && <span className="text-xs text-muted-foreground">(calculated from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem> 
-                            )} />
-                            
+                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Gender {getFieldValue('gender') && <span className="text-xs text-muted-foreground">(from profile)</span>}</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="female" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Female</FormLabel>
-                                            </FormItem>
-                                            <FormItem className="flex items-center space-x-2 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="male" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Male</FormLabel>
-                                            </FormItem>
-                                        </RadioGroup>
+                                <FormLabel>Gender</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                    </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>

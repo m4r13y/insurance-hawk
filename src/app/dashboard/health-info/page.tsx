@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { httpsCallable, getFunctions } from 'firebase/functions';
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import type { Provider, Drug, SelectedProvider, SelectedDrug } from "@/types";
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions";
@@ -63,44 +64,23 @@ export default function HealthInfoPage() {
     const [selectedForm, setSelectedForm] = useState<string>('');
 
     useEffect(() => {
-        if (user) {
-            loadUserData();
+        if (user && db) {
+            getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+                if(docSnap.exists()){
+                    const data = docSnap.data();
+                    setProfile(data);
+                    setSelectedProviders(data.doctors || []);
+                    setSelectedDrugs(data.medications || []);
+                }
+            })
         }
     }, [user]);
 
-    const loadUserData = async () => {
-        if (!user) return;
-        
-        try {
-            const functions = getFunctions();
-            const getUserData = httpsCallable(functions, 'getUserData');
-            const result = await getUserData();
-            const data = result.data as any;
-            
-            setProfile(data.profile || {});
-            setSelectedProviders(data.profile?.doctors || []);
-            setSelectedDrugs(data.profile?.medications || []);
-            
-        } catch (error) {
-            console.error('Error loading user data:', error);
-        }
-    };
-
     const handleSaveAndExit = async () => {
-        if (!user) return;
-        
+        if (!user || !db) return;
+        const userDocRef = doc(db, 'users', user.uid);
         try {
-            const functions = getFunctions();
-            const saveUserData = httpsCallable(functions, 'saveUserData');
-            
-            await saveUserData({
-                step: 'profile',
-                personalInfo: { 
-                    doctors: selectedProviders, 
-                    medications: selectedDrugs 
-                },
-            });
-            
+            await setDoc(userDocRef, { doctors: selectedProviders, medications: selectedDrugs }, { merge: true });
             toast({ title: "Health Info Saved" });
             router.push('/dashboard/documents');
         } catch (error) {

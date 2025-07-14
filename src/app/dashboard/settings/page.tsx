@@ -43,12 +43,7 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const [user, loading] = useFirebaseAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [profile, setProfile] = useState<{
-        displayName?: string;
-        email?: string;
-        photoURL?: string;
-        emailVerified?: boolean;
-    }>({});
+    const [profile, setProfile] = useState<any>({});
     const [isUploading, setIsUploading] = useState(false);
 
     const notificationsForm = useForm<z.infer<typeof notificationsFormSchema>>({
@@ -72,8 +67,8 @@ export default function SettingsPage() {
                 } else {
                     // Pre-fill from auth if no firestore doc exists yet
                     setProfile({
-                        displayName: user.displayName || undefined,
-                        email: user.email || undefined,
+                        displayName: user.displayName,
+                        email: user.email,
                     });
                 }
             });
@@ -93,12 +88,10 @@ export default function SettingsPage() {
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            if (auth.currentUser) {
-                await updateProfile(auth.currentUser, { photoURL: downloadURL });
-            }
+            await updateProfile(auth.currentUser!, { photoURL: downloadURL });
             await setDoc(doc(db, 'users', user.uid), { photoURL: downloadURL }, { merge: true });
 
-            setProfile(prev => ({ ...prev, photoURL: downloadURL }));
+            setProfile((prev: any) => ({ ...prev, photoURL: downloadURL }));
             
             toast({ title: "Profile Photo Updated", description: "Your new photo has been saved." });
         } catch (error) {
@@ -129,10 +122,8 @@ export default function SettingsPage() {
         
         try {
             const credential = EmailAuthProvider.credential(user.email!, data.currentPassword);
-            if (auth.currentUser) {
-                await reauthenticateWithCredential(auth.currentUser, credential);
-                await updatePassword(auth.currentUser, data.newPassword);
-            }
+            await reauthenticateWithCredential(auth.currentUser!, credential);
+            await updatePassword(auth.currentUser!, data.newPassword);
             toast({ title: "Password Changed", description: "Your password has been successfully updated." });
             securityForm.reset();
         } catch (error: any) {

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useFirebaseAuth } from './use-firebase-auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 import { useToast } from './use-toast';
 
 interface ProfileData {
@@ -57,7 +58,9 @@ export function useAutofillProfile(): AutofillHookReturn {
       
       setIsLoading(true);
       try {
-        const functions = getFunctions();
+        if (!functions) {
+          throw new Error('Firebase Functions not initialized');
+        }
         const getUserData = httpsCallable(functions, 'getUserData');
         const result = await getUserData();
         const data = result.data as any;
@@ -119,7 +122,9 @@ export function useAutofillProfile(): AutofillHookReturn {
     if (!user) throw new Error('User not authenticated');
     
     try {
-      const functions = getFunctions();
+      if (!functions) {
+        throw new Error('Firebase Functions not initialized');
+      }
       const saveUserData = httpsCallable(functions, 'saveUserData');
       
       const updateData: any = {

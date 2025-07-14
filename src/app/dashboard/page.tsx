@@ -9,7 +9,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Policy } from "@/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { httpsCallable, getFunctions } from 'firebase/functions';
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -86,31 +87,21 @@ export default function DashboardPage() {
         const newUserFlag = localStorage.getItem("isNewUser") === "true";
         setIsNewUser(newUserFlag);
 
-        // Load user data using Cloud Function
-        if (user) {
-            loadUserData();
+        if (user && db) {
+            const q = query(collection(db, "users", user.uid, "policies"));
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const userPolicies: Policy[] = [];
+                querySnapshot.forEach((doc) => {
+                    userPolicies.push({ id: doc.id, ...doc.data() } as Policy);
+                });
+                setPolicies(userPolicies);
+                setPoliciesLoading(false);
+            });
+            return () => unsubscribe();
         } else {
             setPoliciesLoading(false);
         }
     }, [user]);
-
-    const loadUserData = async () => {
-        if (!user) return;
-        
-        try {
-            const functions = getFunctions();
-            const getUserData = httpsCallable(functions, 'getUserData');
-            const result = await getUserData();
-            const data = result.data as any;
-            
-            setPolicies(data.policies || []);
-            setPoliciesLoading(false);
-            
-        } catch (error) {
-            console.error('Error loading user data:', error);
-            setPoliciesLoading(false);
-        }
-    };
 
     const handleDismissOnboarding = () => {
         localStorage.removeItem("isNewUser");
