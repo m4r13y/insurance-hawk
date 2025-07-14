@@ -277,15 +277,6 @@ function CancerApplication() {
             toast({ variant: "destructive", title: "Submission Failed", description: "There was an error submitting your application." });
         }
     }
-    
-    const handleSubmitClick = async () => {
-        const fieldsToValidate = steps[step - 1].fields;
-        const output = await form.trigger(fieldsToValidate, { shouldFocus: true });
-        if (output) {
-            await onSubmit(form.getValues());
-        }
-    };
-
 
     if (isSubmitted) return <SuccessPage title="Cancer Application" />;
     
@@ -321,7 +312,7 @@ function CancerApplication() {
             </div>
             <Progress value={(step / steps.length) * 100} />
             <Form {...form}>
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     {step === 1 && ( /* Personal Info */
                         <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                             <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
@@ -387,7 +378,7 @@ function CancerApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="button" onClick={handleSubmitClick}>Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
