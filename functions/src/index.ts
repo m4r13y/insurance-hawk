@@ -6,13 +6,15 @@ import * as admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
+let app: admin.app.App;
 try {
-  admin.initializeApp();
+  app = admin.initializeApp();
 } catch (e) {
   v2.logger.info("Admin SDK already initialized.");
+  app = admin.app();
 }
 
-const db = getFirestore(admin.app(), "hawknest-database");
+const db = getFirestore(app, "hawknest-database");
 
 // --- TYPE DEFINITIONS ---
 interface CancerQuoteRequestData {
