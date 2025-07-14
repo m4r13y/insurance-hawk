@@ -4,7 +4,7 @@
  */
 import * as functions from "firebase-functions/v2";
 import * as admin from "firebase-admin";
-import {getFirestore} from "firebase-admin/firestore";
+import {getFirestore, DocumentData} from "firebase-admin/firestore";
 
 // Initialize the Firebase Admin SDK.
 try {
@@ -84,9 +84,9 @@ const mapPremiumModeToKey = (
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(
-  async (request: functions.https.CallableRequest):
+  async (request: functions.https.CallableRequest<CancerQuoteRequestData>):
   Promise<CancerQuoteResponse> => {
-    const data = request.data as CancerQuoteRequestData;
+    const data = request.data;
     functions.logger.info("--- Starting Cancer Quote ---", {
       structuredData: true,
     });
