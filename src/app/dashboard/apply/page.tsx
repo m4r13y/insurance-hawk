@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import React, { useState, useEffect, Suspense, useRef } from "react"
@@ -21,6 +19,7 @@ import { mockPlans, carriers } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
 import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AutofillInput } from "@/components/ui/autofill-input"
 import Link from "next/link"
 import type { Plan, Drug, Provider, Policy } from "@/types"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -28,8 +27,10 @@ import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/h
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import Image from "next/image"
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
+import { useRecentQuotes } from "@/hooks/use-recent-quotes"
+import { useAutofillProfile } from "@/hooks/use-autofill-profile"
 import { db } from "@/lib/firebase"
-import { collection, addDoc, serverTimestamp, setDoc, doc, query, where, getDocs } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, setDoc, doc, query, where, getDocs, writeBatch, orderBy, limit } from "firebase/firestore"
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -244,6 +245,42 @@ async function checkExistingCancerApplication(userId: string): Promise<boolean> 
     return !querySnapshot.empty;
 }
 
+// Check if user has a recent quote (within 7 days)
+async function checkRecentQuote(userId: string, quoteType: string): Promise<{ hasRecentQuote: boolean; quoteData?: any }> {
+    if (!db) {
+        return { hasRecentQuote: false };
+    }
+    
+    try {
+        const quotesCol = collection(db, "users", userId, "quotes");
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const q = query(
+            quotesCol,
+            where("type", "==", quoteType),
+            where("timestamp", ">=", sevenDaysAgo),
+            orderBy("timestamp", "desc"),
+            limit(1)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const latestQuote = querySnapshot.docs[0].data();
+            return { 
+                hasRecentQuote: true, 
+                quoteData: latestQuote 
+            };
+        }
+        
+        return { hasRecentQuote: false };
+    } catch (error) {
+        console.error("Error checking recent quotes:", error);
+        return { hasRecentQuote: false };
+    }
+}
+
 // Save quote history for user reference
 async function saveQuoteHistory(userId: string, quoteData: any, quoteType: string) {
     if (!db) {
@@ -271,17 +308,29 @@ async function saveUserData(userId: string, userData: any, dataType: string) {
     
     // Save to user-data collection structure matching screenshots
     if (dataType === 'medications' && Array.isArray(userData)) {
-        // Save each medication as a separate document
+        // Save each medication as a separate document in medications subcollection
+        // Clear existing medications first
+        const medicationsCol = collection(db, "users", userId, "medications");
+        const existingMedicationsSnapshot = await getDocs(medicationsCol);
+        
+        const batch = writeBatch(db);
+        existingMedicationsSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        // Add new medications to the medications subcollection
         for (const drug of userData) {
-            const medicationDocRef = doc(db, "user-data", userId, "medications", `medication-${drug.rxcui || Date.now()}`);
-            await setDoc(medicationDocRef, {
-                [drug.name.toLowerCase().replace(/\s+/g, '-')]: {
-                    dosage: drug.strength || drug.dosage,
-                    "quantity-count": drug.quantity || "30",
-                    "quantity-period": drug.frequency || "month"
-                }
+            const medicationRef = doc(medicationsCol);
+            batch.set(medicationRef, {
+                name: drug.name,
+                dosage: drug.strength || drug.dosage || "",
+                frequency: drug.frequency || "daily",
+                rxcui: drug.rxcui || "",
+                addedDate: serverTimestamp()
             });
         }
+        
+        await batch.commit();
     } else if (dataType === 'doctors' && Array.isArray(userData)) {
         // Save doctors in the structure shown in screenshots
         for (const provider of userData) {
@@ -314,6 +363,17 @@ function CancerApplication() {
     const [step, setStep] = useState(0);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showEditConfirmation, setShowEditConfirmation] = useState<string | null>(null);
+
+    // Autofill profile integration
+    const { 
+        profileData, 
+        isLoading: isProfileLoading, 
+        isFieldLocked, 
+        getFieldValue, 
+        setFieldUnlocked,
+        updateProfileField 
+    } = useAutofillProfile();
 
     const planId = searchParams.get('planId');
     const planName = searchParams.get('planName');
@@ -334,6 +394,34 @@ function CancerApplication() {
             signature: "", agreesToTerms: false,
         }
     });
+
+    // Autofill form when profile data loads
+    useEffect(() => {
+        if (!isProfileLoading && profileData) {
+            const fieldsToAutofill = ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'];
+            fieldsToAutofill.forEach(fieldName => {
+                const value = getFieldValue(fieldName);
+                if (value) {
+                    form.setValue(fieldName as keyof FormSchema, value);
+                }
+            });
+        }
+    }, [isProfileLoading, profileData, form, getFieldValue]);
+
+    const handleFieldEdit = async (fieldName: string) => {
+        if (isFieldLocked(fieldName)) {
+            setShowEditConfirmation(fieldName);
+        }
+    };
+
+    const confirmFieldEdit = async (fieldName: string) => {
+        setFieldUnlocked(fieldName);
+        setShowEditConfirmation(null);
+        toast({
+            title: "Field Unlocked",
+            description: `You can now edit your ${fieldName}. Changes will update your account.`,
+        });
+    };
 
     const steps = [
         { id: 1, name: 'Personal Information', fields: ['firstName', 'lastName', 'dob', 'gender', 'address', 'city', 'state', 'zip', 'phone', 'email'] as FieldPath<FormSchema>[] },
@@ -549,16 +637,92 @@ function CancerApplication() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     {step === 1 && ( /* Personal Info */
                         <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                            <FormField control={form.control} name="firstName" render={({ field }) => <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="lastName" render={({ field }) => <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="dob" render={({ field }) => <FormItem><FormLabel>Date of Birth</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <AutofillInput
+                                field={form.getValues('firstName')}
+                                label="First Name"
+                                isLocked={isFieldLocked('firstName')}
+                                autofilledValue={getFieldValue('firstName')}
+                                onRequestEdit={() => handleFieldEdit('firstName')}
+                                onConfirmEdit={() => confirmFieldEdit('firstName')}
+                                onUpdateValue={(value) => updateProfileField('firstName', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('lastName')}
+                                label="Last Name" 
+                                isLocked={isFieldLocked('lastName')}
+                                autofilledValue={getFieldValue('lastName')}
+                                onRequestEdit={() => handleFieldEdit('lastName')}
+                                onConfirmEdit={() => confirmFieldEdit('lastName')}
+                                onUpdateValue={(value) => updateProfileField('lastName', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('dob')}
+                                label="Date of Birth"
+                                type="date"
+                                isLocked={isFieldLocked('dob')}
+                                autofilledValue={getFieldValue('dob')}
+                                onRequestEdit={() => handleFieldEdit('dob')}
+                                onConfirmEdit={() => confirmFieldEdit('dob')}
+                                onUpdateValue={(value) => updateProfileField('dob', value)}
+                            />
                             <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Street Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="city" render={({ field }) => <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="state" render={({ field }) => <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="zip" render={({ field }) => <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>} />
+                            <AutofillInput
+                                field={form.getValues('address')}
+                                label="Street Address"
+                                isLocked={isFieldLocked('address')}
+                                autofilledValue={getFieldValue('address')}
+                                onRequestEdit={() => handleFieldEdit('address')}
+                                onConfirmEdit={() => confirmFieldEdit('address')}
+                                onUpdateValue={(value) => updateProfileField('address', value)}
+                                className="md:col-span-2"
+                            />
+                            <AutofillInput
+                                field={form.getValues('city')}
+                                label="City"
+                                isLocked={isFieldLocked('city')}
+                                autofilledValue={getFieldValue('city')}
+                                onRequestEdit={() => handleFieldEdit('city')}
+                                onConfirmEdit={() => confirmFieldEdit('city')}
+                                onUpdateValue={(value) => updateProfileField('city', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('state')}
+                                label="State"
+                                isLocked={isFieldLocked('state')}
+                                autofilledValue={getFieldValue('state')}
+                                onRequestEdit={() => handleFieldEdit('state')}
+                                onConfirmEdit={() => confirmFieldEdit('state')}
+                                onUpdateValue={(value) => updateProfileField('state', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('zip')}
+                                label="Zip Code"
+                                isLocked={isFieldLocked('zip')}
+                                autofilledValue={getFieldValue('zip')}
+                                onRequestEdit={() => handleFieldEdit('zip')}
+                                onConfirmEdit={() => confirmFieldEdit('zip')}
+                                onUpdateValue={(value) => updateProfileField('zip', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('phone')}
+                                label="Phone Number"
+                                type="tel"
+                                isLocked={isFieldLocked('phone')}
+                                autofilledValue={getFieldValue('phone')}
+                                onRequestEdit={() => handleFieldEdit('phone')}
+                                onConfirmEdit={() => confirmFieldEdit('phone')}
+                                onUpdateValue={(value) => updateProfileField('phone', value)}
+                            />
+                            <AutofillInput
+                                field={form.getValues('email')}
+                                label="Email Address"
+                                type="email"
+                                isLocked={isFieldLocked('email')}
+                                autofilledValue={getFieldValue('email')}
+                                onRequestEdit={() => handleFieldEdit('email')}
+                                onConfirmEdit={() => confirmFieldEdit('email')}
+                                onUpdateValue={(value) => updateProfileField('email', value)}
+                            />
                         </CardContent></Card>
                     )}
                     {step === 2 && ( /* Underwriting Info */
@@ -625,6 +789,25 @@ function CancerApplication() {
                     </div>
                 </form>
             </Form>
+
+            {/* Edit Confirmation Dialog */}
+            <Dialog open={!!showEditConfirmation} onOpenChange={() => setShowEditConfirmation(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Account Information</DialogTitle>
+                        <DialogDescription>
+                            This will unlock and update your {showEditConfirmation} in your account profile. 
+                            Continue with editing?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowEditConfirmation(null)}>Cancel</Button>
+                        <Button onClick={() => showEditConfirmation && confirmFieldEdit(showEditConfirmation)}>
+                            Yes, Edit {showEditConfirmation}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -666,13 +849,12 @@ function MedicareSupplementApplication() {
     const [isManualDrugEntryOpen, setIsManualDrugEntryOpen] = useState(false);
     const [uniqueForms, setUniqueForms] = useState<string[]>([]);
     const [selectedForm, setSelectedForm] = useState<string>('');
-    // --- End State for Doctors/Meds Search ---
 
-    const quotedPlanId = 'quoted-plan';
     const planId = searchParams.get('planId');
     const planName = searchParams.get('planName');
     const provider = searchParams.get('provider');
     const premium = searchParams.get('premium');
+    const quotedPlanId = `quoted-${Date.now()}`;
     
     const supplementPlans = mockPlans.filter(p => p.category === "Medicare Supplement");
     const allAvailablePlans: Plan[] = [...supplementPlans];
@@ -2508,26 +2690,131 @@ const applicationTypes = [
 ];
 
 function ApplicationSelectionGrid() {
+  const [user] = useFirebaseAuth();
+  const [userQuotes, setUserQuotes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Load user's quotes to check if they have any
+  useEffect(() => {
+    const loadUserQuotes = async () => {
+      if (!user || !db) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const quotesCol = collection(db, "users", user.uid, "quotes");
+        const quotesSnapshot = await getDocs(quotesCol);
+        const quotes = quotesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setUserQuotes(quotes);
+      } catch (error) {
+        console.error("Error loading user quotes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserQuotes();
+  }, [user]);
+
+  const handleApplicationClick = (appType: string, event: React.MouseEvent) => {
+    // Check if user has any quotes for this application type
+    const hasQuoteForType = userQuotes.some(quote => {
+      const quoteType = quote.type || quote.resultData?.applicationType;
+      return quoteType === appType || 
+             (appType === 'medicare-supplement' && quoteType === 'medicare-supplement') ||
+             (appType === 'dental' && quoteType === 'dental') ||
+             (appType === 'cancer' && quoteType === 'cancer') ||
+             (appType === 'hospital-indemnity' && quoteType === 'hospital-indemnity') ||
+             (appType === 'life-insurance' && quoteType === 'life-insurance') ||
+             (appType === 'health-insurance' && quoteType === 'health') ||
+             (appType === 'medicare-advantage' && quoteType === 'medicare-advantage');
+    });
+
+    if (!hasQuoteForType) {
+      event.preventDefault();
+      toast({
+        variant: "destructive",
+        title: "Quote Required",
+        description: `You must get a quote first before starting a ${applicationTypes.find(t => t.type === appType)?.title} application. Please visit the Quotes page to get started.`,
+      });
+      return;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-semibold">Submit an Application</h1>
+          <p className="text-base text-muted-foreground mt-1">Loading your application options...</p>
+        </div>
+        <div className="flex justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Submit an Application</h1>
         <p className="text-base text-muted-foreground mt-1">Select the type of application you would like to start.</p>
+        {userQuotes.length === 0 && (
+          <Alert className="mt-4">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertTitle>Get Quotes First</AlertTitle>
+            <AlertDescription>
+              You need to get quotes before starting applications. Visit the <Link href="/dashboard/quotes" className="underline font-medium">Quotes page</Link> to get started.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
       <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {applicationTypes.map((app) => {
-                const Icon = app.icon
+                const Icon = app.icon;
+                const hasQuote = userQuotes.some(quote => {
+                  const quoteType = quote.type || quote.resultData?.applicationType;
+                  return quoteType === app.type || 
+                         (app.type === 'medicare-supplement' && quoteType === 'medicare-supplement') ||
+                         (app.type === 'dental' && quoteType === 'dental') ||
+                         (app.type === 'cancer' && quoteType === 'cancer') ||
+                         (app.type === 'hospital-indemnity' && quoteType === 'hospital-indemnity') ||
+                         (app.type === 'life-insurance' && quoteType === 'life-insurance') ||
+                         (app.type === 'health-insurance' && quoteType === 'health') ||
+                         (app.type === 'medicare-advantage' && quoteType === 'medicare-advantage');
+                });
+
                 return (
-                  <Link key={app.type} href={`/dashboard/apply?type=${app.type}`} passHref>
-                    <Card className="h-full flex flex-col items-center justify-center text-center p-6 hover:shadow-lg hover:border-primary transition-all">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
-                        <Icon className="h-8 w-8" />
-                      </div>
-                      <h3 className="font-semibold text-lg">{app.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
-                    </Card>
-                  </Link>
+                  <div key={app.type} onClick={(e) => handleApplicationClick(app.type, e)}>
+                    <Link href={hasQuote ? `/dashboard/apply?type=${app.type}` : '#'} passHref>
+                      <Card className={`h-full flex flex-col items-center justify-center text-center p-6 transition-all ${
+                        hasQuote 
+                          ? 'hover:shadow-lg hover:border-primary cursor-pointer' 
+                          : 'opacity-60 cursor-not-allowed border-dashed'
+                      }`}>
+                        <div className={`flex h-16 w-16 items-center justify-center rounded-full mb-4 ${
+                          hasQuote ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+                        }`}>
+                          <Icon className="h-8 w-8" />
+                        </div>
+                        <h3 className="font-semibold text-lg">{app.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
+                        {!hasQuote && (
+                          <p className="text-xs text-red-600 mt-2 font-medium">Quote required</p>
+                        )}
+                        {hasQuote && (
+                          <p className="text-xs text-green-600 mt-2 font-medium">✓ Quote available</p>
+                        )}
+                      </Card>
+                    </Link>
+                  </div>
                 )
             })}
         </div>

@@ -57,6 +57,24 @@ interface StatesData {
   };
 }
 
+interface UserProfile {
+  firstName?: string;
+  lastName?: string;
+  dob?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  gender?: string;
+}
+
+interface SaveUserDataRequest {
+  step: string;
+  personalInfo?: UserProfile;
+  [key: string]: unknown;
+}
 
 // --- HELPER v2 ---
 const mapFamilyTypeToCode = (
@@ -82,6 +100,158 @@ const mapPremiumModeToKey = (
   };
   return mapping[premiumMode];
 };
+
+// --- USER DATA MANAGEMENT FUNCTIONS ---
+
+// Get user profile data
+export const getUserData = v2.https.onCall(
+  async (request: v2.https.CallableRequest): Promise<{
+    profile: UserProfile;
+    policiesCount: number;
+    documentsCount: number;
+    hasProfile: boolean;
+  }> => {
+    const uid = request.auth?.uid;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to access profile data."
+      );
+    }
+
+    try {
+      v2.logger.info("--- Starting Get User Data ---");
+      v2.logger.info("Fetching data for user:", {
+        userId: uid,
+        email: request.auth?.token?.email || "unknown",
+      });
+
+      // Get user document from Firestore
+      const userDocRef = db.collection("users").doc(uid);
+      const userDocSnap = await userDocRef.get();
+
+      let profile: UserProfile = {};
+      let hasProfile = false;
+
+      if (userDocSnap.exists) {
+        const userData = userDocSnap.data();
+        if (userData?.personalInfo) {
+          profile = userData.personalInfo;
+          hasProfile = true;
+        }
+      }
+
+      // Get policies count
+      const policiesSnapshot = await db
+        .collection("users")
+        .doc(uid)
+        .collection("policies")
+        .get();
+      const policiesCount = policiesSnapshot.size;
+
+      // Get documents count
+      const documentsSnapshot = await db
+        .collection("users")
+        .doc(uid)
+        .collection("documents")
+        .get();
+      const documentsCount = documentsSnapshot.size;
+
+      const result = {
+        profile,
+        policiesCount,
+        documentsCount,
+        hasProfile,
+      };
+
+      v2.logger.info("User data fetched successfully", {
+        userId: uid,
+        policiesCount,
+        documentsCount,
+        hasProfile,
+      });
+
+      return result;
+    } catch (error) {
+      v2.logger.error("Error getting user data:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to retrieve user profile data."
+      );
+    }
+  }
+);
+
+// Save user profile data
+export const saveUserData = v2.https.onCall(
+  async (request: v2.https.CallableRequest<SaveUserDataRequest>):
+  Promise<{success: boolean}> => {
+    const uid = request.auth?.uid;
+    const data = request.data;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to save profile data."
+      );
+    }
+
+    if (!data || !data.personalInfo) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Personal info data is required."
+      );
+    }
+
+    try {
+      v2.logger.info(`Saving user data for UID: ${uid}`, {data});
+
+      // Update user document in Firestore
+      const userDocRef = db.collection("users").doc(uid);
+
+      // Use merge to update only the provided fields
+      await userDocRef.set({
+        personalInfo: data.personalInfo,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, {merge: true});
+
+      // Also save to user-data collection structure for compatibility
+      const userDataDocRef = db.collection("user-data").doc(uid);
+      const userDataUpdate: Record<string, string> = {};
+
+      if (data.personalInfo.firstName) {
+        userDataUpdate["first-name"] = data.personalInfo.firstName;
+      }
+      if (data.personalInfo.lastName) {
+        userDataUpdate["last-name"] = data.personalInfo.lastName;
+      }
+      if (data.personalInfo.dob) {
+        userDataUpdate["date-of-birth"] = data.personalInfo.dob;
+      }
+      if (data.personalInfo.email) {
+        userDataUpdate.email = data.personalInfo.email;
+      }
+      if (data.personalInfo.phone) {
+        userDataUpdate.phone = data.personalInfo.phone;
+      }
+
+      if (Object.keys(userDataUpdate).length > 0) {
+        await userDataDocRef.set(userDataUpdate, {merge: true});
+      }
+
+      v2.logger.info(`Successfully saved user data for ${uid}`);
+
+      return {success: true};
+    } catch (error) {
+      v2.logger.error("Error saving user data:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to save user profile data."
+      );
+    }
+  }
+);
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = v2.https.onCall(
@@ -248,4 +418,455 @@ export const getCancerInsuranceQuote = v2.https.onCall(
       );
     }
   },
+);
+
+// --- ENHANCED USER DATA MANAGEMENT FUNCTIONS ---
+
+// Delete user profile data
+export const deleteUserData = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    dataType: string;
+    itemId?: string;
+  }>): Promise<{success: boolean}> => {
+    const uid = request.auth?.uid;
+    const {dataType, itemId} = request.data;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to delete data."
+      );
+    }
+
+    try {
+      v2.logger.info(`Deleting ${dataType} for user: ${uid}`, {itemId});
+
+      switch (dataType) {
+      case "profile":
+        // Clear personal info but keep user document
+        await db.collection("users").doc(uid).update({
+          personalInfo: admin.firestore.FieldValue.delete(),
+        });
+        break;
+
+      case "policy":
+        if (!itemId) throw new Error("Policy ID required for deletion");
+        await db.collection("users").doc(uid).collection("policies")
+          .doc(itemId).delete();
+        // Also delete from user-data structure
+        await db.collection("user-data").doc(uid).collection("policies")
+          .doc(itemId).delete();
+        break;
+
+      case "document":
+        if (!itemId) throw new Error("Document ID required for deletion");
+        await db.collection("users").doc(uid).collection("documents")
+          .doc(itemId).delete();
+        break;
+
+      case "allData": {
+        // Complete user data deletion
+        const userDoc = db.collection("users").doc(uid);
+        const collections = ["policies", "documents", "quotes"];
+
+        for (const collectionName of collections) {
+          const snapshot = await userDoc.collection(collectionName).get();
+          const batch = db.batch();
+          snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+          await batch.commit();
+        }
+
+        // Delete main user document
+        await userDoc.delete();
+
+        // Delete user-data structure
+        await db.collection("user-data").doc(uid).delete();
+        break;
+      }
+
+      default:
+        throw new Error(`Unsupported data type: ${dataType}`);
+      }
+
+      v2.logger.info(`Successfully deleted ${dataType} for user: ${uid}`);
+      return {success: true};
+    } catch (error) {
+      v2.logger.error(`Error deleting ${dataType}:`, error);
+      throw new v2.https.HttpsError(
+        "internal",
+        `Failed to delete ${dataType}.`
+      );
+    }
+  }
+);
+
+// Update specific user data
+export const updateUserData = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    dataType: string;
+    itemId?: string;
+    updateData: Record<string, unknown>;
+  }>): Promise<{success: boolean}> => {
+    const uid = request.auth?.uid;
+    const {dataType, itemId, updateData} = request.data;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to update data."
+      );
+    }
+
+    try {
+      const logData = {itemId, updateFields: Object.keys(updateData)};
+      v2.logger.info(`Updating ${dataType} for user: ${uid}`, logData);
+
+      switch (dataType) {
+      case "profile":
+        await db.collection("users").doc(uid).update({
+          personalInfo: updateData,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        break;
+
+      case "policy":
+        if (!itemId) throw new Error("Policy ID required for update");
+        await db.collection("users").doc(uid).collection("policies")
+          .doc(itemId).update({
+            ...updateData,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        break;
+
+      case "document":
+        if (!itemId) throw new Error("Document ID required for update");
+        await db.collection("users").doc(uid).collection("documents")
+          .doc(itemId).update({
+            ...updateData,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        break;
+
+      default:
+        throw new Error(`Unsupported data type: ${dataType}`);
+      }
+
+      v2.logger.info(`Successfully updated ${dataType} for user: ${uid}`);
+      return {success: true};
+    } catch (error) {
+      v2.logger.error(`Error updating ${dataType}:`, error);
+      throw new v2.https.HttpsError(
+        "internal",
+        `Failed to update ${dataType}.`
+      );
+    }
+  }
+);
+
+// Get comprehensive user data analytics
+export const getUserAnalytics = v2.https.onCall(
+  async (request: v2.https.CallableRequest): Promise<{
+    profileCompleteness: number;
+    totalPolicies: number;
+    totalDocuments: number;
+    totalQuotes: number;
+    dataHealth: {
+      hasBasicInfo: boolean;
+      hasContactInfo: boolean;
+      hasAddress: boolean;
+      missingFields: string[];
+    };
+  }> => {
+    const uid = request.auth?.uid;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to access analytics."
+      );
+    }
+
+    try {
+      v2.logger.info("Generating user analytics for:", uid);
+
+      // Get user profile
+      const userDoc = await db.collection("users").doc(uid).get();
+      const userData = userDoc.data();
+      const profile = userData?.personalInfo || {};
+
+      // Calculate profile completeness
+      const requiredFields = [
+        "firstName", "lastName", "dob", "email", "phone",
+        "address", "city", "state", "zip",
+      ];
+      const completedFields = requiredFields.filter(
+        (field) => profile[field] && profile[field].toString().trim()
+      );
+      const profileCompleteness = Math.round(
+        (completedFields.length / requiredFields.length) * 100
+      );
+
+      // Get counts
+      const [policiesSnap, documentsSnap, quotesSnap] = await Promise.all([
+        db.collection("users").doc(uid).collection("policies").get(),
+        db.collection("users").doc(uid).collection("documents").get(),
+        db.collection("users").doc(uid).collection("quotes").get(),
+      ]);
+
+      // Data health analysis
+      const missingFields = requiredFields.filter(
+        (field) => !profile[field] || !profile[field].toString().trim()
+      );
+      const dataHealth = {
+        hasBasicInfo: !!(profile.firstName && profile.lastName && profile.dob),
+        hasContactInfo: !!(profile.email && profile.phone),
+        hasAddress: !!(profile.address && profile.city &&
+                       profile.state && profile.zip),
+        missingFields,
+      };
+
+      const analytics = {
+        profileCompleteness,
+        totalPolicies: policiesSnap.size,
+        totalDocuments: documentsSnap.size,
+        totalQuotes: quotesSnap.size,
+        dataHealth,
+      };
+
+      v2.logger.info("User analytics generated successfully", {uid});
+      return analytics;
+    } catch (error) {
+      v2.logger.error("Error generating user analytics:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to generate user analytics."
+      );
+    }
+  }
+);
+
+// Get user medications from medications collection
+export const getUserMedications = v2.https.onCall(
+  async (request: v2.https.CallableRequest): Promise<{
+    medications: Array<{
+      id: string;
+      name: string;
+      dosage: string;
+      frequency: string;
+      rxcui?: string;
+      addedDate: admin.firestore.Timestamp | null;
+    }>;
+    totalCount: number;
+  }> => {
+    const uid = request.auth?.uid;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to access medications."
+      );
+    }
+
+    try {
+      v2.logger.info("Fetching medications for user:", uid);
+
+      // Get medications from medications collection
+      const medicationsSnapshot = await db
+        .collection("users")
+        .doc(uid)
+        .collection("medications")
+        .orderBy("addedDate", "desc")
+        .get();
+
+      const medications = medicationsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name || "",
+        dosage: doc.data().dosage || "",
+        frequency: doc.data().frequency || "",
+        rxcui: doc.data().rxcui,
+        addedDate: doc.data().addedDate,
+      }));
+
+      const logMessage = `Found ${medications.length} medications for ` +
+        `user: ${uid}`;
+      v2.logger.info(logMessage);
+
+      return {
+        medications,
+        totalCount: medications.length,
+      };
+    } catch (error) {
+      v2.logger.error("Error getting medications:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to retrieve medications."
+      );
+    }
+  }
+);
+
+// Save user medications to medications collection
+export const saveMedications = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    medications: Array<{
+      name: string;
+      dosage: string;
+      frequency: string;
+      rxcui?: string;
+    }>;
+  }>): Promise<{success: boolean}> => {
+    const uid = request.auth?.uid;
+    const {medications} = request.data;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to save medications."
+      );
+    }
+
+    if (!medications || !Array.isArray(medications)) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Medications array is required."
+      );
+    }
+
+    try {
+      const logMessage = `Saving ${medications.length} medications for ` +
+        `user: ${uid}`;
+      v2.logger.info(logMessage);
+
+      // Clear existing medications first
+      const existingMedicationsSnapshot = await db
+        .collection("users")
+        .doc(uid)
+        .collection("medications")
+        .get();
+
+      const batch = db.batch();
+      existingMedicationsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // Add new medications
+      const medicationsCol = db.collection("users").doc(uid)
+        .collection("medications");
+
+      for (const medication of medications) {
+        const medicationRef = medicationsCol.doc();
+        batch.set(medicationRef, {
+          name: medication.name,
+          dosage: medication.dosage || "",
+          frequency: medication.frequency || "",
+          rxcui: medication.rxcui || "",
+          addedDate: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+
+      const successMessage = `Successfully saved ${medications.length} ` +
+        `medications for user: ${uid}`;
+      v2.logger.info(successMessage);
+      return {success: true};
+    } catch (error) {
+      v2.logger.error("Error saving medications:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to save medications."
+      );
+    }
+  }
+);
+
+// Check for recent quotes (within last 7 days)
+export const checkRecentQuotes = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    productType: string;
+  }>): Promise<{
+    hasRecentQuote: boolean;
+    recentQuote?: {
+      id: string;
+      type: string;
+      timestamp: admin.firestore.Timestamp;
+      resultData: Record<string, unknown>;
+    };
+    daysOld?: number;
+  }> => {
+    const uid = request.auth?.uid;
+    const {productType} = request.data;
+
+    if (!uid) {
+      throw new v2.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to check quotes."
+      );
+    }
+
+    if (!productType) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Product type is required."
+      );
+    }
+
+    try {
+      v2.logger.info(`Checking recent quotes for ${productType}:`, uid);
+
+      // Calculate date 7 days ago
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      // Get recent quotes of the specified type
+      const quotesSnapshot = await db
+        .collection("users")
+        .doc(uid)
+        .collection("quotes")
+        .where("type", "==", productType)
+        .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(
+          sevenDaysAgo
+        ))
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .get();
+
+      if (quotesSnapshot.empty) {
+        const logMessage = `No recent ${productType} quotes found for ` +
+          `user: ${uid}`;
+        v2.logger.info(logMessage);
+        return {hasRecentQuote: false};
+      }
+
+      const recentQuoteDoc = quotesSnapshot.docs[0];
+      const quoteData = recentQuoteDoc.data();
+      const quoteTimestamp = quoteData.timestamp as admin.firestore.Timestamp;
+
+      // Calculate how many days old the quote is
+      const daysOld = Math.floor(
+        (Date.now() - quoteTimestamp.toMillis()) / (1000 * 60 * 60 * 24)
+      );
+
+      v2.logger.info(
+        `Found recent ${productType} quote (${daysOld} days old) for: ${uid}`
+      );
+
+      return {
+        hasRecentQuote: true,
+        recentQuote: {
+          id: recentQuoteDoc.id,
+          type: quoteData.type,
+          timestamp: quoteTimestamp,
+          resultData: quoteData.resultData || {},
+        },
+        daysOld,
+      };
+    } catch (error) {
+      v2.logger.error("Error checking recent quotes:", error);
+      throw new v2.https.HttpsError(
+        "internal",
+        "Failed to check recent quotes."
+      );
+    }
+  }
 );

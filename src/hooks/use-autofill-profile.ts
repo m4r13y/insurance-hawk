@@ -58,14 +58,24 @@ export function useAutofillProfile(): AutofillHookReturn {
       
       setIsLoading(true);
       try {
+        console.log('=== useAutofillProfile: Loading profile data ===');
+        console.log('User ID:', user.uid);
+        console.log('User email:', user.email);
+        
         if (!functions) {
           throw new Error('Firebase Functions not initialized');
         }
+        console.log('Functions object:', functions);
+        
         const getUserData = httpsCallable(functions, 'getUserData');
+        console.log('Calling getUserData...');
         const result = await getUserData();
+        console.log('getUserData result:', result);
         const data = result.data as any;
+        console.log('getUserData data:', data);
         
         if (data.profile) {
+          console.log('Setting profile data:', data.profile);
           setProfileData(data.profile);
           
           // Lock fields that have existing data
@@ -75,10 +85,25 @@ export function useAutofillProfile(): AutofillHookReturn {
               fieldsToLock.add(field);
             }
           });
+          console.log('Fields to lock:', Array.from(fieldsToLock));
           setLockedFields(fieldsToLock);
+        } else {
+          console.log('No profile data found in result');
+        }
+        
+        // Log additional data for debugging
+        if (data.policiesCount !== undefined) {
+          console.log('Policies count:', data.policiesCount);
+        }
+        if (data.documentsCount !== undefined) {
+          console.log('Documents count:', data.documentsCount);
+        }
+        if (data.hasProfile !== undefined) {
+          console.log('Has profile:', data.hasProfile);
         }
       } catch (error) {
         console.error('Error loading profile data:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         // Don't show error toast to user - just fail silently for better UX
       } finally {
         setIsLoading(false);
@@ -94,6 +119,10 @@ export function useAutofillProfile(): AutofillHookReturn {
 
   const getFieldValue = (fieldName: string): string => {
     if (!profileData || typeof profileData[fieldName] === 'undefined') {
+      // Default to Texas if no state is stored
+      if (fieldName === 'state') {
+        return 'TX';
+      }
       return '';
     }
     const value = profileData[fieldName]?.toString() || '';
@@ -101,6 +130,10 @@ export function useAutofillProfile(): AutofillHookReturn {
     // This prevents setting invalid empty enum values
     if (fieldName === 'gender' && !value.trim()) {
       return '';
+    }
+    // Default to Texas if state is empty
+    if (fieldName === 'state' && !value.trim()) {
+      return 'TX';
     }
     return value;
   };
@@ -127,11 +160,25 @@ export function useAutofillProfile(): AutofillHookReturn {
       }
       const saveUserData = httpsCallable(functions, 'saveUserData');
       
-      const updateData: any = {
-        step: 'profile',
-        personalInfo: {
-          [fieldName]: value,
-        },
+      // Build the complete personal info object with the updated field
+      const personalInfo = {
+        firstName: getFieldValue('firstName'),
+        lastName: getFieldValue('lastName'),
+        dob: getFieldValue('dob'),
+        gender: getFieldValue('gender') as 'male' | 'female',
+        address: getFieldValue('address'),
+        city: getFieldValue('city'),
+        state: getFieldValue('state'),
+        zip: getFieldValue('zip'),
+        phone: getFieldValue('phone'),
+        email: getFieldValue('email'),
+        // Override with the new value
+        [fieldName]: value,
+      };
+
+      const updateData = {
+        personalInfo,
+        applicationStep: 'personal' as const,
       };
 
       await saveUserData(updateData);

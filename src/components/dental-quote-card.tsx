@@ -4,16 +4,68 @@
 import type { DentalQuote } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
+  const [user] = useFirebaseAuth();
+  const { toast } = useToast();
+
+  const handleSelectPlan = async () => {
+    if (!user || !db) return;
+    
+    try {
+      const quotesCol = collection(db, "users", user.uid, "quotes");
+      await addDoc(quotesCol, {
+        type: 'dental',
+        requestData: {
+          planName: quote.plan_name,
+          provider: quote.carrier.name,
+          applicationType: 'dental'
+        },
+        resultData: {
+          monthly_premium: quote.monthly_premium,
+          carrier: quote.carrier,
+          plan_name: quote.plan_name,
+          am_best_rating: quote.am_best_rating,
+          benefit_amount: quote.benefit_amount,
+          benefit_quantifier: quote.benefit_quantifier
+        },
+        timestamp: serverTimestamp(),
+        status: 'selected'
+      });
+
+      toast({
+        title: "Quote Saved",
+        description: "Your dental quote has been saved to your account.",
+      });
+    } catch (error) {
+      console.error("Error saving quote:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save quote. Please try again.",
+      });
+    }
+  };
+
   return (
     <Card className="flex flex-col h-full transition-colors hover:border-primary/50 hover:shadow-lg">
       <CardHeader className="p-8">
-        <CardTitle className="text-xl font-bold text-slate-900">{quote.carrier.name}</CardTitle>
-        <CardDescription>{quote.plan_name}</CardDescription>
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <CardTitle className="text-xl font-bold text-slate-900">{quote.carrier.name}</CardTitle>
+            <CardDescription>{quote.plan_name}</CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" className="p-1 h-8 w-8 shrink-0">
+            <Edit className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 space-y-6 px-8">
         <div className="flex items-baseline gap-2 border-t pt-6">
@@ -43,8 +95,15 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
         )}
       </CardContent>
       <CardFooter className="mt-auto p-8">
-          <Button asChild className="w-full" size="lg">
-            <Link href={`/dashboard/apply?type=dental&planName=${encodeURIComponent(quote.plan_name)}&provider=${encodeURIComponent(quote.carrier.name)}&premium=${quote.monthly_premium}`}>Select Plan</Link>
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={async () => {
+              await handleSelectPlan();
+              window.location.href = `/dashboard/apply?type=dental&planName=${encodeURIComponent(quote.plan_name)}&provider=${encodeURIComponent(quote.carrier.name)}&premium=${quote.monthly_premium}`;
+            }}
+          >
+            Select Plan
           </Button>
       </CardFooter>
     </Card>

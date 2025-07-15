@@ -44,6 +44,7 @@ import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAutofillProfile } from "@/hooks/use-autofill-profile";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
 
@@ -103,6 +104,9 @@ export default function QuotesPage() {
   const [cancerError, setCancerError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Use autofill profile for user data
+  const { profileData, isLoading: isProfileLoading, getFieldValue } = useAutofillProfile();
+
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
     defaultValues: {
@@ -139,7 +143,7 @@ export default function QuotesPage() {
    const cancerForm = useForm<z.infer<typeof cancerFormSchema>>({
         resolver: zodResolver(cancerFormSchema),
         defaultValues: {
-            state: "GA",
+            state: "TX", // Changed default to Texas
             age: 65,
             familyType: "Applicant Only",
             tobaccoStatus: "Non-Tobacco",
@@ -157,6 +161,71 @@ export default function QuotesPage() {
         medigapForm.setValue('plan', planParam.toUpperCase() as z.infer<typeof medigapFormSchema>['plan']);
     }
   }, [medigapForm]);
+
+  // Autofill forms with user profile data
+  useEffect(() => {
+    if (!isProfileLoading && profileData) {
+      // Autofill zipCode for forms that use it
+      const zipCode = getFieldValue('zip');
+      if (zipCode) {
+        medigapForm.setValue('zipCode', zipCode);
+        dentalForm.setValue('zipCode', zipCode);
+        hospitalIndemnityForm.setValue('zipCode', zipCode);
+      }
+
+      // Autofill gender for all forms
+      const gender = getFieldValue('gender');
+      if (gender) {
+        const formattedGender = gender.toLowerCase();
+        if (formattedGender === 'male' || formattedGender === 'female') {
+          medigapForm.setValue('gender', formattedGender as 'male' | 'female');
+          dentalForm.setValue('gender', formattedGender as 'male' | 'female');
+          hospitalIndemnityForm.setValue('gender', formattedGender as 'male' | 'female');
+        }
+      }
+
+      // Autofill state for cancer insurance (convert to state abbreviation if needed)
+      const state = getFieldValue('state');
+      if (state) {
+        // If state is a full name, convert to abbreviation
+        const stateMapping: Record<string, string> = {
+          'Texas': 'TX',
+          'Georgia': 'GA',
+          'TX': 'TX',
+          'GA': 'GA'
+        };
+        const stateAbbr = stateMapping[state] || state;
+        if (stateAbbr === 'TX' || stateAbbr === 'GA') {
+          cancerForm.setValue('state', stateAbbr as 'TX' | 'GA');
+        }
+      }
+
+      // Calculate age from date of birth if available
+      const dob = getFieldValue('dob');
+      if (dob) {
+        const birthDate = new Date(dob);
+        const today = new Date();
+        const calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const finalAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+          ? calculatedAge - 1 
+          : calculatedAge;
+        
+        if (finalAge >= 18 && finalAge <= 120) {
+          if (finalAge >= 65) {
+            medigapForm.setValue('age', finalAge);
+          }
+          if (finalAge >= 18) {
+            dentalForm.setValue('age', finalAge);
+            hospitalIndemnityForm.setValue('age', finalAge);
+          }
+          if (finalAge >= 18 && finalAge <= 99) {
+            cancerForm.setValue('age', finalAge);
+          }
+        }
+      }
+    }
+  }, [isProfileLoading, profileData, getFieldValue, medigapForm, dentalForm, hospitalIndemnityForm, cancerForm]);
 
   useEffect(() => {
     if (featuredQuote?.baseBenefits && featuredQuote.baseBenefits.length > 0) {
