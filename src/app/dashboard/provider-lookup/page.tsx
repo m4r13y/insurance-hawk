@@ -224,10 +224,10 @@ export default function ProviderLookupPage() {
                                         <AccordionTrigger className="text-base">View Services ({services.length})</AccordionTrigger>
                                         <AccordionContent>
                                             <div className="space-y-4 pt-4">
-                                                {services.map(service => (
-                                                    <div key={service.hcpcs_cd} className="p-4 border rounded-lg">
+                                                {services.map((service, index) => (
+                                                    <div key={`${service.hcpcs_cd}-${index}`} className="p-4 border rounded-lg">
                                                         <p className="font-semibold">{service.hcpcs_desc}</p>
-                                                        <p className="text-sm text-muted-foreground">HCPCS Code: {service.hcpcs_cd}</p>
+                                                        <p className="text-sm text-muted-foreground">HCPCS Code: {service.hcpcs_cd} ({service.place_of_srvc === 'F' ? 'Facility' : 'Office'})</p>
                                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 text-sm">
                                                             <InfoItem icon={Stethoscope} label="Beneficiaries" value={service.tot_benes?.toLocaleString()} />
                                                             <InfoItem icon={BriefcaseMedical} label="Services" value={service.tot_srvcs?.toLocaleString()} />
