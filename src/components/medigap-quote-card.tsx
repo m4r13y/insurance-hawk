@@ -15,15 +15,23 @@ import { Badge } from './ui/badge';
 
 const getStarRating = (rating: string) => {
     if (!rating || rating === "N/A") return <span className="text-muted-foreground">N/A</span>;
-    const filledStar = <Star className="h-4 w-4 text-amber-400 fill-amber-400" />;
-    const emptyStar = <Star className="h-4 w-4 text-amber-200 fill-amber-200" />;
     
-    if (rating === 'A++' || rating === 'A+') return <div className="flex">{Array(5).fill(filledStar)}</div>;
-    if (rating === 'A') return <div className="flex">{Array(4).fill(filledStar)}{emptyStar}</div>;
-    if (rating === 'A-') return <div className="flex">{Array(3).fill(filledStar)}{Array(2).fill(emptyStar)}</div>;
-    if (rating === 'B+' || rating === 'B') return <div className="flex">{Array(2).fill(filledStar)}{Array(3).fill(emptyStar)}</div>;
-    if (rating) return <div className="flex">{filledStar}{Array(4).fill(emptyStar)}</div>;
-    return <div className="flex">{Array(5).fill(emptyStar)}</div>;
+    const filledStar = (key: number) => <Star key={`filled-${key}`} className="h-4 w-4 text-amber-400 fill-amber-400" />;
+    const emptyStar = (key: number) => <Star key={`empty-${key}`} className="h-4 w-4 text-amber-200 fill-amber-200" />;
+
+    const renderStars = (filledCount: number) => (
+        <div className="flex">
+            {Array.from({ length: filledCount }, (_, i) => filledStar(i))}
+            {Array.from({ length: 5 - filledCount }, (_, i) => emptyStar(i))}
+        </div>
+    );
+    
+    if (rating === 'A++' || rating === 'A+') return renderStars(5);
+    if (rating === 'A') return renderStars(4);
+    if (rating === 'A-') return renderStars(3);
+    if (rating === 'B+' || rating === 'B') return renderStars(2);
+    if (rating) return renderStars(1);
+    return renderStars(0);
 };
 
 export function MedigapQuoteCard({ quote }: { quote: Quote }) {
