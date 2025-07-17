@@ -2,6 +2,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AutofillInputProps {
-  field: any;
+  form: UseFormReturn<any>;
+  name: string;
   label: string;
   type?: string;
   placeholder?: string;
@@ -22,7 +24,7 @@ interface AutofillInputProps {
   className?: string;
 }
 
-function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, field, type, placeholder, className }: Omit<AutofillInputProps, 'isLocked' | 'onRequestEdit'>) {
+function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, form, name, type, placeholder, className }: Omit<AutofillInputProps, 'isLocked' | 'onRequestEdit'>) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(autofilledValue || '');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -83,7 +85,7 @@ function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, fie
             <FormLabel>{label}</FormLabel>
             <FormControl>
                 <Input
-                    {...field}
+                    {...form.register(name)}
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     type={type}
@@ -98,7 +100,7 @@ function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, fie
                         setIsUpdating(true);
                         try {
                             await onUpdateValue(editValue);
-                            field.onChange(editValue);
+                            form.setValue(name, editValue, { shouldValidate: true });
                             setIsEditing(false);
                         } catch (error) {
                             // Error is handled in the hook
@@ -127,7 +129,9 @@ function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, fie
     );
 }
 
-function RegularInput({ field, label, type, placeholder, autofilledValue, className }: Omit<AutofillInputProps, 'isLocked' | 'onRequestEdit' | 'onConfirmEdit' | 'onUpdateValue'>) {
+function RegularInput({ form, name, label, type, placeholder, autofilledValue, className }: Omit<AutofillInputProps, 'isLocked' | 'onRequestEdit' | 'onConfirmEdit' | 'onUpdateValue'>) {
+    const field = form.register(name);
+
     return (
         <FormItem className={className}>
             <FormLabel>{label}</FormLabel>
@@ -136,13 +140,8 @@ function RegularInput({ field, label, type, placeholder, autofilledValue, classN
                     {...field}
                     type={type}
                     placeholder={placeholder}
+                    defaultValue={autofilledValue}
                     className={cn(autofilledValue ? "bg-blue-50 border-blue-200" : "", className)}
-                    onInput={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        if (target.value !== field.value) {
-                            field.onChange(target.value);
-                        }
-                    }}
                     autoComplete={
                         type === "tel" ? "tel" :
                         label.toLowerCase().includes("address") || label.toLowerCase().includes("street") ? "street-address" :

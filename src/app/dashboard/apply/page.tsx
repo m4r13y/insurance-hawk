@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, Suspense, useRef } from "react"
@@ -31,6 +32,7 @@ import { useRecentQuotes } from "@/hooks/use-recent-quotes"
 import { useAutofillProfile } from "@/hooks/use-autofill-profile"
 import { db } from "@/lib/firebase"
 import { collection, addDoc, serverTimestamp, setDoc, doc, query, where, getDocs, writeBatch, orderBy, limit } from "firebase/firestore"
+import { AddressSearchInput } from "@/components/ui/address-search-input"
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -638,7 +640,8 @@ function CancerApplication() {
                     {step === 1 && ( /* Personal Info */
                         <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                             <AutofillInput
-                                field={form.getValues('firstName')}
+                                form={form}
+                                name="firstName"
                                 label="First Name"
                                 isLocked={isFieldLocked('firstName')}
                                 autofilledValue={getFieldValue('firstName')}
@@ -647,7 +650,8 @@ function CancerApplication() {
                                 onUpdateValue={(value) => updateProfileField('firstName', value)}
                             />
                             <AutofillInput
-                                field={form.getValues('lastName')}
+                                form={form}
+                                name="lastName"
                                 label="Last Name" 
                                 isLocked={isFieldLocked('lastName')}
                                 autofilledValue={getFieldValue('lastName')}
@@ -656,7 +660,8 @@ function CancerApplication() {
                                 onUpdateValue={(value) => updateProfileField('lastName', value)}
                             />
                             <AutofillInput
-                                field={form.getValues('dob')}
+                                form={form}
+                                name="dob"
                                 label="Date of Birth"
                                 type="date"
                                 isLocked={isFieldLocked('dob')}
@@ -666,45 +671,22 @@ function CancerApplication() {
                                 onUpdateValue={(value) => updateProfileField('dob', value)}
                             />
                             <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                            <AutofillInput
-                                field={form.getValues('address')}
-                                label="Street Address"
-                                isLocked={isFieldLocked('address')}
-                                autofilledValue={getFieldValue('address')}
-                                onRequestEdit={() => handleFieldEdit('address')}
-                                onConfirmEdit={() => confirmFieldEdit('address')}
-                                onUpdateValue={(value) => updateProfileField('address', value)}
-                                className="md:col-span-2"
-                            />
-                            <AutofillInput
-                                field={form.getValues('city')}
-                                label="City"
-                                isLocked={isFieldLocked('city')}
-                                autofilledValue={getFieldValue('city')}
-                                onRequestEdit={() => handleFieldEdit('city')}
-                                onConfirmEdit={() => confirmFieldEdit('city')}
-                                onUpdateValue={(value) => updateProfileField('city', value)}
-                            />
-                            <AutofillInput
-                                field={form.getValues('state')}
-                                label="State"
-                                isLocked={isFieldLocked('state')}
-                                autofilledValue={getFieldValue('state')}
-                                onRequestEdit={() => handleFieldEdit('state')}
-                                onConfirmEdit={() => confirmFieldEdit('state')}
-                                onUpdateValue={(value) => updateProfileField('state', value)}
-                            />
-                            <AutofillInput
-                                field={form.getValues('zip')}
-                                label="Zip Code"
-                                isLocked={isFieldLocked('zip')}
-                                autofilledValue={getFieldValue('zip')}
-                                onRequestEdit={() => handleFieldEdit('zip')}
-                                onConfirmEdit={() => confirmFieldEdit('zip')}
-                                onUpdateValue={(value) => updateProfileField('zip', value)}
-                            />
-                            <AutofillInput
-                                field={form.getValues('phone')}
+                            <FormField control={form.control} name="address" render={({ field }) => (
+                                <AutofillInput
+                                    form={form}
+                                    name="address"
+                                    label="Street Address"
+                                    isLocked={isFieldLocked('address')}
+                                    autofilledValue={getFieldValue('address')}
+                                    onRequestEdit={() => handleFieldEdit('address')}
+                                    onConfirmEdit={() => confirmFieldEdit('address')}
+                                    onUpdateValue={(value) => updateProfileField('address', value)}
+                                />
+                            )}/>
+                            <AddressSearchInput form={form} initialZip={getFieldValue('zip')} />
+                             <AutofillInput
+                                form={form}
+                                name="phone"
                                 label="Phone Number"
                                 type="tel"
                                 isLocked={isFieldLocked('phone')}
@@ -714,7 +696,8 @@ function CancerApplication() {
                                 onUpdateValue={(value) => updateProfileField('phone', value)}
                             />
                             <AutofillInput
-                                field={form.getValues('email')}
+                                form={form}
+                                name="email"
                                 label="Email Address"
                                 type="email"
                                 isLocked={isFieldLocked('email')}
