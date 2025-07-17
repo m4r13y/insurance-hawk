@@ -3,11 +3,12 @@
 
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
-import { useForm, type UseFormReturn } from "react-hook-form"
+import { type UseFormReturn } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Loader2, MapPin } from "lucide-react"
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "./form"
+import { Input } from "./input" // Use standard Input
 
 interface AddressSearchInputProps {
   form: UseFormReturn<any>
@@ -91,7 +92,7 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
             <FormControl>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <CommandInput
+                    <Input
                         {...field}
                         placeholder="Start typing your address..."
                         className="pl-10"
@@ -110,7 +111,7 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
             <FormItem className="sm:col-span-2">
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                    <CommandInput {...field} />
+                    <Input {...field} />
                 </FormControl>
                 <FormMessage />
             </FormItem>
@@ -123,7 +124,7 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
             <FormItem className="sm:col-span-1">
                 <FormLabel>State</FormLabel>
                 <FormControl>
-                    <CommandInput {...field} />
+                    <Input {...field} />
                 </FormControl>
                 <FormMessage />
             </FormItem>
@@ -136,7 +137,7 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
             <FormItem className="sm:col-span-2">
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                    <CommandInput {...field} />
+                    <Input {...field} />
                 </FormControl>
                 <FormMessage />
             </FormItem>
