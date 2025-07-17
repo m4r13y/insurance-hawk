@@ -4,13 +4,24 @@
 import type { DentalQuote } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Edit } from 'lucide-react';
+import { Check, Edit, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+
+const getStarRating = (rating: string) => {
+    if (!rating || rating === "N/A") return <span className="text-muted-foreground">N/A</span>;
+    const filledStar = <Star className="h-4 w-4 text-amber-400 fill-amber-400" />;
+    const emptyStar = <Star className="h-4 w-4 text-amber-200 fill-amber-200" />;
+    
+    if (rating === 'A++' || rating === 'A+') return <div className="flex">{Array(5).fill(filledStar)}</div>;
+    if (rating === 'A') return <div className="flex">{Array(4).fill(filledStar)}{emptyStar}</div>;
+    if (rating === 'A-') return <div className="flex">{Array(3).fill(filledStar)}{Array(2).fill(emptyStar)}</div>;
+    return <div className="flex">{Array(5).fill(emptyStar)}</div>;
+};
 
 export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
   const [user] = useFirebaseAuth();
@@ -62,9 +73,14 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
             <CardTitle className="text-xl font-bold text-slate-900">{quote.carrier.name}</CardTitle>
             <CardDescription>{quote.plan_name}</CardDescription>
           </div>
-          <Button variant="ghost" size="sm" className="p-1 h-8 w-8 shrink-0">
-            <Edit className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+              <div className="text-xs">
+                  {getStarRating(quote.am_best_rating)}
+              </div>
+              <Button variant="ghost" size="sm" className="p-1 h-8 w-8 shrink-0">
+                <Edit className="h-4 w-4" />
+              </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 space-y-6 px-8">
