@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useTransition } from 'react';
@@ -37,7 +36,20 @@ type SearchFormValues = z.infer<typeof searchSchema>;
 
 type GroupedProviders = {
   [key: string]: {
-    providerDetails: Omit<ProviderService, 'hcpcs_cd'>;
+    providerDetails: Pick<ProviderService, 
+      'rndrng_npi' | 
+      'rndrng_prvdr_last_org_name' | 
+      'rndrng_prvdr_first_name' | 
+      'rndrng_prvdr_mi' | 
+      'rndrng_prvdr_crdntls' | 
+      'rndrng_prvdr_ent_cd' | 
+      'rndrng_prvdr_st1' | 
+      'rndrng_prvdr_st2' | 
+      'rndrng_prvdr_city' | 
+      'rndrng_prvdr_state_abrvtn' | 
+      'rndrng_prvdr_zip5' | 
+      'rndrng_prvdr_type'
+    >;
     services: Pick<ProviderService, 'hcpcs_cd' | 'hcpcs_desc' | 'hcpcs_drug_ind' | 'place_of_srvc' | 'tot_benes' | 'tot_srvcs' | 'avg_sbmtd_chrg' | 'avg_mdcr_alowd_amt' | 'avg_mdcr_pymt_amt'>[];
   };
 };
@@ -70,37 +82,81 @@ export default function ProviderLookupPage() {
         return;
       }
       
-      const grouped = (response.data || []).reduce((acc: GroupedProviders, service) => {
-        const npi = service.rndrng_npi;
+      // Parse the streaming response format
+      let parsedData: any[] = [];
+      
+      if (typeof response.data === 'string') {
+        // Handle streaming response with multiple JSON objects
+        const responseStr: string = response.data;
+        
+        // Split by looking for patterns that indicate new JSON objects
+        const jsonPattern = /\{"Rndrng_NPI":/g;
+        const matches: number[] = [];
+        let match: RegExpExecArray | null;
+        
+        while ((match = jsonPattern.exec(responseStr)) !== null) {
+          matches.push(match.index);
+        }
+        
+        // Extract each JSON object
+        for (let i = 0; i < matches.length; i++) {
+          const start = matches[i];
+          const end = i < matches.length - 1 ? matches[i + 1] : responseStr.length;
+          const jsonStr = responseStr.substring(start, end);
+          
+          // Clean up the JSON string (remove trailing commas, etc.)
+          const cleanedJsonStr = jsonStr.replace(/,\s*$/, '').trim();
+          
+          try {
+            // Skip the metadata objects (those starting with {"a":)
+            if (!cleanedJsonStr.startsWith('{"a":')) {
+              const jsonObj = JSON.parse(cleanedJsonStr);
+              parsedData.push(jsonObj);
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse JSON object:', cleanedJsonStr, parseError);
+          }
+        }
+      } else if (Array.isArray(response.data)) {
+        // Handle array response format
+        parsedData = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        // Handle single object response
+        parsedData = [response.data];
+      }
+      
+      const grouped = parsedData.reduce((acc: GroupedProviders, service) => {
+        // Handle both camelCase and PascalCase field names
+        const npi = service.rndrng_npi || service.Rndrng_NPI;
         if (!acc[npi]) {
           acc[npi] = {
             providerDetails: {
-              rndrng_npi: service.rndrng_npi,
-              rndrng_prvdr_last_org_name: service.rndrng_prvdr_last_org_name,
-              rndrng_prvdr_first_name: service.rndrng_prvdr_first_name,
-              rndrng_prvdr_mi: service.rndrng_prvdr_mi,
-              rndrng_prvdr_crdntls: service.rndrng_prvdr_crdntls,
-              rndrng_prvdr_ent_cd: service.rndrng_prvdr_ent_cd,
-              rndrng_prvdr_st1: service.rndrng_prvdr_st1,
-              rndrng_prvdr_st2: service.rndrng_prvdr_st2,
-              rndrng_prvdr_city: service.rndrng_prvdr_city,
-              rndrng_prvdr_state_abrvtn: service.rndrng_prvdr_state_abrvtn,
-              rndrng_prvdr_zip5: service.rndrng_prvdr_zip5,
-              rndrng_prvdr_type: service.rndrng_prvdr_type,
+              rndrng_npi: service.rndrng_npi || service.Rndrng_NPI,
+              rndrng_prvdr_last_org_name: service.rndrng_prvdr_last_org_name || service.Rndrng_Prvdr_Last_Org_Name,
+              rndrng_prvdr_first_name: service.rndrng_prvdr_first_name || service.Rndrng_Prvdr_First_Name,
+              rndrng_prvdr_mi: service.rndrng_prvdr_mi || service.Rndrng_Prvdr_MI,
+              rndrng_prvdr_crdntls: service.rndrng_prvdr_crdntls || service.Rndrng_Prvdr_Crdntls,
+              rndrng_prvdr_ent_cd: service.rndrng_prvdr_ent_cd || service.Rndrng_Prvdr_Ent_Cd,
+              rndrng_prvdr_st1: service.rndrng_prvdr_st1 || service.Rndrng_Prvdr_St1,
+              rndrng_prvdr_st2: service.rndrng_prvdr_st2 || service.Rndrng_Prvdr_St2,
+              rndrng_prvdr_city: service.rndrng_prvdr_city || service.Rndrng_Prvdr_City,
+              rndrng_prvdr_state_abrvtn: service.rndrng_prvdr_state_abrvtn || service.Rndrng_Prvdr_State_Abrvtn,
+              rndrng_prvdr_zip5: service.rndrng_prvdr_zip5 || service.Rndrng_Prvdr_Zip5,
+              rndrng_prvdr_type: service.rndrng_prvdr_type || service.Rndrng_Prvdr_Type,
             },
             services: [],
           };
         }
         acc[npi].services.push({
-          hcpcs_cd: service.hcpcs_cd,
-          hcpcs_desc: service.hcpcs_desc,
-          hcpcs_drug_ind: service.hcpcs_drug_ind,
-          place_of_srvc: service.place_of_srvc,
-          tot_benes: service.tot_benes,
-          tot_srvcs: service.tot_srvcs,
-          avg_sbmtd_chrg: service.avg_sbmtd_chrg,
-          avg_mdcr_alowd_amt: service.avg_mdcr_alowd_amt,
-          avg_mdcr_pymt_amt: service.avg_mdcr_pymt_amt,
+          hcpcs_cd: service.hcpcs_cd || service.HCPCS_Cd,
+          hcpcs_desc: service.hcpcs_desc || service.HCPCS_Desc,
+          hcpcs_drug_ind: service.hcpcs_drug_ind || service.HCPCS_Drug_Ind,
+          place_of_srvc: service.place_of_srvc || service.Place_Of_Srvc,
+          tot_benes: parseInt(service.tot_benes || service.Tot_Benes || '0'),
+          tot_srvcs: parseInt(service.tot_srvcs || service.Tot_Srvcs || '0'),
+          avg_sbmtd_chrg: parseFloat(service.avg_sbmtd_chrg || service.Avg_Sbmtd_Chrg || '0'),
+          avg_mdcr_alowd_amt: parseFloat(service.avg_mdcr_alowd_amt || service.Avg_Mdcr_Alowd_Amt || '0'),
+          avg_mdcr_pymt_amt: parseFloat(service.avg_mdcr_pymt_amt || service.Avg_Mdcr_Pymt_Amt || '0'),
         });
         return acc;
       }, {});
@@ -256,7 +312,7 @@ export default function ProviderLookupPage() {
 }
 
 const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | number | undefined }) => {
-    if (value === undefined || value === null) return null;
+    if (value === undefined || value === null || value === '') return null;
     return (
         <div className="flex items-start gap-2">
             <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0"/>
