@@ -47,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutofillProfile } from "@/hooks/use-autofill-profile";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 
 const medigapFormSchema = z.object({
@@ -626,14 +627,6 @@ export default function QuotesPage() {
                         </form>
                     </Form>
 
-                    {isCancerPending && (
-                        <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
-                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                            <h3 className="mt-4 font-headline text-xl font-semibold">Calculating your quote...</h3>
-                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                        </div>
-                    )}
-
                     {cancerError && (
                         <Alert variant="destructive" className="mt-8">
                             <Terminal className="h-4 w-4" />
@@ -641,16 +634,13 @@ export default function QuotesPage() {
                             <AlertDescription>{cancerError}</AlertDescription>
                         </Alert>
                     )}
+                    
+                    <Dialog open={!!cancerQuote} onOpenChange={(open) => !open && setCancerQuote(null)}>
+                        <DialogContent className="p-0 max-w-sm border-0">
+                           {cancerQuote && <CancerQuoteCard quote={cancerQuote} />}
+                        </DialogContent>
+                    </Dialog>
 
-                    {cancerQuote && (
-                        <div className="mt-12">
-                             <h3 className="text-2xl font-semibold mb-2">Your Cancer Insurance Quote</h3>
-                            <p className="mb-6 text-muted-foreground">Here is your personalized quote from Bankers Fidelity.</p>
-                             <div className="flex justify-center">
-                                <CancerQuoteCard quote={cancerQuote} />
-                            </div>
-                        </div>
-                    )}
                 </CardContent>
             </Card>
         </TabsContent>
