@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -34,6 +35,22 @@ interface UserProfile {
     medications?: SelectedDrug[];
     [key: string]: any; // for other existing properties
 }
+
+function cleanData(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(v => cleanData(v));
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((acc, key) => {
+      const value = obj[key];
+      if (value !== undefined) {
+        acc[key] = cleanData(value);
+      }
+      return acc;
+    }, {} as {[key: string]: any});
+  }
+  return obj;
+}
+
 
 export default function HealthInfoPage() {
     const router = useRouter();
@@ -87,28 +104,23 @@ export default function HealthInfoPage() {
         if (!user || !db) return;
         const userDocRef = doc(db, 'users', user.uid);
         try {
-            // Structure data to match Firebase Functions expected format
             const personalInfo: any = {};
-            
-            // Only add profile fields that have actual values
             Object.entries(profile).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
+                if (value !== undefined && value !== null && value !== '' && key !== 'doctors' && key !== 'medications') {
                     personalInfo[key] = value;
                 }
             });
             
             const dataToSave = {
-                personalInfo,
+                ...personalInfo,
                 doctors: selectedProviders, 
                 medications: selectedDrugs,
                 updatedAt: serverTimestamp()
             };
             
-            console.log('Saving doctors:', selectedProviders);
-            console.log('Saving medications:', selectedDrugs);
-            console.log('Final data to save:', dataToSave);
+            const finalData = cleanData(dataToSave);
             
-            await setDoc(userDocRef, dataToSave, { merge: true });
+            await setDoc(userDocRef, finalData, { merge: true });
             toast({ title: "Health Info Saved" });
             router.push('/dashboard/documents');
         } catch (error) {
@@ -372,4 +384,3 @@ export default function HealthInfoPage() {
         </div>
     )
 }
-
