@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import type { Provider, Drug, SelectedProvider, SelectedDrug } from "@/types";
 import { getRelatedDrugs, searchDrugs, searchProviders } from "@/app/dashboard/health-quotes/actions";
@@ -28,11 +27,19 @@ const packageLabels: { [key: string]: string } = {
     '30-day': '30-day supply', '60-day': '60-day supply', '90-day': '90-day supply', 'bottle': '1 bottle',
 };
 
+// Add proper type for profile
+interface UserProfile {
+    zip?: string;
+    doctors?: SelectedProvider[];
+    medications?: SelectedDrug[];
+    [key: string]: any; // for other existing properties
+}
+
 export default function HealthInfoPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [user] = useFirebaseAuth();
-    const [profile, setProfile] = useState<any>({});
+    const [profile, setProfile] = useState<UserProfile>({});
     
     // --- State for Doctors/Meds Search ---
     const [providerQuery, setProviderQuery] = useState('');
@@ -80,7 +87,28 @@ export default function HealthInfoPage() {
         if (!user || !db) return;
         const userDocRef = doc(db, 'users', user.uid);
         try {
-            await setDoc(userDocRef, { doctors: selectedProviders, medications: selectedDrugs }, { merge: true });
+            // Structure data to match Firebase Functions expected format
+            const personalInfo: any = {};
+            
+            // Only add profile fields that have actual values
+            Object.entries(profile).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    personalInfo[key] = value;
+                }
+            });
+            
+            const dataToSave = {
+                personalInfo,
+                doctors: selectedProviders, 
+                medications: selectedDrugs,
+                updatedAt: serverTimestamp()
+            };
+            
+            console.log('Saving doctors:', selectedProviders);
+            console.log('Saving medications:', selectedDrugs);
+            console.log('Final data to save:', dataToSave);
+            
+            await setDoc(userDocRef, dataToSave, { merge: true });
             toast({ title: "Health Info Saved" });
             router.push('/dashboard/documents');
         } catch (error) {
@@ -231,21 +259,42 @@ export default function HealthInfoPage() {
                         {/* Doctors Section */}
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg">Your Doctors & Facilities</h3>
-                            <div className="relative">
-                                <Label htmlFor="provider-search">Provider Name</Label>
-                                <Command shouldFilter={false} className="overflow-visible rounded-lg border">
-                                    <div className="relative">
-                                        <CommandInput id="provider-search" value={providerQuery} onValueChange={handleProviderQueryChange} onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} placeholder="Search for a doctor or facility..."/>
-                                        {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
-                                        {isProviderListVisible && (
-                                            <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                                                {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
-                                                {providerResults.length === 0 && providerQuery.length >= 3 && !providerLoading && (<CommandEmpty>No providers found.</CommandEmpty>)}
-                                                {providerResults.length > 0 && (<CommandGroup>{providerResults.map(p => (<CommandItem key={p.npi} value={p.name} onSelect={() => handleSelectProvider(p)} className="cursor-pointer py-2 px-4"><div className="flex flex-col"><span className="font-medium">{p.name}</span><span className="text-sm text-muted-foreground">{p.specialties?.[0]} - {p.type}</span></div></CommandItem>))}</CommandGroup>)}
-                                            </CommandList>
-                                        )}
-                                    </div>
-                                </Command>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="zip-code">Zip Code</Label>
+                                    <Input 
+                                        id="zip-code" 
+                                        value={profile.zip || ''} 
+                                        onChange={(e) => setProfile(prev => ({ ...prev, zip: e.target.value }))}
+                                        placeholder="Enter your zip code" 
+                                        maxLength={5}
+                                        className="max-w-32"
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <Label htmlFor="provider-search">Provider Name</Label>
+                                    <Command shouldFilter={false} className="overflow-visible rounded-lg border">
+                                        <div className="relative">
+                                            <CommandInput 
+                                                id="provider-search" 
+                                                value={providerQuery} 
+                                                onValueChange={handleProviderQueryChange} 
+                                                onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} 
+                                                onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} 
+                                                placeholder={profile.zip ? "Search for a doctor or facility..." : "Enter zip code first to search providers"}
+                                                disabled={!profile.zip}
+                                            />
+                                            {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                            {isProviderListVisible && profile.zip && (
+                                                <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                                                    {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
+                                                    {providerResults.length === 0 && providerQuery.length >= 3 && !providerLoading && (<CommandEmpty>No providers found.</CommandEmpty>)}
+                                                    {providerResults.length > 0 && (<CommandGroup>{providerResults.map(p => (<CommandItem key={p.npi} value={p.name} onSelect={() => handleSelectProvider(p)} className="cursor-pointer py-2 px-4"><div className="flex flex-col"><span className="font-medium">{p.name}</span><span className="text-sm text-muted-foreground">{p.specialties?.[0]} - {p.type}</span></div></CommandItem>))}</CommandGroup>)}
+                                                </CommandList>
+                                            )}
+                                        </div>
+                                    </Command>
+                                </div>
                             </div>
                             {selectedProviders.length > 0 && (
                                 <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
@@ -324,4 +373,3 @@ export default function HealthInfoPage() {
     )
 }
 
-    

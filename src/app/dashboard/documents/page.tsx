@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -130,6 +129,16 @@ const PersonalInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: an
         dob: profileData?.dob || '',
       }
     });
+
+    // Reset form when profileData changes
+    useEffect(() => {
+        form.reset({
+            firstName: profileData?.firstName || '',
+            lastName: profileData?.lastName || '',
+            dob: profileData?.dob || '',
+        });
+    }, [profileData, form]);
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -155,6 +164,18 @@ const ContactInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: any
         zip: profileData?.zip || '',
       }
     });
+
+    // Reset form when profileData changes
+    useEffect(() => {
+        form.reset({
+            phone: profileData?.phone || '',
+            address: profileData?.address || '',
+            city: profileData?.city || '',
+            state: profileData?.state || '',
+            zip: profileData?.zip || '',
+        });
+    }, [profileData, form]);
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -178,6 +199,14 @@ const FinancialInfoForm = ({ onSave, onCancel, profileData }: { onSave: (data: a
         medicareId: profileData?.medicareId || '',
       }
     });
+
+    // Reset form when profileData changes
+    useEffect(() => {
+        form.reset({
+            medicareId: profileData?.medicareId || '',
+        });
+    }, [profileData, form]);
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
@@ -805,4 +834,3 @@ export default function MyAccountPage() {
   )
 }
 
-    
