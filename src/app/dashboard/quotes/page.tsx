@@ -47,7 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutofillProfile } from "@/hooks/use-autofill-profile";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 
 const medigapFormSchema = z.object({
@@ -637,7 +637,17 @@ export default function QuotesPage() {
                     
                     <Dialog open={!!cancerQuote} onOpenChange={(open) => !open && setCancerQuote(null)}>
                         <DialogContent className="p-0 max-w-sm border-0">
-                           {cancerQuote && <CancerQuoteCard quote={cancerQuote} />}
+                           {cancerQuote && (
+                                <>
+                                    <DialogHeader className="p-6 pb-0">
+                                        <DialogTitle className="sr-only">Your Cancer Insurance Quote</DialogTitle>
+                                        <DialogDescription className="sr-only">
+                                            A quote from {cancerQuote.carrier} for {cancerQuote.plan_name}.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <CancerQuoteCard quote={cancerQuote} />
+                                </>
+                           )}
                         </DialogContent>
                     </Dialog>
 
