@@ -17,16 +17,15 @@ export async function searchMedicareProviders(
   const baseUrl = "https://data.cms.gov/data-api/v1/dataset/92396110-2aed-4d63-a6a2-5d6207d46a29/data";
   const queryParams = new URLSearchParams();
 
+  // This API uses a complex filtering syntax in the URL parameters.
+  // We construct it manually here based on the user's input.
   if (params.npi) {
-    // NPI search uses a simple filter
     queryParams.append('filter[npi][condition][path]', 'Rndrng_NPI');
     queryParams.append('filter[npi][condition][operator]', '=');
     queryParams.append('filter[npi][condition][value]', params.npi);
   } else {
-    // Name and location search uses the complex filtering
     if (params.lastName) {
       queryParams.append('filter[lastName][condition][path]', 'Rndrng_Prvdr_Last_Org_Name');
-      // Use CONTAINS for broader matching
       queryParams.append('filter[lastName][condition][operator]', 'CONTAINS');
       queryParams.append('filter[lastName][condition][value]', params.lastName.toUpperCase());
     }
@@ -64,9 +63,16 @@ export async function searchMedicareProviders(
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`CMS API Error: ${response.status} ${response.statusText}`, { url: fullUrl, body: errorBody });
-      return { error: `Failed to fetch data from CMS. Status: ${response.status}. Please check your search terms.` };
+        const errorBody = await response.text();
+        console.error(`CMS API Error: ${response.status} ${response.statusText}`, { url: fullUrl, body: errorBody });
+        
+        // Check for non-JSON error responses which can happen with this API
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+            return { error: `An unexpected response was received from the server.` };
+        }
+        
+        const parsedError = JSON.parse(errorBody);
+        return { error: parsedError.message || `Failed to fetch data from CMS. Status: ${response.status}.` };
     }
 
     const data: ProviderService[] = await response.json();
