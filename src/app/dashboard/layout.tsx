@@ -45,6 +45,7 @@ import {
   Beaker,
   User,
   Loader2,
+  Stethoscope,
 } from "lucide-react";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
@@ -155,6 +156,11 @@ function DashboardLayoutComponent({
                     <Link href="/dashboard/recommendations"><PiggyBank /><span>Retirement Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/provider-lookup")} tooltip="Provider Lookup">
+                    <Link href="/dashboard/provider-lookup"><Stethoscope /><span>Provider Lookup</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/health-quotes")} tooltip="Health Quotes">
                     <Link href="/dashboard/health-quotes"><Heart /><span>Health Quotes</span></Link>
@@ -230,5 +236,3 @@ export default function DashboardLayout({
     </Suspense>
   )
 }
-
-    

@@ -1,8 +1,4 @@
 
-
-
-
-
 export type Plan = {
   id: string;
   name: string;
@@ -171,7 +167,7 @@ export type Provider = {
   type: string;
   npi: string;
   languages: string[];
-  affiliations?: { name: string; type: string; }[];
+  affiliations?: { name: string; type: string; zip: string; }[];
 };
 
 export type DrugCoverage = {
@@ -216,4 +212,29 @@ export type CancerQuote = {
   carrier: string;
   plan_name: string;
   benefit_amount: number;
+};
+
+// From the new CMS Provider Lookup tool
+export type ProviderService = {
+  rndrng_npi: string;
+  rndrng_prvdr_last_org_name: string;
+  rndrng_prvdr_first_name?: string;
+  rndrng_prvdr_mi?: string;
+  rndrng_prvdr_crdntls?: string;
+  rndrng_prvdr_ent_cd: 'I' | 'O';
+  rndrng_prvdr_st1: string;
+  rndrng_prvdr_st2?: string;
+  rndrng_prvdr_city: string;
+  rndrng_prvdr_state_abrvtn: string;
+  rndrng_prvdr_zip5: string;
+  rndrng_prvdr_type: string;
+  hcpcs_cd: string;
+  hcpcs_desc: string;
+  hcpcs_drug_ind: 'Y' | 'N';
+  place_of_srvc: 'F' | 'O';
+  tot_benes?: number;
+  tot_srvcs?: number;
+  avg_sbmtd_chrg?: number;
+  avg_mdcr_alowd_amt?: number;
+  avg_mdcr_pymt_amt?: number;
 };
