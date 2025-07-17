@@ -3,15 +3,16 @@
 
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
-import { useFormContext, type UseFormReturn } from "react-hook-form"
+import { useForm, type UseFormReturn } from "react-hook-form"
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Loader2, MapPin } from "lucide-react"
+import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "./form"
 
 interface AddressSearchInputProps {
   form: UseFormReturn<any>
   initialZip?: string
+  className?: string
 }
 
 interface GeocodeResult {
@@ -26,7 +27,7 @@ interface GeocodeResult {
   }
 }
 
-export function AddressSearchInput({ form, initialZip }: AddressSearchInputProps) {
+export function AddressSearchInput({ form, initialZip, className }: AddressSearchInputProps) {
   const [query, setQuery] = useState(initialZip || "")
   const [results, setResults] = useState<GeocodeResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -80,38 +81,68 @@ export function AddressSearchInput({ form, initialZip }: AddressSearchInputProps
   }
 
   return (
-    <div className="md:col-span-2 space-y-2">
-      <label className="text-sm font-medium">City, State, Zip Code</label>
-       <Command shouldFilter={false} className="relative overflow-visible">
-            <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <CommandInput
-                    value={query}
-                    onValueChange={setQuery}
-                    onBlur={handleBlur}
-                    onFocus={() => {if (results.length > 0) setIsOpen(true)}}
-                    placeholder="Start typing your city, state, or zip..."
-                    className="pl-10"
-                />
-                {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
-            </div>
-            {isOpen && (
-                 <CommandList className="absolute top-full z-10 mt-1 w-full rounded-md border bg-background shadow-lg">
-                    {results.length === 0 && query.length >= 3 && !loading && (
-                        <CommandEmpty>No results found.</CommandEmpty>
-                    )}
-                    {results.length > 0 && (
-                        <CommandGroup>
-                            {results.map((result) => (
-                                <CommandItem key={result.place_id} onSelect={() => handleSelect(result)} className="cursor-pointer">
-                                    {result.display_name}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    )}
-                </CommandList>
+    <>
+      <FormField
+        control={form.control}
+        name="address"
+        render={({ field }) => (
+          <FormItem className="md:col-span-2">
+            <FormLabel>Street Address</FormLabel>
+            <FormControl>
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <CommandInput
+                        {...field}
+                        placeholder="Start typing your address..."
+                        className="pl-10"
+                    />
+                </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className={cn("md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-x-4 gap-y-6", className)}>
+        <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                    <CommandInput {...field} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
             )}
-       </Command>
-    </div>
+        />
+        <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+            <FormItem className="sm:col-span-1">
+                <FormLabel>State</FormLabel>
+                <FormControl>
+                    <CommandInput {...field} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+        <FormField
+            control={form.control}
+            name="zip"
+            render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+                <FormLabel>Zip Code</FormLabel>
+                <FormControl>
+                    <CommandInput {...field} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+      </div>
+    </>
   )
 }

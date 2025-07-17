@@ -593,7 +593,7 @@ function CancerApplication() {
                                 <Button onClick={() => window.location.href = '/dashboard'}>
                                     Go to Dashboard
                                 </Button>
-                                <Button variant="outline" onClick={() => window.location.href = '/dashboard/plans'}>
+                                <Button variant="outline" onClick={() => window.location.href = '/dashboard/documents'}>
                                     View My Policies
                                 </Button>
                             </div>
@@ -638,7 +638,8 @@ function CancerApplication() {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     {step === 1 && ( /* Personal Info */
-                        <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                        <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                             <AutofillInput
                                 form={form}
                                 name="firstName"
@@ -671,19 +672,10 @@ function CancerApplication() {
                                 onUpdateValue={(value) => updateProfileField('dob', value)}
                             />
                             <FormField control={form.control} name="gender" render={({ field }) => <FormItem><FormLabel>Gender</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex pt-2"><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem><FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem></RadioGroup></FormControl><FormMessage /></FormItem>} />
-                            <FormField control={form.control} name="address" render={({ field }) => (
-                                <AutofillInput
-                                    form={form}
-                                    name="address"
-                                    label="Street Address"
-                                    isLocked={isFieldLocked('address')}
-                                    autofilledValue={getFieldValue('address')}
-                                    onRequestEdit={() => handleFieldEdit('address')}
-                                    onConfirmEdit={() => confirmFieldEdit('address')}
-                                    onUpdateValue={(value) => updateProfileField('address', value)}
-                                />
-                            )}/>
-                            <AddressSearchInput form={form} initialZip={getFieldValue('zip')} />
+                            <AddressSearchInput
+                                form={form}
+                                initialZip={getFieldValue('zip')}
+                            />
                              <AutofillInput
                                 form={form}
                                 name="phone"
