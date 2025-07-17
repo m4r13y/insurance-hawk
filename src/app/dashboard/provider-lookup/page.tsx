@@ -198,8 +198,8 @@ export default function ProviderLookupPage() {
            <h2 className="text-xl font-semibold">Search Results ({totalCount})</h2>
             {totalCount > 0 ? (
                 <div className="space-y-4">
-                    {Object.values(results).map(({ providerDetails, services }) => (
-                        <Card key={providerDetails.rndrng_npi}>
+                    {Object.values(results).map(({ providerDetails, services }, index) => (
+                        <Card key={`${providerDetails.rndrng_npi}-${index}`}>
                             <CardHeader>
                                 <div className="flex flex-col sm:flex-row justify-between gap-2">
                                     <div>
@@ -224,8 +224,8 @@ export default function ProviderLookupPage() {
                                         <AccordionTrigger className="text-base">View Services ({services.length})</AccordionTrigger>
                                         <AccordionContent>
                                             <div className="space-y-4 pt-4">
-                                                {services.map((service, index) => (
-                                                    <div key={`${service.hcpcs_cd}-${service.place_of_srvc}-${index}`} className="p-4 border rounded-lg">
+                                                {services.map((service, serviceIndex) => (
+                                                    <div key={`${service.hcpcs_cd}-${service.place_of_srvc}-${serviceIndex}`} className="p-4 border rounded-lg">
                                                         <p className="font-semibold">{service.hcpcs_desc}</p>
                                                         <p className="text-sm text-muted-foreground">HCPCS Code: {service.hcpcs_cd} ({service.place_of_srvc === 'F' ? 'Facility' : 'Office'})</p>
                                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 text-sm">
