@@ -195,6 +195,7 @@ export type SelectedDrug = Drug & {
 
 export type SelectedProvider = Provider & {
     selectedAffiliation?: string;
+    isPCP?: boolean;
 };
 
 export type CancerQuoteRequestValues = {

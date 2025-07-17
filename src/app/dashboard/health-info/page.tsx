@@ -18,7 +18,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Loader2, Pill, Stethoscope } from 'lucide-react';
+import { Trash2, Loader2, Pill, Stethoscope, Star } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const frequencyLabels: { [key: string]: string } = {
     monthly: 'Every month', '3-months': 'Every 3 months', 'as-needed': 'As needed',
@@ -157,18 +158,25 @@ export default function HealthInfoPage() {
             setProviderToSelectAffiliation(provider);
         } else {
             const affiliation = provider.affiliations?.[0]?.name;
-            setSelectedProviders([...selectedProviders, { ...provider, selectedAffiliation: affiliation }]);
+            setSelectedProviders([...selectedProviders, { ...provider, selectedAffiliation: affiliation, isPCP: false }]);
         }
         setProviderQuery(''); setIsProviderListVisible(false);
     };
 
     const handleAffiliationSelected = (provider: Provider, affiliationName: string) => {
-        setSelectedProviders([...selectedProviders, { ...provider, selectedAffiliation: affiliationName }]);
+        setSelectedProviders([...selectedProviders, { ...provider, selectedAffiliation: affiliationName, isPCP: false }]);
         setProviderToSelectAffiliation(null);
     }
 
     const handleRemoveProvider = (npi: string) => {
         setSelectedProviders(selectedProviders.filter(p => p.npi !== npi));
+    };
+
+    const handleSetPCP = (npi: string) => {
+        setSelectedProviders(prev => prev.map(p => ({
+            ...p,
+            isPCP: p.npi === npi ? !p.isPCP : false
+        })));
     };
 
     const handleMedicationQueryChange = (value: string) => {
@@ -312,8 +320,22 @@ export default function HealthInfoPage() {
                                 <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
                                     {selectedProviders.map(p => (
                                         <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                            <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    {p.isPCP && <Star className="h-4 w-4 text-amber-400 fill-amber-400" />}
+                                                    <p className="text-sm font-medium">{p.name}</p>
+                                                </div>
+                                                {p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}
+                                            </div>
+                                            <div className="flex items-center">
+                                                <Button variant="ghost" size="sm" onClick={() => handleSetPCP(p.npi)} className={cn("text-xs h-7", p.isPCP ? "text-amber-600" : "text-muted-foreground")}>
+                                                    {p.isPCP ? "PCP" : "Make PCP"}
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                    <span className="sr-only">Remove {p.name}</span>
+                                                </Button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
