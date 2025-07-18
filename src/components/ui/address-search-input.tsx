@@ -5,10 +5,9 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { type UseFormReturn } from "react-hook-form"
 import { cn } from "@/lib/utils"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Loader2, MapPin } from "lucide-react"
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "./form"
-import { Input } from "./input" // Use standard Input
+import { Input } from "./input"
 
 interface AddressSearchInputProps {
   form: UseFormReturn<any>
@@ -29,11 +28,20 @@ interface GeocodeResult {
 }
 
 export function AddressSearchInput({ form, initialZip, className }: AddressSearchInputProps) {
-  const [query, setQuery] = useState(initialZip || "")
+  const [query, setQuery] = useState("")
   const [results, setResults] = useState<GeocodeResult[]>([])
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const searchTimeout = useRef<NodeJS.Timeout | null>(null)
+
+  // Watch the address field value and sync with query
+  const addressValue = form.watch("address")
+  
+  useEffect(() => {
+    if (addressValue !== query) {
+      setQuery(addressValue || "")
+    }
+  }, [addressValue])
 
   useEffect(() => {
     if (searchTimeout.current) {
@@ -66,12 +74,19 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
     const city = result.address.city || result.address.town || result.address.village || ""
     const state = result.address.state || ""
     const zip = result.address.postcode || ""
+    
+    // Extract the street address (first part before the first comma)
+    const addressParts = result.display_name.split(',')
+    const streetAddress = addressParts[0].trim()
 
+    // Update all form fields
+    form.setValue("address", streetAddress, { shouldValidate: true })
     form.setValue("city", city, { shouldValidate: true })
     form.setValue("state", state, { shouldValidate: true })
     form.setValue("zip", zip, { shouldValidate: true })
     
-    setQuery(result.display_name.split(',').slice(0, 3).join(','))
+    // Update the query to show the selected address
+    setQuery(streetAddress)
     setIsOpen(false)
   }
 
@@ -94,9 +109,46 @@ export function AddressSearchInput({ form, initialZip, className }: AddressSearc
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         {...field}
+                        value={query}
+                        onChange={(e) => {
+                          field.onChange(e)
+                          setQuery(e.target.value)
+                        }}
+                        onBlur={handleBlur}
                         placeholder="Start typing your address..."
                         className="pl-10"
                     />
+                    {isOpen && (query.length >= 3) && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {loading ? (
+                          <div className="p-4 text-center">
+                            <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                            <p className="text-sm text-muted-foreground mt-2">Searching addresses...</p>
+                          </div>
+                        ) : results.length > 0 ? (
+                          results.map((result) => {
+                            const addressParts = result.display_name.split(',')
+                            const streetAddress = addressParts[0].trim()
+                            const cityState = addressParts.slice(1, 3).join(',').trim()
+                            
+                            return (
+                              <div
+                                key={result.place_id}
+                                className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleSelect(result)}
+                              >
+                                <p className="text-sm font-medium">{streetAddress}</p>
+                                <p className="text-xs text-muted-foreground">{cityState}</p>
+                              </div>
+                            )
+                          })
+                        ) : (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No addresses found
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
             </FormControl>
             <FormMessage />
