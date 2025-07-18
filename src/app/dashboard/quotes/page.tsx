@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useTransition, useEffect } from "react";
@@ -55,7 +53,7 @@ const medigapFormSchema = z.object({
   age: z.coerce.number().min(65, "Must be at least 65").max(120, "Age seems too high"),
   gender: z.enum(["female", "male"]),
   tobacco: z.enum(["false", "true"]),
-  plan: z.enum(["A", "F", "G", "N"]),
+  plan: z.enum(["A", "F", "G", "N"]), // Plan A is included but CSG might not support it
   effectiveDate: z.string().optional(),
   apply_discounts: z.boolean().default(true).optional(),
 });

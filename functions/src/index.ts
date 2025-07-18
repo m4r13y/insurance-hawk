@@ -2,9 +2,9 @@
  * @fileOverview Cancer Insurance quotes using Firebase Cloud Functions v2.
  */
 import * as v2 from "firebase-functions/v2";
-import { getMedigapQuotes } from "./medigap";
 import * as admin from "firebase-admin";
 import {getFirestore} from "firebase-admin/firestore";
+import axios, {isAxiosError} from "axios";
 
 // Initialize the Firebase Admin SDK.
 let app: admin.app.App;
@@ -184,7 +184,293 @@ export const getUserData = v2.https.onCall(
   }
 );
 
-export { getMedigapQuotes };
+// Ensure CSG_API_KEY is set in environment config
+const CSG_API_KEY = process.env.CSG_API_KEY;
+if (!CSG_API_KEY) {
+  v2.logger.error(
+    "CSG_API_KEY environment variable not set. Medigap quotes will not work.",
+  );
+}
+
+// Basic interface for the Medigap API response
+interface MedigapQuoteResponse {
+  quotes: Array<Record<string, unknown>>;
+  total_count: number;
+}
+
+// Interface for CSG API token response
+interface CsgTokenResponse {
+  token: string;
+  expires_date: string;
+  user: Record<string, unknown>;
+  key: string;
+  created_date: string;
+}
+
+// Interface for stored token data
+interface StoredTokenData {
+  token: string;
+  expires_date: string;
+  created_date: string;
+  updated_at: admin.firestore.Timestamp;
+}
+
+/**
+ * Get current valid token from Firestore or refresh if needed
+ */
+async function getCurrentToken(): Promise<string> {
+  try {
+    // Check if we have a valid stored token
+    const tokenDoc = await db.collection("system").doc("csg_token").get();
+    if (tokenDoc.exists) {
+      const tokenData = tokenDoc.data() as StoredTokenData;
+      const expiresDate = new Date(tokenData.expires_date);
+      const now = new Date();
+      // Check if token is still valid (with 30 minute buffer)
+      const bufferTime = 30 * 60 * 1000; // 30 minutes in milliseconds
+      if (expiresDate.getTime() > now.getTime() + bufferTime) {
+        v2.logger.info("Using existing valid token");
+        return tokenData.token;
+      } else {
+        v2.logger.info("Token expired or expiring soon, refreshing...");
+      }
+    } else {
+      v2.logger.info("No stored token found, creating new one...");
+    }
+
+    // Token doesn't exist or is expired, get a new one
+    return await refreshToken();
+  } catch (error) {
+    v2.logger.error("Error getting current token:", error);
+    // Fallback to environment token if available
+    const fallbackToken = process.env.CSG_API_TOKEN;
+    if (fallbackToken) {
+      v2.logger.warn("Using fallback token from environment");
+      return fallbackToken;
+    }
+    throw new Error("Unable to get valid CSG API token");
+  }
+}
+
+/**
+ * Refresh the CSG API token
+ */
+async function refreshToken(): Promise<string> {
+  if (!CSG_API_KEY) {
+    throw new Error("CSG_API_KEY not configured");
+  }
+
+  try {
+    v2.logger.info("Refreshing CSG API token...");
+
+    const response = await axios.post<CsgTokenResponse>(
+      "https://csgapi.appspot.com/v1/auth.json",
+      {
+        api_key: CSG_API_KEY,
+        portal_name: "csg_individual",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const tokenData = response.data;
+
+    // Store the new token in Firestore
+    await db.collection("system").doc("csg_token").set({
+      token: tokenData.token,
+      expires_date: tokenData.expires_date,
+      created_date: tokenData.created_date,
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    v2.logger.info("Successfully refreshed and stored CSG API token", {
+      expires_date: tokenData.expires_date,
+    });
+
+    return tokenData.token;
+  } catch (error) {
+    v2.logger.error("Error refreshing CSG API token:", error);
+    if (isAxiosError(error)) {
+      v2.logger.error("API Error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+    throw new Error("Failed to refresh CSG API token");
+  }
+}
+
+// Scheduled function to refresh token every 7 hours
+export const refreshCsgToken = v2.scheduler.onSchedule({
+  schedule: "0 */7 * * *", // Every 7 hours
+  timeZone: "America/New_York",
+}, async () => {
+  try {
+    v2.logger.info("Scheduled token refresh triggered");
+    await refreshToken();
+    v2.logger.info("Scheduled token refresh completed successfully");
+  } catch (error) {
+    v2.logger.error("Scheduled token refresh failed:", error);
+    // Don't throw here to prevent the scheduler from retrying excessively
+  }
+});
+
+// Medigap quotes function
+export const getMedigapQuotes = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    zip5: string;
+    age: number;
+    gender: "M" | "F";
+    tobacco: 0 | 1;
+    plan: "F" | "G" | "N";
+    effective_date?: string;
+    apply_discounts?: 0 | 1;
+    apply_fees?: 0 | 1;
+    offset?: number;
+    limit?: number;
+    naic?: string | string[];
+    field?: string | string[];
+  }>): Promise<MedigapQuoteResponse> => {
+    const data = request.data;
+    v2.logger.info("--- Starting Medigap Quote Fetch ---", {
+      structuredData: true,
+    });
+    v2.logger.info("1. Received input data:", {data});
+
+    // Input Validation
+    if (!data.zip5 || typeof data.zip5 !== "string") {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "A valid zip5 is required.",
+      );
+    }
+    if (typeof data.age !== "number" || data.age < 1) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "A valid age is required.",
+      );
+    }
+    if (!data.gender || !["M", "F"].includes(data.gender)) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "A valid gender (M or F) is required.",
+      );
+    }
+    if (typeof data.tobacco !== "number" || ![0, 1].includes(data.tobacco)) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "A valid tobacco status (0 or 1) is required.",
+      );
+    }
+    if (!data.plan || !["F", "G", "N"].includes(data.plan)) {
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "A valid plan (F, G, or N) is required.",
+      );
+    }
+
+    if (!CSG_API_KEY) {
+      throw new v2.https.HttpsError(
+        "internal",
+        "Server configuration error: CSG API key is not set.",
+      );
+    }
+
+    try {
+      // Construct query parameters
+      const params: Record<string, string | number | string[]> = {
+        zip5: data.zip5,
+        age: data.age,
+        gender: data.gender,
+        tobacco: data.tobacco,
+        plan: data.plan,
+        apply_discounts: data.apply_discounts || 0,
+        apply_fees: data.apply_fees || 0,
+        offset: data.offset || 0,
+        limit: data.limit || 10,
+      };
+
+      // Add optional fields if provided
+      if (data.effective_date) {
+        params.effective_date = data.effective_date;
+      }
+
+      // Handle repeatable parameters
+      if (data.naic) {
+        params.naic = data.naic;
+      }
+      // Handle field parameter
+      if (data.field) {
+        params.field = data.field;
+      } else {
+        // Define default fields if none provided
+        params.field = [
+          "company_base.name_full",
+          "plan",
+          "monthly_premium",
+          "payment_mode",
+          "is_tobacco_rate",
+          "discounts",
+          "fees",
+          "effective_date",
+          "rating_method",
+        ];
+      }
+
+      v2.logger.info("2. Constructed API parameters:", {params});
+
+      // Get current valid token
+      const currentToken = await getCurrentToken();
+
+      // Make the HTTP request to the CSG API
+      const apiUrl = "https://csgapi.appspot.com/v1/med_supp/quotes.json";
+      v2.logger.info(`3. Making GET request to: ${apiUrl}`);
+
+      const response = await axios.get<MedigapQuoteResponse>(apiUrl, {
+        params,
+        headers: {
+          "x-api-token": currentToken,
+        },
+      });
+
+      v2.logger.info(
+        `4. Received API response with status: ${response.status}`,
+      );
+      v2.logger.info("API response data summary:", {
+        total_count: response.data.total_count,
+        first_quote_example: response.data.quotes?.[0],
+      });
+
+      // Return the response data
+      return response.data;
+    } catch (error: unknown) {
+      v2.logger.error("--- ERROR fetching Medigap Quotes ---", error);
+
+      // Handle specific Axios errors or re-throw as HttpsError
+      if (isAxiosError(error)) {
+        v2.logger.error("Axios error details:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        throw new v2.https.HttpsError(
+          "internal",
+          `Failed to fetch Medigap quotes from API: ${error.message}`,
+          error.response?.data,
+        );
+      } else {
+        // Handle other potential errors
+        throw new v2.https.HttpsError(
+          "internal",
+          "An unexpected error occurred while fetching quotes.",
+        );
+      }
+    }
+  },
+);
 
 // Save user profile data
 export const saveUserData = v2.https.onCall(

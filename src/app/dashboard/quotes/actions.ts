@@ -68,26 +68,50 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
       console.error("Firebase Functions not initialized.");
       throw new Error("Server error: Firebase Functions are not initialized.");
     }
-    // Call the Medigap Cloud Function
-    const getMedigapQuotesCallable = httpsCallable<QuoteRequestValues, { quotes: Quote[] }>(firebaseFunctions!, 'getMedigapQuotes');
-    console.log("Calling getMedigapQuotes Cloud Function with values:", values);
 
-    const result = await getMedigapQuotesCallable(values);
+    // Transform the form data to match the CSG API format expected by the Cloud Function
+    const transformedData = {
+      zip5: values.zipCode,
+      age: values.age,
+      gender: values.gender === 'male' ? 'M' : 'F' as 'M' | 'F',
+      tobacco: values.tobacco === 'true' ? 1 : 0 as 0 | 1,
+      plan: values.plan as 'F' | 'G' | 'N',
+      effective_date: values.effectiveDate,
+      apply_discounts: values.apply_discounts ? 1 : 0 as 0 | 1,
+      apply_fees: 0 as 0 | 1,
+      offset: 0,
+      limit: 50,
+    };
+
+    // Call the Medigap Cloud Function
+    const getMedigapQuotesCallable = httpsCallable<typeof transformedData, { quotes: any[]; total_count: number }>(firebaseFunctions!, 'getMedigapQuotes');
+    console.log("Calling getMedigapQuotes Cloud Function with transformed data:", transformedData);
+
+    const result = await getMedigapQuotesCallable(transformedData);
 
     console.log("Received response from getMedigapQuotes Cloud Function:", result.data);
 
-    // You might want to add some validation here to ensure result.data has the expected format
-    if (!result.data || !Array.isArray(result.data.quotes)) {
-        console.error("Invalid response format from Cloud Function:", result.data);
-        throw new Error("Invalid response format from server.");
-    }
+    // Transform the raw CSG API response to our Quote format
+    const transformedQuotes: Quote[] = result.data.quotes.map((quote: any, index: number) => ({
+      id: `medigap-${index}`,
+      premium: parseFloat(quote.monthly_premium) || 0,
+      monthly_premium: parseFloat(quote.monthly_premium) || 0,
+      carrier: {
+        name: quote.company_base?.name_full || 'Unknown Carrier',
+        logo_url: null
+      },
+      plan_name: `Plan ${quote.plan || values.plan}`,
+      plan_type: quote.plan || values.plan,
+      am_best_rating: quote.am_best_rating || 'NR',
+      rate_type: quote.rating_method || 'Unknown',
+      discounts: quote.discounts || []
+    }));
 
-    return { quotes: result.data.quotes };
+    return { quotes: transformedQuotes };
 
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
-    // Consider returning mock data or a specific error structure on failure
-    // return { quotes: mockMedigapQuotes, error: e.message || "Failed to fetch quotes." };
+    return { error: e.message || "Failed to fetch quotes." };
     return { error: e.message || "Failed to fetch quotes." };
   }
 }
