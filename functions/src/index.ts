@@ -2,6 +2,7 @@
  * @fileOverview Cancer Insurance quotes using Firebase Cloud Functions v2.
  */
 import * as v2 from "firebase-functions/v2";
+import { getMedigapQuotes } from "./medigap";
 import * as admin from "firebase-admin";
 import {getFirestore} from "firebase-admin/firestore";
 
@@ -182,6 +183,8 @@ export const getUserData = v2.https.onCall(
     }
   }
 );
+
+export { getMedigapQuotes };
 
 // Save user profile data
 export const saveUserData = v2.https.onCall(

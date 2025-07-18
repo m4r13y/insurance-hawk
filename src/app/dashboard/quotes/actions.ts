@@ -1,48 +1,12 @@
 
 
 "use server";
-
+import { functions as firebaseFunctions } from "@/lib/firebase";
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
 
-// Note: As per the new architecture, firebase-admin is no longer needed here.
-// The cancer quote logic is now handled by a dedicated Cloud Function.
-
-
-const mockMedigapQuotes: Quote[] = [
-    {
-        id: "quote-aetna-g",
-        monthly_premium: 125.50,
-        carrier: { name: "Aetna", logo_url: null },
-        plan_name: "Plan G",
-        plan_type: "Medigap",
-        discounts: [{ name: "Household Discount", value: 0.07, type: "percent", rule: "Must live with one other adult" }],
-        am_best_rating: "A",
-        rate_type: "Attained",
-        premium: 0
-    },
-    {
-        id: "quote-cigna-g",
-        monthly_premium: 130.00,
-        carrier: { name: "Cigna", logo_url: null },
-        plan_name: "Plan G",
-        plan_type: "Medigap",
-        discounts: [{ name: "Household Discount", value: 0.05, type: "percent", rule: "Must live with one other adult" }],
-        am_best_rating: "A-",
-        rate_type: "Issue-Age",
-        premium: 0
-    },
-    {
-        id: "quote-mutual-g",
-        monthly_premium: 142.75,
-        carrier: { name: "Mutual of Omaha", logo_url: null },
-        plan_name: "Plan G",
-        plan_type: "Medigap",
-        discounts: [],
-        am_best_rating: "A+",
-        rate_type: "Attained",
-        premium: 0
-    },
-];
+// Note: As per the new architecture, firebase-admin is no longer needed here on the frontend.
+// The quote logic is now handled by dedicated Cloud Functions.
+import { httpsCallable } from "firebase/functions";
 
 const mockDentalQuotes: DentalQuote[] = [
     {
@@ -99,16 +63,31 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
 
 export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
-    // Return mock data for testing
-    console.log("Returning mock Medigap quotes for values:", values);
-    const filteredQuotes = mockMedigapQuotes.map(q => ({
-        ...q,
-        plan_name: `Plan ${values.plan}`
-    }));
-    return { quotes: filteredQuotes };
+    // Check if firebaseFunctions is initialized
+    if (!firebaseFunctions) {
+      console.error("Firebase Functions not initialized.");
+      throw new Error("Server error: Firebase Functions are not initialized.");
+    }
+    // Call the Medigap Cloud Function
+    const getMedigapQuotesCallable = httpsCallable<QuoteRequestValues, { quotes: Quote[] }>(firebaseFunctions!, 'getMedigapQuotes');
+    console.log("Calling getMedigapQuotes Cloud Function with values:", values);
+
+    const result = await getMedigapQuotesCallable(values);
+
+    console.log("Received response from getMedigapQuotes Cloud Function:", result.data);
+
+    // You might want to add some validation here to ensure result.data has the expected format
+    if (!result.data || !Array.isArray(result.data.quotes)) {
+        console.error("Invalid response format from Cloud Function:", result.data);
+        throw new Error("Invalid response format from server.");
+    }
+
+    return { quotes: result.data.quotes };
 
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
+    // Consider returning mock data or a specific error structure on failure
+    // return { quotes: mockMedigapQuotes, error: e.message || "Failed to fetch quotes." };
     return { error: e.message || "Failed to fetch quotes." };
   }
 }
