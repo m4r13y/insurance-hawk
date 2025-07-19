@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { resourcesList } from "@/resources/resourcesList";
+import type { ResourceCard } from "@/resources/resourcesList";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -454,26 +456,29 @@ const planData: Record<string, PlanData> = {
   },
 };
 
-const resourceArticles: ResourceArticle[] = [
-  {
-    title: "Drug Plans Explained",
-    description: "Learn the basics of Medicare Part D a.k.a. PDP.",
-    readTime: "11 min read",
-    url: "/dashboard/education/drug-plans",
-  },
-  {
-    title: "Avoiding Penalties",
-    description: "Avoid extra costs by signing up for Medicare on time.",
-    readTime: "4 min read",
-    url: "/dashboard/education/penalties",
-  },
-  {
-    title: "Enrollment Periods",
-    description: "Know when to sign up and make changes to your Medicare.",
-    readTime: "4 min read",
-    url: "/dashboard/education/enrollment",
-  },
-];
+// Dynamically filter resources for the selected plan/add-on
+function getRelevantResources(selectedPlan: string, isAdvantage: boolean) {
+  const planMap: Record<string, keyof ResourceCard['products']> = {
+    'plan-g': 'planG',
+    'plan-n': 'planN',
+    'plan-f': 'planF',
+    'drug-plan': 'pdp',
+    'cancer-plan': 'cancer',
+    'dental-vision': 'dvh',
+    'ppo': 'ppo',
+    'hmo': 'hmo',
+    'c-snp': 'snp',
+    'd-snp': 'snp',
+    'cancer-insurance': 'cancer',
+    'short-term': 'hip',
+    'hospital-indemnity': 'hip',
+    'original-medicare': 'ogMedicare',
+    'medicare-advantage': 'advantage',
+  };
+  let key = planMap[selectedPlan];
+  if (!key) key = isAdvantage ? 'advantage' : 'ogMedicare';
+  return resourcesList.filter(r => r.products[key as keyof ResourceCard['products']]);
+}
 
 export default function ComparePlansPage() {
   const router = useRouter();
@@ -483,6 +488,7 @@ export default function ComparePlansPage() {
   const currentPlans = isAdvantage ? advantagePlans : originalMedicarePlans;
   const currentAddOns = isAdvantage ? advantageAddOns : originalMedicareAddOns;
   const currentData = planData[selectedPlan] || planData[isAdvantage ? "medicare-advantage" : "original-medicare"];
+  const relevantResources = getRelevantResources(selectedPlan, isAdvantage);
   
   const themeColors = {
     primary: isAdvantage ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700",
@@ -517,8 +523,18 @@ export default function ComparePlansPage() {
                 <Logo />
               </SidebarHeader>
 
-              {/* Plan Type Toggle - moved to top of sidebar */}
+              {/* Back Button - moved above the toggle */}
               <div className="px-3 pt-4 pb-2">
+                <SidebarMenuItem className="list-none">
+                  <SidebarMenuButton onClick={handleBackToDashboard} tooltip="Back to Dashboard">
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Dashboard</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </div>
+
+              {/* Plan Type Toggle - now below the back button */}
+              <div className="px-3 pb-2">
                 <div className="flex items-center justify-center space-x-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                   <span className={`font-semibold text-sm ${!isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
                     Original
@@ -535,16 +551,6 @@ export default function ComparePlansPage() {
                     Advantage
                   </span>
                 </div>
-              </div>
-
-              {/* Back Button */}
-              <div className="px-3 pb-2">
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleBackToDashboard} tooltip="Back to Dashboard">
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back to Dashboard</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </div>
 
               <SidebarMenu>
@@ -775,29 +781,41 @@ export default function ComparePlansPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {resourceArticles.map((article, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
-                              <span>Article</span>
-                              <Clock className="w-3 h-3" />
-                              <span>{article.readTime}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <h3 className="font-semibold text-base mb-2">{article.title}</h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{article.description}</p>
-                        <Button variant="link" className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs">
-                          Learn More <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {relevantResources.length === 0 ? (
+                    <div className="col-span-3 text-center text-gray-500 py-8">No resources available for this plan/add-on.</div>
+                  ) : (
+                    relevantResources.map((resource, index) => (
+  <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+    <CardContent className="p-4">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
+            <span>{resource.type}</span>
+            <Clock className="w-3 h-3" />
+            <span>{resource.duration} {resource.durationUnit}</span>
+          </div>
+        </div>
+      </div>
+      <h3 className="font-semibold text-base mb-2">{resource.title}</h3>
+      <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{resource.description}</p>
+      <Button
+        variant="link"
+        className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs"
+        onClick={() => {
+          // Always generate slug from resource title
+          const slug = resource.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          router.push(`/dashboard/resources/${slug}`);
+        }}
+      >
+        {resource.linkLabel} <ArrowRight className="w-3 h-3 ml-1" />
+      </Button>
+    </CardContent>
+  </Card>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
