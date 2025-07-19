@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle2, FileUp, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, BookOpen, ShieldCheck, Loader2 } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, CheckCircle2, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, ShieldCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Policy } from "@/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
-
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -67,15 +65,9 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                     </Link>
                 </Button>
             </CardContent>
-            <CardFooter className="p-8">
-                <Button onClick={onDismiss} variant="ghost" className="w-full text-muted-foreground">
-                    I'll explore on my own
-                </Button>
-            </CardFooter>
         </Card>
     </div>
 );
-
 
 export default function DashboardPage() {
     const [user, authLoading] = useFirebaseAuth();
@@ -124,148 +116,210 @@ export default function DashboardPage() {
     const primaryHealthPlan = policies.find(p => p.policyCategoryName === 'Health Insurance');
     const displayName = user.displayName?.split(' ')[0] || 'there';
 
-  return (
-    <div className="space-y-8 md:space-y-12">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white">
-        <div className="max-w-4xl">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Welcome Back, {displayName}!</h1>
-          <p className="text-blue-100 text-lg leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
-        </div>
-      </div>
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+            <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
+                {/* Hero Section */}
+                <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white shadow-xl">
+                    <div className="max-w-4xl">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 lg:mb-6">
+                            Welcome Back, {displayName}!
+                        </h1>
+                        <p className="text-blue-100 text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl">
+                            Here's your comprehensive overview. Manage your policies, track your progress, and discover new ways to secure your future.
+                        </p>
+                    </div>
+                </div>
 
-      <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
-        
-        {/* Top Row Wrapper */}
-        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10">
-            {/* Card 1: Current Plan / Prompt */}
-            <div className="w-full lg:w-2/3">
-                {primaryHealthPlan ? (
-                     <Card className="h-full shadow-lg border-0 bg-white dark:bg-neutral-800">
-                      <CardHeader className="border-b border-gray-100 dark:border-neutral-700">
-                        <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Your Current Plan</CardTitle>
-                        <CardDescription className="text-gray-600 dark:text-neutral-400">{primaryHealthPlan.carrierName} {primaryHealthPlan.planName}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6 p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">Monthly Premium</p>
-                            <p className="mt-1 text-5xl font-bold text-blue-600 dark:text-blue-400">${(primaryHealthPlan.premium || 0).toFixed(2)}</p>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">per month</p>
-                          </div>
-                          {primaryHealthPlan.carrierLogoUrl && <Image src={primaryHealthPlan.carrierLogoUrl} data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />}
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-baseline text-sm mb-1">
-                            <p className="text-gray-600 dark:text-neutral-400">Deductible Progress</p>
-                            <p className="font-medium text-gray-800 dark:text-neutral-200">$125 / $500</p>
-                          </div>
-                          <Progress value={25} aria-label="25% of deductible met" className="bg-gray-200 dark:bg-neutral-700" />
-                        </div>
-                      </CardContent>
-                      <CardFooter className="border-t border-gray-100 dark:border-neutral-700 p-6">
-                        <Button variant="outline" asChild>
-                          <Link href="/dashboard/documents">View All Policies</Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                ) : (
-                     <Card className="h-full flex flex-col items-center justify-center text-center p-8 shadow-lg border-0 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6 shadow-lg">
-                            <ShieldCheck className="h-10 w-10" />
-                        </div>
-                        <CardTitle className="font-bold text-2xl text-gray-900 dark:text-white mb-3">Secure Your Health</CardTitle>
-                        <CardDescription className="text-gray-600 dark:text-neutral-400 mb-6 max-w-md">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
-                        <CardFooter className="p-0">
-                            <Button asChild size="lg" className="shadow-lg">
-                                <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                )}
-            </div>
-            
-            {/* Card 2: Retirement Plan */}
-            <div className="w-full lg:w-1/3">
-                <Card className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-neutral-800 dark:to-neutral-900 shadow-lg border-0">
-                    <CardHeader className="border-b border-blue-100 dark:border-neutral-700">
-                      <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Create Your Retirement Plan</CardTitle>
-                      <CardDescription className="text-gray-600 dark:text-neutral-400">Get a personalized retirement plan to secure your future.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
-                            <PiggyBank className="h-10 w-10" />
-                        </div>
-                        <p className="mb-4 text-gray-700 dark:text-neutral-300 leading-relaxed">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
-                    </CardContent>
-                     <CardFooter className="border-t border-blue-100 dark:border-neutral-700 p-6">
-                         <Button className="w-full shadow-lg" size="lg" asChild>
-                            <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                         </Button>
-                     </CardFooter>
-                 </Card>
-            </div>
-        </div>
-        
-        {/* Bottom Row */}
-        <div>
-            <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
-                <CardHeader className="border-b border-gray-100 dark:border-neutral-700">
-                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Your Retirement Readiness Score</CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-neutral-400">Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-8">
-                    <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-neutral-700 dark:to-neutral-800 rounded-2xl">
-                        <h4 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">Retirement Readiness</h4>
-                        <div className="mt-2 text-6xl sm:text-7xl font-bold text-blue-600 dark:text-blue-400">{retirementScore}</div>
-                        <div className="mt-1 text-sm text-gray-500 dark:text-neutral-400">out of 100 points</div>
-                        <Progress value={retirementScore} className="mt-6 w-full bg-blue-100 dark:bg-neutral-600" indicatorClassName="bg-gradient-to-r from-blue-500 to-blue-600" />
-                    </div>
-                    <div className="p-6">
-                        <h4 className="font-semibold mb-6 text-lg text-gray-900 dark:text-white">Your Current Plans</h4>
-                        {ownedPlanCategories.length > 0 ? (
-                            <div className="space-y-4">
-                                {ownedPlanCategories.map(category => {
-                                    const planInfo = planTypes.find(p => p.id === category);
-                                    const Icon = planInfo?.icon || FileDigit;
-                                    return (
-                                        <div key={category} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-800">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white shadow-md">
-                                                <Icon className="h-5 w-5" />
-                                            </div>
-                                            <p className="font-semibold text-base text-green-800 dark:text-green-400">{category}</p>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Current Plan / Prompt */}
+                        {primaryHealthPlan ? (
+                            <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800 hover:shadow-2xl transition-shadow duration-200">
+                                <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center">
+                                            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                                         </div>
-                                    )
-                                })}
-                            </div>
+                                        <div>
+                                            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                                                Your Current Plan
+                                            </CardTitle>
+                                            <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
+                                                {primaryHealthPlan.carrierName} {primaryHealthPlan.planName}
+                                            </CardDescription>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-8 p-8">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-neutral-400 mb-2">Monthly Premium</p>
+                                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                                ${primaryHealthPlan.premium?.toFixed(2) || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-medium text-gray-600 dark:text-neutral-400 mb-2">Status</p>
+                                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                                                primaryHealthPlan.status === 'active' 
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400'
+                                                    : primaryHealthPlan.status === 'pending'
+                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-400'
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-400'
+                                            }`}>
+                                                {primaryHealthPlan.status.charAt(0).toUpperCase() + primaryHealthPlan.status.slice(1)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Button asChild className="w-full h-12 text-base">
+                                        <Link href="/dashboard/plans">
+                                            <Shield className="mr-2 h-5 w-5" />
+                                            View Plan Details
+                                        </Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
                         ) : (
-                            <div className="text-center py-8">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700 mx-auto mb-4">
-                                    <FileDigit className="h-8 w-8 text-gray-400" />
-                                </div>
-                                <p className="text-sm text-gray-500 dark:text-neutral-400">You have no plans added yet. Go to the "My Policies" page to add your policies.</p>
-                            </div>
+                            <Card className="shadow-xl border-0 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 hover:shadow-2xl transition-shadow duration-200">
+                                <CardContent className="flex flex-col items-center justify-center text-center p-12">
+                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-6">
+                                        <ShieldCheck className="h-10 w-10" />
+                                    </div>
+                                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                                        Secure Your Health
+                                    </CardTitle>
+                                    <CardDescription className="text-gray-600 dark:text-neutral-400 mb-8 max-w-md text-base leading-relaxed">
+                                        You haven't added a health plan yet. Get instant quotes to find the best coverage for you.
+                                    </CardDescription>
+                                    <Button asChild size="lg" className="h-12 px-8">
+                                        <Link href="/dashboard/health-quotes">
+                                            <Heart className="mr-2 h-5 w-5" />
+                                            Get Health Quotes
+                                        </Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
                         )}
+
+                        {/* Quick Actions */}
+                        <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
+                            <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Quick Actions
+                                </CardTitle>
+                                <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
+                                    Common tasks and tools
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    {planTypes.slice(0, 4).map((planType) => {
+                                        const Icon = planType.icon;
+                                        return (
+                                            <Button
+                                                key={planType.id}
+                                                asChild
+                                                variant="outline"
+                                                className="h-auto p-6 justify-start text-left hover:bg-gray-50 dark:hover:bg-neutral-700 hover:shadow-md transition-all duration-200"
+                                            >
+                                                <Link href={planType.href}>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                                            <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                                        </div>
+                                                        <span className="font-medium text-base">{planType.label}</span>
+                                                    </div>
+                                                </Link>
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                </CardContent>
-                {missingPlans.length > 0 && (
-                    <CardFooter className="flex-col items-start border-t border-gray-100 dark:border-neutral-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-neutral-800 dark:to-neutral-900 p-6 sm:p-8 rounded-b-xl">
-                         <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-2">Areas for Improvement</h4>
-                         <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4">Consider adding these plans to improve your retirement readiness.</p>
-                         <div className="flex flex-wrap gap-3">
-                            {missingPlans.map(plan => (
-                                <Button key={plan.id} variant="secondary" size="sm" asChild className="shadow-sm hover:shadow-md">
-                                    <Link href={plan.href || '#'}>
-                                        Add {plan.label}
+
+                    {/* Sidebar */}
+                    <div className="space-y-8">
+                        {/* Retirement Score */}
+                        <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
+                            <CardHeader className="text-center pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Retirement Readiness
+                                </CardTitle>
+                                <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
+                                    Your coverage score
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center p-8">
+                                <div className="relative w-28 h-28 mx-auto mb-6">
+                                    <div className="w-full h-full bg-gray-200 dark:bg-neutral-700 rounded-full">
+                                        <div 
+                                            className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center"
+                                            style={{ background: `conic-gradient(from 0deg, #3b82f6 0%, #3b82f6 ${retirementScore}%, #e5e7eb ${retirementScore}%, #e5e7eb 100%)` }}
+                                        >
+                                            <div className="w-20 h-20 bg-white dark:bg-neutral-800 rounded-full flex items-center justify-center">
+                                                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                    {retirementScore}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-base text-gray-600 dark:text-neutral-400 mb-6">
+                                    You have {ownedPlanCategories.length} of {planTypes.length} plan types
+                                </p>
+                                <Button asChild variant="outline" size="lg" className="w-full h-12">
+                                    <Link href="/dashboard/recommendations">
+                                        <PiggyBank className="mr-2 h-5 w-5" />
+                                        Improve Score
                                     </Link>
                                 </Button>
-                            ))}
-                         </div>
-                    </CardFooter>
-                )}
-            </Card>
+                            </CardContent>
+                        </Card>
+
+                        {/* Missing Plans */}
+                        {missingPlans.length > 0 && (
+                            <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
+                                <CardHeader className="pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                                        Suggested Coverage
+                                    </CardTitle>
+                                    <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
+                                        Plans you might need
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-8">
+                                    <div className="space-y-4">
+                                        {missingPlans.slice(0, 3).map((plan) => {
+                                            const Icon = plan.icon;
+                                            return (
+                                                <Button
+                                                    key={plan.id}
+                                                    asChild
+                                                    variant="ghost"
+                                                    className="w-full justify-start h-auto p-4 hover:bg-gray-50 dark:hover:bg-neutral-700 hover:shadow-sm transition-all duration-200"
+                                                >
+                                                    <Link href={plan.href}>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-500/10 rounded-md flex items-center justify-center">
+                                                                <Icon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                                            </div>
+                                                            <span className="text-base font-medium">{plan.label}</span>
+                                                            <ArrowRight className="w-4 h-4 ml-auto text-gray-400" />
+                                                        </div>
+                                                    </Link>
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    );
 }

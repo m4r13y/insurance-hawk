@@ -369,22 +369,28 @@ export default function QuotesPage() {
   const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Get Supplemental Quotes</h1>
-        <p className="text-base text-muted-foreground mt-1">
-          Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
-        </p>
-      </div>
+    <div className="bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+          <div className="max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+              Get Supplemental Quotes
+            </h1>
+            <p className="text-purple-100 text-base lg:text-lg leading-relaxed opacity-90">
+              Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
+            </p>
+          </div>
+        </div>
 
-       <Tabs defaultValue="medigap" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
-            <TabsTrigger value="medigap" className="py-2.5">Medicare Supplement</TabsTrigger>
-            <TabsTrigger value="dental" className="py-2.5">Dental</TabsTrigger>
-            <TabsTrigger value="cancer" className="py-2.5">Cancer</TabsTrigger>
-            <TabsTrigger value="hospital-indemnity" className="py-2.5">Hospital Indemnity</TabsTrigger>
-            <TabsTrigger value="life-insurance" className="py-2.5">Life Insurance</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="medigap" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto bg-white dark:bg-neutral-800 border shadow-sm">
+              <TabsTrigger value="medigap" className="py-3 text-sm font-medium">Medicare Supplement</TabsTrigger>
+              <TabsTrigger value="dental" className="py-3 text-sm font-medium">Dental</TabsTrigger>
+              <TabsTrigger value="cancer" className="py-3 text-sm font-medium">Cancer</TabsTrigger>
+              <TabsTrigger value="hospital-indemnity" className="py-3 text-sm font-medium">Hospital Indemnity</TabsTrigger>
+              <TabsTrigger value="life-insurance" className="py-3 text-sm font-medium">Life Insurance</TabsTrigger>
+          </TabsList>
         <TabsContent value="medigap" className="mt-6">
             <Card>
                 <CardHeader>
@@ -898,6 +904,7 @@ export default function QuotesPage() {
             </Card>
         </TabsContent>
        </Tabs>
+      </div>
     </div>
   );
 }

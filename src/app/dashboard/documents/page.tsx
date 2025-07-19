@@ -659,23 +659,31 @@ export default function MyAccountPage() {
     const displayName = profile.firstName ? `${profile.firstName} ${profile.lastName}` : user?.displayName;
 
   return (
-        <div className="space-y-8 max-w-5xl mx-auto">
-             <div>
-                <h1 className="text-2xl font-semibold">My Account</h1>
-                <p className="text-base text-muted-foreground mt-1">Manage your policies, documents, and personal information.</p>
-            </div>
-        
-            <Card>
-                <CardHeader className="flex flex-row justify-between items-start">
-                    <div>
-                        <CardTitle className="text-xl">Your Policies</CardTitle>
-                        <CardDescription>Here are the policies you've added to your nest.</CardDescription>
+        <div className="bg-gray-50 dark:bg-neutral-900">
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 dark:from-teal-700 dark:via-teal-800 dark:to-teal-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+                    <div className="max-w-4xl">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+                            My Account
+                        </h1>
+                        <p className="text-teal-100 text-base lg:text-lg leading-relaxed opacity-90">
+                            Manage your policies, documents, and personal information all in one place.
+                        </p>
                     </div>
-                    <Button onClick={() => { setEditingPolicy(null); setIsAddPolicyDialogOpen(true); }}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Policy
-                    </Button>
-                </CardHeader>
+                </div>
+        
+                <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+                    <CardHeader className="flex flex-row justify-between items-start">
+                        <div>
+                            <CardTitle className="text-xl">Your Policies</CardTitle>
+                            <CardDescription>Here are the policies you've added to your nest.</CardDescription>
+                        </div>
+                        <Button onClick={() => { setEditingPolicy(null); setIsAddPolicyDialogOpen(true); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Policy
+                        </Button>
+                    </CardHeader>
                 <CardContent>
                     {policies.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -693,7 +701,7 @@ export default function MyAccountPage() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
                 <CardHeader>
                     <CardTitle className="text-xl">Your Documents</CardTitle>
                     <CardDescription>Upload and manage supporting documents like your Medicare card or proof of residence.</CardDescription>
@@ -832,6 +840,7 @@ export default function MyAccountPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            </div>
         </div>
   )
 }

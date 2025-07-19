@@ -268,32 +268,91 @@ export default function HealthInfoPage() {
 
 
     return (
-        <div className="max-w-4xl w-full mx-auto space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Edit Health Information</CardTitle>
-                    <CardDescription>Add, remove, or manage your preferred doctors and medications.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-rose-800 dark:from-rose-700 dark:via-rose-800 dark:to-rose-900 rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white shadow-xl">
+                    <div className="max-w-4xl">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 lg:mb-6">
+                            Health Information
+                        </h1>
+                        <p className="text-rose-100 text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl">
+                            Add, remove, or manage your preferred doctors and medications to get personalized plan recommendations.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Progress Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
+                        <CardContent className="p-6 text-center">
+                            <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Your Doctors</h3>
+                            <p className="text-sm text-gray-600 dark:text-neutral-400">Add preferred healthcare providers</p>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
+                        <CardContent className="p-6 text-center">
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Medications</h3>
+                            <p className="text-sm text-gray-600 dark:text-neutral-400">Manage your current prescriptions</p>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
+                        <CardContent className="p-6 text-center">
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Plan Match</h3>
+                            <p className="text-sm text-gray-600 dark:text-neutral-400">Get personalized recommendations</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
+                    <CardHeader className="pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                        <CardTitle className="text-xl font-semibold">Edit Health Information</CardTitle>
+                        <CardDescription className="text-base">Add, remove, or manage your preferred doctors and medications to ensure accurate plan recommendations.</CardDescription>
+                    </CardHeader>
+                <CardContent className="p-8">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
                         {/* Doctors Section */}
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg">Your Doctors & Facilities</h3>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="zip-code">Zip Code</Label>
+                        <div className="space-y-8">
+                            <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-neutral-700">
+                                <div className="w-10 h-10 bg-rose-100 dark:bg-rose-500/10 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <h3 className="font-semibold text-xl text-gray-900 dark:text-white">Your Doctors & Facilities</h3>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <Label htmlFor="zip-code" className="text-sm font-medium text-gray-700 dark:text-gray-300">Zip Code</Label>
                                     <Input 
                                         id="zip-code" 
                                         value={profile.zip || ''} 
                                         onChange={(e) => setProfile(prev => ({ ...prev, zip: e.target.value }))}
                                         placeholder="Enter your zip code" 
                                         maxLength={5}
-                                        className="max-w-32"
+                                        className="max-w-40 h-11"
                                     />
                                 </div>
                                 <div className="relative">
-                                    <Label htmlFor="provider-search">Provider Name</Label>
-                                    <Command shouldFilter={false} className="overflow-visible rounded-lg border">
+                                    <Label htmlFor="provider-search" className="text-sm font-medium text-gray-700 dark:text-gray-300">Provider Name</Label>
+                                    <Command shouldFilter={false} className="overflow-visible rounded-lg border mt-2">
                                         <div className="relative">
                                             <CommandInput 
                                                 id="provider-search" 
@@ -303,13 +362,14 @@ export default function HealthInfoPage() {
                                                 onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} 
                                                 placeholder={profile.zip ? "Search for a doctor or facility..." : "Enter zip code first to search providers"}
                                                 disabled={!profile.zip}
+                                                className="h-11"
                                             />
                                             {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                             {isProviderListVisible && profile.zip && (
                                                 <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                     {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
                                                     {providerResults.length === 0 && providerQuery.length >= 3 && !providerLoading && (<CommandEmpty>No providers found.</CommandEmpty>)}
-                                                    {providerResults.length > 0 && (<CommandGroup>{providerResults.map(p => (<CommandItem key={p.npi} value={p.name} onSelect={() => handleSelectProvider(p)} className="cursor-pointer py-2 px-4"><div className="flex flex-col"><span className="font-medium">{p.name}</span><span className="text-sm text-muted-foreground">{p.specialties?.[0]} - {p.type}</span></div></CommandItem>))}</CommandGroup>)}
+                                                    {providerResults.length > 0 && (<CommandGroup>{providerResults.map(p => (<CommandItem key={p.npi} value={p.name} onSelect={() => handleSelectProvider(p)} className="cursor-pointer py-3 px-4"><div className="flex flex-col"><span className="font-medium">{p.name}</span><span className="text-sm text-muted-foreground">{p.specialties?.[0]} - {p.type}</span></div></CommandItem>))}</CommandGroup>)}
                                                 </CommandList>
                                             )}
                                         </div>
@@ -317,21 +377,21 @@ export default function HealthInfoPage() {
                                 </div>
                             </div>
                             {selectedProviders.length > 0 && (
-                                <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
+                                <div className="space-y-3 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 max-h-72 overflow-y-auto bg-gray-50/50 dark:bg-neutral-800/50">
                                     {selectedProviders.map(p => (
-                                        <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <div key={p.npi} className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-neutral-800 shadow-sm border border-gray-100 dark:border-neutral-700">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     {p.isPCP && <Star className="h-4 w-4 text-amber-400 fill-amber-400" />}
                                                     <p className="text-sm font-medium">{p.name}</p>
                                                 </div>
-                                                {p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}
+                                                {p.selectedAffiliation && <p className="text-xs text-muted-foreground mt-1">{p.selectedAffiliation}</p>}
                                             </div>
-                                            <div className="flex items-center">
-                                                <Button variant="ghost" size="sm" onClick={() => handleSetPCP(p.npi)} className={cn("text-xs h-7", p.isPCP ? "text-amber-600" : "text-muted-foreground")}>
+                                            <div className="flex items-center gap-2">
+                                                <Button variant="ghost" size="sm" onClick={() => handleSetPCP(p.npi)} className={cn("text-xs h-8 px-3", p.isPCP ? "text-amber-600 bg-amber-50" : "text-muted-foreground")}>
                                                     {p.isPCP ? "PCP" : "Make PCP"}
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveProvider(p.npi)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                     <span className="sr-only">Remove {p.name}</span>
                                                 </Button>
@@ -342,31 +402,59 @@ export default function HealthInfoPage() {
                             )}
                         </div>
                         {/* Medications Section */}
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg">Your Medications</h3>
-                            <div className="relative">
-                                <Label htmlFor="medication-search">Medication Name</Label>
-                                <Command shouldFilter={false} className="overflow-visible rounded-lg border">
-                                    <div className="relative">
-                                        <CommandInput id="medication-search" value={medicationQuery} onValueChange={handleMedicationQueryChange} onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} placeholder="Search for a medication..."/>
-                                        {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
-                                        {isMedicationListVisible && (
-                                            <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
-                                                    {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
-                                                {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
-                                            </CommandList>
-                                        )}
-                                    </div>
-                                </Command>
+                        <div className="space-y-8">
+                            <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-neutral-700">
+                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                </div>
+                                <h3 className="font-semibold text-xl text-gray-900 dark:text-white">Your Medications</h3>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => setIsManualDrugEntryOpen(true)}>Enter Manually</Button>
+                            <div className="space-y-6">
+                                <div className="relative">
+                                    <Label htmlFor="medication-search" className="text-sm font-medium text-gray-700 dark:text-gray-300">Medication Name</Label>
+                                    <Command shouldFilter={false} className="overflow-visible rounded-lg border mt-2">
+                                        <div className="relative">
+                                            <CommandInput 
+                                                id="medication-search" 
+                                                value={medicationQuery} 
+                                                onValueChange={handleMedicationQueryChange} 
+                                                onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} 
+                                                onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} 
+                                                placeholder="Search for a medication..."
+                                                className="h-11"
+                                            />
+                                            {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                            {isMedicationListVisible && (
+                                                <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
+                                                    {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
+                                                    {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
+                                                    {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer py-3"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                </CommandList>
+                                            )}
+                                        </div>
+                                    </Command>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => setIsManualDrugEntryOpen(true)} className="h-10">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Enter Manually
+                                </Button>
+                            </div>
                             {selectedDrugs.length > 0 && (
-                                <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
+                                <div className="space-y-3 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 max-h-72 overflow-y-auto bg-gray-50/50 dark:bg-neutral-800/50">
                                     {selectedDrugs.map(drug => (
-                                        <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                            <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                        <div key={drug.rxcui} className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-neutral-800 shadow-sm border border-gray-100 dark:border-neutral-700">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">{drug.full_name}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveDrug(drug.rxcui)}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                <span className="sr-only">Remove {drug.full_name}</span>
+                                            </Button>
                                         </div>
                                     ))}
                                 </div>
@@ -374,8 +462,15 @@ export default function HealthInfoPage() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button onClick={handleSaveAndExit}>Save and Exit</Button>
+                <CardFooter className="pt-8 border-t border-gray-100 dark:border-neutral-700 bg-gray-50/50 dark:bg-neutral-800/50 rounded-b-xl">
+                    <div className="flex items-center justify-between w-full">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Your information is secure and only used for plan recommendations.
+                        </p>
+                        <Button onClick={handleSaveAndExit} size="lg" className="px-8 h-12">
+                            Save and Continue
+                        </Button>
+                    </div>
                 </CardFooter>
             </Card>
 
@@ -403,6 +498,7 @@ export default function HealthInfoPage() {
             <Dialog open={!!drugToAddDetails} onOpenChange={(open) => !open && setDrugToAddDetails(null)}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Tell us about this drug</DialogTitle><DialogDescription>Provide the quantity and frequency for {drugToAddDetails?.name}.</DialogDescription></DialogHeader><div className="grid gap-4 py-4"><div className="space-y-2"><Label htmlFor="dosage">Dosage</Label><Input id="dosage" value={drugToAddDetails?.full_name || ''} disabled /></div><div className="space-y-2"><Label htmlFor="package">Package</Label><Select value={pkg} onValueChange={setPackage}><SelectTrigger id="package"><SelectValue placeholder="Select package" /></SelectTrigger><SelectContent><SelectItem value="30-day">30-day supply</SelectItem><SelectItem value="60-day">60-day supply</SelectItem><SelectItem value="90-day">90-day supply</SelectItem><SelectItem value="bottle">1 bottle</SelectItem></SelectContent></Select></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label htmlFor="quantity">Quantity</Label><Input id="quantity" type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} min={1} /></div><div className="space-y-2"><Label htmlFor="frequency">Frequency</Label><Select value={frequency} onValueChange={setFrequency}><SelectTrigger id="frequency"><SelectValue placeholder="Select frequency" /></SelectTrigger><SelectContent><SelectItem value="monthly">Every month</SelectItem><SelectItem value="3-months">Every 3 months</SelectItem><SelectItem value="as-needed">As needed</SelectItem></SelectContent></Select></div></div></div><DialogFooter><Button variant="outline" onClick={() => setDrugToAddDetails(null)}>Cancel</Button><Button onClick={handleFinalAddDrug}>Add to My Drug List</Button></DialogFooter></DialogContent></Dialog>
             <Dialog open={isManualDrugEntryOpen} onOpenChange={setIsManualDrugEntryOpen}><DialogContent><DialogHeader><DialogTitle>Enter Medication Manually</DialogTitle><DialogDescription>If you couldn't find your medication, you can add its details here.</DialogDescription></DialogHeader><form onSubmit={handleManualDrugAdd} className="space-y-4 py-4"><div className="space-y-2"><Label htmlFor="manual-drug-name">Drug Name</Label><Input id="manual-drug-name" name="manual-drug-name" required /></div><div className="space-y-2"><Label htmlFor="manual-drug-dosage">Dosage (optional)</Label><Input id="manual-drug-dosage" name="manual-drug-dosage" placeholder="e.g., 20mg" /></div><DialogFooter><Button variant="outline" type="button" onClick={() => setIsManualDrugEntryOpen(false)}>Cancel</Button><Button type="submit">Add Medication</Button></DialogFooter></form></DialogContent></Dialog>
 
+            </div>
         </div>
     )
 }

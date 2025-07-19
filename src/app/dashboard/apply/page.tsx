@@ -2723,25 +2723,44 @@ function ApplicationSelectionGrid() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold">Submit an Application</h1>
-          <p className="text-base text-muted-foreground mt-1">Loading your application options...</p>
-        </div>
-        <div className="flex justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="bg-gray-50 dark:bg-neutral-900">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 dark:from-amber-700 dark:via-amber-800 dark:to-amber-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+            <div className="max-w-4xl">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+                Submit an Application
+              </h1>
+              <p className="text-amber-100 text-base lg:text-lg leading-relaxed opacity-90">
+                Loading your application options...
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Submit an Application</h1>
-        <p className="text-base text-muted-foreground mt-1">Select the type of application you would like to start.</p>
+    <div className="bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 dark:from-amber-700 dark:via-amber-800 dark:to-amber-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+          <div className="max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+              Submit an Application
+            </h1>
+            <p className="text-amber-100 text-base lg:text-lg leading-relaxed opacity-90">
+              Select the type of application you would like to start. Make sure you have quotes first.
+            </p>
+          </div>
+        </div>
+        
         {userQuotes.length === 0 && (
-          <Alert className="mt-4">
+          <Alert className="shadow-lg border-0 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
             <ShieldAlert className="h-4 w-4" />
             <AlertTitle>Get Quotes First</AlertTitle>
             <AlertDescription>
@@ -2749,9 +2768,9 @@ function ApplicationSelectionGrid() {
             </AlertDescription>
           </Alert>
         )}
-      </div>
-      <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {applicationTypes.map((app) => {
                 const Icon = app.icon;
                 const hasQuote = userQuotes.some(quote => {
@@ -2793,6 +2812,7 @@ function ApplicationSelectionGrid() {
                 )
             })}
         </div>
+      </div>
       </div>
     </div>
   );

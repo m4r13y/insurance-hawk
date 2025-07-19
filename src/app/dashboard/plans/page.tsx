@@ -31,59 +31,95 @@ export default function PlansPage() {
     const featuredPlanId = sortBy === 'rating' && filteredAndSortedPlans.length > 0 ? filteredAndSortedPlans[0].id : null;
 
   return (
-    <div className="space-y-8">
-       <div>
-        <h1 className="text-2xl font-semibold">Browse Plans</h1>
-        <p className="text-base text-muted-foreground mt-1">Compare and find the best plan for you.</p>
-      </div>
+    <div className="bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 dark:from-indigo-700 dark:via-indigo-800 dark:to-indigo-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+          <div className="max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+              Browse Plans
+            </h1>
+            <p className="text-indigo-100 text-base lg:text-lg leading-relaxed opacity-90">
+              Compare and find the best insurance plan for your needs and budget.
+            </p>
+          </div>
+        </div>
 
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input placeholder="Search by plan or provider..." className="pl-12 h-11 text-base" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:flex gap-4">
+        {/* Search and Filter Section */}
+        <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+          <div className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input 
+                  placeholder="Search by plan or provider..." 
+                  className="pl-12 h-12 text-base border-gray-200 dark:border-neutral-700 focus:border-indigo-500 dark:focus:border-indigo-400" 
+                  value={searchTerm} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-4">
                 <Select value={planCategory} onValueChange={setPlanCategory}>
-                    <SelectTrigger className="w-full md:w-[200px] h-11 text-base">
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Plan Types</SelectItem>
-                        <SelectItem value="Medicare Supplement">Medicare Supplement</SelectItem>
-                        <SelectItem value="Health Insurance">Health Insurance</SelectItem>
-                        <SelectItem value="Dental">Dental</SelectItem>
-                        <SelectItem value="Cancer">Cancer</SelectItem>
-                        <SelectItem value="Hospital Indemnity">Hospital Indemnity</SelectItem>
-                        <SelectItem value="Long Term Care">Long Term Care</SelectItem>
-                        <SelectItem value="Life Insurance">Life Insurance</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger className="w-full lg:w-[200px] h-12 text-base border-gray-200 dark:border-neutral-700">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Plan Types</SelectItem>
+                    <SelectItem value="Medicare Supplement">Medicare Supplement</SelectItem>
+                    <SelectItem value="Health Insurance">Health Insurance</SelectItem>
+                    <SelectItem value="Dental">Dental</SelectItem>
+                    <SelectItem value="Cancer">Cancer</SelectItem>
+                    <SelectItem value="Hospital Indemnity">Hospital Indemnity</SelectItem>
+                    <SelectItem value="Long Term Care">Long Term Care</SelectItem>
+                    <SelectItem value="Life Insurance">Life Insurance</SelectItem>
+                  </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full md:w-[180px] h-11 text-base">
-                        <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="rating">Sort by Rating</SelectItem>
-                        <SelectItem value="premium_asc">Sort by Premium (Low to High)</SelectItem>
-                        <SelectItem value="premium_desc">Sort by Premium (High to Low)</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger className="w-full lg:w-[180px] h-12 text-base border-gray-200 dark:border-neutral-700">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rating">Sort by Rating</SelectItem>
+                    <SelectItem value="premium_asc">Sort by Premium (Low to High)</SelectItem>
+                    <SelectItem value="premium_desc">Sort by Premium (High to Low)</SelectItem>
+                  </SelectContent>
                 </Select>
+              </div>
             </div>
-        </div>
-      </Card>
-      
-      {filteredAndSortedPlans.length > 0 ? (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 items-start">
-            {filteredAndSortedPlans.map(plan => <PlanCard key={plan.id} plan={plan} isFeatured={plan.id === featuredPlanId} />)}
-        </div>
-      ) : (
-        <div className="text-center py-20">
-            <h3 className="text-2xl font-semibold">No Plans Found</h3>
-            <p className="text-muted-foreground mt-2">Try adjusting your search or filters.</p>
-        </div>
-      )}
+          </div>
+        </Card>
+        
+        {/* Results Section */}
+        {filteredAndSortedPlans.length > 0 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-gray-600 dark:text-neutral-400">
+                Showing {filteredAndSortedPlans.length} plans
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+              {filteredAndSortedPlans.map(plan => (
+                <PlanCard 
+                  key={plan.id} 
+                  plan={plan} 
+                  isFeatured={plan.id === featuredPlanId} 
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+            <div className="text-center py-20">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">No Plans Found</h3>
+              <p className="text-gray-600 dark:text-neutral-400 mt-2">Try adjusting your search or filters to find plans that match your criteria.</p>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

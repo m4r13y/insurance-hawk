@@ -142,111 +142,137 @@ export default function SettingsPage() {
     const displayName = profile.displayName || user.displayName;
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
-      </div>
+    <div className="bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+          <div className="max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+              Account Settings
+            </h1>
+            <p className="text-purple-100 text-base lg:text-lg leading-relaxed opacity-90">
+              Manage your account settings, preferences, and security options.
+            </p>
+          </div>
+        </div>
 
-        <Card>
-            <CardHeader className="flex flex-row items-center gap-6">
-                <Avatar className="h-20 w-20">
-                     {isUploading ? (
-                        <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                            <Loader2 className="h-8 w-8 animate-spin"/>
-                        </div>
-                    ) : (
-                        <>
-                            <AvatarImage src={profile.photoURL || user.photoURL || defaultHawkImage} alt="User avatar" />
-                            <AvatarFallback>{displayName?.[0]}</AvatarFallback>
-                        </>
-                    )}
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Profile Section */}
+          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+            <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <Avatar className="h-20 w-20 ring-4 ring-purple-100 dark:ring-purple-500/20">
+                  {isUploading ? (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700">
+                      <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-purple-400"/>
+                    </div>
+                  ) : (
+                    <>
+                      <AvatarImage src={profile.photoURL || user.photoURL || defaultHawkImage} alt="User avatar" />
+                      <AvatarFallback className="bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xl font-semibold">
+                        {displayName?.[0]}
+                      </AvatarFallback>
+                    </>
+                  )}
                 </Avatar>
-                <div className="space-y-2">
-                    <CardTitle className="text-xl">{displayName}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
-                    <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Upload Photo
-                    </Button>
+                <div className="space-y-2 flex-1">
+                  <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">{displayName}</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-neutral-400">{user.email}</CardDescription>
+                  <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={isUploading}
+                    className="mt-3"
+                  >
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                    Upload Photo
+                  </Button>
                 </div>
+              </div>
             </CardHeader>
-        </Card>
+          </Card>
 
-      <Card>
-        <CardHeader>
-           <CardTitle className="text-xl">Notification Settings</CardTitle>
-          <CardDescription>Choose how you want to be notified.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-           <Form {...notificationsForm}>
-            <form onSubmit={notificationsForm.handleSubmit(handleNotificationsSubmit)} className="space-y-6">
-                <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                        <div className="space-y-1.5">
-                            <FormLabel className="text-base">Email Notifications</FormLabel>
-                            <FormDescription>Receive notifications about your account, applications, and updates via email.</FormDescription>
-                        </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+          {/* Notification Settings */}
+          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+            <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-4">
+              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Notification Settings</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-neutral-400">Choose how you want to be notified</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <Form {...notificationsForm}>
+                <form onSubmit={notificationsForm.handleSubmit(handleNotificationsSubmit)} className="space-y-6">
+                  <FormField control={notificationsForm.control} name="emailNotifications" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 dark:border-neutral-700 p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
+                      <div className="space-y-1.5">
+                        <FormLabel className="text-base font-medium text-gray-900 dark:text-white">Email Notifications</FormLabel>
+                        <FormDescription className="text-gray-600 dark:text-neutral-400">Receive notifications about your account, applications, and updates via email</FormDescription>
+                      </div>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     </FormItem>
-                )} />
-                    <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 sm:p-6">
-                        <div className="space-y-1.5">
-                            <FormLabel className="text-base">SMS Text Notifications</FormLabel>
-                            <FormDescription>Get important alerts and status updates via text message.</FormDescription>
-                        </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  )} />
+                  <FormField control={notificationsForm.control} name="smsNotifications" render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 dark:border-neutral-700 p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
+                      <div className="space-y-1.5">
+                        <FormLabel className="text-base font-medium text-gray-900 dark:text-white">SMS Text Notifications</FormLabel>
+                        <FormDescription className="text-gray-600 dark:text-neutral-400">Get important alerts and status updates via text message</FormDescription>
+                      </div>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     </FormItem>
-                )} />
-                    <div className="flex justify-end">
-                    <Button type="submit">Save Preferences</Button>
-                </div>
-            </form>
-           </Form>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-            <CardTitle className="text-xl">Change Password</CardTitle>
-          <CardDescription>For your security, we recommend using a strong password that you don't use elsewhere.</CardDescription>
-        </CardHeader>
-        <CardContent>
-           <Form {...securityForm}>
-            <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-8">
-                <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Current Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
-                    <FormMessage />
-                </FormItem>
-                )} />
-                <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
-                    <FormMessage />
-                </FormItem>
-                )} />
-                <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Confirm New Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
-                    <FormMessage />
-                </FormItem>
-                )} />
-                <div className="flex justify-end">
-                <Button type="submit" variant="destructive" disabled={securityForm.formState.isSubmitting}>
-                    {securityForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Change Password
-                </Button>
-                </div>
-            </form>
-           </Form>
-        </CardContent>
-      </Card>
+                  )} />
+                  <div className="flex justify-end pt-4">
+                    <Button type="submit" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700">
+                      Save Preferences
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+          
+          {/* Security Settings */}
+          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+            <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-4">
+              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Change Password</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-neutral-400">For your security, we recommend using a strong password that you don't use elsewhere</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <Form {...securityForm}>
+                <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-6">
+                  <FormField control={securityForm.control} name="currentPassword" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-900 dark:text-white">Current Password</FormLabel>
+                      <FormControl><Input type="password" {...field} className="border-gray-200 dark:border-neutral-700" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={securityForm.control} name="newPassword" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-900 dark:text-white">New Password</FormLabel>
+                      <FormControl><Input type="password" {...field} className="border-gray-200 dark:border-neutral-700" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={securityForm.control} name="confirmPassword" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-900 dark:text-white">Confirm New Password</FormLabel>
+                      <FormControl><Input type="password" {...field} className="border-gray-200 dark:border-neutral-700" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <div className="flex justify-end pt-4">
+                    <Button type="submit" variant="destructive" disabled={securityForm.formState.isSubmitting}>
+                      {securityForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                      Change Password
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

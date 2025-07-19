@@ -129,25 +129,34 @@ export default function DataStatusPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Data Management</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage all your account data
-          </p>
+    <div className="bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-violet-600 via-violet-700 to-violet-800 dark:from-violet-700 dark:via-violet-800 dark:to-violet-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
+          <div className="max-w-4xl flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
+                Data Management
+              </h1>
+              <p className="text-violet-100 text-base lg:text-lg leading-relaxed opacity-90">
+                Monitor and manage all your account data
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={loadAnalytics}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" onClick={loadAnalytics}>
-          <BarChart3 className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Profile Completion Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        {/* Profile Completion Overview */}
+        <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Profile Completion
           </CardTitle>
@@ -401,6 +410,7 @@ export default function DataStatusPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
