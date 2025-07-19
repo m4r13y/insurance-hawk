@@ -640,12 +640,12 @@ export default function QuotesPage() {
                     )}
                     
                     <Dialog open={!!cancerQuote} onOpenChange={(open) => !open && setCancerQuote(null)}>
-                        <DialogContent className="p-0 max-w-sm border-0">
+                        <DialogContent className="p-0 max-w-md border-0 bg-transparent shadow-none [&>button]:hidden">
                            {cancerQuote && (
                                 <>
-                                    <DialogHeader className="p-6 pb-0">
-                                        <DialogTitle className="sr-only">Your Cancer Insurance Quote</DialogTitle>
-                                        <DialogDescription className="sr-only">
+                                    <DialogHeader className="sr-only">
+                                        <DialogTitle>Your Cancer Insurance Quote</DialogTitle>
+                                        <DialogDescription>
                                             A quote from {cancerQuote.carrier} for {cancerQuote.plan_name}.
                                         </DialogDescription>
                                     </DialogHeader>

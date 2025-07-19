@@ -271,58 +271,52 @@ export default function HealthInfoPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
             <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
                 {/* Header Section */}
-                <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-rose-800 dark:from-rose-700 dark:via-rose-800 dark:to-rose-900 rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white shadow-xl">
+                <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-rose-800 dark:from-rose-700 dark:via-rose-800 dark:to-rose-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
                     <div className="max-w-4xl">
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 lg:mb-6">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-3 lg:mb-4">
                             Health Information
                         </h1>
-                        <p className="text-rose-100 text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl">
+                        <p className="text-rose-100 text-base lg:text-lg leading-relaxed opacity-90 max-w-3xl">
                             Add, remove, or manage your preferred doctors and medications to get personalized plan recommendations.
                         </p>
                     </div>
                 </div>
 
                 {/* Progress Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
-                        <CardContent className="p-6 text-center">
-                            <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Your Doctors</h3>
-                            <p className="text-sm text-gray-600 dark:text-neutral-400">Add preferred healthcare providers</p>
-                        </CardContent>
-                    </Card>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="text-center p-6">
+                        <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Your Doctors</h3>
+                        <p className="text-sm text-gray-600 dark:text-neutral-400">Add preferred healthcare providers</p>
+                    </div>
                     
-                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
-                        <CardContent className="p-6 text-center">
-                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Medications</h3>
-                            <p className="text-sm text-gray-600 dark:text-neutral-400">Manage your current prescriptions</p>
-                        </CardContent>
-                    </Card>
+                    <div className="text-center p-6">
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Medications</h3>
+                        <p className="text-sm text-gray-600 dark:text-neutral-400">Manage your current prescriptions</p>
+                    </div>
                     
-                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow">
-                        <CardContent className="p-6 text-center">
-                            <div className="w-12 h-12 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Plan Match</h3>
-                            <p className="text-sm text-gray-600 dark:text-neutral-400">Get personalized recommendations</p>
-                        </CardContent>
-                    </Card>
+                    <div className="text-center p-6">
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Plan Match</h3>
+                        <p className="text-sm text-gray-600 dark:text-neutral-400">Get personalized recommendations</p>
+                    </div>
                 </div>
 
-                <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
-                    <CardHeader className="pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
+                <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+                    <CardHeader className="pb-6">
                         <CardTitle className="text-xl font-semibold">Edit Health Information</CardTitle>
                         <CardDescription className="text-base">Add, remove, or manage your preferred doctors and medications to ensure accurate plan recommendations.</CardDescription>
                     </CardHeader>

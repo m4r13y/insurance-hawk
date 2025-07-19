@@ -221,37 +221,31 @@ export default function EducationPage() {
           </div>
         </div>
 
-        {/* Quick Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800 hover:shadow-xl transition-shadow duration-200">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI-Powered</h3>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">Get instant answers powered by advanced AI technology</p>
-            </CardContent>
-          </Card>
+        {/* Quick Info Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
+          <div className="text-center p-6">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI-Powered</h3>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">Get instant answers powered by advanced AI technology</p>
+          </div>
           
-          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800 hover:shadow-xl transition-shadow duration-200">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bot className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">24/7 Available</h3>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">Access Medicare guidance anytime, anywhere</p>
-            </CardContent>
-          </Card>
+          <div className="text-center p-6">
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bot className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">24/7 Available</h3>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">Access Medicare guidance anytime, anywhere</p>
+          </div>
           
-          <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800 hover:shadow-xl transition-shadow duration-200">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Expert Support</h3>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">Backed by Medicare experts and licensed agents</p>
-            </CardContent>
-          </Card>
+          <div className="text-center p-6">
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Expert Support</h3>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">Backed by Medicare experts and licensed agents</p>
+          </div>
         </div>
 
         {/* Chat Interface */}

@@ -10,6 +10,8 @@ import type { Policy } from "@/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
+import { getCarrierLogo } from "@/lib/mock-data";
+import Image from "next/image";
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -110,213 +112,321 @@ export default function DashboardPage() {
         return <OnboardingGuide name={user.displayName?.split(' ')[0] || 'there'} onDismiss={handleDismissOnboarding} />;
     }
 
-    const ownedPlanCategories = [...new Set(policies.map(p => p.policyCategoryName))];
+    const ownedPlanCategories = [...new Set((policies || []).map(p => p.policyCategoryName))];
     const retirementScore = Math.round((ownedPlanCategories.length / planTypes.length) * 100);
     const missingPlans = planTypes.filter(p => !ownedPlanCategories.includes(p.id));
-    const primaryHealthPlan = policies.find(p => p.policyCategoryName === 'Health Insurance');
+    const primaryHealthPlan = (policies || []).find(p => p.policyCategoryName === 'Health Insurance');
     const displayName = user.displayName?.split(' ')[0] || 'there';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
             <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
                 {/* Hero Section */}
-                <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white shadow-xl">
+                <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
                     <div className="max-w-4xl">
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 lg:mb-6">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-3 lg:mb-4">
                             Welcome Back, {displayName}!
                         </h1>
-                        <p className="text-blue-100 text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl">
+                        <p className="text-blue-100 text-base lg:text-lg leading-relaxed opacity-90 max-w-3xl">
                             Here's your comprehensive overview. Manage your policies, track your progress, and discover new ways to secure your future.
                         </p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content Area */}
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Current Plan / Prompt */}
-                        {primaryHealthPlan ? (
-                            <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800 hover:shadow-2xl transition-shadow duration-200">
-                                <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center">
-                                            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                Your Current Plan
-                                            </CardTitle>
-                                            <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
-                                                {primaryHealthPlan.carrierName} {primaryHealthPlan.planName}
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-8 p-8">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600 dark:text-neutral-400 mb-2">Monthly Premium</p>
-                                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                                ${primaryHealthPlan.premium?.toFixed(2) || 'N/A'}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-medium text-gray-600 dark:text-neutral-400 mb-2">Status</p>
-                                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                                                primaryHealthPlan.status === 'active' 
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400'
-                                                    : primaryHealthPlan.status === 'pending'
-                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-400'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-400'
-                                            }`}>
-                                                {primaryHealthPlan.status.charAt(0).toUpperCase() + primaryHealthPlan.status.slice(1)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <Button asChild className="w-full h-12 text-base">
-                                        <Link href="/dashboard/plans">
-                                            <Shield className="mr-2 h-5 w-5" />
-                                            View Plan Details
+                {/* Mobile/Tablet Retirement Readiness - Show on smaller screens */}
+                <div className="xl:hidden mb-4 sm:mb-6">
+                    <Card className="shadow-sm border-0 bg-white dark:bg-neutral-800">
+                        <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                                        Retirement Readiness
+                                    </h3>
+                                    <p className="text-gray-600 dark:text-neutral-400 text-xs sm:text-sm mb-2 sm:mb-3">
+                                        You have <span className="font-semibold text-gray-900 dark:text-white">{ownedPlanCategories.length} of {planTypes.length}</span> plan types
+                                    </p>
+                                    <Button asChild size="sm" variant="outline" className="h-7 text-xs sm:h-8 sm:text-sm">
+                                        <Link href="/dashboard/recommendations">
+                                            <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                                            <span className="hidden sm:inline">Improve Score</span>
+                                            <span className="sm:hidden">Improve</span>
                                         </Link>
                                     </Button>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <Card className="shadow-xl border-0 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 hover:shadow-2xl transition-shadow duration-200">
-                                <CardContent className="flex flex-col items-center justify-center text-center p-12">
-                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-6">
-                                        <ShieldCheck className="h-10 w-10" />
-                                    </div>
-                                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                                        Secure Your Health
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 dark:text-neutral-400 mb-8 max-w-md text-base leading-relaxed">
-                                        You haven't added a health plan yet. Get instant quotes to find the best coverage for you.
-                                    </CardDescription>
-                                    <Button asChild size="lg" className="h-12 px-8">
-                                        <Link href="/dashboard/health-quotes">
-                                            <Heart className="mr-2 h-5 w-5" />
-                                            Get Health Quotes
-                                        </Link>
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Quick Actions */}
-                        <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
-                            <CardHeader className="border-b border-gray-100 dark:border-neutral-700 pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
-                                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-                                    Quick Actions
-                                </CardTitle>
-                                <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
-                                    Common tasks and tools
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    {planTypes.slice(0, 4).map((planType) => {
-                                        const Icon = planType.icon;
-                                        return (
-                                            <Button
-                                                key={planType.id}
-                                                asChild
-                                                variant="outline"
-                                                className="h-auto p-6 justify-start text-left hover:bg-gray-50 dark:hover:bg-neutral-700 hover:shadow-md transition-all duration-200"
-                                            >
-                                                <Link href={planType.href}>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
-                                                            <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                                        </div>
-                                                        <span className="font-medium text-base">{planType.label}</span>
-                                                    </div>
-                                                </Link>
-                                            </Button>
-                                        );
-                                    })}
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-8">
-                        {/* Retirement Score */}
-                        <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
-                            <CardHeader className="text-center pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
-                                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-                                    Retirement Readiness
-                                </CardTitle>
-                                <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
-                                    Your coverage score
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="text-center p-8">
-                                <div className="relative w-28 h-28 mx-auto mb-6">
+                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex-shrink-0 ml-3 sm:ml-4">
                                     <div className="w-full h-full bg-gray-200 dark:bg-neutral-700 rounded-full">
                                         <div 
-                                            className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center"
+                                            className="w-full h-full rounded-full flex items-center justify-center"
                                             style={{ background: `conic-gradient(from 0deg, #3b82f6 0%, #3b82f6 ${retirementScore}%, #e5e7eb ${retirementScore}%, #e5e7eb 100%)` }}
                                         >
-                                            <div className="w-20 h-20 bg-white dark:bg-neutral-800 rounded-full flex items-center justify-center">
-                                                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            <div className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white dark:bg-neutral-800 rounded-full flex items-center justify-center">
+                                                <span className="text-sm sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                                                     {retirementScore}%
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-base text-gray-600 dark:text-neutral-400 mb-6">
-                                    You have {ownedPlanCategories.length} of {planTypes.length} plan types
-                                </p>
-                                <Button asChild variant="outline" size="lg" className="w-full h-12">
-                                    <Link href="/dashboard/recommendations">
-                                        <PiggyBank className="mr-2 h-5 w-5" />
-                                        Improve Score
-                                    </Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                        {/* Missing Plans */}
-                        {missingPlans.length > 0 && (
-                            <Card className="shadow-xl border-0 bg-white dark:bg-neutral-800">
-                                <CardHeader className="pb-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-t-xl">
-                                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-                                        Suggested Coverage
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 dark:text-neutral-400 text-base">
-                                        Plans you might need
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-8">
-                                    <div className="space-y-4">
-                                        {missingPlans.slice(0, 3).map((plan) => {
-                                            const Icon = plan.icon;
-                                            return (
-                                                <Button
-                                                    key={plan.id}
-                                                    asChild
-                                                    variant="ghost"
-                                                    className="w-full justify-start h-auto p-4 hover:bg-gray-50 dark:hover:bg-neutral-700 hover:shadow-sm transition-all duration-200"
-                                                >
-                                                    <Link href={plan.href}>
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-500/10 rounded-md flex items-center justify-center">
-                                                                <Icon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                                            </div>
-                                                            <span className="text-base font-medium">{plan.label}</span>
-                                                            <ArrowRight className="w-4 h-4 ml-auto text-gray-400" />
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Plan Overview Grid */}
+                        <div className="space-y-4">
+                            <div>
+                                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    Your Coverage Overview
+                                </h2>
+                                <p className="text-gray-600 dark:text-neutral-400 text-base lg:text-lg mb-4">
+                                    Manage your existing plans or get quotes for new coverage
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6">
+                                <div className="xl:col-span-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                                        {planTypes.map((planType) => {
+                                    const Icon = planType.icon;
+                                    const userPolicy = (policies || []).find(p => p.policyCategoryName === planType.id);
+                                    
+                                    if (userPolicy) {
+                                        // Get carrier logo using our utility function
+                                        const carrierLogoUrl = getCarrierLogo(userPolicy.carrierName || '');
+                                        
+                                        // Dynamic status styling
+                                        const getStatusDisplay = (status: Policy['status']) => {
+                                            switch (status) {
+                                                case 'active':
+                                                    return {
+                                                        text: 'Active',
+                                                        dotColor: 'bg-green-500',
+                                                        textColor: 'text-green-700 dark:text-green-400'
+                                                    };
+                                                case 'pending':
+                                                    return {
+                                                        text: 'Pending',
+                                                        dotColor: 'bg-yellow-500',
+                                                        textColor: 'text-yellow-700 dark:text-yellow-400'
+                                                    };
+                                                case 'declined':
+                                                    return {
+                                                        text: 'Declined',
+                                                        dotColor: 'bg-red-500',
+                                                        textColor: 'text-red-700 dark:text-red-400'
+                                                    };
+                                                default:
+                                                    return {
+                                                        text: 'Unknown',
+                                                        dotColor: 'bg-gray-500',
+                                                        textColor: 'text-gray-700 dark:text-gray-400'
+                                                    };
+                                            }
+                                        };
+                                        
+                                        const statusDisplay = getStatusDisplay(userPolicy.status);
+                                        const borderColor = userPolicy.status === 'active' ? 'border-green-200 dark:border-green-800' : 
+                                                          userPolicy.status === 'pending' ? 'border-yellow-200 dark:border-yellow-800' : 
+                                                          'border-red-200 dark:border-red-800';
+                                        
+                                        // Show existing policy
+                                        return (
+                                            <Card key={planType.id} className={`shadow-sm border ${borderColor} bg-white dark:bg-neutral-800 hover:shadow-md transition-all duration-200`}>
+                                                <CardContent className="p-4">
+                                                    {/* Mobile Layout - Horizontal */}
+                                                    <div className="flex items-center gap-3 min-h-[64px] sm:hidden">
+                                                        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                            {carrierLogoUrl ? (
+                                                                <Image
+                                                                    src={carrierLogoUrl}
+                                                                    alt={userPolicy.carrierName || 'Carrier logo'}
+                                                                    width={48}
+                                                                    height={48}
+                                                                    className="w-12 h-12 object-contain rounded-lg"
+                                                                    unoptimized
+                                                                    onError={(e) => {
+                                                                        // Fallback to icon if logo fails to load
+                                                                        e.currentTarget.style.display = 'none';
+                                                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <Icon className={`w-7 h-7 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
                                                         </div>
-                                                    </Link>
-                                                </Button>
-                                            );
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate leading-tight mb-1">{planType.label}</h3>
+                                                            <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-1">
+                                                                {userPolicy.carrierName}
+                                                            </p>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className={`w-1.5 h-1.5 ${statusDisplay.dotColor} rounded-full`}></div>
+                                                                <span className={`text-xs font-medium ${statusDisplay.textColor}`}>{statusDisplay.text}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right flex-shrink-0 ml-3">
+                                                            {userPolicy.premium && (
+                                                                <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+                                                                    ${userPolicy.premium.toFixed(2)}/month
+                                                                </p>
+                                                            )}
+                                                            <Button asChild variant="outline" className="h-8 text-xs whitespace-nowrap" size="sm">
+                                                                <Link href="/dashboard/plans">
+                                                                    View Details
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Tablet+ Layout - Vertical */}
+                                                    <div className="hidden sm:block text-left">
+                                                        <div className="flex items-center gap-3 mb-3">
+                                                            <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                                {carrierLogoUrl ? (
+                                                                    <Image
+                                                                        src={carrierLogoUrl}
+                                                                        alt={userPolicy.carrierName || 'Carrier logo'}
+                                                                        width={48}
+                                                                        height={48}
+                                                                        className="lg:w-14 lg:h-14 object-contain rounded-lg"
+                                                                        unoptimized
+                                                                        onError={(e) => {
+                                                                            // Fallback to icon if logo fails to load
+                                                                            e.currentTarget.style.display = 'none';
+                                                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <Icon className={`w-7 h-7 lg:w-8 lg:h-8 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 truncate">
+                                                                    {userPolicy.carrierName}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1 mb-4">
+                                                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">{planType.label}</h3>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className={`w-1.5 h-1.5 ${statusDisplay.dotColor} rounded-full`}></div>
+                                                                <span className={`text-xs lg:text-sm font-medium ${statusDisplay.textColor}`}>{statusDisplay.text}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            {userPolicy.premium && (
+                                                                <p className="text-sm lg:text-base font-bold text-gray-900 dark:text-white flex-shrink-0">
+                                                                    ${userPolicy.premium.toFixed(2)}/month
+                                                                </p>
+                                                            )}
+                                                            <Button asChild variant="outline" className="h-8 text-xs lg:h-9 lg:text-sm flex-shrink-0 min-w-[60px]" size="sm">
+                                                                <Link href="/dashboard/plans">
+                                                                    <span className="hidden lg:inline">View Details</span>
+                                                                    <span className="lg:hidden">View</span>
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    } else {
+                                        // Show get quote option - clean organized design
+                                        return (
+                                            <Card key={planType.id} className="shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 bg-white dark:bg-neutral-800 hover:shadow-md transition-all duration-200 cursor-pointer group">
+                                                <Link href={planType.href}>
+                                                    <CardContent className="p-4">
+                                                        {/* Mobile Layout - Horizontal */}
+                                                        <div className="flex items-center gap-3 min-h-[64px] sm:hidden">
+                                                            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                                                                <Icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate leading-tight mb-1">{planType.label}</h3>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <div className="w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Not covered</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors ml-3 whitespace-nowrap">
+                                                                    Get Quotes <ArrowRight className="w-4 h-4 ml-1.5" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Tablet+ Layout - Vertical */}
+                                                        <div className="hidden sm:block text-left">
+                                                            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200">
+                                                                <Icon className="w-7 h-7 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400" />
+                                                            </div>
+                                                            <div className="space-y-1 mb-4">
+                                                                <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">{planType.label}</h3>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                                                                    <span className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Not covered</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="inline-flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm lg:text-base group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                                                Get Quotes <ArrowRight className="w-4 h-4 ml-1.5" />
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Link>
+                                            </Card>
+                                        );
+                                    }
                                         })}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </div>
+                                
+                                {/* Desktop Sidebar - Retirement Readiness (Hidden on mobile) */}
+                                <div className="hidden xl:block xl:col-span-1">
+                                    <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800 h-full">
+                                        <CardContent className="p-6 h-full flex flex-col justify-center">
+                                            <div className="text-center space-y-6">
+                                                <div>
+                                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                                                        Retirement Readiness
+                                                    </h2>
+                                                    <p className="text-gray-600 dark:text-neutral-400 text-sm">
+                                                        Your coverage score
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="relative w-32 h-32 mx-auto">
+                                                    <div className="w-full h-full bg-gray-200 dark:bg-neutral-700 rounded-full">
+                                                        <div 
+                                                            className="w-full h-full rounded-full flex items-center justify-center"
+                                                            style={{ background: `conic-gradient(from 0deg, #3b82f6 0%, #3b82f6 ${retirementScore}%, #e5e7eb ${retirementScore}%, #e5e7eb 100%)` }}
+                                                        >
+                                                            <div className="w-24 h-24 bg-white dark:bg-neutral-800 rounded-full flex items-center justify-center">
+                                                                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                                    {retirementScore}%
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="space-y-4">
+                                                    <p className="text-sm text-gray-600 dark:text-neutral-400">
+                                                        You have <span className="font-semibold text-gray-900 dark:text-white">{ownedPlanCategories.length} of {planTypes.length}</span> plan types
+                                                    </p>
+                                                    
+                                                    <Button asChild className="w-full" size="sm">
+                                                        <Link href="/dashboard/recommendations">
+                                                            <PiggyBank className="h-4 w-4 mr-2" />
+                                                            Improve Score
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

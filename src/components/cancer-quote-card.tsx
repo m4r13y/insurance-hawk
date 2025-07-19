@@ -4,8 +4,7 @@
 import type { CancerQuote } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, HeartCrack, Edit } from 'lucide-react';
-import Link from 'next/link';
+import { Check, Star } from 'lucide-react';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -35,21 +34,21 @@ export function CancerQuoteCard({ quote }: { quote: CancerQuote }) {
   };
 
   return (
-    <Card className="group transition-all duration-300 hover:shadow-md focus:outline-hidden focus:shadow-md w-full max-w-sm">
+    <Card className="group transition-all duration-300 relative hover:shadow-md focus:outline-hidden focus:shadow-md">
       <CardHeader>
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-500">
-            <HeartCrack className="h-6 w-6 text-white" />
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
+              Cancer
+            </span>
+            <CardTitle>{quote.carrier}</CardTitle>
+            <CardDescription>{quote.plan_name}</CardDescription>
           </div>
-          <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
-            <Edit className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1 text-amber-500">
+            <Star className="h-4 w-4 fill-current" />
+            <span className="font-bold text-sm">4.5</span>
+          </div>
         </div>
-        <span className="block mb-1 text-xs font-semibold uppercase text-rose-600 dark:text-rose-500">
-          Cancer Insurance
-        </span>
-        <CardTitle>{quote.carrier}</CardTitle>
-        <CardDescription>{quote.plan_name}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-6">
         <div className="text-center">
@@ -60,14 +59,17 @@ export function CancerQuoteCard({ quote }: { quote: CancerQuote }) {
           <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">per month</p>
         </div>
         <ul className="space-y-3 text-sm text-gray-500 dark:text-neutral-500">
-          <li className="text-center p-4 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
-            <p className="text-sm font-semibold text-gray-800 dark:text-neutral-200">Lump-Sum Benefit</p>
-            <p className="mt-1 text-3xl font-bold text-rose-600 dark:text-rose-400">${new Intl.NumberFormat().format(quote.benefit_amount)}</p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">upon diagnosis</p>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Lump-Sum Benefit: <strong className="text-gray-800 dark:text-neutral-200">${new Intl.NumberFormat().format(quote.benefit_amount)}</strong></span>
           </li>
           <li className="flex items-center gap-3">
-            <Check className="h-5 w-5 shrink-0 text-teal-500"/>
-            <span>Pays a lump-sum upon diagnosis</span>
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Pays upon diagnosis</span>
+          </li>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Use for any cancer-related expenses</span>
           </li>
         </ul>
       </CardContent>

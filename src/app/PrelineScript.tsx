@@ -43,7 +43,22 @@ export default function PrelineScript() {
         }
 
         // Initialize Preline
-        await loadPreline();
+        const preline = await loadPreline();
+        
+        // Wait a bit for DOM to be ready and then initialize
+        setTimeout(() => {
+          try {
+            if (
+              typeof window !== 'undefined' &&
+              window.HSStaticMethods &&
+              typeof window.HSStaticMethods.autoInit === 'function'
+            ) {
+              window.HSStaticMethods.autoInit();
+            }
+          } catch (error) {
+            console.warn('Preline initialization failed:', error);
+          }
+        }, 200);
       } catch (error) {
         console.warn('Some optional libraries failed to load:', error);
       }
@@ -53,14 +68,21 @@ export default function PrelineScript() {
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (
-        window.HSStaticMethods &&
-        typeof window.HSStaticMethods.autoInit === 'function'
-      ) {
-        window.HSStaticMethods.autoInit();
+    const timer = setTimeout(() => {
+      try {
+        if (
+          typeof window !== 'undefined' &&
+          window.HSStaticMethods &&
+          typeof window.HSStaticMethods.autoInit === 'function'
+        ) {
+          window.HSStaticMethods.autoInit();
+        }
+      } catch (error) {
+        console.warn('Preline autoInit failed:', error);
       }
     }, 100);
+
+    return () => clearTimeout(timer);
   }, [path]);
 
   return null;

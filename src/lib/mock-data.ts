@@ -191,3 +191,71 @@ export const carriers = [
   { "id": "sentinel", "name": "Sentinel Security Life", "logoUrl": "https://logo.clearbit.com/sslco.com", "website": "https://sslco.com" },
   { "id": "greatsouthern", "name": "Great Southern Life", "logoUrl": "https://logo.clearbit.com/gslife.com", "website": "https://gslife.com" }
 ];
+
+// Utility function to find carrier logo by provider name
+export function getCarrierLogo(providerName: string): string | null {
+  // Create a mapping of provider names to carrier data
+  const providerMapping: Record<string, string> = {
+    // Exact matches
+    'Humana': 'humana',
+    'Cigna': 'cigna',
+    'Aflac': 'aflac',
+    'MetLife': 'metlife',
+    'Aetna': 'cvs_aetna',
+    'Kaiser Permanente': 'kaiser',
+    'UnitedHealthCare': 'unitedhealth',
+    'Blue Shield': 'bcbsca',
+    'Delta Dental': 'eyemed', // Using eyemed as a fallback for dental
+    'Bankers Fidelity': 'bankersfidelity',
+    
+    // Partial matches for fuzzy matching
+    'united': 'unitedhealth',
+    'anthem': 'elevance',
+    'blue shield': 'bcbsca',
+    'blue cross': 'bcbstx',
+    'kaiser': 'kaiser',
+    'aetna': 'cvs_aetna',
+    'cvs': 'cvs_aetna',
+    'humana': 'humana',
+    'cigna': 'cigna',
+    'aflac': 'aflac',
+    'metlife': 'metlife',
+    'delta': 'eyemed',
+    'bankers': 'bankersfidelity'
+  };
+
+  // First try exact match
+  const exactMatch = providerMapping[providerName];
+  if (exactMatch) {
+    const carrier = carriers.find(c => c.id === exactMatch);
+    // Only return logo URL if it's likely to work (skip known problematic ones)
+    if (carrier && !isProblematicLogo(carrier.logoUrl)) {
+      return carrier.logoUrl;
+    }
+  }
+
+  // Try fuzzy matching (case-insensitive partial match)
+  const lowerProviderName = providerName.toLowerCase();
+  for (const [key, carrierId] of Object.entries(providerMapping)) {
+    if (lowerProviderName.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerProviderName)) {
+      const carrier = carriers.find(c => c.id === carrierId);
+      if (carrier && !isProblematicLogo(carrier.logoUrl)) {
+        return carrier.logoUrl;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Helper function to identify known problematic logo URLs
+function isProblematicLogo(logoUrl: string): boolean {
+  const problematicDomains = [
+    'brighthealth.com',
+    'point32health.org',
+    'gslife.com',
+    'sslco.com'
+  ];
+  
+  return problematicDomains.some(domain => logoUrl.includes(domain));
+}

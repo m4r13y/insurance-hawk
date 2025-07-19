@@ -4,23 +4,21 @@
 import type { DentalQuote } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Edit, Star } from 'lucide-react';
-import Link from 'next/link';
+import { Check, Star } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
-const getStarRating = (rating: string) => {
-    if (!rating || rating === "N/A") return <span className="text-muted-foreground">N/A</span>;
-    const filledStar = <Star className="h-4 w-4 text-amber-400 fill-amber-400" />;
-    const emptyStar = <Star className="h-4 w-4 text-amber-200 fill-amber-200" />;
-    
-    if (rating === 'A++' || rating === 'A+') return <div className="flex">{Array(5).fill(filledStar)}</div>;
-    if (rating === 'A') return <div className="flex">{Array(4).fill(filledStar)}{emptyStar}</div>;
-    if (rating === 'A-') return <div className="flex">{Array(3).fill(filledStar)}{Array(2).fill(emptyStar)}</div>;
-    return <div className="flex">{Array(5).fill(emptyStar)}</div>;
+const getRatingScore = (rating: string) => {
+    if (!rating || rating === "N/A") return 0;
+    if (rating === 'A++' || rating === 'A+') return 5.0;
+    if (rating === 'A') return 4.5;
+    if (rating === 'A-') return 4.0;
+    if (rating === 'B+' || rating === 'B') return 3.5;
+    if (rating === 'B-') return 3.0;
+    return 2.5;
 };
 
 export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
@@ -66,23 +64,19 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
   };
 
   return (
-    <Card className="group transition-all duration-300 hover:shadow-md focus:outline-hidden focus:shadow-md">
+    <Card className="group transition-all duration-300 relative hover:shadow-md focus:outline-hidden focus:shadow-md">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <span className="block mb-1 text-xs font-semibold uppercase text-emerald-600 dark:text-emerald-500">
-              Dental Insurance
+            <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
+              Dental
             </span>
             <CardTitle>{quote.carrier.name}</CardTitle>
             <CardDescription>{quote.plan_name}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-xs">
-              {getStarRating(quote.am_best_rating)}
-            </div>
-            <Button variant="ghost" size="sm" className="p-1 h-8 w-8 shrink-0">
-                <Edit className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-1 text-amber-500">
+            <Star className="h-4 w-4 fill-current" />
+            <span className="font-bold text-sm">{getRatingScore(quote.am_best_rating).toFixed(1)}</span>
           </div>
         </div>
       </CardHeader>
@@ -95,10 +89,17 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
           <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">per month</p>
         </div>
         <ul className="space-y-3 text-sm text-gray-500 dark:text-neutral-500">
-          <li className="text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-            <p className="text-sm font-semibold text-gray-800 dark:text-neutral-200">Maximum Benefit</p>
-            <p className="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400 capitalize">{quote.benefit_quantifier}</p>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Maximum Benefit: <strong className="text-gray-800 dark:text-neutral-200">${new Intl.NumberFormat().format(Number(quote.benefit_amount))}</strong></span>
+          </li>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Benefit Period: <strong className="text-gray-800 dark:text-neutral-200 capitalize">{quote.benefit_quantifier}</strong></span>
+          </li>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>AM Best Rating: <strong className="text-gray-800 dark:text-neutral-200">{quote.am_best_rating}</strong></span>
           </li>
         </ul>
         {(quote.benefit_notes || quote.limitation_notes) && (
