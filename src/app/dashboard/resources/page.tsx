@@ -211,19 +211,19 @@ export default function ResourcesPage() {
   const [selectedType, setSelectedType] = useState("All");
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  const filteredResources = resources.filter(resource => {
+  const filteredResources: Resource[] = resources.filter((resource: Resource) => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+      resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesCategory = selectedCategory === "All" || resource.category === selectedCategory;
     const matchesType = selectedType === "All" || resource.type === selectedType;
     const matchesFeatured = !showFeaturedOnly || resource.featured;
-    
+
     return matchesSearch && matchesCategory && matchesType && matchesFeatured;
   });
 
-  const featuredResources = resources.filter(resource => resource.featured);
+  const featuredResources: Resource[] = resources.filter((resource: Resource) => resource.featured);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -290,7 +290,7 @@ export default function ResourcesPage() {
                   
                   <div className="flex items-center gap-2">
                     {getCategoryIcon(resource.category)}
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category}</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category.replace("'", "&apos;")}</span>
                     {resource.rating && (
                       <div className="flex items-center gap-1 ml-auto">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
