@@ -476,15 +476,17 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                         <Badge variant="secondary">{policy.policySubcategoryName || policy.policyCategoryName}</Badge>
                     </div>
                     {policy.premium != null && (
-                        <div className="flex justify-between items-center">
-                            <p className="text-muted-foreground">Premium</p>
-                            <p className="font-semibold">{`$${policy.premium.toFixed(2)}/mo`}</p>
+                        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-neutral-200">Monthly Premium</p>
+                            <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">${policy.premium.toFixed(2)}</p>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">per month</p>
                         </div>
                     )}
                     {policy.benefitAmount != null && (
-                        <div className="flex justify-between items-center">
-                            <p className="text-muted-foreground">Benefit Amount</p>
-                            <p className="font-semibold">{`$${policy.benefitAmount.toLocaleString()}`}</p>
+                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-neutral-200">Benefit Amount</p>
+                            <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">${policy.benefitAmount.toLocaleString()}</p>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">coverage amount</p>
                         </div>
                     )}
                     {policy.enrollmentDate && (

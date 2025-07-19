@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import PrelineScriptWrapper from '../components/PrelineScriptWrapper';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={cn("font-sans antialiased", inter.variable)}>
         {children}
         <Toaster />
+        <PrelineScriptWrapper />
       </body>
     </html>
   );

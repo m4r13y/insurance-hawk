@@ -1,0 +1,81 @@
+#Design Guidelines for Large/Emphasized Numbers (Stats & Quotes)
+Hierarchy & Layout
+
+Place the key number/value at the visual top or center of each stat/quote block.
+
+Use a grid or flex layout for stat groups.
+
+grid grid-cols-2 md:grid-cols-3 gap-6 is a solid default.
+
+Typography
+
+Numbers:
+
+Use large font sizes (text-4xl to text-7xl depending on context/device).
+
+Make numbers bold (font-bold or font-extrabold).
+
+Use a brand-accent color (text-blue-600 or your brand’s main color).
+
+Labels/Supporting Text:
+
+Place stat label/title above the number (text-lg sm:text-xl font-semibold text-gray-800).
+
+Add a short description below, smaller and muted (text-sm text-gray-500).
+
+Spacing & Sizing
+
+Use vertical spacing between label, number, and description (mt-1, mt-2).
+
+Apply generous padding to stat containers (p-4 to p-8).
+
+Visual Emphasis
+
+Use badges, icons, or % change tags for extra context, but keep secondary.
+
+If comparing stats (like % change), use subtle background highlights (bg-gray-200/50) and rounded badges.
+
+Accessibility
+
+Ensure text contrast meets accessibility standards (check brand color against backgrounds).
+
+Use semantic HTML (<h4>, <p>, <span>, etc.).
+
+Dark Mode
+
+Always include dark mode classes (e.g., dark:text-neutral-200, dark:bg-neutral-800).
+
+Responsiveness
+
+Numbers and containers should resize appropriately on smaller screens (use responsive font and grid classes).
+
+Use sm:, md:, and lg: Tailwind prefixes as needed.
+
+Consistency
+
+All stats/quote sections should use the same spacing, color, and typography system.
+
+Consider creating a <StatCard> or <QuoteCard> component to enforce this.
+
+Example Pattern (React + Tailwind):
+
+tsx
+Copy
+Edit
+<div className="p-6 bg-white dark:bg-neutral-900 rounded-2xl shadow flex flex-col items-center text-center">
+  <h4 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">Stat Label</h4>
+  <p className="mt-2 text-5xl sm:text-6xl font-bold text-blue-600 dark:text-blue-400">98.7%</p>
+  <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Supporting detail here</p>
+</div>
+Quick Reference Checklist
+ Large, bold, colored number
+
+ Label/title above, description below
+
+ Consistent padding and spacing
+
+ Grid or flex layout for multiple stats
+
+ Dark mode and accessible color contrast
+
+ Responsive on all devices

@@ -126,9 +126,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 md:space-y-12">
-      <div className="max-w-4xl">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Welcome Back, {displayName}!</h1>
-        <p className="mt-2 text-lg text-slate-600 leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white">
+        <div className="max-w-4xl">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Welcome Back, {displayName}!</h1>
+          <p className="text-blue-100 text-lg leading-relaxed">Here's your nest overview. Manage your policies, track your progress, and discover new ways to secure your future.</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
@@ -138,42 +141,43 @@ export default function DashboardPage() {
             {/* Card 1: Current Plan / Prompt */}
             <div className="w-full lg:w-2/3">
                 {primaryHealthPlan ? (
-                     <Card className="h-full">
-                      <CardHeader>
-                        <CardTitle>Your Current Plan</CardTitle>
-                        <CardDescription>{primaryHealthPlan.carrierName} {primaryHealthPlan.planName}</CardDescription>
+                     <Card className="h-full shadow-lg border-0 bg-white dark:bg-neutral-800">
+                      <CardHeader className="border-b border-gray-100 dark:border-neutral-700">
+                        <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Your Current Plan</CardTitle>
+                        <CardDescription className="text-gray-600 dark:text-neutral-400">{primaryHealthPlan.carrierName} {primaryHealthPlan.planName}</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-6 p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-slate-500">Premium</p>
-                            <p className="text-3xl font-bold text-slate-900">${(primaryHealthPlan.premium || 0).toFixed(2)}/mo</p>
+                            <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">Monthly Premium</p>
+                            <p className="mt-1 text-5xl font-bold text-blue-600 dark:text-blue-400">${(primaryHealthPlan.premium || 0).toFixed(2)}</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">per month</p>
                           </div>
                           {primaryHealthPlan.carrierLogoUrl && <Image src={primaryHealthPlan.carrierLogoUrl} data-ai-hint="insurance logo" alt="Provider Logo" width={100} height={40} className="rounded-lg" />}
                         </div>
                         <div>
                           <div className="flex justify-between items-baseline text-sm mb-1">
-                            <p className="text-slate-500">Deductible Progress</p>
-                            <p className="font-medium text-slate-700">$125 / $500</p>
+                            <p className="text-gray-600 dark:text-neutral-400">Deductible Progress</p>
+                            <p className="font-medium text-gray-800 dark:text-neutral-200">$125 / $500</p>
                           </div>
-                          <Progress value={25} aria-label="25% of deductible met" />
+                          <Progress value={25} aria-label="25% of deductible met" className="bg-gray-200 dark:bg-neutral-700" />
                         </div>
                       </CardContent>
-                      <CardFooter>
+                      <CardFooter className="border-t border-gray-100 dark:border-neutral-700 p-6">
                         <Button variant="outline" asChild>
                           <Link href="/dashboard/documents">View All Policies</Link>
                         </Button>
                       </CardFooter>
                     </Card>
                 ) : (
-                     <Card className="h-full flex flex-col items-center justify-center text-center p-8">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6">
+                     <Card className="h-full flex flex-col items-center justify-center text-center p-8 shadow-lg border-0 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600 mb-6 shadow-lg">
                             <ShieldCheck className="h-10 w-10" />
                         </div>
-                        <CardTitle className="font-headline text-2xl">Secure Your Health</CardTitle>
-                        <CardDescription className="mt-2">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
-                        <CardFooter className="mt-6 p-0">
-                            <Button asChild size="lg">
+                        <CardTitle className="font-bold text-2xl text-gray-900 dark:text-white mb-3">Secure Your Health</CardTitle>
+                        <CardDescription className="text-gray-600 dark:text-neutral-400 mb-6 max-w-md">You haven't added a health plan yet. Get instant quotes to find the best coverage for you.</CardDescription>
+                        <CardFooter className="p-0">
+                            <Button asChild size="lg" className="shadow-lg">
                                 <Link href="/dashboard/health-quotes">Get Health Quotes <ArrowRight className="ml-2 h-4 w-4"/></Link>
                             </Button>
                         </CardFooter>
@@ -183,19 +187,19 @@ export default function DashboardPage() {
             
             {/* Card 2: Retirement Plan */}
             <div className="w-full lg:w-1/3">
-                <Card className="h-full flex flex-col bg-slate-100/70">
-                    <CardHeader>
-                      <CardTitle>Create Your Retirement Plan</CardTitle>
-                      <CardDescription>Get a personalized retirement plan to secure your future.</CardDescription>
+                <Card className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-neutral-800 dark:to-neutral-900 shadow-lg border-0">
+                    <CardHeader className="border-b border-blue-100 dark:border-neutral-700">
+                      <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Create Your Retirement Plan</CardTitle>
+                      <CardDescription className="text-gray-600 dark:text-neutral-400">Get a personalized retirement plan to secure your future.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                    <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
                             <PiggyBank className="h-10 w-10" />
                         </div>
-                        <p className="mb-4 text-slate-600">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
+                        <p className="mb-4 text-gray-700 dark:text-neutral-300 leading-relaxed">Answer a few questions and our AI will generate a personalized retirement plan with detailed recommendations.</p>
                     </CardContent>
-                     <CardFooter>
-                         <Button className="w-full" size="lg" asChild>
+                     <CardFooter className="border-t border-blue-100 dark:border-neutral-700 p-6">
+                         <Button className="w-full shadow-lg" size="lg" asChild>
                             <Link href="/dashboard/recommendations">Create My Plan <ArrowRight className="ml-2 h-4 w-4" /></Link>
                          </Button>
                      </CardFooter>
@@ -205,44 +209,52 @@ export default function DashboardPage() {
         
         {/* Bottom Row */}
         <div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Your Retirement Readiness Score</CardTitle>
-                    <CardDescription>Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
+            <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
+                <CardHeader className="border-b border-gray-100 dark:border-neutral-700">
+                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Your Retirement Readiness Score</CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-neutral-400">Based on your current coverage and financial planning. Add policies on the Documents page to update your score.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                    <div className="flex flex-col items-center justify-center text-center p-4">
-                        <div className="text-7xl md:text-8xl font-extrabold text-slate-900">{retirementScore}</div>
-                        <div className="font-medium text-slate-500">out of 100</div>
-                        <Progress value={retirementScore} className="mt-6 w-full" indicatorClassName="bg-teal-500" />
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-8">
+                    <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-neutral-700 dark:to-neutral-800 rounded-2xl">
+                        <h4 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">Retirement Readiness</h4>
+                        <div className="mt-2 text-6xl sm:text-7xl font-bold text-blue-600 dark:text-blue-400">{retirementScore}</div>
+                        <div className="mt-1 text-sm text-gray-500 dark:text-neutral-400">out of 100 points</div>
+                        <Progress value={retirementScore} className="mt-6 w-full bg-blue-100 dark:bg-neutral-600" indicatorClassName="bg-gradient-to-r from-blue-500 to-blue-600" />
                     </div>
-                    <div>
-                        <h4 className="font-semibold mb-4 text-lg text-slate-800">Your Current Plans</h4>
+                    <div className="p-6">
+                        <h4 className="font-semibold mb-6 text-lg text-gray-900 dark:text-white">Your Current Plans</h4>
                         {ownedPlanCategories.length > 0 ? (
                             <div className="space-y-4">
                                 {ownedPlanCategories.map(category => {
                                     const planInfo = planTypes.find(p => p.id === category);
                                     const Icon = planInfo?.icon || FileDigit;
                                     return (
-                                        <div key={category} className="flex items-center gap-4 p-3 bg-green-50 rounded-md border border-green-200">
-                                            <Icon className="h-6 w-6 text-green-600" />
-                                            <p className="font-medium text-base text-green-800">{category}</p>
+                                        <div key={category} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-800">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white shadow-md">
+                                                <Icon className="h-5 w-5" />
+                                            </div>
+                                            <p className="font-semibold text-base text-green-800 dark:text-green-400">{category}</p>
                                         </div>
                                     )
                                 })}
                             </div>
                         ) : (
-                            <p className="text-sm text-slate-500 text-center py-4 border rounded-lg">You have no plans added yet. Go to the "My Policies" page to add your policies.</p>
+                            <div className="text-center py-8">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700 mx-auto mb-4">
+                                    <FileDigit className="h-8 w-8 text-gray-400" />
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-neutral-400">You have no plans added yet. Go to the "My Policies" page to add your policies.</p>
+                            </div>
                         )}
                     </div>
                 </CardContent>
                 {missingPlans.length > 0 && (
-                    <CardFooter className="flex-col items-start border-t bg-slate-100/50 p-6 sm:p-8">
-                         <h4 className="font-semibold text-slate-800 text-lg">Areas for Improvement</h4>
-                         <p className="text-sm text-slate-500 mt-1 mb-4">Consider adding these plans to improve your retirement readiness.</p>
+                    <CardFooter className="flex-col items-start border-t border-gray-100 dark:border-neutral-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-neutral-800 dark:to-neutral-900 p-6 sm:p-8 rounded-b-xl">
+                         <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-2">Areas for Improvement</h4>
+                         <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4">Consider adding these plans to improve your retirement readiness.</p>
                          <div className="flex flex-wrap gap-3">
                             {missingPlans.map(plan => (
-                                <Button key={plan.id} variant="secondary" size="sm" asChild>
+                                <Button key={plan.id} variant="secondary" size="sm" asChild className="shadow-sm hover:shadow-md">
                                     <Link href={plan.href || '#'}>
                                         Add {plan.label}
                                     </Link>

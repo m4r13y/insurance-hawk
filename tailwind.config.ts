@@ -7,6 +7,7 @@ export default {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/preline/preline.js',
   ],
   theme: {
     container: {
@@ -54,6 +55,9 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+      },
+      width: {
+        '160': '40rem',
       },
       borderRadius: {
         '3xl': '1.5rem',

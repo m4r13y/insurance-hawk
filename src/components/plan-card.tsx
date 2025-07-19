@@ -31,42 +31,76 @@ export function PlanCard({ plan, showSelectButton = true, isFeatured = false }: 
   
   return (
     <Card className={cn(
-        "flex flex-col h-full transition-all duration-300 relative",
-        isFeatured ? "border-sky-500 shadow-lg" : "hover:border-primary/50 hover:shadow-lg"
+        "group transition-all duration-300 relative hover:shadow-md focus:outline-hidden focus:shadow-md",
+        isFeatured ? "border-blue-500 shadow-lg" : "hover:border-primary/50"
     )}>
-      {isFeatured && <Badge className="absolute -top-3 left-8 bg-sky-500 text-white">Best Value</Badge>}
-      <CardHeader className="p-8">
-        <div className="flex justify-between items-center">
-            <CardTitle className="text-xl font-bold text-slate-900">{plan.name}</CardTitle>
-            <div className="flex items-center gap-1 text-amber-500">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="font-bold">{plan.rating.toFixed(1)}</span>
-            </div>
+      {isFeatured && (
+        <div className="absolute -top-3 left-8 z-10">
+          <span className="hs-button hs-button-primary px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            Best Value
+          </span>
         </div>
-        <CardDescription>{plan.provider}</CardDescription>
+      )}
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
+              {plan.category}
+            </span>
+            <CardTitle>{plan.name}</CardTitle>
+            <CardDescription>{plan.provider}</CardDescription>
+          </div>
+          <div className="flex items-center gap-1 text-amber-500">
+            <Star className="h-4 w-4 fill-current" />
+            <span className="font-bold text-sm">{plan.rating.toFixed(1)}</span>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 space-y-6 px-8">
-        <div className="flex items-baseline gap-2">
-            <p className="text-5xl font-extrabold tracking-tight text-slate-900">${plan.premium}</p>
-            <span className="text-lg text-slate-500">/mo</span>
+      <CardContent className="flex-1 space-y-6">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">Monthly Premium</p>
+          <p className="mt-1 text-5xl font-bold text-blue-600 dark:text-blue-400">
+            ${plan.premium}
+          </p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">per month</p>
         </div>
-        <ul className="space-y-3 text-sm text-slate-600">
+        <ul className="space-y-3 text-sm text-gray-500 dark:text-neutral-500">
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Deductible: <strong className="text-gray-800 dark:text-neutral-200">${plan.deductible.toLocaleString()}</strong></span>
+          </li>
+          <li className="flex items-center gap-3">
+            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <span>Max Out-of-Pocket: <strong className="text-gray-800 dark:text-neutral-200">${plan.maxOutOfPocket.toLocaleString()}</strong></span>
+          </li>
+          {plan.features.prescriptionDrug && (
             <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-teal-500 shrink-0"/>
-                <span>Deductible: <strong>${plan.deductible.toLocaleString()}</strong></span>
+              <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+              <span>Prescription Drug Coverage</span>
             </li>
+          )}
+          {plan.features.dental && (
             <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-teal-500 shrink-0"/>
-                <span>Max Out-of-Pocket: <strong>${plan.maxOutOfPocket.toLocaleString()}</strong></span>
+              <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+              <span>Dental Coverage</span>
             </li>
-            {plan.features.prescriptionDrug && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Prescription Drug Coverage</span></li>}
-            {plan.features.dental && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Dental Coverage</span></li>}
-            {plan.features.vision && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Vision Coverage</span></li>}
-            {plan.features.hearing && <li className="flex items-center gap-3"><Check className="h-5 w-5 text-teal-500 shrink-0"/><span>Hearing Coverage</span></li>}
+          )}
+          {plan.features.vision && (
+            <li className="flex items-center gap-3">
+              <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+              <span>Vision Coverage</span>
+            </li>
+          )}
+          {plan.features.hearing && (
+            <li className="flex items-center gap-3">
+              <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+              <span>Hearing Coverage</span>
+            </li>
+          )}
         </ul>
       </CardContent>
       {showSelectButton && (
-        <CardFooter className="p-8 mt-auto">
+        <CardFooter>
           <Button asChild className="w-full" size="lg" variant={isFeatured ? 'default' : 'outline'}>
             <Link href={applicationUrl}>Select Plan</Link>
           </Button>

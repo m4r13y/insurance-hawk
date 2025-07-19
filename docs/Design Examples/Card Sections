@@ -1,0 +1,213 @@
+# Card Design System Instructions
+
+---
+
+## 1. **General Layout & Container**
+
+* **Container:**
+
+  * Use `container mx-auto` for centered, max-width page wrapper.
+  * Apply generous vertical spacing with `py-8` for the page, and `space-y-16` for separation between main sections.
+* **Grid:**
+
+  * For card layouts, use `grid sm:grid-cols-2 lg:grid-cols-3 gap-6` (or as needed for the use case).
+* **Padding:**
+
+  * Card containers: use `px-4 py-10 sm:px-6 lg:px-8 lg:py-14` for section wrappers.
+  * Individual cards: use `p-4 md:p-6`.
+
+---
+
+## 2. **Typography**
+
+* **Headings:**
+
+  * Main headers: `text-4xl font-bold text-gray-900 dark:text-white mb-4`
+  * Section headers: `text-2xl font-semibold text-gray-900 dark:text-white mb-6`
+* **Subtext/Descriptions:**
+
+  * Use `text-lg text-gray-600 dark:text-gray-400` for introductory text.
+  * For card subtitles, use smaller, colored, uppercase, bold text:
+
+    * Example: `text-xs font-semibold uppercase text-blue-600 dark:text-blue-500`
+* **Card Titles:**
+
+  * `text-xl font-semibold text-gray-800 dark:text-neutral-300 dark:hover:text-white`
+* **Card Body:**
+
+  * `mt-3 text-gray-500 dark:text-neutral-500`
+* **Dates/Meta Info:**
+
+  * `mb-1 text-xs text-gray-600 dark:text-neutral-400`
+* **Emphasis:**
+
+  * Use `font-semibold text-sm text-gray-800 dark:text-neutral-200` for highlighted info.
+
+---
+
+## 3. **Card Structure & Visuals**
+
+### **Standard Card Anatomy**
+
+* **Outer:**
+
+  * `flex flex-col h-full bg-white border border-gray-200 shadow-2xs rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70`
+  * Use `group` for hover/focus effects as needed.
+* **Card Top (Icon/Visual):**
+
+  * Fixed height (e.g., `h-52`)
+  * Center icon using `flex flex-col justify-center items-center`
+  * The background is a strong accent color (`bg-blue-600`, `bg-rose-500`, `bg-amber-500`, etc.), changing per card type.
+  * SVGs/icons are in a white box with rounded corners or a custom shape for branding.
+* **Card Middle (Content):**
+
+  * Use vertical spacing (`p-4 md:p-6`)
+  * Stack: Subtitle (small color tag), Title (bold), Description (muted)
+* **Card Bottom (Actions):**
+
+  * Always stick to the bottom with `mt-auto flex`
+  * Separate actions with `border-t` and `divide-x`
+  * Each button/cta:
+
+    * `w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-es-xl` (or `rounded-ee-xl` for the rightmost)
+    * Color follows card base: `bg-white text-gray-800 hover:bg-gray-50` (light) or `dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800`
+    * Disabled: `disabled:opacity-50 disabled:pointer-events-none`
+    * Shadows: `shadow-2xs` for gentle elevation.
+* **Radii:**
+
+  * Use `rounded-xl` for cards, `rounded-t-xl` for card headers, and `rounded-es-xl` / `rounded-ee-xl` for card actions.
+
+---
+
+## 4. **Colors**
+
+* **Base:**
+
+  * Light theme:
+
+    * Card: `bg-white`, border: `border-gray-200`, text: `text-gray-800/900`
+    * Actions: `bg-white text-gray-800`
+  * Dark theme:
+
+    * Card: `dark:bg-neutral-900 dark:border-neutral-700`, text: `dark:text-white` or `dark:text-neutral-300`
+    * Actions: `dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800`
+* **Accent (per card type):**
+
+  * Top icon area uses a strong color (`bg-blue-600`, `bg-rose-500`, `bg-amber-500`, etc.)
+  * Subtitle uses corresponding color (`text-blue-600`, `text-rose-600`, `text-amber-500`)
+* **Misc:**
+
+  * Muted text: `text-gray-500 dark:text-neutral-500`
+  * Section backgrounds can use soft grays or keep white for minimalism.
+
+---
+
+## 5. **Special Components**
+
+### **Location Cards with Avatars**
+
+* Use a border box with padding: `p-4 border border-gray-200 rounded-lg dark:border-neutral-700`
+* Place avatar or SVG at the top with spacing: `mb-3`
+* Text meta below in a column:
+
+  * Date/period (`mb-1 text-xs ...`)
+  * Main info (`font-semibold text-sm ...`)
+  * Subtext (`mt-1 text-sm ...`)
+
+### **Education/Resume/Meta Info Cards**
+
+* Use a simple card or bordered box with SVG/icon, meta line, bold main info, and muted institution line.
+* Grid is typically `grid grid-cols-1 sm:grid-cols-2 gap-3` for smaller cards.
+
+---
+
+## 6. **Responsive Design**
+
+* **Grid:**
+
+  * Use `sm:grid-cols-2` for tablet, `lg:grid-cols-3` for desktop.
+* **Padding:**
+
+  * Mobile-first: `px-4 py-10`, increases to `sm:px-6 lg:px-8 lg:py-14` at breakpoints.
+* **Typography scales:**
+
+  * Base text and headers get smaller on mobile, larger on desktop.
+
+---
+
+## 7. **Dark Mode**
+
+* Always provide dark equivalents for backgrounds, borders, and text using Tailwind's `dark:` variant.
+* Make sure all hover/focus/disabled states are addressed for both light and dark modes.
+
+---
+
+## 8. **Icons/SVGs**
+
+* **Sizing:**
+
+  * Top card SVGs: `size-28` or as appropriate, always centered.
+  * Meta/mini-icons: `size-10` or similar for inline/mini cards.
+* **Placement:**
+
+  * Always inside a colored card header background or a dedicated icon box.
+
+---
+
+## 9. **Button & Link Behavior**
+
+* Use `hover:bg-gray-50` for light theme and `dark:hover:bg-neutral-800` for dark.
+* Remove focus ring outline with `focus:outline-hidden`, but keep some visual feedback (e.g., subtle bg).
+* If action is disabled, always use `disabled:opacity-50 disabled:pointer-events-none`.
+
+---
+
+## 10. **Shadow & Depth**
+
+* Use `shadow-2xs` for a subtle, modern elevation.
+* Avoid heavy box-shadows unless you need a floating/elevated effect for modals.
+
+---
+
+## 11. **Consistency Checklist**
+
+* Spacing between cards is always `gap-6` or similar.
+* Card content always vertically aligned.
+* All card sections have rounded corners (`rounded-xl`), with sharper radii on actions if desired.
+* Text, color, and actions always provide *visible* contrast in both themes.
+
+---
+
+# **Quick Start for New Cards**
+
+1. **Copy the card skeleton:**
+
+   ```jsx
+   <div className="group flex flex-col h-full bg-white border border-gray-200 shadow-2xs rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
+     <div className="h-52 flex flex-col justify-center items-center bg-blue-600 rounded-t-xl">
+       {/* Icon/SVG here */}
+     </div>
+     <div className="p-4 md:p-6">
+       <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-500">
+         Subtitle
+       </span>
+       <h3 className="text-xl font-semibold text-gray-800 dark:text-neutral-300 dark:hover:text-white">
+         Card Title
+       </h3>
+       <p className="mt-3 text-gray-500 dark:text-neutral-500">
+         Card body/description text goes here.
+       </p>
+     </div>
+     <div className="mt-auto flex border-t border-gray-200 divide-x divide-gray-200 dark:border-neutral-700 dark:divide-neutral-700">
+       <a className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-es-xl bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" href="#">
+         View sample
+       </a>
+       <a className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-xl bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" href="#">
+         View API
+       </a>
+     </div>
+   </div>
+   ```
+2. **Swap out colors, SVGs, and content to match the card purpose.**
+3. **Apply the correct dark mode and responsive classes.**
+4. **Maintain vertical and horizontal spacing.**

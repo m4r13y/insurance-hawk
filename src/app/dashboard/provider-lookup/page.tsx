@@ -19,6 +19,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Badge } from '@/components/ui/badge';
+import { ProviderResultsTable } from './provider-results-table';
 import { Separator } from '@/components/ui/separator';
 
 const searchSchema = z.object({
@@ -250,62 +251,18 @@ export default function ProviderLookupPage() {
       )}
 
       {results && (
-        <div className="space-y-6">
-           <h2 className="text-xl font-semibold">Search Results ({totalCount})</h2>
-            {totalCount > 0 ? (
-                <div className="space-y-4">
-                    {Object.values(results).map(({ providerDetails, services }, index) => (
-                        <Card key={`${providerDetails.rndrng_npi}-${index}`}>
-                            <CardHeader>
-                                <div className="flex flex-col sm:flex-row justify-between gap-2">
-                                    <div>
-                                        <CardTitle className="flex items-center gap-3">
-                                            {providerDetails.rndrng_prvdr_ent_cd === 'I' ? <User /> : <Building />}
-                                            {providerDetails.rndrng_prvdr_first_name} {providerDetails.rndrng_prvdr_mi} {providerDetails.rndrng_prvdr_last_org_name}, {providerDetails.rndrng_prvdr_crdntls}
-                                        </CardTitle>
-                                        <CardDescription className="mt-2">NPI: {providerDetails.rndrng_npi}</CardDescription>
-                                    </div>
-                                    <div className="text-sm text-muted-foreground text-left sm:text-right">
-                                        <p>{providerDetails.rndrng_prvdr_st1}</p>
-                                        <p>{providerDetails.rndrng_prvdr_city}, {providerDetails.rndrng_prvdr_state_abrvtn} {providerDetails.rndrng_prvdr_zip5}</p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-wrap gap-2 pt-4">
-                                    <Badge variant="secondary"><BriefcaseMedical className="h-3 w-3 mr-1.5"/>{providerDetails.rndrng_prvdr_type}</Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <Accordion type="single" collapsible>
-                                    <AccordionItem value="services">
-                                        <AccordionTrigger className="text-base">View Services ({services.length})</AccordionTrigger>
-                                        <AccordionContent>
-                                            <div className="space-y-4 pt-4">
-                                                {services.map((service, serviceIndex) => (
-                                                    <div key={`${service.hcpcs_cd}-${service.place_of_srvc}-${serviceIndex}`} className="p-4 border rounded-lg">
-                                                        <p className="font-semibold">{service.hcpcs_desc}</p>
-                                                        <p className="text-sm text-muted-foreground">HCPCS Code: {service.hcpcs_cd} ({service.place_of_srvc === 'F' ? 'Facility' : 'Office'})</p>
-                                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 text-sm">
-                                                            <InfoItem icon={Stethoscope} label="Beneficiaries" value={service.tot_benes?.toLocaleString()} />
-                                                            <InfoItem icon={BriefcaseMedical} label="Services" value={service.tot_srvcs?.toLocaleString()} />
-                                                            <InfoItem icon={DollarSign} label="Avg. Submitted" value={`$${service.avg_sbmtd_chrg?.toFixed(2)}`} />
-                                                            <InfoItem icon={DollarSign} label="Avg. Allowed" value={`$${service.avg_mdcr_alowd_amt?.toFixed(2)}`} />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground">No providers found for your search criteria.</p>
-                </div>
-            )}
-        </div>
+        <ProviderResultsTable
+          results={results}
+          totalCount={totalCount}
+          onViewDetails={(npi) => {
+            // Handle view details action
+            console.log('View details for NPI:', npi);
+          }}
+          onSelectProvider={(npi) => {
+            // Handle select provider action
+            console.log('Select provider with NPI:', npi);
+          }}
+        />
       )}
     </div>
   );
