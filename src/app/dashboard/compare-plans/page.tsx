@@ -121,6 +121,286 @@ const planData: Record<string, PlanData> = {
     ctaText: "Get Instant Quotes Online",
     ctaUrl: "/dashboard/quotes",
   },
+  "plan-f": {
+    title: "MEDIGAP PLAN F",
+    subtitle: "Explained in 5 minutes!",
+    description: "Plan F covers all gaps left by Original Medicare, including copays, coinsurance, and deductibles. You can see any doctor that accepts Medicare, and you don't need referrals. Plan F is only available to those who became eligible for Medicare before January 1, 2020.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Use Any Doctor", value: "✓", highlight: true },
+        { label: "Visit Any Hospital", value: "✓", highlight: true },
+        { label: "No Out-of-Pocket Costs", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Part B Premium", value: "$185/mo *" },
+        { label: "Plan F Premium", value: "Varies" },
+        { label: "Copays", value: "None" },
+        { label: "Deductibles", value: "$0" },
+      ],
+      details: [
+        { label: "Dental, Vision, Hearing", value: "Separate" },
+        { label: "Health Questions", value: "Yes" },
+      ],
+    },
+    ctaText: "Get Plan F Quotes",
+    ctaUrl: "/dashboard/quotes",
+  },
+  "plan-n": {
+    title: "MEDIGAP PLAN N",
+    subtitle: "Explained in 5 minutes!",
+    description: "Plan N offers lower premiums than Plan G or F, but you may pay small copays for doctor visits and emergency room trips. It covers most out-of-pocket costs except the Part B deductible and excess charges.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Use Any Doctor", value: "✓", highlight: true },
+        { label: "Visit Any Hospital", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Part B Premium", value: "$185/mo *" },
+        { label: "Plan N Premium", value: "Varies" },
+        { label: "Copays", value: "Up to $20" },
+        { label: "Deductibles", value: "$257/yr" },
+      ],
+      details: [
+        { label: "Dental, Vision, Hearing", value: "Separate" },
+        { label: "Health Questions", value: "Yes" },
+      ],
+    },
+    ctaText: "Get Plan N Quotes",
+    ctaUrl: "/dashboard/quotes",
+  },
+  // Original Medicare Add-Ons
+  "drug-plan": {
+    title: "DRUG PLAN (PART D)",
+    subtitle: "Explained in 5 minutes!",
+    description: "Medicare Part D helps cover the cost of prescription drugs. Plans vary by coverage, pharmacy network, and formulary. You can choose a plan that fits your medication needs.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Covers Most Prescriptions", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "Annual Deductible", value: "Up to $545" },
+        { label: "Copays", value: "Varies" },
+      ],
+      details: [
+        { label: "Preferred Pharmacies", value: "Yes" },
+        { label: "Coverage Gap", value: "Possible" },
+      ],
+    },
+    ctaText: "Get Drug Plan Quotes",
+    ctaUrl: "/dashboard/quotes",
+  },
+  "cancer-plan": {
+    title: "CANCER PLAN",
+    subtitle: "Explained in 5 minutes!",
+    description: "Cancer Plans provide a lump-sum cash benefit if you are diagnosed with cancer. This money can be used for treatment, travel, or any expenses you choose. It helps cover costs not paid by Medicare or other insurance.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true },
+        { label: "Use Anywhere", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "No Deductible", value: "✓", highlight: true },
+      ],
+      details: [
+        { label: "Pays Directly to You", value: "Yes" },
+        { label: "No Network Restrictions", value: "Yes" },
+      ],
+    },
+    ctaText: "Get Cancer Plan Quotes",
+    ctaUrl: "/dashboard/quotes",
+  },
+  "dental-vision": {
+    title: "DENTAL, VISION & HEARING",
+    subtitle: "Explained in 5 minutes!",
+    description: "Dental, Vision & Hearing plans help pay for routine exams, cleanings, eyeglasses, hearing aids, and more. These benefits are not covered by Original Medicare or Medigap.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Dental Coverage", value: "✓", highlight: true },
+        { label: "Vision Coverage", value: "✓", highlight: true },
+        { label: "Hearing Coverage", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "Copays", value: "Varies" },
+      ],
+      details: [
+        { label: "Choose Any Provider", value: "Yes" },
+        { label: "No Waiting Periods", value: "On some plans" },
+      ],
+    },
+    ctaText: "Get Dental/Vision/Hearing Quotes",
+    ctaUrl: "/dashboard/quotes",
+  },
+  // Advantage Plans
+  "ppo": {
+    title: "PPO (Preferred Provider Organization)",
+    subtitle: "Flexible Medicare Advantage Option",
+    description: "PPO plans offer flexibility to see any doctor or specialist, in or out of network, often without referrals. You pay less when using network providers, but you can go out-of-network for a higher cost. PPOs may include extra benefits like dental, vision, and hearing.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true },
+        { label: "No Referral Needed", value: "✓", highlight: true },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most" },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "$0-$50" },
+        { label: "Copays", value: "Varies" },
+        { label: "Out-of-Network Cost", value: "Higher" },
+      ],
+      details: [
+        { label: "Network Size", value: "Large" },
+        { label: "Prior Authorization", value: "Sometimes" },
+      ],
+    },
+    ctaText: "Get PPO Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  "hmo": {
+    title: "HMO (Health Maintenance Organization)",
+    subtitle: "Coordinated Medicare Advantage Care",
+    description: "HMO plans require you to use network doctors and hospitals except in emergencies. You usually need a referral to see a specialist. HMOs often have lower costs and may include extra benefits like dental, vision, and hearing.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Coordinated Care", value: "✓", highlight: true },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most" },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "$0-$30" },
+        { label: "Copays", value: "Low" },
+      ],
+      details: [
+        { label: "Referral Needed", value: "Yes" },
+        { label: "Network Size", value: "Medium-Large" },
+      ],
+    },
+    ctaText: "Get HMO Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  "c-snp": {
+    title: "C-SNP (Chronic Condition Special Needs Plan)",
+    subtitle: "Tailored for Chronic Conditions",
+    description: "C-SNPs are designed for people with specific chronic conditions (like diabetes, heart disease, or COPD). These plans offer specialized provider networks, care coordination, and benefits tailored to your condition.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Condition-Specific Care", value: "✓", highlight: true },
+        { label: "Care Coordination", value: "✓", highlight: true },
+        { label: "Extra Benefits", value: "Varies" },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "$0-$40" },
+        { label: "Copays", value: "Varies" },
+      ],
+      details: [
+        { label: "Eligibility", value: "Specific Chronic Condition" },
+        { label: "Network Size", value: "Varies" },
+      ],
+    },
+    ctaText: "Get C-SNP Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  "d-snp": {
+    title: "D-SNP (Dual Eligible Special Needs Plan)",
+    subtitle: "For Medicare & Medicaid Eligible",
+    description: "D-SNPs are for people who qualify for both Medicare and Medicaid. These plans coordinate benefits from both programs, often with low or no out-of-pocket costs and extra support services.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true },
+        { label: "Extra Support Services", value: "✓", highlight: true },
+        { label: "Extra Benefits", value: "Most" },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "$0" },
+        { label: "Copays", value: "Low/None" },
+      ],
+      details: [
+        { label: "Eligibility", value: "Medicare & Medicaid" },
+        { label: "Network Size", value: "Varies" },
+      ],
+    },
+    ctaText: "Get D-SNP Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  // Advantage Add-Ons
+  "cancer-insurance": {
+    title: "CANCER INSURANCE",
+    subtitle: "Lump-Sum Protection for Cancer Diagnosis",
+    description: "Cancer Insurance pays a lump-sum cash benefit if you are diagnosed with cancer. Use the money for treatment, travel, or any expenses. It helps cover costs not paid by Medicare or Advantage plans.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true },
+        { label: "Pays Directly to You", value: "✓", highlight: true },
+        { label: "No Network Restrictions", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "No Deductible", value: "✓", highlight: true },
+      ],
+      details: [
+        { label: "Use Anywhere", value: "Yes" },
+        { label: "Waiting Period", value: "Possible" },
+      ],
+    },
+    ctaText: "Get Cancer Insurance Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  "short-term": {
+    title: "SHORT TERM CARE",
+    subtitle: "Coverage for Short Recovery Periods",
+    description: "Short Term Care plans help pay for recovery after illness, injury, or surgery. They cover skilled nursing, rehabilitation, and home health care for a limited time, filling gaps left by Medicare or Advantage plans.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Skilled Nursing Coverage", value: "✓", highlight: true },
+        { label: "Rehabilitation", value: "✓", highlight: true },
+        { label: "Home Health Care", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "Daily Benefit", value: "$100-$300" },
+      ],
+      details: [
+        { label: "Benefit Period", value: "Up to 360 days" },
+        { label: "Waiting Period", value: "Possible" },
+      ],
+    },
+    ctaText: "Get Short Term Care Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
+  "hospital-indemnity": {
+    title: "HOSPITAL INDEMNITY",
+    subtitle: "Cash Benefit for Hospital Stays",
+    description: "Hospital Indemnity plans pay a fixed cash benefit for each day you are hospitalized. Use the money for any expenses, including deductibles, copays, or travel. These plans help cover costs not paid by Medicare or Advantage plans.",
+    videoUrl: "/placeholder-video.mp4",
+    keyInfo: {
+      benefits: [
+        { label: "Daily Hospital Benefit", value: "✓", highlight: true },
+        { label: "Pays Directly to You", value: "✓", highlight: true },
+        { label: "No Network Restrictions", value: "✓", highlight: true },
+      ],
+      costs: [
+        { label: "Monthly Premium", value: "Varies" },
+        { label: "Daily Benefit", value: "$100-$500" },
+      ],
+      details: [
+        { label: "Benefit Period", value: "Up to 365 days" },
+        { label: "Waiting Period", value: "Possible" },
+      ],
+    },
+    ctaText: "Get Hospital Indemnity Quotes",
+    ctaUrl: "/dashboard/health-quotes",
+  },
   "original-medicare": {
     title: "ORIGINAL MEDICARE",
     subtitle: "Explained in 5 minutes!",
@@ -199,7 +479,6 @@ export default function ComparePlansPage() {
   const router = useRouter();
   const [isAdvantage, setIsAdvantage] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("original-medicare");
-  const [showResources, setShowResources] = useState(false);
 
   const currentPlans = isAdvantage ? advantagePlans : originalMedicarePlans;
   const currentAddOns = isAdvantage ? advantageAddOns : originalMedicareAddOns;
@@ -237,7 +516,27 @@ export default function ComparePlansPage() {
               <SidebarHeader>
                 <Logo />
               </SidebarHeader>
-              
+
+              {/* Plan Type Toggle - moved to top of sidebar */}
+              <div className="px-3 pt-4 pb-2">
+                <div className="flex items-center justify-center space-x-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <span className={`font-semibold text-sm ${!isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
+                    Original
+                  </span>
+                  <Switch
+                    checked={isAdvantage}
+                    onCheckedChange={(checked) => {
+                      setIsAdvantage(checked);
+                      setSelectedPlan(checked ? "medicare-advantage" : "original-medicare");
+                    }}
+                    className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-blue-600"
+                  />
+                  <span className={`font-semibold text-sm ${isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
+                    Advantage
+                  </span>
+                </div>
+              </div>
+
               {/* Back Button */}
               <div className="px-3 pb-2">
                 <SidebarMenuItem>
@@ -247,7 +546,7 @@ export default function ComparePlansPage() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </div>
-              
+
               <SidebarMenu>
                 {/* Plan Types Section */}
                 <div className="px-3 py-2">
@@ -272,7 +571,7 @@ export default function ComparePlansPage() {
                     </SidebarMenuItem>
                   ))}
                 </div>
-                
+
                 {/* Add-ons Section */}
                 <div className="px-3 py-2">
                   <h3 className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
@@ -298,242 +597,211 @@ export default function ComparePlansPage() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-8">
-            
-            {/* Page Header with Toggle */}
-            <div className="text-center space-y-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                Compare Medicare Plans
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                Choose the best Medicare option for your needs. Compare Original Medicare with Medigap plans or explore Medicare Advantage options.
-              </p>
-              
-              {/* Plan Type Toggle */}
-              <div className="flex items-center justify-center space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm max-w-md mx-auto">
-                <span className={`font-semibold ${!isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
-                  Original
-                </span>
-                <Switch
-                  checked={isAdvantage}
-                  onCheckedChange={(checked) => {
-                    setIsAdvantage(checked);
-                    resetToMain();
-                  }}
-                  className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-blue-600"
-                />
-                <span className={`font-semibold ${isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
-                  Advantage
-                </span>
-              </div>
-            </div>
-
-            {/* Video and Description Section */}
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
-              
-              {/* Video and Description - Takes up 3 columns on XL screens */}
-              <div className="xl:col-span-3 space-y-6">
-                
-                {/* Video Player */}
-                <Card className="overflow-hidden">
-                  <div className="relative bg-black aspect-video">
-                    <div className={`absolute inset-0 bg-gradient-to-r ${themeColors.gradient} flex items-center justify-center`}>
-                      <div className="text-center text-white p-6">
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2">{currentData.title}</h2>
-                        <div className="inline-block bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium mb-4">
-                          {currentData.subtitle}
-                        </div>
-                        <div className="flex items-center justify-center space-x-4 text-white/80">
-                          <Play className="w-6 h-6" />
-                          <span>0:00 / 0:36</span>
-                          <div className="flex space-x-2">
-                            <button className="hover:text-white"><Info className="w-5 h-5" /></button>
-                            <button className="hover:text-white"><ExternalLink className="w-5 h-5" /></button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+            {/* Video and Description Section - More Compact */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Video and Description - Takes up 1 column (50%) on large screens */}
+              <div className="space-y-4">
+                {/* Video Player and Content in single card */}
+                <Card className="overflow-hidden flex flex-col h-full">
+                  {/* YouTube Video Embed */}
+                  <div className="relative bg-black" style={{ aspectRatio: '16/9' }}>
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src="https://www.youtube.com/embed/7o3q3med9Dw"
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full rounded-t"
+                    ></iframe>
                   </div>
-                </Card>
-
-                {/* Description */}
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-4">
-                      What is {isAdvantage ? "Medicare Advantage" : selectedPlan === "original-medicare" ? "Original Medicare" : "Plan G"}?
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {currentData.description}
-                    </p>
+                  {/* Description and Button at the bottom, spaced evenly */}
+                  <CardContent className="flex flex-col flex-grow justify-between p-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">
+                        {currentData.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
+                        {currentData.description}
+                      </p>
+                    </div>
+                    <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold mt-4`}>
+                      {currentData.ctaText}
+                    </Button>
                   </CardContent>
                 </Card>
-
-                {/* CTA Button */}
-                <Button className={`w-full ${themeColors.button} text-white py-4 text-lg font-semibold`}>
-                  {currentData.ctaText}
-                </Button>
               </div>
 
-              {/* Key Information Sidebar - Takes up 1 column on XL screens */}
-              <div className="xl:col-span-1">
-                <Card className="sticky top-6">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Key Information</CardTitle>
+              {/* Key Information Sidebar - Table Style */}
+              <div>
+                <Card className="sticky top-4">
+                  <CardHeader className="p-0 align-top">
+                    <CardTitle className="text-lg m-0">Key Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    
-                    {/* Benefits */}
-                    {currentData.keyInfo.benefits && (
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Benefits</h4>
-                        <div className="space-y-2">
-                          {currentData.keyInfo.benefits.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Info className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-                              </div>
-                              {item.highlight ? (
-                                <Check className="w-4 h-4 text-green-500" />
-                              ) : (
-                                <span className="text-sm font-medium">{item.value}</span>
-                              )}
-                            </div>
+                  <CardContent className="pt-0 px-0">
+                    {/* Details Section */}
+                    {currentData.keyInfo.details && (
+                      <table className="w-full m-0">
+                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white m-0 p-0">
+                          Details
+                        </caption>
+                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                          {currentData.keyInfo.details.map((item, index) => (
+                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                                {item.label}
+                              </th>
+                              <td className="py-2.5 px-4 text-right">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {item.value}
+                                </span>
+                              </td>
+                            </tr>
                           ))}
-                        </div>
-                      </div>
+                        </tbody>
+                      </table>
                     )}
-
-                  {/* Costs */}
-                  {currentData.keyInfo.costs && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Costs</h4>
-                      <div className="space-y-2">
-                        {currentData.keyInfo.costs.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Info className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {item.highlight && <Check className="w-4 h-4 text-green-500" />}
-                              <span className="text-sm font-medium">{item.value}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    {/* Premiums Section */}
+                    {currentData.keyInfo.premiums && (
+                      <table className="w-full">
+                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                          Premiums
+                        </caption>
+                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                          {currentData.keyInfo.premiums.map((item, index) => (
+                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                                {item.label}
+                              </th>
+                              <td className="py-2.5 px-4 text-right">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {item.value}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    {/* Deductibles Section */}
+                    {currentData.keyInfo.deductibles && (
+                      <table className="w-full">
+                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                          Deductibles
+                        </caption>
+                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                          {currentData.keyInfo.deductibles.map((item, index) => (
+                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                                {item.label}
+                              </th>
+                              <td className="py-2.5 px-4 text-right">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {item.value}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    {/* Benefits Section */}
+                    {currentData.keyInfo.benefits && (
+                      <table className="w-full">
+                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                          Benefits
+                        </caption>
+                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                          {currentData.keyInfo.benefits.map((item, index) => (
+                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                                {item.label}
+                              </th>
+                              <td className="py-2.5 px-4 text-right">
+                                {item.highlight || item.value === "✓" ? (
+                                  <svg className="shrink-0 ml-auto size-5 text-blue-600 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                ) : (
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {item.value}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    {/* Costs Section */}
+                    {currentData.keyInfo.costs && (
+                      <table className="w-full">
+                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                          Costs
+                        </caption>
+                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                          {currentData.keyInfo.costs.map((item, index) => (
+                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                                {item.label}
+                              </th>
+                              <td className="py-2.5 px-4 text-right">
+                                <span className={`text-sm font-medium ${item.highlight ? themeColors.accent : 'text-gray-900 dark:text-white'}`}>
+                                  {item.value}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    {/* Footer Note */}
+                    <div className="px-4 py-2 bg-gray-50 dark:bg-neutral-800">
+                      <p className="text-xs text-gray-500 italic text-center">
+                        * May vary based on individual situations
+                      </p>
                     </div>
-                  )}
-
-                  {/* Details */}
-                  {currentData.keyInfo.details && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Details</h4>
-                      <div className="space-y-2">
-                        {currentData.keyInfo.details.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Info className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-                            </div>
-                            <span className="text-sm font-medium">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Premiums */}
-                  {currentData.keyInfo.premiums && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Premiums</h4>
-                      <div className="space-y-2">
-                        {currentData.keyInfo.premiums.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Info className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-                            </div>
-                            <span className="text-sm font-medium">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Deductibles */}
-                  {currentData.keyInfo.deductibles && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Deductibles</h4>
-                      <div className="space-y-2">
-                        {currentData.keyInfo.deductibles.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Info className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {item.highlight && <Check className="w-4 h-4 text-green-500" />}
-                              <span className="text-sm font-medium">{item.value}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500 italic">
-                    * May vary based on individual situations
-                  </p>
                 </CardContent>
               </Card>
             </div>
           </div>
-
-          {/* Helpful Resources Section */}
-          <Card>
-            <CardHeader>
-              <button
-                onClick={() => setShowResources(!showResources)}
-                className="w-full flex items-center justify-between text-left"
-              >
-                <CardTitle className="text-xl">Helpful Resources</CardTitle>
-                <ChevronDown className={`w-5 h-5 transition-transform ${showResources ? 'rotate-180' : ''}`} />
-              </button>
-            </CardHeader>
-            
-            {showResources && (
+          {/* Helpful Resources Section - Full Width, Always Visible */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-center">Helpful Resources</CardTitle>
+              </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {resourceArticles.map((article, index) => (
                     <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-6">
+                      <CardContent className="p-4">
                         <div className="flex items-start gap-3 mb-3">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
                             <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 mb-1">
+                            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
                               <span>Article</span>
                               <Clock className="w-3 h-3" />
                               <span>{article.readTime}</span>
                             </div>
                           </div>
                         </div>
-                        
-                        <h3 className="font-semibold text-lg mb-2">{article.title}</h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{article.description}</p>
-                        
-                        <Button variant="link" className="p-0 h-auto text-blue-600 dark:text-blue-400">
-                          Learn More <ArrowRight className="w-4 h-4 ml-1" />
+                        <h3 className="font-semibold text-base mb-2">{article.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{article.description}</p>
+                        <Button variant="link" className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs">
+                          Learn More <ArrowRight className="w-3 h-3 ml-1" />
                         </Button>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               </CardContent>
-            )}
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
