@@ -170,17 +170,6 @@ export default function ProviderLookupPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-cyan-600 via-cyan-700 to-cyan-800 dark:from-cyan-700 dark:via-cyan-800 dark:to-cyan-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Medicare Provider Lookup
-            </h1>
-            <p className="text-cyan-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Search for providers and view services delivered to Original Medicare beneficiaries.
-            </p>
-          </div>
-        </div>
 
         <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">
           <CardHeader>

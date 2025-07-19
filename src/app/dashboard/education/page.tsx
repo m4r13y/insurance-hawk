@@ -96,7 +96,7 @@ function Chatbot() {
 
     const InitialPrompts = () => (
         <div className="flex flex-col items-center justify-center h-full text-center p-6 sm:p-8">
-             <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-6">
+             <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-6">
                 <Sparkles className="h-8 w-8 md:h-10 md:w-10" />
             </div>
             <h3 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">Welcome to the Medicare Assistant!</h3>
@@ -121,8 +121,8 @@ function Chatbot() {
         <Card className="h-full flex flex-col shadow-xl border-0 bg-white dark:bg-neutral-800">
             <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100 dark:border-neutral-700 pb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center">
-                        <Bot className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center">
+                        <Bot className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
                         <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -188,13 +188,13 @@ function Chatbot() {
                     <Input
                         id="message"
                         placeholder="Ask about Medicare plans, costs, or eligibility..."
-                        className="flex-1 h-10 sm:h-11 text-sm sm:text-base border-gray-200 dark:border-neutral-700 focus:border-emerald-500 dark:focus:border-emerald-400"
+                        className="flex-1 h-10 sm:h-11 text-sm sm:text-base border-gray-200 dark:border-neutral-700 focus:border-blue-500 dark:focus:border-blue-400"
                         autoComplete="off"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         disabled={isPending}
                     />
-                    <Button type="submit" size="icon" disabled={isPending || !input.trim()} className="h-10 w-10 sm:h-11 sm:w-11 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                    <Button type="submit" size="icon" disabled={isPending || !input.trim()} className="h-10 w-10 sm:h-11 sm:w-11 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
                         <Send className="h-5 w-5" />
                         <span className="sr-only">Send</span>
                     </Button>
@@ -209,17 +209,6 @@ export default function EducationPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 dark:from-emerald-700 dark:via-emerald-800 dark:to-emerald-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Medicare Education Center
-            </h1>
-            <p className="text-emerald-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Get personalized answers about Medicare plans, costs, and eligibility with our AI-powered assistant.
-            </p>
-          </div>
-        </div>
 
         {/* Quick Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
@@ -232,16 +221,16 @@ export default function EducationPage() {
           </div>
           
           <div className="text-center p-6">
-            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bot className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">24/7 Available</h3>
             <p className="text-sm text-gray-600 dark:text-neutral-400">Access Medicare guidance anytime, anywhere</p>
           </div>
           
           <div className="text-center p-6">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Phone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Expert Support</h3>
             <p className="text-sm text-gray-600 dark:text-neutral-400">Backed by Medicare experts and licensed agents</p>

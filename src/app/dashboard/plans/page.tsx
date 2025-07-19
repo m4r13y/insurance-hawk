@@ -33,17 +33,6 @@ export default function PlansPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 dark:from-indigo-700 dark:via-indigo-800 dark:to-indigo-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Browse Plans
-            </h1>
-            <p className="text-indigo-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Compare and find the best insurance plan for your needs and budget.
-            </p>
-          </div>
-        </div>
 
         {/* Search and Filter Section */}
         <Card className="shadow-lg border-0 bg-white dark:bg-neutral-800">

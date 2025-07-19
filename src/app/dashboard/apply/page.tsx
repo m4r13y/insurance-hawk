@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans, carriers } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack } from "lucide-react"
+import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack, Edit } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AutofillInput } from "@/components/ui/autofill-input"
 import Link from "next/link"
@@ -2680,7 +2680,8 @@ function ApplicationSelectionGrid() {
       
       try {
         const quotesCol = collection(db, "users", user.uid, "quotes");
-        const quotesSnapshot = await getDocs(quotesCol);
+        const quotesQuery = query(quotesCol, orderBy("timestamp", "desc"));
+        const quotesSnapshot = await getDocs(quotesQuery);
         const quotes = quotesSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -2696,9 +2697,9 @@ function ApplicationSelectionGrid() {
     loadUserQuotes();
   }, [user]);
 
-  const handleApplicationClick = (appType: string, event: React.MouseEvent) => {
-    // Check if user has any quotes for this application type
-    const hasQuoteForType = userQuotes.some(quote => {
+  // Helper function to get the most recent quote for a specific application type
+  const getMostRecentQuote = (appType: string) => {
+    return userQuotes.find(quote => {
       const quoteType = quote.type || quote.resultData?.applicationType;
       return quoteType === appType || 
              (appType === 'medicare-supplement' && quoteType === 'medicare-supplement') ||
@@ -2709,6 +2710,81 @@ function ApplicationSelectionGrid() {
              (appType === 'health-insurance' && quoteType === 'health') ||
              (appType === 'medicare-advantage' && quoteType === 'medicare-advantage');
     });
+  };
+
+  // Helper function to get the quote page URL for each application type
+  const getQuotePageUrl = (appType: string) => {
+    switch (appType) {
+      case 'medicare-supplement':
+        return '/dashboard/quotes?tab=medigap';
+      case 'dental':
+        return '/dashboard/quotes?tab=dental';
+      case 'cancer':
+        return '/dashboard/quotes?tab=cancer';
+      case 'hospital-indemnity':
+      case 'life-insurance':
+      case 'medicare-advantage':
+        return '/dashboard/quotes';
+      case 'health-insurance':
+        return '/dashboard/health-quotes';
+      default:
+        return '/dashboard/quotes';
+    }
+  };
+
+  // Helper function to format quote info for display
+  const formatQuoteInfo = (quote: any, appType: string) => {
+    if (!quote) return null;
+
+    // Handle different quote data structures
+    let premium = null;
+    let carrier = null;
+    let planName = null;
+
+    // Try to extract premium from various possible structures
+    if (quote.resultData?.monthly_premium) {
+      premium = quote.resultData.monthly_premium;
+    } else if (quote.resultData?.premium) {
+      premium = quote.resultData.premium;
+    } else if (quote.resultData?.totalPremium) {
+      premium = quote.resultData.totalPremium;
+    } else if (quote.resultData?.rate) {
+      premium = quote.resultData.rate;
+    }
+
+    // Try to extract carrier information - handle both string and object formats
+    if (quote.resultData?.carrier) {
+      if (typeof quote.resultData.carrier === 'string') {
+        carrier = quote.resultData.carrier;
+      } else if (quote.resultData.carrier?.name) {
+        carrier = quote.resultData.carrier.name;
+      }
+    } else if (quote.resultData?.company) {
+      if (typeof quote.resultData.company === 'string') {
+        carrier = quote.resultData.company;
+      } else if (quote.resultData.company?.name) {
+        carrier = quote.resultData.company.name;
+      }
+    }
+
+    // Try to extract plan name
+    if (quote.resultData?.planName) {
+      planName = quote.resultData.planName;
+    } else if (quote.resultData?.plan) {
+      planName = quote.resultData.plan;
+    }
+
+    return {
+      premium: premium ? Number(premium) : null,
+      carrier: carrier ? String(carrier) : null,
+      planName: planName ? String(planName) : null,
+      timestamp: quote.timestamp
+    };
+  };
+
+  const handleApplicationClick = (appType: string, event: React.MouseEvent) => {
+    // Check if user has any quotes for this application type
+    const hasQuoteForType = getMostRecentQuote(appType);
 
     if (!hasQuoteForType) {
       event.preventDefault();
@@ -2725,17 +2801,6 @@ function ApplicationSelectionGrid() {
     return (
       <div className="bg-gray-50 dark:bg-neutral-900">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {/* Header Section */}
-          <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 dark:from-amber-700 dark:via-amber-800 dark:to-amber-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-            <div className="max-w-4xl">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-                Submit an Application
-              </h1>
-              <p className="text-amber-100 text-base lg:text-lg leading-relaxed opacity-90">
-                Loading your application options...
-              </p>
-            </div>
-          </div>
           <div className="flex justify-center p-12">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
@@ -2747,17 +2812,6 @@ function ApplicationSelectionGrid() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 dark:from-amber-700 dark:via-amber-800 dark:to-amber-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Submit an Application
-            </h1>
-            <p className="text-amber-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Select the type of application you would like to start. Make sure you have quotes first.
-            </p>
-          </div>
-        </div>
         
         {userQuotes.length === 0 && (
           <Alert className="shadow-lg border-0 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
@@ -2770,42 +2824,131 @@ function ApplicationSelectionGrid() {
         )}
         
         <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
             {applicationTypes.map((app) => {
                 const Icon = app.icon;
-                const hasQuote = userQuotes.some(quote => {
-                  const quoteType = quote.type || quote.resultData?.applicationType;
-                  return quoteType === app.type || 
-                         (app.type === 'medicare-supplement' && quoteType === 'medicare-supplement') ||
-                         (app.type === 'dental' && quoteType === 'dental') ||
-                         (app.type === 'cancer' && quoteType === 'cancer') ||
-                         (app.type === 'hospital-indemnity' && quoteType === 'hospital-indemnity') ||
-                         (app.type === 'life-insurance' && quoteType === 'life-insurance') ||
-                         (app.type === 'health-insurance' && quoteType === 'health') ||
-                         (app.type === 'medicare-advantage' && quoteType === 'medicare-advantage');
-                });
+                const mostRecentQuote = getMostRecentQuote(app.type);
+                const hasQuote = !!mostRecentQuote;
+                const quoteInfo = formatQuoteInfo(mostRecentQuote, app.type);
 
                 return (
                   <div key={app.type} onClick={(e) => handleApplicationClick(app.type, e)}>
                     <Link href={hasQuote ? `/dashboard/apply?type=${app.type}` : '#'} passHref>
-                      <Card className={`h-full flex flex-col items-center justify-center text-center p-6 transition-all ${
+                      <Card className={`shadow-sm border ${
                         hasQuote 
-                          ? 'hover:shadow-lg hover:border-primary cursor-pointer' 
-                          : 'opacity-60 cursor-not-allowed border-dashed'
-                      }`}>
-                        <div className={`flex h-16 w-16 items-center justify-center rounded-full mb-4 ${
-                          hasQuote ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
-                        }`}>
-                          <Icon className="h-8 w-8" />
-                        </div>
-                        <h3 className="font-semibold text-lg">{app.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1 leading-snug">{app.description}</p>
-                        {!hasQuote && (
-                          <p className="text-xs text-red-600 mt-2 font-medium">Quote required</p>
-                        )}
+                          ? 'border-green-200 dark:border-green-800 hover:shadow-md cursor-pointer' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 cursor-not-allowed opacity-60 border-dashed'
+                      } bg-white dark:bg-neutral-800 transition-all duration-200 group relative`}>
+                        {/* Edit Quote Button - Top Right */}
                         {hasQuote && (
-                          <p className="text-xs text-green-600 mt-2 font-medium">✓ Quote available</p>
+                          <div className="absolute top-3 right-3 z-10">
+                            <Link 
+                              href={getQuotePageUrl(app.type)} 
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group/edit"
+                            >
+                              <Edit className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover/edit:text-blue-600 dark:group-hover/edit:text-blue-400 transition-colors duration-200" />
+                            </Link>
+                          </div>
                         )}
+                        <CardContent className="p-4">
+                          {/* Mobile Layout - Horizontal */}
+                          <div className="flex items-center gap-3 min-h-[64px] sm:hidden">
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 ${
+                              hasQuote 
+                                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 group-hover:scale-105' 
+                                : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                            }`}>
+                              <Icon className={`w-7 h-7 ${
+                                hasQuote ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate leading-tight mb-2">{app.title}</h3>
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${
+                                  hasQuote ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}></div>
+                                <span className={`text-xs font-medium ${
+                                  hasQuote ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                                }`}>
+                                  {hasQuote ? 'Quote Available' : 'Quote Required'}
+                                </span>
+                              </div>
+                              {hasQuote && quoteInfo && quoteInfo.premium && !isNaN(quoteInfo.premium) && (
+                                <p className="text-base font-bold text-gray-900 dark:text-white">
+                                  ${quoteInfo.premium.toFixed(2)}/month
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Tablet+ Layout - Vertical */}
+                          <div className="hidden sm:block text-left">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 ${
+                                hasQuote 
+                                  ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 group-hover:scale-105' 
+                                  : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                              }`}>
+                                <Icon className={`w-7 h-7 lg:w-8 lg:h-8 ${
+                                  hasQuote ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
+                                }`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                {quoteInfo?.carrier && typeof quoteInfo.carrier === 'string' && (
+                                  <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 truncate">
+                                    {quoteInfo.carrier}
+                                  </p>
+                                )}
+                                {(!quoteInfo?.carrier || typeof quoteInfo.carrier !== 'string') && (
+                                  <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-500 truncate">
+                                    Various carriers available
+                                  </p>
+                                )}
+                                {hasQuote && quoteInfo?.timestamp && quoteInfo.timestamp.seconds && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                                    Quote from {new Date(quoteInfo.timestamp.seconds * 1000).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="space-y-2 mb-4">
+                              <h3 className="font-semibold text-gray-900 dark:text-white text-base lg:text-lg">{app.title}</h3>
+                              <div className="flex items-center gap-1.5">
+                                <div className={`w-1.5 h-1.5 rounded-full ${
+                                  hasQuote ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}></div>
+                                <span className={`text-xs lg:text-sm font-medium ${
+                                  hasQuote ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                                }`}>
+                                  {hasQuote ? 'Quote Available' : 'Quote Required'}
+                                </span>
+                              </div>
+                            </div>
+                            {/* Premium always at bottom */}
+                            <div className="mt-auto">
+                              {hasQuote && quoteInfo && quoteInfo.premium && !isNaN(quoteInfo.premium) ? (
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+                                    ${quoteInfo.premium.toFixed(2)}/month
+                                  </p>
+                                  <div className="text-xs lg:text-sm font-medium text-green-600 dark:text-green-400">
+                                    Ready to Apply
+                                  </div>
+                                </div>
+                              ) : hasQuote ? (
+                                <div className="text-xs lg:text-sm font-medium text-green-600 dark:text-green-400 text-right">
+                                  Ready to Apply
+                                </div>
+                              ) : (
+                                <div className="text-xs lg:text-sm font-medium text-red-600 dark:text-red-400 text-right">
+                                  Get Quote First
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
                       </Card>
                     </Link>
                   </div>

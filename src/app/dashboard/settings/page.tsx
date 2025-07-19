@@ -144,17 +144,6 @@ export default function SettingsPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Account Settings
-            </h1>
-            <p className="text-purple-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Manage your account settings, preferences, and security options.
-            </p>
-          </div>
-        </div>
 
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Section */}
@@ -164,12 +153,12 @@ export default function SettingsPage() {
                 <Avatar className="h-20 w-20 ring-4 ring-purple-100 dark:ring-purple-500/20">
                   {isUploading ? (
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700">
-                      <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-purple-400"/>
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400"/>
                     </div>
                   ) : (
                     <>
                       <AvatarImage src={profile.photoURL || user.photoURL || defaultHawkImage} alt="User avatar" />
-                      <AvatarFallback className="bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xl font-semibold">
+                      <AvatarFallback className="bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xl font-semibold">
                         {displayName?.[0]}
                       </AvatarFallback>
                     </>
@@ -222,7 +211,7 @@ export default function SettingsPage() {
                     </FormItem>
                   )} />
                   <div className="flex justify-end pt-4">
-                    <Button type="submit" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
                       Save Preferences
                     </Button>
                   </div>

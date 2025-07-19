@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack } from "lucide-react";
+import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack, FileText, Smile, Heart, Hospital, Shield } from "lucide-react";
 import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
 import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote, CancerQuoteRequestValues } from "@/types";
 import Link from "next/link";
@@ -83,6 +83,11 @@ const cancerFormSchema = z.object({
 });
 
 export default function QuotesPage() {
+  // Tab animation state
+  const [activeTab, setActiveTab] = useState("medigap");
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [sliderStyle, setSliderStyle] = useState<React.CSSProperties>({});
+
   const [isMedigapPending, startMedigapTransition] = useTransition();
   const [medigapQuotes, setMedigapQuotes] = useState<Quote[] | null>(null);
   const [medigapError, setMedigapError] = useState<string | null>(null);
@@ -105,6 +110,40 @@ export default function QuotesPage() {
 
   // Use autofill profile for user data
   const { profileData, isLoading: isProfileLoading, getFieldValue } = useAutofillProfile();
+
+  // Tab configuration
+  const tabs = [
+    { id: "medigap", label: "Medicare Supplement", shortLabel: "Medicare", icon: FileText },
+    { id: "dental", label: "Dental", shortLabel: "Dental", icon: Smile },
+    { id: "cancer", label: "Cancer", shortLabel: "Cancer", icon: HeartCrack },
+    { id: "hospital-indemnity", label: "Hospital Indemnity", shortLabel: "Hospital", icon: Hospital },
+    { id: "life-insurance", label: "Life Insurance", shortLabel: "Life", icon: Shield },
+  ];
+
+  // Update slider position when active tab changes
+  useEffect(() => {
+    if (tabsRef.current) {
+      const activeTabElement = tabsRef.current.querySelector(`[data-value="${activeTab}"]`) as HTMLElement;
+      if (activeTabElement) {
+        const tabsContainer = tabsRef.current;
+        const containerRect = tabsContainer.getBoundingClientRect();
+        const tabRect = activeTabElement.getBoundingClientRect();
+        
+        const left = tabRect.left - containerRect.left;
+        const width = tabRect.width;
+        
+        setSliderStyle({
+          transform: `translateX(${left}px)`,
+          width: `${width}px`,
+        });
+      }
+    }
+  }, [activeTab]);
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
 
   const medigapForm = useForm<z.infer<typeof medigapFormSchema>>({
     resolver: zodResolver(medigapFormSchema),
@@ -369,262 +408,608 @@ export default function QuotesPage() {
   const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
 
   return (
-    <div className="bg-gray-50 dark:bg-neutral-900">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              Get Supplemental Quotes
-            </h1>
-            <p className="text-purple-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Select a plan type below to get instant quotes for Medigap, Dental, and other supplemental plans.
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
 
-        <Tabs defaultValue="medigap" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto bg-white dark:bg-neutral-800 border shadow-sm">
-              <TabsTrigger value="medigap" className="py-3 text-sm font-medium">Medicare Supplement</TabsTrigger>
-              <TabsTrigger value="dental" className="py-3 text-sm font-medium">Dental</TabsTrigger>
-              <TabsTrigger value="cancer" className="py-3 text-sm font-medium">Cancer</TabsTrigger>
-              <TabsTrigger value="hospital-indemnity" className="py-3 text-sm font-medium">Hospital Indemnity</TabsTrigger>
-              <TabsTrigger value="life-insurance" className="py-3 text-sm font-medium">Life Insurance</TabsTrigger>
-          </TabsList>
-        <TabsContent value="medigap" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Medicare Supplement (Medigap) Quotes</CardTitle>
-                    <CardDescription>All fields are required to get your instant Medigap quotes.</CardDescription>
-                </CardHeader>
-                <CardContent>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <div className="relative overflow-x-auto" ref={tabsRef}>
+            {/* Animated slider background */}
+            <div 
+              className="absolute top-2 h-[calc(100%-16px)] bg-white dark:bg-blue-900 rounded-lg shadow-lg transition-all duration-300 ease-in-out z-0"
+              style={sliderStyle}
+            />
+            
+            <TabsList className="relative grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 shadow-lg rounded-xl p-2 z-10 min-w-fit">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger 
+                    key={tab.id}
+                    value={tab.id}
+                    data-value={tab.id}
+                    className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium rounded-lg transition-all duration-300 relative z-20 whitespace-nowrap ${
+                      activeTab === tab.id 
+                        ? 'text-blue-700 dark:text-blue-200' 
+                        : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    {/* Medicare Supplement responsive text */}
+                    {tab.id === 'medigap' && (
+                      <>
+                        <span className="hidden lg:inline">Medicare Supplement</span>
+                        <span className="lg:hidden">Medicare</span>
+                      </>
+                    )}
+                    {/* Hospital Indemnity responsive text */}
+                    {tab.id === 'hospital-indemnity' && (
+                      <>
+                        <span className="hidden lg:inline">Hospital Indemnity</span>
+                        <span className="lg:hidden">Hospital</span>
+                      </>
+                    )}
+                    {/* Life Insurance responsive text */}
+                    {tab.id === 'life-insurance' && (
+                      <>
+                        <span className="hidden lg:inline">Life Insurance</span>
+                        <span className="lg:hidden">Life</span>
+                      </>
+                    )}
+                    {/* Simple labels for Dental and Cancer */}
+                    {(tab.id === 'dental' || tab.id === 'cancer') && (
+                      <span>{tab.label}</span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+        <TabsContent value="medigap" className="mt-4 sm:mt-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 sm:p-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        Medicare Supplement Quotes
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+                        Complete your information below to receive personalized Medicare Supplement quotes from top-rated insurers.
+                    </p>
+                </div>
+                
+                <div className="p-6 sm:p-8">
                     <Form {...medigapForm}>
                         <form onSubmit={medigapForm.handleSubmit(onMedigapSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={medigapForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={medigapForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={medigapForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="plan" render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Plan Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="A">Plan A</SelectItem>
-                                    <SelectItem value="F">Plan F</SelectItem>
-                                    <SelectItem value="G">Plan G</SelectItem>
-                                    <SelectItem value="N">Plan N</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="effectiveDate" render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Effective Date</FormLabel>
-                                <FormControl><Input type="date" {...field} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={medigapForm.control} name="apply_discounts" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                    <div className="space-y-0.5">
-                                        <FormLabel>Apply Discounts</FormLabel>
+                            
+                            {/* Location Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">1</span>
                                     </div>
-                                    <FormControl>
-                                        <Switch
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isMedigapPending} size="lg">
-                            {isMedigapPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
-                            ) : (
-                                <>Get Instant Quotes</>
-                            )}
-                            </Button>
-                        </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
+                                </div>
+                                <div className="ml-11">
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="zipCode" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ZIP Code</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        placeholder="Enter your ZIP code" 
+                                                        {...field} 
+                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Personal Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">2</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h3>
+                                </div>
+                                <div className="ml-11 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="age" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Age</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="number" 
+                                                        placeholder="65" 
+                                                        {...field} 
+                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} 
+                                    />
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="gender" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Gender</FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup 
+                                                        onValueChange={field.onChange} 
+                                                        defaultValue={field.value} 
+                                                        className="flex gap-4 pt-2"
+                                                    >
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="female" className="text-blue-600" />
+                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="male" className="text-blue-600" />
+                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                                        </div>
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Health Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">3</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Health Information</h3>
+                                </div>
+                                <div className="ml-11">
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="tobacco" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Tobacco Use</FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup 
+                                                        onValueChange={field.onChange} 
+                                                        defaultValue={field.value} 
+                                                        className="flex gap-4 pt-2"
+                                                    >
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="false" className="text-blue-600" />
+                                                            <div>
+                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Non-Tobacco User</label>
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Preferred rates available</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="true" className="text-blue-600" />
+                                                            <div>
+                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Tobacco User</label>
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Standard rates apply</p>
+                                                            </div>
+                                                        </div>
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Plan Selection */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">4</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Plan Selection</h3>
+                                </div>
+                                <div className="ml-11">
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="plan" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Plan Type</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                                                            <SelectValue placeholder="Select your preferred plan type" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="A">Plan A - Basic Coverage</SelectItem>
+                                                        <SelectItem value="F">Plan F - Comprehensive Coverage</SelectItem>
+                                                        <SelectItem value="G">Plan G - Most Popular</SelectItem>
+                                                        <SelectItem value="N">Plan N - Lower Premium</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Additional Preferences */}
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 space-y-6">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Additional Preferences</h4>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="effectiveDate" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Desired Effective Date</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="date" 
+                                                        {...field} 
+                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    
+                                    <FormField 
+                                        control={medigapForm.control} 
+                                        name="apply_discounts" 
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between bg-white dark:bg-gray-900 rounded-xl border-2 border-gray-200 dark:border-gray-600 p-4">
+                                                <div className="space-y-0.5">
+                                                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        Apply Available Discounts
+                                                    </FormLabel>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Include household and loyalty discounts
+                                                    </p>
+                                                </div>
+                                                <FormControl>
+                                                    <Switch
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                        className="data-[state=checked]:bg-blue-600"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="flex justify-center pt-4">
+                                <Button 
+                                    type="submit" 
+                                    disabled={isMedigapPending} 
+                                    size="lg" 
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isMedigapPending ? (
+                                        <>
+                                            <Loader2 className="mr-3 h-5 w-5 animate-spin" /> 
+                                            Generating Quotes...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Get Medicare Supplement Quotes
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </form>
                     </Form>
+                </div>
+            </div>
 
-                    {isMedigapPending && (
-                        <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
-                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                            <h3 className="mt-4 font-headline text-xl font-semibold">Finding the best rates...</h3>
-                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
+            {/* Loading State */}
+            {isMedigapPending && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
+                            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                            Processing Your Request
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Comparing Medicare Supplement plans from multiple carriers...
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {medigapError && (
+                <Alert variant="destructive" className="mt-6">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>Unable to Process Request</AlertTitle>
+                    <AlertDescription>{medigapError}</AlertDescription>
+                </Alert>
+            )}
+
+            {/* Results */}
+            {medigapQuotes && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
+                    <div className="text-center mb-8">
+                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            Your Medicare Supplement Quotes
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            {medigapQuotes.length} plan{medigapQuotes.length !== 1 ? 's' : ''} available based on your criteria
+                        </p>
+                    </div>
+                    
+                    {medigapQuotes.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                            {medigapQuotes.map((quote) => <MedigapQuoteCard key={quote.id} quote={quote} />)}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                            <FileDigit className="h-12 w-12 mx-auto mb-4 text-gray-400"/>
+                            <p className="text-lg mb-2">No quotes found for your criteria</p>
+                            <p className="text-sm">Try adjusting your preferences above</p>
                         </div>
                     )}
-                    {medigapError && (
-                        <Alert variant="destructive" className="mt-8">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Error Fetching Quotes</AlertTitle>
-                        <AlertDescription>{medigapError}</AlertDescription>
-                        </Alert>
-                    )}
-                    
-                    {medigapQuotes && (
-                    <div className="mt-12">
-                        <h3 className="text-2xl font-semibold mb-2">Your Medigap Quotes</h3>
-                        <p className="mb-6 text-muted-foreground">
-                            Found {medigapQuotes.length} quote{medigapQuotes.length !== 1 ? 's' : ''} based on your information.
-                        </p>
-                        {medigapQuotes.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {medigapQuotes.map((quote) => <MedigapQuoteCard key={quote.id} quote={quote} />)}
-                            </div>
-                        ) : (
-                            <div className="text-center py-16 text-muted-foreground">
-                                <FileDigit className="h-10 w-10 mx-auto mb-4"/>
-                                <p>No quotes found for the selected criteria.</p>
-                                <p className="text-sm">Please try different options.</p>
-                            </div>
-                        )}
-                    </div>
-                    )}
-                </CardContent>
-            </Card>
+                </div>
+            )}
         </TabsContent>
-        <TabsContent value="dental" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dental Insurance Quotes</CardTitle>
-                    <CardDescription>Fill out the fields below to get instant dental quotes.</CardDescription>
-                </CardHeader>
-                <CardContent>
+        <TabsContent value="dental" className="mt-4 sm:mt-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-6 sm:p-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        Dental Insurance Quotes
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+                        Provide your information to receive competitive dental insurance quotes from leading providers.
+                    </p>
+                </div>
+                
+                <div className="p-6 sm:p-8">
                     <Form {...dentalForm}>
                         <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={dentalForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={dentalForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={dentalForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField control={dentalForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
-                                <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isDentalPending} size="lg">
-                            {isDentalPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
-                            ) : (
-                                <>Get Dental Quotes</>
-                            )}
-                            </Button>
-                        </div>
+                            
+                            {/* Location Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">1</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
+                                </div>
+                                <div className="ml-11">
+                                    <FormField 
+                                        control={dentalForm.control} 
+                                        name="zipCode" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ZIP Code</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        placeholder="Enter your ZIP code" 
+                                                        {...field} 
+                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Personal Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">2</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h3>
+                                </div>
+                                <div className="ml-11 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <FormField 
+                                        control={dentalForm.control} 
+                                        name="age" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Age</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="number" 
+                                                        placeholder="25" 
+                                                        {...field} 
+                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} 
+                                    />
+                                    <FormField 
+                                        control={dentalForm.control} 
+                                        name="gender" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Gender</FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup 
+                                                        onValueChange={field.onChange} 
+                                                        defaultValue={field.value} 
+                                                        className="flex gap-4 pt-2"
+                                                    >
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="female" className="text-green-600" />
+                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="male" className="text-green-600" />
+                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                                        </div>
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Health Information */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">3</span>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Health Information</h3>
+                                </div>
+                                <div className="ml-11">
+                                    <FormField 
+                                        control={dentalForm.control} 
+                                        name="tobacco" 
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Tobacco Use</FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup 
+                                                        onValueChange={field.onChange} 
+                                                        defaultValue={field.value} 
+                                                        className="flex gap-4 pt-2"
+                                                    >
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="false" className="text-green-600" />
+                                                            <div>
+                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Non-Tobacco User</label>
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Preferred rates available</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
+                                                            <RadioGroupItem value="true" className="text-green-600" />
+                                                            <div>
+                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Tobacco User</label>
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Standard rates apply</p>
+                                                            </div>
+                                                        </div>
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="flex justify-center pt-4">
+                                <Button 
+                                    type="submit" 
+                                    disabled={isDentalPending} 
+                                    size="lg" 
+                                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDentalPending ? (
+                                        <>
+                                            <Loader2 className="mr-3 h-5 w-5 animate-spin" /> 
+                                            Generating Quotes...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Get Dental Insurance Quotes
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </form>
                     </Form>
-                    
-                    {isDentalPending && (
-                        <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
-                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                            <h3 className="mt-4 font-headline text-xl font-semibold">Finding dental plans...</h3>
-                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                        </div>
-                    )}
-                    {dentalError && (
-                        <Alert variant="destructive" className="mt-8">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Error Fetching Dental Quotes</AlertTitle>
-                        <AlertDescription>{dentalError}</AlertDescription>
-                        </Alert>
-                    )}
+                </div>
+            </div>
 
-                    {dentalQuotes && (
-                        <div className="mt-12">
-                            <h3 className="text-2xl font-semibold mb-2">Your Dental Quotes</h3>
-                            <p className="mb-6 text-muted-foreground">
-                                Found {dentalQuotes.length} quote{dentalQuotes.length !== 1 ? 's' : ''} based on your information.
-                            </p>
-                            {dentalQuotes.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {dentalQuotes.map((quote) => <DentalQuoteCard key={quote.id} quote={quote} />)}
-                                </div>
-                            ) : (
-                                <div className="text-center py-16 text-muted-foreground">
-                                    <FileDigit className="h-10 w-10 mx-auto mb-4"/>
-                                    <p>No quotes found for the selected criteria.</p>
-                                    <p className="text-sm">Please try different options.</p>
-                                </div>
-                            )}
+            {/* Loading State */}
+            {isDentalPending && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
+                            <Loader2 className="w-8 h-8 text-green-600 dark:text-green-400 animate-spin" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                            Processing Your Request
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Comparing dental insurance plans from multiple providers...
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {dentalError && (
+                <Alert variant="destructive" className="mt-6">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>Unable to Process Request</AlertTitle>
+                    <AlertDescription>{dentalError}</AlertDescription>
+                </Alert>
+            )}
+
+            {/* Results */}
+            {dentalQuotes && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
+                    <div className="text-center mb-8">
+                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            Your Dental Insurance Quotes
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            {dentalQuotes.length} plan{dentalQuotes.length !== 1 ? 's' : ''} available based on your criteria
+                        </p>
+                    </div>
+                    
+                    {dentalQuotes.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                            {dentalQuotes.map((quote) => <DentalQuoteCard key={quote.id} quote={quote} />)}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                            <FileDigit className="h-12 w-12 mx-auto mb-4 text-gray-400"/>
+                            <p className="text-lg mb-2">No dental plans found</p>
+                            <p className="text-sm">Try different criteria above</p>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            )}
         </TabsContent>
-        <TabsContent value="cancer" className="mt-6">
+        <TabsContent value="cancer" className="mt-4 sm:mt-6">
             <Card>
-                <CardHeader>
-                    <CardTitle>Cancer Insurance Quote</CardTitle>
-                    <CardDescription>Fill out the fields below to get a personalized cancer insurance quote.</CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-lg sm:text-xl">Cancer Insurance Quote</CardTitle>
+                    <CardDescription className="text-sm sm:text-base">Fill out the fields below to get a personalized cancer insurance quote.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                     <Form {...cancerForm}>
-                        <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)} className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)} className="space-y-6 sm:space-y-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                  <FormField control={cancerForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="TX">Texas</SelectItem><SelectItem value="GA">Georgia</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => ( <FormItem><FormLabel>Tobacco Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem><SelectItem value="Tobacco">Tobacco</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( <FormItem className="lg:col-span-2"><FormLabel>Family Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Applicant Only">Applicant Only</SelectItem><SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem><SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem><SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                                 <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( <FormItem className="sm:col-span-2 lg:col-span-2"><FormLabel>Family Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Applicant Only">Applicant Only</SelectItem><SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem><SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem><SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => ( <FormItem><FormLabel>Premium Mode</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem><SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem><SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem><SelectItem value="Annual">Annual</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( <FormItem><FormLabel>Carcinoma In Situ</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="25%">25%</SelectItem><SelectItem value="100%">100%</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                                  <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
-                            <div className="flex justify-end items-center gap-4">
-                                <Button type="submit" disabled={isCancerPending} size="lg">
+                            <div className="flex flex-col sm:flex-row justify-end items-center gap-3 sm:gap-4">
+                                <Button type="submit" disabled={isCancerPending} size="lg" className="w-full sm:w-auto">
                                 {isCancerPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculating...</> : "Get Quote"}
                                 </Button>
                             </div>

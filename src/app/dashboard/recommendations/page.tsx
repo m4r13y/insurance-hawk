@@ -765,17 +765,6 @@ export default function RetirementPlanPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 dark:from-emerald-700 dark:via-emerald-800 dark:to-emerald-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-              AI Retirement Plan
-            </h1>
-            <p className="text-emerald-100 text-base lg:text-lg leading-relaxed opacity-90">
-              Use our AI tool to create a personalized retirement strategy tailored to your financial goals and Medicare needs.
-            </p>
-          </div>
-        </div>
         
         <RetirementPlanForm />
       </div>

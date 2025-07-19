@@ -131,26 +131,23 @@ export default function DataStatusPage() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-violet-600 via-violet-700 to-violet-800 dark:from-violet-700 dark:via-violet-800 dark:to-violet-900 rounded-xl lg:rounded-2xl p-6 lg:p-8 text-white shadow-xl">
-          <div className="max-w-4xl flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3">
-                Data Management
-              </h1>
-              <p className="text-violet-100 text-base lg:text-lg leading-relaxed opacity-90">
-                Monitor and manage all your account data
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={loadAnalytics}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 lg:mb-3 text-gray-900 dark:text-white">
+              Data Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-base lg:text-lg leading-relaxed">
+              Monitor and manage all your account data
+            </p>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={loadAnalytics}
+            className="border-gray-300 dark:border-gray-600"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
         {/* Profile Completion Overview */}
