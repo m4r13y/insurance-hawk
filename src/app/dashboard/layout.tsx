@@ -46,6 +46,8 @@ import {
   User,
   Loader2,
   Stethoscope,
+  Library,
+  Scale,
 } from "lucide-react";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
@@ -64,6 +66,9 @@ function DashboardLayoutComponent({
   const isApplyFormPage = pathname === '/dashboard/apply' && !!applicationType;
   const isRetirementPlanPage = pathname === '/dashboard/recommendations';
   const isHealthInfoPage = pathname === '/dashboard/health-info';
+  
+  // Check if we're on a page that should hide the main sidebar
+  const shouldHideMainSidebar = pathname === '/dashboard/compare-plans';
 
   const isFullScreenForm = isApplyFormPage || isRetirementPlanPage || isHealthInfoPage;
 
@@ -135,6 +140,11 @@ function DashboardLayoutComponent({
     );
   }
 
+  // If we're on compare-plans page, render without main sidebar
+  if (shouldHideMainSidebar) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen md:flex">
@@ -172,6 +182,11 @@ function DashboardLayoutComponent({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/compare-plans")} tooltip="Compare Plans">
+                    <Link href="/dashboard/compare-plans"><Scale /><span>Compare Plans</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/apply")} tooltip="Submit Application">
                     <Link href="/dashboard/apply"><FileText /><span>Submit Application</span></Link>
                   </SidebarMenuButton>
@@ -184,6 +199,11 @@ function DashboardLayoutComponent({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/education")} tooltip="Education">
                     <Link href="/dashboard/education"><BookOpen /><span>Education</span></Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/resources")} tooltip="Resources">
+                    <Link href="/dashboard/resources"><Library /><span>Resources</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
