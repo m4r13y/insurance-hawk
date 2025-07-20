@@ -8,31 +8,149 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
 import { UserNav } from "@/components/user-nav"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Menu } from "lucide-react"
+import { Menu, ChevronDown, Rocket, PiggyBank, Heart, FileDigit, Scale, FileText, User, BookOpen, Library, Settings, Stethoscope } from "lucide-react"
 
 interface NavItem {
+  title: string
   href: string
-  label: string
+  description: string
+  icon: React.ElementType
 }
 
-const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/recommendations", label: "Retirement Plan" },
-  { href: "/dashboard/health-quotes", label: "Health Quotes" },
-  { href: "/dashboard/quotes", label: "Supplemental Quotes" },
-  { href: "/dashboard/compare-plans", label: "Compare" },
-  { href: "/dashboard/apply", label: "Apply" },
-  { href: "/dashboard/documents", label: "My Account" },
-  { href: "/dashboard/education", label: "Education" },
-  { href: "/dashboard/resources", label: "Resources" },
-  { href: "/dashboard/settings", label: "Settings" },
+const getInsuranceItems: NavItem[] = [
+  {
+    title: "Health Quotes (Under 65)",
+    href: "/dashboard/health-quotes",
+    description: "Find individual & family health plans.",
+    icon: Heart,
+  },
+  {
+    title: "Supplemental Quotes (65+)",
+    href: "/dashboard/quotes",
+    description: "Get quotes for Medigap, Dental, and more.",
+    icon: FileDigit,
+  },
+  {
+    title: "Submit Application",
+    href: "/dashboard/apply",
+    description: "Complete and submit your insurance application.",
+    icon: FileText,
+  },
+];
+
+const toolsAndResourcesItems: NavItem[] = [
+  {
+    title: "Compare Plans",
+    href: "/dashboard/compare-plans",
+    description: "Side-by-side plan comparisons.",
+    icon: Scale,
+  },
+  {
+    title: "Retirement Plan",
+    href: "/dashboard/recommendations",
+    description: "Get a personalized retirement analysis.",
+    icon: PiggyBank,
+  },
+  {
+    title: "Provider Lookup",
+    href: "/dashboard/provider-lookup",
+    description: "Find Medicare-accepted providers.",
+    icon: Stethoscope,
+  },
+  {
+    title: "Education Center",
+    href: "/dashboard/education",
+    description: "Learn about Medicare with our AI assistant.",
+    icon: BookOpen,
+  },
+  {
+    title: "Resource Library",
+    href: "/dashboard/resources",
+    description: "Articles, guides, and official documents.",
+    icon: Library,
+  },
+];
+
+const myAccountItems: NavItem[] = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    description: "Your main account overview.",
+    icon: Rocket,
+  },
+  {
+    title: "My Account",
+    href: "/dashboard/documents",
+    description: "Manage policies, documents, and profile.",
+    icon: User,
+  },
+  {
+    title: "Settings",
+    href: "/dashboard/settings",
+    description: "Update your account and notification settings.",
+    icon: Settings,
+  },
 ]
+
+const allNavItems = [...getInsuranceItems, ...toolsAndResourcesItems, ...myAccountItems];
+
+
+function NavigationMenu() {
+  const pathname = usePathname();
+  
+  const createMenu = (title: string, items: NavItem[]) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="flex items-center gap-1 text-base">
+          {title}
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64" align="start">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <DropdownMenuItem key={item.href} asChild>
+              <Link href={item.href} className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <span className={cn(
+                    "font-medium",
+                    pathname === item.href ? "text-primary" : "text-foreground"
+                  )}>
+                    {item.title}
+                  </span>
+                </div>
+                <p className="ml-6 text-xs text-muted-foreground">{item.description}</p>
+              </Link>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  return (
+    <nav className="flex items-center gap-2 text-sm">
+      {createMenu("Get Insurance", getInsuranceItems)}
+      {createMenu("Tools & Resources", toolsAndResourcesItems)}
+      {createMenu("My Account", myAccountItems)}
+    </nav>
+  );
+}
+
 
 export function Header() {
   const pathname = usePathname()
@@ -40,25 +158,12 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
             <Logo />
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  pathname === item.href ? "text-foreground" : "text-foreground/60"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <NavigationMenu />
         </div>
 
         {/* Mobile Nav */}
@@ -82,17 +187,17 @@ export function Header() {
             </Link>
             <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
               <div className="flex flex-col space-y-3">
-                {navItems.map((item) => (
+                {allNavItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsSheetOpen(false)}
                     className={cn(
                       "transition-colors hover:text-foreground",
-                       pathname === item.href ? "text-foreground" : "text-muted-foreground"
+                       pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
                     )}
                   >
-                    {item.label}
+                    {item.title}
                   </Link>
                 ))}
               </div>
