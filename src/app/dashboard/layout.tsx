@@ -39,7 +39,7 @@ import {
     Stethoscope01Icon,
     Health01Icon,
     DocumentTextIcon,
-    CompareIcon,
+    GitCompareIcon as CompareIcon,
     DocumentAddIcon,
     User01Icon,
     BookOpen01Icon,

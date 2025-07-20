@@ -12,13 +12,13 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { 
     Menu01Icon, 
     Cancel01Icon, 
-    ChevronDownIcon, 
-    ChevronRightIcon, 
+    ArrowDown01Icon, 
+    ArrowRight01Icon, 
     Rocket01Icon, 
     BankIcon, 
     Health01Icon, 
     DocumentTextIcon, 
-    CompareIcon, 
+    GitCompareIcon as CompareIcon, 
     DocumentAddIcon, 
     User01Icon, 
     BookOpen01Icon, 
@@ -136,7 +136,7 @@ export function Header() {
                     <button id="hs-header-base-mega-menu-fullwidth" type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" aria-haspopup="menu" aria-expanded="false" aria-label="Mega Menu">
                       <HugeiconsIcon icon={LibraryIcon} className="shrink-0 size-4 me-3 md:me-2" />
                       Tools & Resources
-                      <HugeiconsIcon icon={ChevronDownIcon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <HugeiconsIcon icon={ArrowDown01Icon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
 
                     <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 relative w-full min-w-60 hidden z-10 top-full start-0 before:absolute before:-top-5 before:start-0 before:w-full before:h-5" role="menu" aria-orientation="vertical" aria-labelledby="hs-header-base-mega-menu-fullwidth">
@@ -156,7 +156,7 @@ export function Header() {
                                     </p>
                                     <p className="mt-3 inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 group-hover:underline group-focus:underline font-medium dark:text-blue-400">
                                         Contact an Advisor
-                                        <HugeiconsIcon icon={ChevronRightIcon} className="shrink-0 size-4" />
+                                        <HugeiconsIcon icon={ArrowRight01Icon} className="shrink-0 size-4" />
                                     </p>
                                     </div>
                                 </a>
@@ -170,7 +170,7 @@ export function Header() {
                     <button type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
                       <HugeiconsIcon icon={Health01Icon} className="shrink-0 size-4 me-3 md:me-2" />
                       Get Insurance
-                      <HugeiconsIcon icon={ChevronDownIcon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <HugeiconsIcon icon={ArrowDown01Icon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
                     <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 w-full hidden z-10 top-full start-0 min-w-60 md:bg-white md:shadow-md md:rounded-lg p-2 dark:md:bg-neutral-800 md:dark:border dark:md:border-neutral-700">
                         {getInsuranceItems.map(item => <MegaMenuLink key={item.href} item={item} />)}
