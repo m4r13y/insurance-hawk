@@ -154,7 +154,7 @@ export function MedicareBeginnersGuideContent() {
                 <li>Your Medicare card arrives by mail in a few weeks.</li>
                 <li>Review your chosen plan’s materials—look for your Summary of Benefits and Evidence of Coverage.</li>
                 <li>If you chose a Medicare Advantage or Part D plan, you’ll get a separate card from that company.</li>
-                <li>Make sure your doctor and pharmacy are in your plan’s network (for Advantage or drug plans).</li>
+                <li>Make sure your doctor and pharmacy are in your new plan’s network (for Advantage or drug plans).</li>
                 <li>Set up online access at Medicare.gov to track claims and see your coverage.</li>
             </ul>
 
