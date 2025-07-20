@@ -151,9 +151,9 @@ export default function ResourcesPage() {
                       </div>
                       
                       <div className="flex flex-wrap gap-1">
-                        {resource.tags.slice(0, 3).map((tag) => (
+                        {resource.tags && resource.tags.slice(0, 3).map((tag) => (
                           <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
+                            {tag.replace("'", "&apos;")}
                           </Badge>
                         ))}
                       </div>
@@ -290,9 +290,9 @@ export default function ResourcesPage() {
                       </div>
                       
                       <div className="flex flex-wrap gap-1 mb-4">
-                        {resource.tags.slice(0, 4).map((tag) => (
+                      {resource.tags && resource.tags.slice(0, 4).map((tag: string) => (
                           <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
+                            {tag.replace("'", "&apos;")}
                           </Badge>
                         ))}
                       </div>

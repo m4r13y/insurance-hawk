@@ -2,6 +2,14 @@
 // Each resource can be used to generate article/blog pages and filter by product
 
 export interface ResourceCard {
+  rating: any;
+  id: Key | null | undefined;
+  official: any;
+  phone: any;
+  url: any;
+  category: string;
+  featured: boolean;
+  tags: string | string[] | null | undefined;
   title: string;
   type: string;
   linkLabel: string;
