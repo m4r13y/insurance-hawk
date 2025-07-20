@@ -35,13 +35,12 @@ import { AddressSearchInput } from "@/components/ui/address-search-input"
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
     ShieldTickIcon,
-    CheckCircleIcon,
+    CheckmarkCircleIcon,
     ArrowRight01Icon,
     UserIcon,
     HealthIcon,
     File01Icon,
     FileTickIcon,
-    CelebrationIcon,
     HeartIcon,
     SmileIcon,
     Hospital01Icon,
@@ -179,7 +178,7 @@ const SuccessPage = ({ title }: { title: string }) => (
         <Card className="w-full">
             <CardHeader>
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <HugeiconsIcon icon={CelebrationIcon} className="h-8 w-8" />
+                    <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-8 w-8" />
                 </div>
                 <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">{title} Complete!</CardTitle>
                 <CardDescription className="text-base">Thank you for submitting your application.</CardDescription>
@@ -606,7 +605,7 @@ function CancerApplication() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center space-y-4">
-                            <HugeiconsIcon icon={CheckCircleIcon} className="mx-auto h-16 w-16 text-green-500" />
+                            <HugeiconsIcon icon={CheckmarkCircleIcon} className="mx-auto h-16 w-16 text-green-500" />
                             <h2 className="text-2xl font-bold text-green-700">Application Submitted Successfully!</h2>
                             <p className="text-gray-600">
                                 Your Cancer Insurance application has been received and is being processed. 
