@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -21,191 +22,11 @@ import {
   Filter,
 } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { resourcesList } from "@/resources/resourcesList";
+import type { ResourceCard } from "@/resources/resourcesList";
 
-interface Resource {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  type: 'website' | 'document' | 'phone' | 'tool' | 'video' | 'article';
-  url?: string;
-  slug?: string;
-  phone?: string;
-  rating?: number;
-  tags: string[];
-  featured?: boolean;
-  official?: boolean;
-}
-
-const resources: Resource[] = [
-  // Official Medicare Resources
-  {
-    id: "medicare-gov",
-    title: "Medicare.gov Official Website",
-    description: "The official U.S. government site for Medicare. Find plans, coverage information, and enrollment details.",
-    category: "Official",
-    type: "website",
-    url: "https://www.medicare.gov",
-    rating: 5,
-    tags: ["official", "plans", "enrollment", "coverage"],
-    featured: true,
-    official: true,
-  },
-  {
-    id: "medicare-plan-finder",
-    title: "Medicare Plan Finder",
-    description: "Compare Medicare health plans and prescription drug plans in your area.",
-    category: "Official",
-    type: "tool",
-    url: "https://www.medicare.gov/plan-compare",
-    rating: 5,
-    tags: ["tool", "compare", "plans", "prescription"],
-    featured: true,
-    official: true,
-  },
-  {
-    id: "medicare-penalties-article",
-    title: "Understanding Medicare Late Enrollment Penalties",
-    description: "A complete guide to different Medicare late enrollment penalties, how much they cost, and simple steps you can take to avoid them.",
-    category: "Education",
-    type: "article",
-    slug: "medicare-late-enrollment-penalties",
-    rating: 5,
-    tags: ["medicare penalties", "enrollment", "part b", "part d"],
-    featured: true,
-  },
-  {
-    id: "medicare-helpline",
-    title: "Medicare Helpline",
-    description: "24/7 help with Medicare questions, enrollment, and claims issues.",
-    category: "Support",
-    type: "phone",
-    phone: "1-800-MEDICARE (1-800-633-4227)",
-    rating: 4,
-    tags: ["support", "helpline", "24/7", "enrollment"],
-    official: true,
-  },
-  
-  // State Health Insurance Programs
-  {
-    id: "ship",
-    title: "State Health Insurance Assistance Program (SHIP)",
-    description: "Free, personalized Medicare counseling and assistance in your state.",
-    category: "Support",
-    type: "website",
-    url: "https://www.shiphelp.org",
-    rating: 5,
-    tags: ["counseling", "free", "state", "assistance"],
-    official: true,
-  },
-  
-  // Cost and Financial Assistance
-  {
-    id: "medicare-savings-programs",
-    title: "Medicare Savings Programs",
-    description: "Information about programs that help pay Medicare premiums and costs.",
-    category: "Financial",
-    type: "website",
-    url: "https://www.medicare.gov/your-medicare-costs/get-help-paying-costs/medicare-savings-programs",
-    rating: 4,
-    tags: ["savings", "financial-assistance", "premiums", "costs"],
-    official: true,
-  },
-  {
-    id: "extra-help",
-    title: "Extra Help with Medicare Prescription Drug Costs",
-    description: "Federal program to help pay Medicare prescription drug costs.",
-    category: "Financial",
-    type: "website",
-    url: "https://www.ssa.gov/benefits/medicare/prescriptionhelp",
-    rating: 4,
-    tags: ["prescription", "extra-help", "financial-assistance", "ssa"],
-    official: true,
-  },
-  
-  // Educational Resources
-  {
-    id: "medicare-and-you",
-    title: "Medicare & You Handbook",
-    description: "Official Medicare handbook with comprehensive coverage information.",
-    category: "Education",
-    type: "document",
-    url: "https://www.medicare.gov/Pubs/pdf/10050-Medicare-and-You.pdf",
-    rating: 5,
-    tags: ["handbook", "comprehensive", "coverage", "official"],
-    official: true,
-  },
-  {
-    id: "medicare-basics",
-    title: "Medicare Basics Video Series",
-    description: "Educational videos covering Medicare fundamentals and enrollment.",
-    category: "Education",
-    type: "video",
-    url: "https://www.medicare.gov/basics/get-started-with-medicare/medicare-basics",
-    rating: 4,
-    tags: ["video", "basics", "fundamentals", "enrollment"],
-    official: true,
-  },
-  
-  // Health and Wellness
-  {
-    id: "medicare-wellness",
-    title: "Medicare Wellness Visits",
-    description: "Information about free preventive care and wellness visits covered by Medicare.",
-    category: "Health",
-    type: "website",
-    url: "https://www.medicare.gov/coverage/wellness-visits",
-    rating: 4,
-    tags: ["wellness", "preventive", "free", "coverage"],
-    official: true,
-  },
-  {
-    id: "mymedicare-gov",
-    title: "MyMedicare.gov Account",
-    description: "Secure online account to manage your Medicare benefits and claims.",
-    category: "Tools",
-    type: "website",
-    url: "https://www.mymedicare.gov",
-    rating: 4,
-    tags: ["account", "online", "benefits", "claims"],
-    official: true,
-  },
-  
-  // Fraud and Scams
-  {
-    id: "medicare-fraud",
-    title: "Report Medicare Fraud",
-    description: "How to recognize and report Medicare fraud, errors, and abuse.",
-    category: "Support",
-    type: "website",
-    url: "https://www.medicare.gov/forms-help-resources/report-fraud-and-abuse",
-    rating: 4,
-    tags: ["fraud", "report", "abuse", "scams"],
-    official: true,
-  },
-  
-  // Third-party Resources
-  {
-    id: "medicare-interactive",
-    title: "Medicare Interactive",
-    description: "Comprehensive Medicare education website with detailed explanations.",
-    category: "Education",
-    type: "website",
-    url: "https://www.medicareinteractive.org",
-    rating: 4,
-    tags: ["education", "comprehensive", "explanations", "learning"],
-  },
-  {
-    id: "kff-medicare",
-    title: "KFF Medicare Policy Resources",
-    description: "Research and analysis on Medicare policy and trends.",
-    category: "Research",
-    type: "website",
-    url: "https://www.kff.org/medicare",
-    rating: 4,
-    tags: ["research", "policy", "analysis", "trends"],
-  },
-];
+const resources = resourcesList;
 
 const categories = ["All", "Official", "Support", "Financial", "Education", "Health", "Tools", "Research"];
 const types = ["All", "article", "website", "document", "phone", "tool", "video"];
@@ -217,7 +38,7 @@ export default function ResourcesPage() {
   const [selectedType, setSelectedType] = useState("All");
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  const filteredResources: Resource[] = resources.filter((resource: Resource) => {
+  const filteredResources: ResourceCard[] = resources.filter((resource: ResourceCard) => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -229,7 +50,7 @@ export default function ResourcesPage() {
     return matchesSearch && matchesCategory && matchesType && matchesFeatured;
   });
 
-  const featuredResources: Resource[] = resources.filter((resource: Resource) => resource.featured);
+  const featuredResources: ResourceCard[] = resources.filter((resource: ResourceCard) => resource.featured);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -256,14 +77,25 @@ export default function ResourcesPage() {
     }
   };
 
-  const handleResourceClick = (resource: Resource) => {
+  const handleResourceClick = (e: React.MouseEvent, resource: ResourceCard) => {
     if (resource.type === 'article' && resource.slug) {
-      router.push(`/dashboard/resources/${resource.slug}`);
-    } else if (resource.url) {
+      // Let the Next.js Link handle navigation
+      return;
+    }
+    // For external links, prevent default and open in new tab
+    e.preventDefault();
+    if (resource.url) {
       window.open(resource.url, '_blank');
     } else if (resource.phone) {
       window.location.href = `tel:${resource.phone}`;
     }
+  };
+  
+  const getResourceHref = (resource: ResourceCard) => {
+    if (resource.type === 'article' && resource.slug) {
+      return `/dashboard/resources/${resource.slug}`;
+    }
+    return resource.url || '#';
   };
 
   return (
@@ -288,53 +120,60 @@ export default function ResourcesPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredResources.map((resource) => (
-              <Card key={resource.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleResourceClick(resource)}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {getIcon(resource.type)}
-                      <CardTitle className="text-lg">{resource.title}</CardTitle>
-                    </div>
-                    {resource.official && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        Official
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <CardDescription className="text-sm">{resource.description}</CardDescription>
-                  
-                  <div className="flex items-center gap-2">
-                    {getCategoryIcon(resource.category)}
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category.replace("'", "&apos;")}</span>
-                    {resource.rating && (
-                      <div className="flex items-center gap-1 ml-auto">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{resource.rating}</span>
+              <Link key={resource.id} href={getResourceHref(resource)} legacyBehavior passHref>
+                <a onClick={(e) => handleResourceClick(e, resource)} target={resource.url ? '_blank' : undefined} rel={resource.url ? 'noopener noreferrer' : undefined} className="block h-full">
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          {getIcon(resource.type)}
+                          <CardTitle className="text-lg">{resource.title}</CardTitle>
+                        </div>
+                        {resource.official && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Official
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {resource.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  
-                  <div className="pt-2">
-                    <Button 
-                      className="w-full"
-                      variant={resource.official ? "default" : "outline"}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Visit Resource
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <CardDescription className="text-sm">{resource.description}</CardDescription>
+                      
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(resource.category)}
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category.replace("'", "&apos;")}</span>
+                        {resource.rating && (
+                          <div className="flex items-center gap-1 ml-auto">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium">{resource.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {resource.tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="pt-2">
+                        <Button 
+                          className="w-full"
+                          variant={resource.official ? "default" : "outline"}
+                          asChild
+                        >
+                          <span>
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Visit Resource
+                          </span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -414,60 +253,64 @@ export default function ResourcesPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredResources.map((resource) => (
-              <Card key={resource.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleResourceClick(resource)}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getIcon(resource.type)}
-                      <h3 className="font-semibold text-lg">{resource.title}</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {resource.featured && (
-                        <Star className="w-4 h-4 text-yellow-500" />
-                      )}
-                      {resource.official && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">
-                          Official
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{resource.description}</p>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getCategoryIcon(resource.category)}
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category}</span>
-                    </div>
-                    {resource.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{resource.rating}</span>
+              <Link key={resource.id} href={getResourceHref(resource)} legacyBehavior passHref>
+                <a onClick={(e) => handleResourceClick(e, resource)} target={resource.url ? '_blank' : undefined} rel={resource.url ? 'noopener noreferrer' : undefined} className="block h-full">
+                  <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {getIcon(resource.type)}
+                          <h3 className="font-semibold text-lg">{resource.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {resource.featured && (
+                            <Star className="w-4 h-4 text-yellow-500" />
+                          )}
+                          {resource.official && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">
+                              Official
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {resource.tags.slice(0, 4).map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm"
-                      variant={resource.official ? "default" : "outline"}
-                      className="flex-1"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Visit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{resource.description}</p>
+                      
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(resource.category)}
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category}</span>
+                        </div>
+                        {resource.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium">{resource.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {resource.tags.slice(0, 4).map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm"
+                          variant={resource.official ? "default" : "outline"}
+                          className="flex-1"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Visit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
+              </Link>
             ))}
           </div>
           
