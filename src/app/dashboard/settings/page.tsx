@@ -12,12 +12,13 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect, useRef } from "react"
-import { Loader2 } from "lucide-react"
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
 import { db, auth, storage } from "@/lib/firebase"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ReloadIcon } from '@hugeicons/core-free-icons';
 
 // --- Schemas --- //
 const notificationsFormSchema = z.object({
@@ -135,7 +136,7 @@ export default function SettingsPage() {
         }
     };
 
-    if (loading) { return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div> }
+    if (loading) { return <div className="flex h-full items-center justify-center"><HugeiconsIcon icon={ReloadIcon} className="h-8 w-8 animate-spin"/></div> }
   
     if (!user) { return null }
 
@@ -153,7 +154,7 @@ export default function SettingsPage() {
                 <Avatar className="h-20 w-20 ring-4 ring-purple-100 dark:ring-purple-500/20">
                   {isUploading ? (
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700">
-                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400"/>
+                      <HugeiconsIcon icon={ReloadIcon} className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400"/>
                     </div>
                   ) : (
                     <>
@@ -175,7 +176,7 @@ export default function SettingsPage() {
                     disabled={isUploading}
                     className="mt-3"
                   >
-                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                    {isUploading ? <HugeiconsIcon icon={ReloadIcon} className="mr-2 h-4 w-4 animate-spin"/> : null}
                     Upload Photo
                   </Button>
                 </div>
@@ -252,7 +253,7 @@ export default function SettingsPage() {
                   )} />
                   <div className="flex justify-end pt-4">
                     <Button type="submit" variant="destructive" disabled={securityForm.formState.isSubmitting}>
-                      {securityForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                      {securityForm.formState.isSubmitting && <HugeiconsIcon icon={ReloadIcon} className="mr-2 h-4 w-4 animate-spin"/>}
                       Change Password
                     </Button>
                   </div>
@@ -265,7 +266,5 @@ export default function SettingsPage() {
     </div>
   )
 }
-
-    
 
     
