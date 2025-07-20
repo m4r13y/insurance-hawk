@@ -1,4 +1,3 @@
-
 import React from "react";
 import { PartDPenaltyEstimator } from "@/components/PartDPenaltyEstimator";
 import { PartBPenaltyEstimator } from "@/components/PartBPenaltyEstimator";
@@ -131,9 +130,9 @@ export default function BlogArticlePage() {
       {/* Sidebar */}
       <BlogSidebar
         author={{
-          name: "Leyla Ludic",
-          avatarUrl: "https://images.unsplash.com/photo-1669837401587-f9a4cfe3126e?ixlib=rb-4.0.3&auto=format&fit=facearea&facepad=2&w=320&h=320&q=80",
-          bio: "UI/UX enthusiast",
+          name: "Jonathan Hawkins",
+          avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77",
+          bio: "CFP | Medicare Specialist",
         }}
         mediaLinks={[
           {
