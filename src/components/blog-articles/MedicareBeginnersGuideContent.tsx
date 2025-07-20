@@ -82,7 +82,6 @@ export function MedicareBeginnersGuideContent() {
                 <li>Drug plan and Advantage plan costs vary; some have $0 premiums, some charge more depending on coverage.</li>
                 <li>In 2025, there’s a <strong>$2,000 annual limit</strong> on what you pay out-of-pocket for prescriptions under Part D.</li>
             </ul>
-            <p><strong>What to expect after you enroll:</strong> You’ll get your red, white, and blue Medicare card in the mail. Take it to your doctor’s office at your next visit, and check that your pharmacy accepts your drug plan if you added Part D.</p>
             
              <figure className="my-8">
               <Image 
