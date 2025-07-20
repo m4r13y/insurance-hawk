@@ -6,6 +6,8 @@ interface BlogHeaderProps {
   category: string;
   date: string;
   intro: string;
+  breadcrumbHref: string;
+  breadcrumbLabel: string;
 }
 
 export const BlogHeader: React.FC<BlogHeaderProps> = ({
@@ -14,11 +16,13 @@ export const BlogHeader: React.FC<BlogHeaderProps> = ({
   category,
   date,
   intro,
+  breadcrumbHref,
+  breadcrumbLabel,
 }) => (
   <div className="mb-8 pb-6 border-b border-gray-200 dark:border-neutral-700">
-    <a className="inline-flex items-center gap-x-1.5 text-sm text-gray-600 decoration-2 hover:underline focus:outline-hidden focus:underline dark:text-blue-500" href="#">
+    <a className="inline-flex items-center gap-x-1.5 text-sm text-gray-600 decoration-2 hover:underline focus:outline-hidden focus:underline dark:text-blue-500" href={breadcrumbHref}>
       <svg className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-      Back to Blog
+      Back to {breadcrumbLabel}
     </a>
     <h1 className="text-3xl font-bold lg:text-5xl dark:text-white mt-4 mb-2">{title}</h1>
     {subtitle && <h2 className="text-xl font-semibold mb-2">{subtitle}</h2>}

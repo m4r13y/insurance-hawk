@@ -15,6 +15,8 @@ export function WorkingPast65Content() {
           category="Medicare"
           date="July 22, 2025"
           intro="Working past age 65 is becoming more common. But what does that mean for your Medicare enrollment? This guide will walk you through your options."
+          breadcrumbHref="/dashboard/resources"
+          breadcrumbLabel="Resources"
         />
         
         {/* Generic Article Content */}

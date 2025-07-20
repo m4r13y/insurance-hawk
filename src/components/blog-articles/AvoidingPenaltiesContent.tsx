@@ -19,6 +19,8 @@ export function AvoidingPenaltiesContent() {
           category="Medicare"
           date="July 19, 2025"
           intro="Missing your Medicare enrollment window can cost you — not just in stress, but in real money. Medicare has several late enrollment penalties that can stick with you for life. They’re not one-time fees. They’re monthly surcharges added to your premium for as long as you have that part of Medicare."
+          breadcrumbHref="/dashboard/resources"
+          breadcrumbLabel="Resources"
         />
         {/* Section Navigation - Tool Cards */}
         <nav className="my-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
