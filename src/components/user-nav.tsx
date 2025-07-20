@@ -18,7 +18,7 @@ import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { CreditCardIcon, Logout02Icon, Setting01Icon, User01Icon } from '@hugeicons/core-free-icons';
+import { CreditCardIcon, LogoutCircle01Icon, Settings02Icon, UserIcon } from '@hugeicons/core-free-icons';
 
 
 const defaultHawkImage = "/hawk-profile.jpg";
@@ -60,7 +60,7 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
              <Link href="/dashboard/settings">
-                <HugeiconsIcon icon={User01Icon} className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
                 <span>Profile</span>
              </Link>
           </DropdownMenuItem>
@@ -70,14 +70,14 @@ export function UserNav() {
           </DropdownMenuItem>
            <DropdownMenuItem asChild>
              <Link href="/dashboard/settings">
-                <HugeiconsIcon icon={Setting01Icon} className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={Settings02Icon} className="mr-2 h-4 w-4" />
                 <span>Settings</span>
              </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
-          <HugeiconsIcon icon={Logout02Icon} className="mr-2 h-4 w-4" />
+          <HugeiconsIcon icon={LogoutCircle01Icon} className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

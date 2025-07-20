@@ -34,20 +34,20 @@ import { Header } from "@/components/ui/header"; // Import the new Header
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { 
-    DashboardSquare02Icon,
-    BankIcon,
-    Stethoscope01Icon,
-    Health01Icon,
-    DocumentTextIcon,
+    DashboardBrowsingIcon,
+    PiggyBankIcon,
+    StethoscopeIcon,
+    HealthIcon,
+    File01Icon as DocumentTextIcon,
     GitCompareIcon as CompareIcon,
-    User01Icon,
+    UserIcon as User01Icon,
     BookOpen01Icon,
-    LibraryIcon,
-    Setting01Icon,
-    Search01Icon,
-    Login01Icon,
+    LibrariesIcon as LibraryIcon,
+    Settings02Icon as Setting01Icon,
+    Search02Icon as Search01Icon,
+    LoginCircle01Icon as Login01Icon,
     Cancel01Icon,
-    LoaderIcon,
+    ReloadIcon as LoaderIcon,
 } from '@hugeicons/core-free-icons';
 
 
@@ -170,22 +170,22 @@ function DashboardLayoutComponent({
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Dashboard">
-                    <Link href="/dashboard"><HugeiconsIcon icon={DashboardSquare02Icon} /><span>Dashboard</span></Link>
+                    <Link href="/dashboard"><HugeiconsIcon icon={DashboardBrowsingIcon} /><span>Dashboard</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/recommendations")} tooltip="Retirement Plan">
-                    <Link href="/dashboard/recommendations"><HugeiconsIcon icon={BankIcon} /><span>Retirement Plan</span></Link>
+                    <Link href="/dashboard/recommendations"><HugeiconsIcon icon={PiggyBankIcon} /><span>Retirement Plan</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/provider-lookup")} tooltip="Provider Lookup">
-                    <Link href="/dashboard/provider-lookup"><HugeiconsIcon icon={Stethoscope01Icon} /><span>Provider Lookup</span></Link>
+                    <Link href="/dashboard/provider-lookup"><HugeiconsIcon icon={StethoscopeIcon} /><span>Provider Lookup</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/health-quotes")} tooltip="Health Quotes">
-                    <Link href="/dashboard/health-quotes"><HugeiconsIcon icon={Health01Icon} /><span>Health Quotes</span></Link>
+                    <Link href="/dashboard/health-quotes"><HugeiconsIcon icon={HealthIcon} /><span>Health Quotes</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>

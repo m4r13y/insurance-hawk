@@ -15,15 +15,15 @@ import {
     ArrowDown01Icon, 
     ArrowRight01Icon, 
     Rocket01Icon, 
-    BankIcon, 
-    Health01Icon, 
-    DocumentTextIcon, 
+    PiggyBankIcon as BankIcon, 
+    HealthIcon as Health01Icon, 
+    File01Icon as DocumentTextIcon, 
     GitCompareIcon as CompareIcon, 
-    User01Icon, 
+    UserIcon as User01Icon, 
     BookOpen01Icon, 
-    LibraryIcon, 
-    Setting01Icon, 
-    Stethoscope01Icon 
+    LibrariesIcon as LibraryIcon, 
+    Settings02Icon as Setting01Icon, 
+    StethoscopeIcon as Stethoscope01Icon 
 } from "@hugeicons/core-free-icons";
 
 interface NavItem {
