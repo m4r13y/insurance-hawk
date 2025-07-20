@@ -6,6 +6,7 @@ import { BlogContent } from "@/components/BlogContent";
 import { ActionButtons } from "@/components/ActionButtons";
 import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
+import Image from "next/image";
 
 const faqItems = [
     {
@@ -42,6 +43,20 @@ export function MedicareBeginnersGuideContent() {
           breadcrumbLabel="Resources"
         />
         <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
+            <figure className="my-8">
+              <Image 
+                className="w-full object-cover rounded-xl" 
+                src="https://placehold.co/800x400.png" 
+                alt="A person reviewing Medicare documents at a desk."
+                width={800}
+                height={400}
+                data-ai-hint="planning guide"
+              />
+              <figcaption className="mt-2 text-sm text-center text-gray-500">
+                Navigating your Medicare options is a key step in financial planning for retirement.
+              </figcaption>
+            </figure>
+
             <h2 className="text-xl font-bold">Who Gets Medicare &amp; When?</h2>
             <p>Most people qualify for Medicare at age 65. If you already get Social Security or Railroad Retirement benefits, you’ll be signed up automatically for Medicare Parts A and B. If you aren’t, you’ll need to enroll yourself—but it’s a straightforward process.</p>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
