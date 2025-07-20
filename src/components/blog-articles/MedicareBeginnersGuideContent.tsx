@@ -5,6 +5,30 @@ import { BlogSidebar } from "@/components/BlogSidebar";
 import { BlogContent } from "@/components/BlogContent";
 import { ActionButtons } from "@/components/ActionButtons";
 import { Button } from "@/components/ui/button";
+import { FaqSection } from "@/components/FaqSection";
+
+const faqItems = [
+    {
+        question: "What if I’m helping a parent sign up?",
+        answer: "You can help gather documents and join calls with Social Security, but only the person enrolling can make choices unless you have power of attorney or legal authority."
+    },
+    {
+        question: "What happens if I travel a lot?",
+        answer: "Original Medicare covers you anywhere in the U.S. Some Medigap plans include foreign emergency coverage. Advantage plans may limit coverage outside your home area."
+    },
+    {
+        question: "Can I change my mind after picking a plan?",
+        answer: "Yes. Each fall during Open Enrollment, you can switch plans. Some special situations let you change at other times, too."
+    },
+    {
+        question: "How do I know what plan is best?",
+        answer: "Focus on what matters most—keeping your doctor, total cost, and extra benefits. Use the Medicare Plan Finder and talk with a SHIP counselor for free advice."
+    },
+    {
+        question: "What if I’m still working at 65?",
+        answer: "Check with your employer about whether you should delay Medicare. Sometimes it's best to keep your job coverage, but get the details in writing to avoid penalties."
+    }
+];
 
 export function MedicareBeginnersGuideContent() {
   return (
@@ -151,29 +175,7 @@ export function MedicareBeginnersGuideContent() {
                 <li>Not asking for help. Local counselors (SHIP) and Medicare.gov are free and unbiased.</li>
             </ul>
 
-            <h2 className="text-xl font-bold">Real Questions, Real Answers</h2>
-            <div className="space-y-4">
-                <div>
-                    <h3 className="font-semibold">What if I’m helping a parent sign up?</h3>
-                    <p>You can help gather documents and join calls with Social Security, but only the person enrolling can make choices unless you have power of attorney or legal authority.</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">What happens if I travel a lot?</h3>
-                    <p>Original Medicare covers you anywhere in the U.S. Some Medigap plans include foreign emergency coverage. Advantage plans may limit coverage outside your home area.</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">Can I change my mind after picking a plan?</h3>
-                    <p>Yes. Each fall during Open Enrollment, you can switch plans. Some special situations let you change at other times, too.</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">How do I know what plan is best?</h3>
-                    <p>Focus on what matters most—keeping your doctor, total cost, and extra benefits. Use the Medicare Plan Finder and talk with a SHIP counselor for free advice.</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">What if I’m still working at 65?</h3>
-                    <p>Check with your employer about whether you should delay Medicare. Sometimes it's best to keep your job coverage, but get the details in writing to avoid penalties.</p>
-                </div>
-            </div>
+            <FaqSection title="Real Questions, Real Answers" items={faqItems} />
 
             <h2 className="text-xl font-bold">Next Steps</h2>
             <p>Medicare doesn’t have to be confusing or overwhelming. Start by marking your calendar, decide what coverage fits your life, and ask questions along the way. After you enroll, review your plan each year, stay aware of new benefits, and get help if you need it. The right plan gives you peace of mind, saves money, and helps you get the care you need—now and for years to come.</p>
