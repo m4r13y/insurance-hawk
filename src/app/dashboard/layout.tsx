@@ -30,6 +30,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
+import { Header } from "@/components/ui/header"; // Import the new Header
 import {
   LayoutDashboard,
   FileText,
@@ -69,6 +70,7 @@ function DashboardLayoutComponent({
   
   // Check if we're on a page that should hide the main sidebar
   const shouldHideMainSidebar = pathname === '/dashboard/compare-plans';
+  const isArticlePage = pathname.startsWith('/dashboard/resources/'); // New flag for article pages
 
   const isFullScreenForm = isApplyFormPage || isRetirementPlanPage || isHealthInfoPage;
 
@@ -103,6 +105,18 @@ function DashboardLayoutComponent({
 
   if (!user) {
     return null; // or a redirect, but the effect handles it
+  }
+
+  // Render article layout with top header
+  if (isArticlePage) {
+    return (
+      <>
+        <Header />
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+          {children}
+        </main>
+      </>
+    );
   }
 
   if (isFullScreenForm) {
