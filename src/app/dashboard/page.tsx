@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle2, PiggyBank, Shield, Activity, LifeBuoy, Home, FileDigit, Heart, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Policy } from "@/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -12,6 +13,16 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { getCarrierLogo } from "@/lib/mock-data";
 import Image from "next/image";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  HealthIcon,
+  DentalCareIcon,
+  Cardiogram02Icon,
+  FirstAidKitIcon,
+  Home as HomeIcon,
+  PiggyBankIcon,
+  File01Icon,
+} from '@hugeicons/core-free-icons';
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -20,12 +31,12 @@ const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const planTypes = [
-    { id: 'Health Insurance', label: 'Health/Medical Plan', icon: Shield, href: '/dashboard/health-quotes' },
-    { id: 'Dental, Vision, Hearing (DVH)', label: 'Dental Coverage', icon: DentalIcon, href: '/dashboard/quotes?plan=dental' },
-    { id: 'Cancer Insurance', label: 'Cancer Insurance', icon: Activity, href: '/dashboard/quotes' },
-    { id: 'Life Insurance', label: 'Life Insurance', icon: LifeBuoy, href: '/dashboard/quotes' },
-    { id: 'Long-Term Care (LTC)', label: 'Long-Term Care', icon: Home, href: '/dashboard/quotes' },
-    { id: 'Retirement Plan', label: 'Retirement Plan', icon: PiggyBank, href: '/dashboard/recommendations' }
+    { id: 'Health Insurance', label: 'Health/Medical Plan', icon: HealthIcon, href: '/dashboard/health-quotes' },
+    { id: 'Dental, Vision, Hearing (DVH)', label: 'Dental Coverage', icon: DentalCareIcon, href: '/dashboard/quotes?plan=dental' },
+    { id: 'Cancer Insurance', label: 'Cancer Insurance', icon: Cardiogram02Icon, href: '/dashboard/quotes' },
+    { id: 'Life Insurance', label: 'Life Insurance', icon: FirstAidKitIcon, href: '/dashboard/quotes' },
+    { id: 'Long-Term Care (LTC)', label: 'Long-Term Care', icon: HomeIcon, href: '/dashboard/quotes' },
+    { id: 'Retirement Plan', label: 'Retirement Plan', icon: PiggyBankIcon, href: '/dashboard/recommendations' }
 ];
 
 const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => void }) => (
@@ -41,7 +52,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-8">
                 <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
                     <Link href="/dashboard/recommendations">
-                        <PiggyBank className="mr-3 h-6 w-6 text-primary" />
+                        <HugeiconsIcon icon={PiggyBankIcon} className="mr-3 h-6 w-6 text-primary" />
                         <span className="flex flex-col">
                             <span className="font-semibold">Create a Retirement Plan</span>
                             <span className="text-xs text-muted-foreground">Get personalized retirement advice.</span>
@@ -50,7 +61,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
                     <Link href="/dashboard/health-quotes">
-                        <Heart className="mr-3 h-6 w-6 text-primary" />
+                        <HugeiconsIcon icon={HealthIcon} className="mr-3 h-6 w-6 text-primary" />
                         <span className="flex flex-col">
                             <span className="font-semibold">Get Health Quotes</span>
                             <span className="text-xs text-muted-foreground">For individuals under 65.</span>
@@ -59,7 +70,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-auto py-4 justify-start text-left">
                     <Link href="/dashboard/quotes">
-                        <FileDigit className="mr-3 h-6 w-6 text-primary" />
+                        <HugeiconsIcon icon={File01Icon} className="mr-3 h-6 w-6 text-primary" />
                         <span className="flex flex-col">
                             <span className="font-semibold">Get Supplemental Quotes</span>
                             <span className="text-xs text-muted-foreground">For Medigap, Dental, and more.</span>
@@ -147,7 +158,7 @@ export default function DashboardPage() {
                                     </p>
                                     <Button asChild size="sm" variant="outline" className="h-7 text-xs sm:h-8 sm:text-sm">
                                         <Link href="/dashboard/recommendations">
-                                            <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                                            <HugeiconsIcon icon={PiggyBankIcon} className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                                             <span className="hidden sm:inline">Improve Score</span>
                                             <span className="sm:hidden">Improve</span>
                                         </Link>
@@ -253,7 +264,7 @@ export default function DashboardPage() {
                                                                     }}
                                                                 />
                                                             ) : null}
-                                                            <Icon className={`w-7 h-7 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
+                                                            <HugeiconsIcon icon={Icon} className={`w-7 h-7 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate leading-tight mb-1">{planType.label}</h3>
@@ -298,7 +309,7 @@ export default function DashboardPage() {
                                                                         }}
                                                                     />
                                                                 ) : null}
-                                                                <Icon className={`w-7 h-7 lg:w-8 lg:h-8 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
+                                                                <HugeiconsIcon icon={Icon} className={`w-7 h-7 lg:w-8 lg:h-8 ${statusDisplay.textColor} ${carrierLogoUrl ? 'hidden' : ''}`} />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -339,7 +350,7 @@ export default function DashboardPage() {
                                                         {/* Mobile Layout - Horizontal */}
                                                         <div className="flex items-center gap-3 min-h-[64px] sm:hidden">
                                                             <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-                                                                <Icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                                                                <HugeiconsIcon icon={Icon} className="w-7 h-7 text-blue-600 dark:text-blue-400" />
                                                             </div>
                                                             <div className="flex-1 min-w-0 flex items-center justify-between">
                                                                 <div className="flex-1 min-w-0">
@@ -358,7 +369,7 @@ export default function DashboardPage() {
                                                         {/* Tablet+ Layout - Vertical */}
                                                         <div className="hidden sm:block text-left">
                                                             <div className="w-12 h-12 lg:w-14 lg:h-14 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200">
-                                                                <Icon className="w-7 h-7 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400" />
+                                                                <HugeiconsIcon icon={Icon} className="w-7 h-7 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400" />
                                                             </div>
                                                             <div className="space-y-1 mb-4">
                                                                 <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">{planType.label}</h3>
@@ -416,7 +427,7 @@ export default function DashboardPage() {
                                                     
                                                     <Button asChild className="w-full" size="sm">
                                                         <Link href="/dashboard/recommendations">
-                                                            <PiggyBank className="h-4 w-4 mr-2" />
+                                                            <HugeiconsIcon icon={PiggyBankIcon} className="h-4 w-4 mr-2" />
                                                             Improve Score
                                                         </Link>
                                                     </Button>
