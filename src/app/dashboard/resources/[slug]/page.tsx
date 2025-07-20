@@ -30,6 +30,7 @@ import { ReimbursementVsDiagnosisContent } from "@/components/blog-articles/Reim
 import { TopPlanFAddonsContent } from "@/components/blog-articles/TopPlanFAddonsContent";
 import { TopPlanGAddonsContent } from "@/components/blog-articles/TopPlanGAddonsContent";
 import { TopPlanNAddonsContent } from "@/components/blog-articles/TopPlanNAddonsContent";
+import { CancerPlansWithAdvantageContent } from "@/components/blog-articles/CancerPlansWithAdvantageContent";
 
 
 interface BlogArticlePageProps {
@@ -121,6 +122,7 @@ const articleComponents: Record<string, React.ComponentType> = {
   'top-plan-f-addons': TopPlanFAddonsContent,
   'top-plan-g-addons': TopPlanGAddonsContent,
   'top-plan-n-addons': TopPlanNAddonsContent,
+  'cancer-plans-with-advantage': CancerPlansWithAdvantageContent,
 };
 
 export default function BlogArticlePage({ params }: BlogArticlePageProps) {
