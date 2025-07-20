@@ -1,3 +1,4 @@
+
 import React from "react";
 import { PartDPenaltyEstimator } from "@/components/PartDPenaltyEstimator";
 import { PartBPenaltyEstimator } from "@/components/PartBPenaltyEstimator";
@@ -27,7 +28,7 @@ export default function BlogArticlePage() {
             intro="Missing your Medicare enrollment window can cost you — not just in stress, but in real money. Medicare has several late enrollment penalties that can stick with you for life. They’re not one-time fees. They’re monthly surcharges added to your premium for as long as you have that part of Medicare."
           />
           {/* Section Navigation - Tool Cards */}
-          <nav className="my-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+          <nav className="my-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ToolCard
               href="#enrollment-periods"
               icon={
@@ -54,7 +55,7 @@ export default function BlogArticlePage() {
             />
           </nav>
         {/* Medicare Enrollment Periods Calculator */}
-        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-2xl font-semibold mb-2">Introduction</h2>
@@ -68,7 +69,7 @@ export default function BlogArticlePage() {
         </section>
 
         {/* Part B Penalties */}
-        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part B Late Enrollment Penalty</h2>
@@ -83,7 +84,7 @@ export default function BlogArticlePage() {
         </section>
 
         {/* Part D Penalty */}
-        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part D Late Enrollment Penalty</h2>
