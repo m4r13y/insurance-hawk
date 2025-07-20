@@ -16,7 +16,7 @@ const FAQIcon = () => (
 
 export function FaqSection({ title, items }: FAQSectionProps) {
   return (
-    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto" itemScope itemType="https://schema.org/FAQPage">
       {/* Title */}
       <div className="max-w-2xl mx-auto mb-10 lg:mb-14">
         <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">{title}</h2>
@@ -25,16 +25,18 @@ export function FaqSection({ title, items }: FAQSectionProps) {
 
       <div className="max-w-2xl mx-auto divide-y divide-gray-200 dark:divide-neutral-700">
         {items.map((item, index) => (
-            <div key={index} className="py-8 first:pt-0 last:pb-0">
+            <div key={index} className="py-8 first:pt-0 last:pb-0" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
             <div className="flex gap-x-5">
               <FAQIcon />
               <div className="grow">
-                <h3 className="md:text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                <h3 className="md:text-lg font-semibold text-gray-800 dark:text-neutral-200" itemProp="name">
                   {item.question}
                 </h3>
-                <p className="mt-1 text-gray-500 dark:text-neutral-500">
-                  {item.answer}
-                </p>
+                <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p className="mt-1 text-gray-500 dark:text-neutral-500" itemProp="text">
+                        {item.answer}
+                    </p>
+                </div>
               </div>
             </div>
           </div>
