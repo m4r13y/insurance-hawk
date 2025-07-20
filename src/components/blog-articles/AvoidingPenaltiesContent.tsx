@@ -1,3 +1,4 @@
+
 import React from "react";
 import { PartDPenaltyEstimator } from "@/components/PartDPenaltyEstimator";
 import { PartBPenaltyEstimator } from "@/components/PartBPenaltyEstimator";
@@ -126,21 +127,9 @@ export function AvoidingPenaltiesContent() {
         bio: "CFP | Medicare Specialist",
       }}
       mediaLinks={[
-        {
-          title: "5 Reasons to Not start a UX Designer Career in 2022/2023",
-          imageUrl: "https://images.unsplash.com/photo-1567016526105-22da7c13161a?ixlib=rb-4.0.3&auto=format&fit=crop&w=320&q=80",
-          href: "#",
-        },
-        {
-          title: "If your UX Portfolio has this 20% Well Done, it Will Give You an 80% Result",
-          imageUrl: "https://images.unsplash.com/photo-1542125387-c71274d94f0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=320&q=80",
-          href: "#",
-        },
-        {
-          title: "7 Principles of Icon Design",
-          imageUrl: "https://images.unsplash.com/photo-1586232702178-f044c5f4d4b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=320&q=80",
-          href: "#",
-        },
+        { title: "Enrollment Periods Explained", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/enrollment-periods" },
+        { title: "How to Handle Medicare If You’re Working After 65", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/working-past-65" },
+        { title: "How Medicare Drug Plans Work", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/drug-plans-explained" }
       ]}
     />
     </div>

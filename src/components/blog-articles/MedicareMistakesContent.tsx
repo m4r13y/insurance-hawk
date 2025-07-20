@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BlogHeader } from "@/components/BlogHeader";
 import { BlogSidebar } from "@/components/BlogSidebar";
@@ -28,7 +29,11 @@ export function MedicareMistakesContent() {
       </BlogContent>
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
-        mediaLinks={[]}
+        mediaLinks={[
+          { title: "Medicare Beginner's Guide", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/medicare-beginners-guide" },
+          { title: "Avoiding Late Enrollment Penalties", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/avoiding-penalties" },
+          { title: "50 Most Asked Medicare Questions", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/medicare-questions" }
+        ]}
       />
     </div>
   );
