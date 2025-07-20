@@ -10,6 +10,7 @@ import { WorkingPast65Content } from "@/components/blog-articles/WorkingPast65Co
 import { AnnualChangesContent } from "@/components/blog-articles/AnnualChangesContent";
 import { BenefitsOfHipPlansContent } from "@/components/blog-articles/BenefitsOfHipPlansContent";
 import { CancerPlanClaimProcessContent } from "@/components/blog-articles/CancerPlanClaimProcessContent";
+import { CancerPlansWithMedigapContent } from "@/components/blog-articles/CancerPlansWithMedigapContent";
 import { CancerStatisticsContent } from "@/components/blog-articles/CancerStatisticsContent";
 import { CompareAdvantagePlansContent } from "@/components/blog-articles/CompareAdvantagePlansContent";
 import { ComparePdpPlansContent } from "@/components/blog-articles/ComparePdpPlansContent";
@@ -102,6 +103,7 @@ const articleComponents: Record<string, React.ComponentType> = {
   'annual-changes': AnnualChangesContent,
   'benefits-of-hip-plans': BenefitsOfHipPlansContent,
   'cancer-plan-claim-process': CancerPlanClaimProcessContent,
+  'cancer-plans-with-medigap': CancerPlansWithMedigapContent,
   'cancer-statistics': CancerStatisticsContent,
   'compare-advantage-plans': CompareAdvantagePlansContent,
   'compare-pdp-plans': ComparePdpPlansContent,
