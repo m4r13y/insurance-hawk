@@ -12,12 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CreditCard, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Billing01Icon, Logout02Icon, Setting01Icon, User01Icon } from '@hugeicons/core-free-icons';
 
 
 const defaultHawkImage = "/hawk-profile.jpg";
@@ -59,24 +60,24 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
              <Link href="/dashboard/settings">
-                <User className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={User01Icon} className="mr-2 h-4 w-4" />
                 <span>Profile</span>
              </Link>
           </DropdownMenuItem>
           <DropdownMenuItem disabled>
-            <CreditCard className="mr-2 h-4 w-4" />
+            <HugeiconsIcon icon={Billing01Icon} className="mr-2 h-4 w-4" />
             <span>Billing</span>
           </DropdownMenuItem>
            <DropdownMenuItem asChild>
              <Link href="/dashboard/settings">
-                <Settings className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={Setting01Icon} className="mr-2 h-4 w-4" />
                 <span>Settings</span>
              </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <HugeiconsIcon icon={Logout02Icon} className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

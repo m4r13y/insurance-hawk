@@ -8,7 +8,24 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
 import { UserNav } from "@/components/user-nav"
-import { Menu, X, ChevronDown, ChevronRight, Rocket, PiggyBank, Heart, FileDigit, Scale, FileText, User, BookOpen, Library, Settings, Stethoscope } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react";
+import { 
+    Menu01Icon, 
+    Cancel01Icon, 
+    ChevronDownIcon, 
+    ChevronRightIcon, 
+    Rocket01Icon, 
+    BankIcon, 
+    Health01Icon, 
+    DocumentTextIcon, 
+    CompareIcon, 
+    DocumentAddIcon, 
+    User01Icon, 
+    BookOpen01Icon, 
+    LibraryIcon, 
+    Setting01Icon, 
+    Stethoscope01Icon 
+} from "@hugeicons/core-free-icons";
 
 interface NavItem {
   title: string
@@ -22,19 +39,19 @@ const getInsuranceItems: NavItem[] = [
     title: "Health Quotes (Under 65)",
     href: "/dashboard/health-quotes",
     description: "Find individual & family health plans.",
-    icon: Heart,
+    icon: Health01Icon,
   },
   {
     title: "Supplemental Quotes (65+)",
     href: "/dashboard/quotes",
     description: "Get quotes for Medigap, Dental, and more.",
-    icon: FileDigit,
+    icon: DocumentTextIcon,
   },
   {
     title: "Submit Application",
     href: "/dashboard/apply",
     description: "Complete and submit your insurance application.",
-    icon: FileText,
+    icon: DocumentAddIcon,
   },
 ];
 
@@ -43,31 +60,31 @@ const toolsAndResourcesItems: NavItem[] = [
     title: "Compare Plans",
     href: "/dashboard/compare-plans",
     description: "Side-by-side plan comparisons.",
-    icon: Scale,
+    icon: CompareIcon,
   },
   {
     title: "Retirement Plan",
     href: "/dashboard/recommendations",
     description: "Get a personalized retirement analysis.",
-    icon: PiggyBank,
+    icon: BankIcon,
   },
   {
     title: "Provider Lookup",
     href: "/dashboard/provider-lookup",
     description: "Find Medicare-accepted providers.",
-    icon: Stethoscope,
+    icon: Stethoscope01Icon,
   },
   {
     title: "Education Center",
     href: "/dashboard/education",
     description: "Learn about Medicare with our AI assistant.",
-    icon: BookOpen,
+    icon: BookOpen01Icon,
   },
   {
     title: "Resource Library",
     href: "/dashboard/resources",
     description: "Articles, guides, and official documents.",
-    icon: Library,
+    icon: LibraryIcon,
   },
 ];
 
@@ -75,7 +92,7 @@ function MegaMenuLink({ item }: { item: NavItem }) {
   const Icon = item.icon;
   return (
     <Link href={item.href} className="p-3 flex gap-x-4 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 rounded-lg dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-      <Icon className="shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200" />
+      <HugeiconsIcon icon={Icon} className="shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200" />
       <div className="grow">
         <p className="font-medium text-sm text-gray-800 dark:text-neutral-200">{item.title}</p>
         <p className="text-sm text-gray-500 dark:text-neutral-500">{item.description}</p>
@@ -98,8 +115,8 @@ export function Header() {
           <div className="md:hidden flex items-center gap-2">
             <UserNav />
             <button type="button" className="hs-collapse-toggle md:hidden relative size-9 flex justify-center items-center font-medium text-sm rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" id="hs-header-base-collapse"  aria-expanded="false" aria-controls="hs-header-base" aria-label="Toggle navigation"  data-hs-collapse="#hs-header-base" >
-              <Menu className="hs-collapse-open:hidden size-4" />
-              <X className="hs-collapse-open:block shrink-0 hidden size-4" />
+              <HugeiconsIcon icon={Menu01Icon} className="hs-collapse-open:hidden size-4" />
+              <HugeiconsIcon icon={Cancel01Icon} className="hs-collapse-open:block shrink-0 hidden size-4" />
               <span className="sr-only">Toggle navigation</span>
             </button>
           </div>
@@ -111,15 +128,15 @@ export function Header() {
               <div className="grow">
                 <div className="flex flex-col md:flex-row md:justify-end md:items-center gap-0.5 md:gap-1">
                   <Link className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined}>
-                    <Rocket className="shrink-0 size-4 me-3 md:me-2" />
+                    <HugeiconsIcon icon={Rocket01Icon} className="shrink-0 size-4 me-3 md:me-2" />
                     Dashboard
                   </Link>
 
                   <div className="hs-dropdown [--strategy:static] md:[--strategy:absolute] [--adaptive:none] [--is-collapse:true] md:[--is-collapse:false] ">
                     <button id="hs-header-base-mega-menu-fullwidth" type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" aria-haspopup="menu" aria-expanded="false" aria-label="Mega Menu">
-                      <Library className="shrink-0 size-4 me-3 md:me-2" />
+                      <HugeiconsIcon icon={LibraryIcon} className="shrink-0 size-4 me-3 md:me-2" />
                       Tools & Resources
-                      <ChevronDown className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <HugeiconsIcon icon={ChevronDownIcon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
 
                     <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 relative w-full min-w-60 hidden z-10 top-full start-0 before:absolute before:-top-5 before:start-0 before:w-full before:h-5" role="menu" aria-orientation="vertical" aria-labelledby="hs-header-base-mega-menu-fullwidth">
@@ -139,7 +156,7 @@ export function Header() {
                                     </p>
                                     <p className="mt-3 inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 group-hover:underline group-focus:underline font-medium dark:text-blue-400">
                                         Contact an Advisor
-                                        <ChevronRight className="shrink-0 size-4" />
+                                        <HugeiconsIcon icon={ChevronRightIcon} className="shrink-0 size-4" />
                                     </p>
                                     </div>
                                 </a>
@@ -151,9 +168,9 @@ export function Header() {
 
                   <div className="hs-dropdown [--strategy:static] md:[--strategy:absolute] [--adaptive:none] [--is-collapse:true] md:[--is-collapse:false]">
                     <button type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-                      <Heart className="shrink-0 size-4 me-3 md:me-2" />
+                      <HugeiconsIcon icon={Health01Icon} className="shrink-0 size-4 me-3 md:me-2" />
                       Get Insurance
-                      <ChevronDown className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <HugeiconsIcon icon={ChevronDownIcon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
                     <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 w-full hidden z-10 top-full start-0 min-w-60 md:bg-white md:shadow-md md:rounded-lg p-2 dark:md:bg-neutral-800 md:dark:border dark:md:border-neutral-700">
                         {getInsuranceItems.map(item => <MegaMenuLink key={item.href} item={item} />)}
@@ -161,7 +178,7 @@ export function Header() {
                   </div>
 
                   <Link href="/dashboard/documents" className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-                    <User className="shrink-0 size-4 me-3 md:me-2" />
+                    <HugeiconsIcon icon={User01Icon} className="shrink-0 size-4 me-3 md:me-2" />
                     My Account
                   </Link>
 
