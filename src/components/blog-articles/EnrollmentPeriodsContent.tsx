@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const faqItems = [
     {
@@ -70,7 +71,7 @@ export function EnrollmentPeriodsContent() {
                 <li>Sign up for a Part D prescription drug plan (PDP)</li>
             </ul>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
-                Missing your IEP can mean late enrollment penalties or gaps in coverage.
+                Missing your IEP can mean late enrollment penalties or gaps in coverage. Read our <Link href="/dashboard/resources/avoiding-penalties">guide on avoiding penalties</Link> for more information.
             </blockquote>
             
             <h3 className="text-lg font-semibold">2. Annual Enrollment Period (AEP)</h3>
@@ -113,49 +114,49 @@ export function EnrollmentPeriodsContent() {
             
             <h2 className="text-xl font-bold">Comparison Table: Enrollment Periods</h2>
             <div className="overflow-x-auto my-6">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-50 dark:bg-neutral-800">
-                  <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">Enrollment Period</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">Who Can Use It</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">What You Can Do</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">When It Happens</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">IEP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">New to Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Enroll in Part A, B, MAPD, PDP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">7 months around 65th birthday</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">AEP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Anyone on Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Switch/drop MAPD or PDP plans</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Oct 15 – Dec 7 each year</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">OEP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">MAPD members</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Switch/drop MAPD, go to Original Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Jan 1 – Mar 31 each year</td>
-                  </tr>
-                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Medigap OEP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">New to Part B</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Enroll in Medigap, no health questions</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">6 months after Part B starts</td>
-                  </tr>
-                </tbody>
-              </table>
+              <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Enrollment Period</TableHead>
+                        <TableHead>Who Can Use It</TableHead>
+                        <TableHead>What You Can Do</TableHead>
+                        <TableHead>When It Happens</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>IEP</TableCell>
+                    <TableCell>New to Medicare</TableCell>
+                    <TableCell>Enroll in Part A, B, MAPD, PDP</TableCell>
+                    <TableCell>7 months around 65th birthday</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>AEP</TableCell>
+                    <TableCell>Anyone on Medicare</TableCell>
+                    <TableCell>Switch/drop MAPD or PDP plans</TableCell>
+                    <TableCell>Oct 15 – Dec 7 each year</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>OEP</TableCell>
+                    <TableCell>MAPD members</TableCell>
+                    <TableCell>Switch/drop MAPD, go to Original Medicare</TableCell>
+                    <TableCell>Jan 1 – Mar 31 each year</TableCell>
+                  </TableRow>
+                   <TableRow>
+                    <TableCell>Medigap OEP</TableCell>
+                    <TableCell>New to Part B</TableCell>
+                    <TableCell>Enroll in Medigap, no health questions</TableCell>
+                    <TableCell>6 months after Part B starts</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
 
             <FaqSection title="Frequently Asked Questions" items={faqItems} />
 
             <h2 className="text-xl font-bold">The Bottom Line</h2>
             <p>
-                Medicare enrollment windows can be confusing, but getting familiar with the key dates can save you money and stress. If you need help sorting out your options or have questions about the right plan for you, our team can guide you—just reach out for a free consultation.
+                Medicare enrollment windows can be confusing, but getting familiar with the key dates can save you money and stress. If you need help sorting out your options or have questions about the right plan for you, our team can guide you—just reach out for a free consultation. For more basic information, check out our <Link href="/dashboard/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.
             </p>
             
             <Button size="lg" className="my-8 px-6 py-3">

@@ -83,7 +83,7 @@ export function CancerPlansWithMedigapContent() {
             </figure>
 
             <h2 className="text-xl font-bold">The Hidden Costs of Cancer Treatment</h2>
-            <p>Even with the right doctors, cancer care comes with extra financial pressure. Oral chemotherapy drugs might not be fully covered by your Part D plan. If you live far from a major treatment center, you might have to pay for travel and hotel stays. These are not covered by Medicare or Medigap, but they’re very real expenses.</p>
+            <p>Even with the right doctors, cancer care comes with extra financial pressure. Oral chemotherapy drugs might not be fully covered by your Part D plan. If you live far from a major treatment center, you might have to pay for travel and hotel stays. These are not covered by Medicare or Medigap, but they’re very real expenses. For more on the numbers, see our article on <Link href="/dashboard/resources/cancer-statistics">cancer statistics</Link>.</p>
             
             <h2 className="text-xl font-bold">How Cancer Insurance Fills the Gaps</h2>
             <p>Cancer insurance is a standalone policy that pays a lump-sum cash benefit if you’re diagnosed. That money can be used for anything you need—medical bills, travel, groceries, or even a mortgage payment. There are no restrictions. This flexibility means you can focus on getting better, not figuring out how to pay for care.</p>

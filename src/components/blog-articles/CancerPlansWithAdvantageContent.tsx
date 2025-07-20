@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from "next/link";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
 const faqItems = [
     {
@@ -61,7 +62,7 @@ export function CancerPlansWithAdvantageContent() {
                 <li>For non-medical expenses like travel, lodging, or special diets.</li>
                 <li>To replace lost income or pay household bills while you undergo treatment.</li>
             </ul>
-            <p>This flexibility makes lump-sum cancer policies especially helpful when you're facing a sudden health and financial crisis.</p>
+            <p>This flexibility makes lump-sum cancer policies especially helpful when you're facing a sudden health and financial crisis. Learn more by checking our <Link href="/dashboard/resources/cancer-statistics">cancer statistics article</Link>.</p>
 
              <figure className="my-8">
               <Image 
@@ -80,33 +81,34 @@ export function CancerPlansWithAdvantageContent() {
             <h2 className="text-xl font-bold">How It Helps with Medicare Advantage Costs</h2>
             <p>If you're enrolled in a Medicare Advantage plan, you're likely dealing with network restrictions and significant cost-sharing. Many plans require 20% coinsurance for treatments like chemotherapy and radiation until you reach your annual out-of-pocket maximum, which can be thousands of dollars.</p>
             
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse my-6">
-                <thead>
-                  <tr>
-                    <th className="border border-gray-300 p-2 text-left">Expense Scenario</th>
-                    <th className="border border-gray-300 p-2 text-center">MA Plan Only</th>
-                    <th className="border border-gray-300 p-2 text-center">MA Plan + Cancer Policy</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-300 p-2">Chemotherapy Coinsurance (20% of $10,000)</td>
-                    <td className="border border-gray-300 p-2 text-center">$2,000</td>
-                    <td className="border border-gray-300 p-2 text-center">Covered by cash benefit</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-300 p-2">Travel to a Specialist Center</td>
-                    <td className="border border-gray-300 p-2 text-center">Not Covered</td>
-                    <td className="border border-gray-300 p-2 text-center">Covered by cash benefit</td>
-                  </tr>
-                   <tr>
-                    <td className="border border-gray-300 p-2">Lost Income During Treatment</td>
-                    <td className="border border-gray-300 p-2 text-center">Not Covered</td>
-                    <td className="border border-gray-300 p-2 text-center">Covered by cash benefit</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="overflow-x-auto my-6">
+              <Table>
+                <TableCaption>Example cost comparison. Actual costs and benefits vary by plan.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Expense Scenario</TableHead>
+                    <TableHead className="text-center">MA Plan Only</TableHead>
+                    <TableHead className="text-center">MA Plan + Cancer Policy</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Chemotherapy Coinsurance (20% of $10,000)</TableCell>
+                    <TableCell className="text-center">$2,000</TableCell>
+                    <TableCell className="text-center">Covered by cash benefit</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Travel to a Specialist Center</TableCell>
+                    <TableCell className="text-center">Not Covered</TableCell>
+                    <TableCell className="text-center">Covered by cash benefit</TableCell>
+                  </TableRow>
+                   <TableRow>
+                    <TableCell>Lost Income During Treatment</TableCell>
+                    <TableCell className="text-center">Not Covered</TableCell>
+                    <TableCell className="text-center">Covered by cash benefit</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
 
             <h2 className="text-xl font-bold">When Should You Consider It?</h2>

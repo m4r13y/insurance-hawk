@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
 const faqItems = [
     {
@@ -84,36 +85,36 @@ export function DrugPlansExplainedContent() {
             </figure>
 
             <h2 className="text-xl font-bold">The Late Enrollment Penalty: Why You Need a Plan Now</h2>
-            <p>You might think you can skip a drug plan if you don’t take medications, but Medicare charges a late enrollment penalty for that. The fee is added to your monthly premium for life. The best way to avoid it is to get coverage when you’re first eligible, even if it's a low-cost plan.</p>
+            <p>You might think you can skip a drug plan if you don’t take medications, but Medicare charges a late enrollment penalty for that. The fee is added to your monthly premium for life. The best way to avoid it is to get coverage when you’re first eligible, even if it's a low-cost plan. Learn more in our <Link href="/dashboard/resources/avoiding-penalties">Guide to Avoiding Penalties</Link>.</p>
             
             <div className="overflow-x-auto my-6">
-              <table className="w-full text-left border-collapse">
-                <caption className="text-lg font-semibold mb-2 text-left">Medicare Drug Plan Costs in 2025 (Quick View)</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
-                  <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">Cost Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 font-semibold">Typical Range in 2025</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Monthly Premium</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$30 – $60+</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Deductible</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$0 – $600</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Copay/Coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Varies by plan/drug</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Out-of-Pocket Max</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$2,000 (new for 2025)</td>
-                  </tr>
-                </tbody>
-              </table>
+              <Table>
+                <TableCaption>Medicare Drug Plan Costs in 2025 (Quick View)</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cost Type</TableHead>
+                    <TableHead>Typical Range in 2025</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Monthly Premium</TableCell>
+                    <TableCell>$30 – $60+</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Deductible</TableCell>
+                    <TableCell>$0 – $600</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Copay/Coinsurance</TableCell>
+                    <TableCell>Varies by plan/drug</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Out-of-Pocket Max</TableCell>
+                    <TableCell>$2,000 (new for 2025)</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
 
             <h2 className="text-xl font-bold">How to Choose the Right Drug Plan</h2>

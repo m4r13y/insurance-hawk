@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
 const faqItems = [
     {
@@ -75,37 +76,38 @@ export function CompareAdvantagePlansContent() {
                     <strong>Review Prescription Drug Coverage:</strong> Not all plans cover the same drugs, and some plans have different rules about how you get your medicine. In 2025, out-of-pocket drug costs will be capped at $2,000 for the year. You can also choose to spread your costs throughout the year with new payment options.
                 </li>
                 <li>
-                    <strong>Compare Costs:</strong> Each plan sets its own costs, including monthly premiums, deductibles, and copays. Some plans have $0 premiums, but you still have to pay your Medicare Part B premium. Look at the plan’s yearly maximum out-of-pocket limit, since this protects you from very high costs.
+                    <strong>Compare Costs:</strong> Each plan sets its own costs, including monthly premiums, deductibles, and copays. Some plans have $0 premiums, but you still have to pay your Medicare Part B premium. Look at the plan’s yearly maximum out-of-pocket limit, since this protects you from very high costs. A <Link href="/dashboard/resources/hip-for-advantage">hospital indemnity plan</Link> can help cover these costs.
                 </li>
             </ol>
 
             <div className="overflow-x-auto my-6">
-              <table className="w-full border-collapse">
-                <thead className="bg-gray-50 dark:bg-neutral-800">
-                  <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Cost Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">What You Might Pay (2025)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Part B Premium</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$185/month</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Part C Monthly Premium</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$0–$100+ (varies by plan)</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Maximum Out-of-Pocket</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Varies (set by plan)</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Drug Costs Cap</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">$2,000/year max</td>
-                  </tr>
-                </tbody>
-              </table>
+              <Table>
+                <TableCaption>Typical Medicare Advantage Costs in 2025</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cost Type</TableHead>
+                    <TableHead>What You Might Pay (2025)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Part B Premium</TableCell>
+                    <TableCell>$185/month</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Part C Monthly Premium</TableCell>
+                    <TableCell>$0–$100+ (varies by plan)</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Maximum Out-of-Pocket</TableCell>
+                    <TableCell>Varies (set by plan)</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Drug Costs Cap</TableCell>
+                    <TableCell>$2,000/year max</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
 
             <ol className="list-decimal pl-6 space-y-4" start={5}>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const faqItems = [
     {
@@ -28,7 +29,7 @@ const faqItems = [
     },
     {
         question: "What if I’m still working at 65?",
-        answer: "Check with your employer about whether you should delay Medicare. Sometimes it's best to keep your job coverage, but get the details in writing to avoid penalties."
+        answer: "Check with your employer about whether you should delay Medicare. Sometimes it's best to keep your job's health plan, but get the details in writing to avoid penalties."
     }
 ];
 
@@ -98,66 +99,67 @@ export function MedicareBeginnersGuideContent() {
             </figure>
 
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse my-6">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-neutral-800">
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Benefit</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan A</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan G</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan N</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A coinsurance (hospital)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part B coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Blood (first 3 pints)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A hospice coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skilled nursing facility coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A deductible</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part B deductible</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                  </tr>
-                  <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Excess charges</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                  </tr>
-                </tbody>
-              </table>
+              <Table>
+                <TableCaption>Medigap Plan Comparison. *Plan N requires copays for some visits.</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Benefit</TableHead>
+                        <TableHead className="text-center">Plan A</TableHead>
+                        <TableHead className="text-center">Plan G</TableHead>
+                        <TableHead className="text-center">Plan N</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                        <TableCell>Part A coinsurance (hospital)</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Part B coinsurance</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓*</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Blood (first 3 pints)</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Part A hospice coinsurance</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Skilled nursing facility coinsurance</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Part A deductible</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Part B deductible</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Excess charges</TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                    </TableRow>
+                </TableBody>
+              </Table>
             </div>
 
             <h2 className="text-xl font-bold">Step-by-Step: How To Get Started</h2>
@@ -205,7 +207,7 @@ export function MedicareBeginnersGuideContent() {
 
             <h2 className="text-xl font-bold">Next Steps</h2>
             <p>Medicare doesn’t have to be confusing or overwhelming. Start by marking your calendar, decide what coverage fits your life, and ask questions along the way. After you enroll, review your plan each year, stay aware of new benefits, and get help if you need it. The right plan gives you peace of mind, saves money, and helps you get the care you need—now and for years to come.</p>
-            <p>Ready to get started? Head to Medicare.gov or call your local SHIP counselor today.</p>
+            <p>Ready to get started? Head to Medicare.gov or call your local SHIP counselor today. For more specific questions, see our <Link href="/dashboard/resources/medicare-questions">50 Most Asked Medicare Questions article</Link>.</p>
             
             <Button size="lg" className="my-8 px-6 py-3">Schedule Your Medicare Review</Button>
 
