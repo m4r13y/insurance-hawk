@@ -10,10 +10,10 @@ interface ToolCardProps {
 export const ToolCard: React.FC<ToolCardProps> = ({ href, icon, title, description }) => (
   <a
     href={href}
-    className="bg-white rounded-xl shadow-lg border border-blue-100 hover:border-blue-300 transition p-8 flex flex-col items-center text-center"
+    className="bg-white rounded-xl shadow-lg border border-gray-100 hover:border-blue-300 dark:bg-neutral-800 dark:border-neutral-700 dark:hover:border-blue-600 transition p-6 flex flex-col items-center text-center"
   >
-    <span className="mb-3 size-10 text-blue-600">{icon}</span>
-    <span className="font-semibold text-lg mb-1">{title}</span>
-    <span className="text-sm text-gray-500">{description}</span>
+    <div className="mb-4 text-blue-600 dark:text-blue-500">{icon}</div>
+    <span className="font-semibold text-base mb-1 text-gray-800 dark:text-neutral-200">{title}</span>
+    <span className="text-sm text-gray-500 dark:text-neutral-400">{description}</span>
   </a>
 );

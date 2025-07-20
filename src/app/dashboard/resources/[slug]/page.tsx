@@ -15,7 +15,7 @@ export const metadata = {
 
 export default function BlogArticlePage() {
   return (
-    <div className="max-w-[85rem] px-12 sm:px-6 lg:px-8 mx-auto">
+    <div className="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
       <div className="grid lg:grid-cols-3 gap-y-8 lg:gap-y-0 lg:gap-x-8">
         {/* Content */}
         <BlogContent>
@@ -28,7 +28,7 @@ export default function BlogArticlePage() {
           />
           {/* Section Navigation - Tool Cards */}
           <nav className="my-8 flex flex-wrap gap-4 justify-center">
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 justify-center">
               <ToolCard
                 href="#enrollment-periods"
                 icon={
@@ -54,26 +54,24 @@ export default function BlogArticlePage() {
                 description="Calculate your penalty for missing drug coverage."
               />
             </div>
-            {/*<a href="#avoid-penalties" className="px-6 py-3 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100 font-medium transition shadow">How to Avoid Penalties</a>
-          */}
           </nav>
         {/* Medicare Enrollment Periods Calculator */}
-        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 flex justify-stretch gap-12">
-            <div className="w-7/12 flex flex-col justify-around">
+        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-2xl font-semibold mb-2">Introduction</h2>
                     <p className="mb-2">The good news is, most of these penalties are easy to avoid if you understand the rules and act early.</p>
                     <p className="mb-2">In this article, we’ll break down the three main late enrollment penalties, who they apply to, and what you can do to make sure you’re protected.</p>
                 </div>
             </div>
-            <div className="w-5/12">
+            <div>
                 <EnrollmentPeriodsTool />
             </div>
         </section>
 
         {/* Part B Penalties */}
-        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 flex justify-stretch gap-12">
-            <div className="w-7/12 flex flex-col justify-around">
+        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part B Late Enrollment Penalty</h2>
                     <p className="mb-2">If you don’t sign up for Medicare Part B when you’re first eligible and don’t qualify for a Special Enrollment Period, you’ll face a penalty.</p>
@@ -81,14 +79,14 @@ export default function BlogArticlePage() {
                     <p className="mb-2">This usually happens when someone delays enrolling because they feel healthy or didn’t realize their employer coverage wasn’t creditable. It also happens if someone misses their Initial Enrollment Period and doesn’t qualify for a special enrollment window.</p>
                 </div>
             </div>
-            <div className="w-5/12">
+            <div>
                 <PartBPenaltyEstimator />
             </div>
         </section>
 
         {/* Part D Penalty */}
-        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 flex justify-stretch gap-12">
-            <div className="w-7/12 flex flex-col justify-around">
+        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part D Late Enrollment Penalty</h2>
                     <p className="mb-2">If you don’t have creditable prescription drug coverage when you’re first eligible for Medicare and you wait more than 63 days to get it, you’ll face a penalty.</p>
@@ -96,7 +94,7 @@ export default function BlogArticlePage() {
                     <p className="mb-2">This often happens when people think they don’t need a Part D plan because they’re not taking medications. But if you’re eligible for Medicare and don’t have other creditable drug coverage, you still need a plan to avoid this fee.</p>
                 </div>
             </div>
-            <div className="w-5/12">
+            <div>
                 <PartDPenaltyEstimator />
             </div>
         </section>

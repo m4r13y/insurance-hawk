@@ -5,16 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ExternalLink,
   Search,
   Phone,
-  Mail,
-  MapPin,
-  Clock,
   Star,
-  Download,
   FileText,
   Globe,
   Heart,
@@ -25,16 +20,17 @@ import {
   AlertCircle,
   Filter,
 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 interface Resource {
   id: string;
   title: string;
   description: string;
   category: string;
-  type: 'website' | 'document' | 'phone' | 'tool' | 'video';
+  type: 'website' | 'document' | 'phone' | 'tool' | 'video' | 'article';
   url?: string;
+  slug?: string;
   phone?: string;
-  email?: string;
   rating?: number;
   tags: string[];
   featured?: boolean;
@@ -68,6 +64,17 @@ const resources: Resource[] = [
     official: true,
   },
   {
+    id: "medicare-penalties-article",
+    title: "Understanding Medicare Late Enrollment Penalties",
+    description: "A complete guide to different Medicare late enrollment penalties, how much they cost, and simple steps you can take to avoid them.",
+    category: "Education",
+    type: "article",
+    slug: "medicare-late-enrollment-penalties",
+    rating: 5,
+    tags: ["medicare penalties", "enrollment", "part b", "part d"],
+    featured: true,
+  },
+  {
     id: "medicare-helpline",
     title: "Medicare Helpline",
     description: "24/7 help with Medicare questions, enrollment, and claims issues.",
@@ -76,7 +83,6 @@ const resources: Resource[] = [
     phone: "1-800-MEDICARE (1-800-633-4227)",
     rating: 4,
     tags: ["support", "helpline", "24/7", "enrollment"],
-    featured: true,
     official: true,
   },
   
@@ -90,7 +96,6 @@ const resources: Resource[] = [
     url: "https://www.shiphelp.org",
     rating: 5,
     tags: ["counseling", "free", "state", "assistance"],
-    featured: true,
     official: true,
   },
   
@@ -203,9 +208,10 @@ const resources: Resource[] = [
 ];
 
 const categories = ["All", "Official", "Support", "Financial", "Education", "Health", "Tools", "Research"];
-const types = ["All", "website", "document", "phone", "tool", "video"];
+const types = ["All", "article", "website", "document", "phone", "tool", "video"];
 
 export default function ResourcesPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
@@ -232,6 +238,7 @@ export default function ResourcesPage() {
       case 'phone': return <Phone className="w-4 h-4" />;
       case 'tool': return <Calculator className="w-4 h-4" />;
       case 'video': return <BookOpen className="w-4 h-4" />;
+      case 'article': return <FileText className="w-4 h-4" />;
       default: return <ExternalLink className="w-4 h-4" />;
     }
   };
@@ -246,6 +253,16 @@ export default function ResourcesPage() {
       case 'Tools': return <Calculator className="w-4 h-4" />;
       case 'Research': return <AlertCircle className="w-4 h-4" />;
       default: return <ExternalLink className="w-4 h-4" />;
+    }
+  };
+
+  const handleResourceClick = (resource: Resource) => {
+    if (resource.type === 'article' && resource.slug) {
+      router.push(`/dashboard/resources/${resource.slug}`);
+    } else if (resource.url) {
+      window.open(resource.url, '_blank');
+    } else if (resource.phone) {
+      window.location.href = `tel:${resource.phone}`;
     }
   };
 
@@ -271,7 +288,7 @@ export default function ResourcesPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredResources.map((resource) => (
-              <Card key={resource.id} className="hover:shadow-lg transition-shadow">
+              <Card key={resource.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleResourceClick(resource)}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -308,26 +325,13 @@ export default function ResourcesPage() {
                   </div>
                   
                   <div className="pt-2">
-                    {resource.url && (
-                      <Button 
-                        asChild 
-                        className="w-full"
-                        variant={resource.official ? "default" : "outline"}
-                      >
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Visit Resource
-                        </a>
-                      </Button>
-                    )}
-                    {resource.phone && (
-                      <Button asChild className="w-full" variant="outline">
-                        <a href={`tel:${resource.phone}`}>
-                          <Phone className="w-4 h-4 mr-2" />
-                          {resource.phone}
-                        </a>
-                      </Button>
-                    )}
+                    <Button 
+                      className="w-full"
+                      variant={resource.official ? "default" : "outline"}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Visit Resource
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -410,7 +414,7 @@ export default function ResourcesPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredResources.map((resource) => (
-              <Card key={resource.id} className="hover:shadow-md transition-shadow">
+              <Card key={resource.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleResourceClick(resource)}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -453,27 +457,14 @@ export default function ResourcesPage() {
                   </div>
                   
                   <div className="flex gap-2">
-                    {resource.url && (
-                      <Button 
-                        asChild 
-                        size="sm"
-                        variant={resource.official ? "default" : "outline"}
-                        className="flex-1"
-                      >
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Visit
-                        </a>
-                      </Button>
-                    )}
-                    {resource.phone && (
-                      <Button asChild size="sm" variant="outline" className="flex-1">
-                        <a href={`tel:${resource.phone}`}>
-                          <Phone className="w-4 h-4 mr-2" />
-                          Call
-                        </a>
-                      </Button>
-                    )}
+                    <Button 
+                      size="sm"
+                      variant={resource.official ? "default" : "outline"}
+                      className="flex-1"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Visit
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
