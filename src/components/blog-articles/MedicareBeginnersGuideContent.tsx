@@ -100,61 +100,61 @@ export function MedicareBeginnersGuideContent() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse my-6">
                 <thead>
-                  <tr>
-                    <th className="border border-gray-300 p-2 text-left">Benefit</th>
-                    <th className="border border-gray-300 p-2 text-center">Plan A</th>
-                    <th className="border border-gray-300 p-2 text-center">Plan G</th>
-                    <th className="border border-gray-300 p-2 text-center">Plan N</th>
+                  <tr className="bg-gray-50 dark:bg-neutral-800">
+                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Benefit</th>
+                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan A</th>
+                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan G</th>
+                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan N</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-300 p-2">Part A coinsurance (hospital)</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A coinsurance (hospital)</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Part B coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part B coinsurance</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Blood (first 3 pints)</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Blood (first 3 pints)</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Part A hospice coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A hospice coinsurance</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Skilled nursing facility coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skilled nursing facility coinsurance</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Part A deductible</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part A deductible</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Part B deductible</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Part B deductible</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 p-2">Excess charges</td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
-                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Excess charges</td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -186,7 +186,7 @@ export function MedicareBeginnersGuideContent() {
 
             <h2 className="text-xl font-bold">Common Situations & What To Do</h2>
             <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Still working at 65?</strong> Ask your employer if you should delay Part B and D. Get their answer in writing, if possible. Sometimes it makes sense to keep your job’s health plan, but don’t risk a <Link href="/dashboard/resources/avoiding-penalties">penalty by guessing</Link>.</li>
+                <li><strong>Still working at 65?</strong> Ask your employer if you should delay Part B and D. Sometimes it makes sense to keep your job’s health plan, but don’t risk a <Link href="/dashboard/resources/avoiding-penalties">penalty by guessing</Link>. Check out our guide on <Link href="/dashboard/resources/working-past-65">how to handle Medicare when working past 65</Link> for more details.</li>
                 <li><strong>Retiring later or already have health insurance?</strong> If you have other coverage (from work, a union, the VA, or TRICARE), talk to your benefits administrator. There are special enrollment periods if you lose this coverage later.</li>
                 <li><strong>Tight on money?</strong> Check for Extra Help, Medicare Savings Programs, or Medicaid—these can lower or even eliminate your premiums and copays if you qualify.</li>
                 <li><strong>Moved or want to change plans?</strong> Each fall (Oct 15–Dec 7) is Medicare Open Enrollment. You can switch plans or add coverage with no penalty.</li>

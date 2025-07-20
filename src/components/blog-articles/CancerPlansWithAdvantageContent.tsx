@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BlogHeader } from "@/components/BlogHeader";
 import { BlogSidebar } from "@/components/BlogSidebar";
@@ -6,6 +7,7 @@ import { ActionButtons } from "@/components/ActionButtons";
 import { Button } from "@/components/ui/button";
 import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
+import Link from "next/link";
 
 const faqItems = [
     {
@@ -115,7 +117,7 @@ export function CancerPlansWithAdvantageContent() {
                 <li>You want more control over where and how you receive care.</li>
                 <li>You're on a fixed income and want to avoid large surprise expenses.</li>
             </ul>
-            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn't a replacement for Medicare Advantage, but it can be a smart addition.</p>
+            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn't a replacement for Medicare Advantage, but it can be a smart addition. For more foundational information, see our <Link href="/dashboard/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.</p>
             
             <FaqSection title="FAQs About Cancer Insurance and Medicare Advantage" items={faqItems} />
             
