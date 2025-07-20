@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
 import { UserNav } from "@/components/user-nav"
-import { Menu, X, ChevronDown, Rocket, PiggyBank, Heart, FileDigit, Scale, FileText, User, BookOpen, Library, Settings, Stethoscope } from "lucide-react"
+import { Menu, X, ChevronDown, ChevronRight, Rocket, PiggyBank, Heart, FileDigit, Scale, FileText, User, BookOpen, Library, Settings, Stethoscope } from "lucide-react"
 
 interface NavItem {
   title: string
