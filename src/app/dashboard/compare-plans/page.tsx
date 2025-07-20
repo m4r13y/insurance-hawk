@@ -41,6 +41,8 @@ import {
   Eye,
   Ear,
 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
+
 
 interface PlanType {
   id: string;
@@ -512,6 +514,7 @@ export default function ComparePlansPage() {
     router.back();
   };
 
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex overflow-hidden">
@@ -526,7 +529,7 @@ export default function ComparePlansPage() {
 
               {/* Back Button - moved above the toggle */}
               <div className="px-3 pt-4 pb-2">
-                <SidebarMenuItem className="list-none">
+                <SidebarMenuItem>
                   <SidebarMenuButton onClick={handleBackToDashboard} tooltip="Back to Dashboard">
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back to Dashboard</span>
@@ -650,83 +653,83 @@ export default function ComparePlansPage() {
                   <CardContent className="pt-0 px-0">
                     {/* Details Section */}
                     {currentData.keyInfo.details && (
-                      <table className="w-full m-0">
-                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white m-0 p-0">
+                      <Table>
+                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white m-0 p-0">
                           Details
-                        </caption>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        </TableCaption>
+                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
                           {currentData.keyInfo.details.map((item, index) => (
-                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
                                 {item.label}
-                              </th>
-                              <td className="py-2.5 px-4 text-right">
+                              </TableHead>
+                              <TableCell className="py-2.5 px-4 text-right">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                   {item.value}
                                 </span>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                     {/* Premiums Section */}
                     {currentData.keyInfo.premiums && (
-                      <table className="w-full">
-                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                      <Table>
+                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
                           Premiums
-                        </caption>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        </TableCaption>
+                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
                           {currentData.keyInfo.premiums.map((item, index) => (
-                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
                                 {item.label}
-                              </th>
-                              <td className="py-2.5 px-4 text-right">
+                              </TableHead>
+                              <TableCell className="py-2.5 px-4 text-right">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                   {item.value}
                                 </span>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                     {/* Deductibles Section */}
                     {currentData.keyInfo.deductibles && (
-                      <table className="w-full">
-                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                      <Table>
+                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
                           Deductibles
-                        </caption>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        </TableCaption>
+                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
                           {currentData.keyInfo.deductibles.map((item, index) => (
-                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
                                 {item.label}
-                              </th>
-                              <td className="py-2.5 px-4 text-right">
+                              </TableHead>
+                              <TableCell className="py-2.5 px-4 text-right">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                   {item.value}
                                 </span>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                     {/* Benefits Section */}
                     {currentData.keyInfo.benefits && (
-                      <table className="w-full">
-                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                      <Table>
+                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
                           Benefits
-                        </caption>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        </TableCaption>
+                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
                           {currentData.keyInfo.benefits.map((item, index) => (
-                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
                                 {item.label}
-                              </th>
-                              <td className="py-2.5 px-4 text-right">
+                              </TableHead>
+                              <TableCell className="py-2.5 px-4 text-right">
                                 {item.highlight || item.value === "✓" ? (
                                   <svg className="shrink-0 ml-auto size-5 text-blue-600 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="20 6 9 17 4 12"/>
@@ -736,33 +739,33 @@ export default function ComparePlansPage() {
                                     {item.value}
                                   </span>
                                 )}
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                     {/* Costs Section */}
                     {currentData.keyInfo.costs && (
-                      <table className="w-full">
-                        <caption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
+                      <Table>
+                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
                           Costs
-                        </caption>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        </TableCaption>
+                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
                           {currentData.keyInfo.costs.map((item, index) => (
-                            <tr key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <th className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
+                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
+                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
                                 {item.label}
-                              </th>
-                              <td className="py-2.5 px-4 text-right">
+                              </TableHead>
+                              <TableCell className="py-2.5 px-4 text-right">
                                 <span className={`text-sm font-medium ${item.highlight ? themeColors.accent : 'text-gray-900 dark:text-white'}`}>
                                   {item.value}
                                 </span>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                     {/* Footer Note */}
                     <div className="px-4 py-2 bg-gray-50 dark:bg-neutral-800">
@@ -770,8 +773,9 @@ export default function ComparePlansPage() {
                         * May vary based on individual situations
                       </p>
                     </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
           {/* Helpful Resources Section - Full Width, Always Visible */}
