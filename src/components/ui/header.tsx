@@ -104,116 +104,112 @@ const myAccountItems: NavItem[] = [
   },
 ]
 
-const allNavItems = [...getInsuranceItems, ...toolsAndResourcesItems, ...myAccountItems];
+const allNavItems = [...myAccountItems, ...getInsuranceItems, ...toolsAndResourcesItems];
 
-
-function NavigationMenu() {
-  const pathname = usePathname();
-  
-  const createMenu = (title: string, items: NavItem[]) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-1 text-base">
-          {title}
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="start">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <DropdownMenuItem key={item.href} asChild>
-              <Link href={item.href} className="flex flex-col items-start gap-1">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                  <span className={cn(
-                    "font-medium",
-                    pathname === item.href ? "text-primary" : "text-foreground"
-                  )}>
-                    {item.title}
-                  </span>
-                </div>
-                <p className="ml-6 text-xs text-muted-foreground">{item.description}</p>
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
+function MegaMenuLink({ item }: { item: NavItem }) {
+  const Icon = item.icon;
   return (
-    <nav className="flex items-center gap-2 text-sm">
-      {createMenu("Get Insurance", getInsuranceItems)}
-      {createMenu("Tools & Resources", toolsAndResourcesItems)}
-      {createMenu("My Account", myAccountItems)}
-    </nav>
+    <Link href={item.href} className="p-3 flex gap-x-4 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 rounded-lg dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+      <Icon className="shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200" />
+      <div className="grow">
+        <p className="font-medium text-sm text-gray-800 dark:text-neutral-200">{item.title}</p>
+        <p className="text-sm text-gray-500 dark:text-neutral-500">{item.description}</p>
+      </div>
+    </Link>
   );
 }
 
-
 export function Header() {
-  const pathname = usePathname()
-  const [isSheetOpen, setIsSheetOpen] = React.useState(false)
+  const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
+    <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
+      <nav className="relative max-w-screen-2xl w-full mx-auto md:flex md:items-center md:justify-between md:gap-3 py-2 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center gap-x-1">
+          <Link href="/dashboard" className="flex-none" aria-label="Brand">
             <Logo />
           </Link>
-          <NavigationMenu />
+
+          <div className="md:hidden flex items-center gap-2">
+            <UserNav />
+            <button type="button" className="hs-collapse-toggle relative size-9 flex justify-center items-center font-medium text-sm rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" id="hs-header-base-collapse" aria-expanded="false" aria-controls="hs-header-base" aria-label="Toggle navigation" data-hs-collapse="#hs-header-base">
+              <Menu className="hs-collapse-open:hidden size-4" />
+              <X className="hs-collapse-open:block shrink-0 hidden size-4" />
+              <span className="sr-only">Toggle navigation</span>
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Nav */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
-            >
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="pr-0">
-            <Link
-              href="/dashboard"
-              className="flex items-center"
-              onClick={() => setIsSheetOpen(false)}
-            >
-              <Logo />
-            </Link>
-            <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
-              <div className="flex flex-col space-y-3">
-                {allNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsSheetOpen(false)}
-                    className={cn(
-                      "transition-colors hover:text-foreground",
-                       pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
-                    )}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
+        <div id="hs-header-base" className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block" aria-labelledby="hs-header-base-collapse">
+          <div className="overflow-hidden overflow-y-auto max-h-[75vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            <div className="py-2 md:py-0 flex flex-col md:flex-row md:items-center md:justify-between gap-0.5 md:gap-1">
+              
+              <div className="flex-1 flex flex-col md:flex-row md:justify-start md:items-center gap-0.5 md:gap-1">
+                {/* Dashboard Link */}
+                <Link className={cn("p-2 flex items-center text-sm rounded-lg focus:outline-hidden focus:bg-gray-100 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700", pathname === '/dashboard' ? 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200' : 'text-gray-800 hover:bg-gray-100 dark:text-neutral-200')} href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined}>
+                  <Rocket className="shrink-0 size-4 me-3 md:me-2" />
+                  Dashboard
+                </Link>
+
+                {/* Get Insurance Menu */}
+                <div className="hs-dropdown [--strategy:static] md:[--strategy:absolute] [--adaptive:none]">
+                  <button type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+                    <Heart className="shrink-0 size-4 me-3 md:me-2" />
+                    Get Insurance
+                    <ChevronDown className="hs-dropdown-open:-rotate-180 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                  </button>
+                  <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 w-full hidden z-10 top-full start-0 min-w-60 md:bg-white md:shadow-md md:rounded-lg p-2 dark:md:bg-neutral-800 md:dark:border dark:md:border-neutral-700">
+                    {getInsuranceItems.map(item => <MegaMenuLink key={item.href} item={item} />)}
+                  </div>
+                </div>
+
+                {/* Tools & Resources Mega Menu */}
+                <div className="hs-dropdown [--strategy:static] md:[--strategy:absolute] [--adaptive:none]">
+                  <button id="hs-header-base-mega-menu-fullwidth" type="button" className="hs-dropdown-toggle w-full p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+                    <Library className="shrink-0 size-4 me-3 md:me-2" />
+                    Tools & Resources
+                    <ChevronDown className="hs-dropdown-open:-rotate-180 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                  </button>
+
+                  <div className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 relative w-full hidden z-10 top-full start-0 before:absolute before:-top-5 before:start-0 before:w-full before:h-5">
+                    <div className="md:max-w-[85rem] md:w-full md:mx-auto md:bg-white md:rounded-lg md:shadow-md dark:md:bg-neutral-800">
+                      <div className="py-1 md:p-2 md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {toolsAndResourcesItems.map(item => (
+                           <div key={item.href} className="flex flex-col">
+                             <MegaMenuLink item={item} />
+                           </div>
+                        ))}
+                         <div className="mt-2 md:mt-0 flex flex-col md:col-span-2 lg:col-span-1">
+                            <a className="p-3 flex gap-x-5 items-center rounded-xl hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" href="#">
+                                <img className="size-32 rounded-lg" src="https://images.unsplash.com/photo-1648737967328-690548aec14f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=320&h=320&q=80" data-ai-hint="planning guide" alt="A person looking at a document" />
+                                <div className="grow">
+                                <p className="text-sm text-gray-800 dark:text-neutral-400">
+                                    Our expert advisors can provide personalized guidance for your unique situation.
+                                </p>
+                                <p className="mt-3 inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 group-hover:underline group-focus:underline font-medium dark:text-blue-400">
+                                    Contact an Advisor
+                                    <ChevronRight className="shrink-0 size-4" />
+                                </p>
+                                </div>
+                            </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="my-2 md:my-0 md:mx-2 hidden md:block">
+                <div className="w-px h-5 bg-gray-300 dark:bg-neutral-700"></div>
+              </div>
+
+              <div className="hidden md:flex flex-wrap items-center gap-x-1.5">
+                <UserNav />
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-        
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            {/* Can add search here if needed */}
           </div>
-          <nav className="flex items-center">
-            <UserNav />
-          </nav>
         </div>
-      </div>
+      </nav>
     </header>
   )
 }
