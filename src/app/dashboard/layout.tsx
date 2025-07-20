@@ -40,7 +40,6 @@ import {
     Health01Icon,
     DocumentTextIcon,
     GitCompareIcon as CompareIcon,
-    DocumentAddIcon,
     User01Icon,
     BookOpen01Icon,
     LibraryIcon,
@@ -201,7 +200,7 @@ function DashboardLayoutComponent({
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/apply")} tooltip="Submit Application">
-                    <Link href="/dashboard/apply"><HugeiconsIcon icon={DocumentAddIcon} /><span>Submit Application</span></Link>
+                    <Link href="/dashboard/apply"><HugeiconsIcon icon={DocumentTextIcon} /><span>Submit Application</span></Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>

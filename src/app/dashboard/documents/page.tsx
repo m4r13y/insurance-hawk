@@ -1,9 +1,12 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical, User, Pencil, Eye, EyeOff, Stethoscope, Pill, Loader2, Check } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, PlusCircle, Edit, ExternalLink, ArrowLeft, Layers, Shield, MoreVertical, User, Eye, EyeOff, Stethoscope, Pill, Loader2, Check } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PencilEdit02Icon } from '@hugeicons/core-free-icons';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Policy as PolicyType, Document as DocumentType, Provider, Drug, SelectedProvider, SelectedDrug } from '@/types';
@@ -87,7 +90,7 @@ const EditableCard = ({ title, children, FormComponent, onSave, profileData }: {
                 <CardTitle className="text-xl">{title}</CardTitle>
                  {!isEditing && (
                     <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        <Pencil className="mr-2 h-4 w-4" />
+                        <HugeiconsIcon icon={PencilEdit02Icon} className="mr-2 h-4 w-4" />
                         Edit
                     </Button>
                 )}
@@ -833,4 +836,3 @@ export default function MyAccountPage() {
         </div>
   )
 }
-

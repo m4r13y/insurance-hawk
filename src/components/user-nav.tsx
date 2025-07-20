@@ -18,7 +18,7 @@ import { useFirebaseAuth } from "@/hooks/use-firebase-auth"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { CreditCard01Icon, Logout02Icon, Setting01Icon, User01Icon } from '@hugeicons/core-free-icons';
+import { CreditCardIcon, Logout02Icon, Setting01Icon, User01Icon } from '@hugeicons/core-free-icons';
 
 
 const defaultHawkImage = "/hawk-profile.jpg";
@@ -65,7 +65,7 @@ export function UserNav() {
              </Link>
           </DropdownMenuItem>
           <DropdownMenuItem disabled>
-            <HugeiconsIcon icon={CreditCard01Icon} className="mr-2 h-4 w-4" />
+            <HugeiconsIcon icon={CreditCardIcon} className="mr-2 h-4 w-4" />
             <span>Billing</span>
           </DropdownMenuItem>
            <DropdownMenuItem asChild>

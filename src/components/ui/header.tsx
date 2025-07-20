@@ -19,7 +19,6 @@ import {
     Health01Icon, 
     DocumentTextIcon, 
     GitCompareIcon as CompareIcon, 
-    DocumentAddIcon, 
     User01Icon, 
     BookOpen01Icon, 
     LibraryIcon, 
@@ -51,7 +50,7 @@ const getInsuranceItems: NavItem[] = [
     title: "Submit Application",
     href: "/dashboard/apply",
     description: "Complete and submit your insurance application.",
-    icon: DocumentAddIcon,
+    icon: DocumentTextIcon,
   },
 ];
 
