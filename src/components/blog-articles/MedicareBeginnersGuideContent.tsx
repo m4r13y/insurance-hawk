@@ -44,20 +44,6 @@ export function MedicareBeginnersGuideContent() {
           breadcrumbLabel="Resources"
         />
         <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
-            <figure className="my-8">
-              <Image 
-                className="w-full object-cover rounded-xl" 
-                src="https://placehold.co/800x400.png" 
-                alt="A person reviewing Medicare documents at a desk."
-                width={800}
-                height={400}
-                data-ai-hint="planning guide"
-              />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
-                Navigating your Medicare options is a key step in financial planning for retirement.
-              </figcaption>
-            </figure>
-
              <div className="relative my-8" style={{paddingTop: "56.25%"}}>
                 <iframe 
                     className="absolute inset-0 w-full h-full rounded-xl"
@@ -98,6 +84,20 @@ export function MedicareBeginnersGuideContent() {
             </ul>
             <p><strong>What to expect after you enroll:</strong> You’ll get your red, white, and blue Medicare card in the mail. Take it to your doctor’s office at your next visit, and check that your pharmacy accepts your drug plan if you added Part D.</p>
             
+             <figure className="my-8">
+              <Image 
+                className="w-full object-cover rounded-xl" 
+                src="https://placehold.co/800x400.png" 
+                alt="A person reviewing Medicare documents at a desk."
+                width={800}
+                height={400}
+                data-ai-hint="planning guide"
+              />
+              <figcaption className="mt-2 text-sm text-center text-gray-500">
+                Navigating your Medicare options is a key step in financial planning for retirement.
+              </figcaption>
+            </figure>
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse my-6">
                 <thead>
