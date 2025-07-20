@@ -786,35 +786,35 @@ export default function ComparePlansPage() {
                     <div className="col-span-3 text-center text-gray-500 py-8">No resources available for this plan/add-on.</div>
                   ) : (
                     relevantResources.map((resource, index) => (
-  <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-    <CardContent className="p-4">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
-            <span>{resource.type}</span>
-            <Clock className="w-3 h-3" />
-            <span>{resource.duration} {resource.durationUnit}</span>
-          </div>
-        </div>
-      </div>
-      <h3 className="font-semibold text-base mb-2">{resource.title}</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{resource.description}</p>
-      <Button
-        variant="link"
-        className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs"
-        onClick={() => {
-          // Always generate slug from resource title
-          const slug = resource.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          router.push(`/dashboard/resources/${slug}`);
-        }}
-      >
-        {resource.linkLabel} <ArrowRight className="w-3 h-3 ml-1" />
-      </Button>
-    </CardContent>
-  </Card>
+                      <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
+                                <span>{resource.type}</span>
+                                <Clock className="w-3 h-3" />
+                                <span>{resource.duration} {resource.durationUnit}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <h3 className="font-semibold text-base mb-2">{resource.title}</h3>
+                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{resource.description}</p>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs"
+                            onClick={() => {
+                              // Always generate slug from resource title
+                              const slug = resource.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                              router.push(`/dashboard/resources/${slug}`);
+                            }}
+                          >
+                            {resource.linkLabel} <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </CardContent>
+                      </Card>
                     ))
                   )}
                 </div>
