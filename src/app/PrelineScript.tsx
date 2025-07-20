@@ -3,83 +3,34 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
-// Preline UI
-async function loadPreline() {
-  return import('preline/dist/index.js');
-}
-
 export default function PrelineScript() {
   const path = usePathname();
 
   useEffect(() => {
-    const initLibraries = async () => {
-      try {
-        // Dynamically import optional third-party libraries
-        const [
-          { default: $ },
-          { default: _ },
-          { default: noUiSlider },
-          DataTables,
-          { default: Dropzone },
-          VanillaCalendarPro
-        ] = await Promise.all([
-          import('jquery'),
-          import('lodash'),
-          import('nouislider'),
-          import('datatables.net'),
-          import('dropzone'),
-          import('vanilla-calendar-pro')
-        ]);
+    // This is a client-side only effect that re-initializes Preline on route changes.
+    const reinitPreline = async () => {
+      // It's possible for this to run before the preline script is loaded.
+      // We can wait for it to be available on the window object.
+      let attempts = 0;
+      const maxAttempts = 10;
 
-        // Safely assign to window
-        if (typeof window !== 'undefined') {
-          window._ = _;
-          window.$ = $;
-          window.jQuery = $;
-          window.DataTable = $.fn.dataTable;
-          window.noUiSlider = noUiSlider;
-          window.VanillaCalendarPro = VanillaCalendarPro;
-          window.Dropzone = Dropzone;
+      while (typeof window !== 'undefined' && !window.HSStaticMethods && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // wait 100ms
+        attempts++;
+      }
+
+      if (typeof window !== 'undefined' && window.HSStaticMethods) {
+        try {
+          window.HSStaticMethods.autoInit();
+        } catch (error) {
+          console.warn('Preline autoInit failed:', error);
         }
-
-        // Initialize Preline
-        const preline = await loadPreline();
-        
-        // Wait a bit for DOM to be ready and then initialize
-        setTimeout(() => {
-          try {
-            if (
-              typeof window !== 'undefined' &&
-              window.HSStaticMethods &&
-              typeof window.HSStaticMethods.autoInit === 'function'
-            ) {
-              window.HSStaticMethods.autoInit();
-            }
-          } catch (error) {
-            console.warn('Preline initialization failed:', error);
-          }
-        }, 200);
-      } catch (error) {
-        console.warn('Some optional libraries failed to load:', error);
       }
     };
-
-    initLibraries();
-  }, []);
-
-  useEffect(() => {
+    
+    // We need a small delay to allow the DOM to update after a route change.
     const timer = setTimeout(() => {
-      try {
-        if (
-          typeof window !== 'undefined' &&
-          window.HSStaticMethods &&
-          typeof window.HSStaticMethods.autoInit === 'function'
-        ) {
-          window.HSStaticMethods.autoInit();
-        }
-      } catch (error) {
-        console.warn('Preline autoInit failed:', error);
-      }
+      reinitPreline();
     }, 100);
 
     return () => clearTimeout(timer);
