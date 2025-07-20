@@ -54,6 +54,20 @@ export function WorkingPast65Content() {
               </figcaption>
             </figure>
 
+             {/* 
+              SEO NOTE: Use a responsive container for video embeds. The `title` attribute is crucial for accessibility and SEO.
+             */}
+             <div className="relative my-8" style={{paddingTop: "56.25%"}}>
+                <iframe 
+                    className="absolute inset-0 w-full h-full rounded-xl"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                    title="YouTube video player for [Article Topic]" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                ></iframe>
+            </div>
+
             <p>
                 This is an introductory paragraph. It sets the stage for the rest of the article and tells the reader what to expect. It should be engaging and clear.
             </p>

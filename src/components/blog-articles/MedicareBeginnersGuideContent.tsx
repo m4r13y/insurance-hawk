@@ -58,6 +58,17 @@ export function MedicareBeginnersGuideContent() {
               </figcaption>
             </figure>
 
+             <div className="relative my-8" style={{paddingTop: "56.25%"}}>
+                <iframe 
+                    className="absolute inset-0 w-full h-full rounded-xl"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                    title="YouTube video player" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                ></iframe>
+            </div>
+
             <h2 className="text-xl font-bold">Who Gets Medicare &amp; When?</h2>
             <p>Most people qualify for Medicare at age 65. If you already get Social Security or Railroad Retirement benefits, you’ll be signed up automatically for Medicare Parts A and B. If you aren’t, you’ll need to enroll yourself—but it’s a straightforward process.</p>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
