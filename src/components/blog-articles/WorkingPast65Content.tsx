@@ -9,12 +9,22 @@ import { FaqSection } from "@/components/FaqSection";
 import Image from "next/image";
 import Link from 'next/link';
 
+// SEO NOTE: This is the template for all new articles. Duplicate this file and rename it
+// to create a new article. Fill in the content as described in the notes below.
+// The `generateMetadata` function in `[slug]/page.tsx` will automatically handle
+// the SEO title, description, and keywords based on what's in `resourcesList.ts`.
+
 export function WorkingPast65Content() {
   return (
     <div className="grid lg:grid-cols-3 gap-y-8 lg:gap-y-0 lg:gap-x-12">
       {/* Content */}
       <BlogContent>
-        {/* Header */}
+        {/*
+          SEO NOTE: The BlogHeader component is essential.
+          It displays the main H1 title, category, date, and introductory paragraph.
+          The `title` and `intro` are crucial for on-page SEO.
+          The `breadcrumbLabel` helps with navigation and context.
+        */}
         <BlogHeader
           title="Working Past 65: A Guide to Medicare"
           category="Medicare"
@@ -25,6 +35,11 @@ export function WorkingPast65Content() {
         
         {/* Generic Article Content */}
         <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
+            {/*
+              SEO NOTE: Always include a high-quality, relevant image near the top.
+              - Use a descriptive `alt` text for accessibility and image search SEO.
+              - Use the data-ai-hint for internal image search tooling.
+            */}
             <figure className="my-8">
               <Image 
                 className="w-full object-cover rounded-xl" 
@@ -42,14 +57,26 @@ export function WorkingPast65Content() {
             <p>
                 This is an introductory paragraph. It sets the stage for the rest of the article and tells the reader what to expect. It should be engaging and clear.
             </p>
+            {/*
+              SEO NOTE: Blockquotes make key points stand out and can be picked up by
+              search engines as featured snippets.
+            */}
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
                 Use blockquotes for powerful testimonials, examples, or key takeaways that you want to stand out from the main text.
             </blockquote>
             
+            {/*
+              SEO NOTE: Use semantic H2 tags for main sections. This helps search engines
+              understand the content's structure.
+            */}
             <h2 className="text-xl font-bold">Use H2 Headings for Main Sections</h2>
             <p>
                 Organize your content into logical sections using H2 headings. This improves readability and helps search engines understand the structure of your content.
             </p>
+            {/*
+              SEO NOTE: Use bulleted lists for unordered items. They are easy to scan
+              and can appear in featured snippets.
+            */}
             <ul className="list-disc pl-6 mb-4">
                 <li>Use bulleted lists for unordered items.</li>
                 <li>They are great for highlighting key points or features.</li>
@@ -57,6 +84,11 @@ export function WorkingPast65Content() {
             </ul>
 
             <h2 className="text-xl font-bold">Another Section for More Details</h2>
+            {/*
+              SEO NOTE: Use ordered lists for step-by-step instructions.
+              Include internal links to other relevant articles using the Next.js <Link> component.
+              This improves site navigation and distributes "link equity".
+            */}
             <p>
                 Use ordered lists for step-by-step instructions or processes. Don't forget to include <Link href="/dashboard/resources/avoiding-penalties">internal links</Link> to other relevant articles on your site. This helps with SEO and user navigation.
             </p>
@@ -66,6 +98,11 @@ export function WorkingPast65Content() {
                 <li>The final step to complete the action.</li>
             </ol>
             
+            {/*
+              SEO NOTE: The FaqSection component automatically adds `FAQPage` schema.org
+              structured data, which can result in rich snippets in Google search.
+              Always include 3-5 relevant questions and answers.
+            */}
             <FaqSection 
               title="Frequently Asked Questions" 
               items={[
@@ -84,11 +121,16 @@ export function WorkingPast65Content() {
             <p>
                 End your article with a strong conclusion that summarizes the key points and provides a clear next step for the reader.
             </p>
+            {/*
+              SEO NOTE: Every article should have a clear Call-to-Action (CTA) to guide
+              the user to the next desired step (e.g., getting a quote, contacting an agent).
+            */}
             <Button size="lg" className="my-8 px-6 py-3">
               This is the Call to Action
             </Button>
         </div>
 
+        {/* This component is for social proof and engagement metrics. */}
         <ActionButtons
             badges={[
               { tag: "Plan" },
@@ -100,7 +142,7 @@ export function WorkingPast65Content() {
           />
       </BlogContent>
 
-      {/* Sidebar */}
+      {/* This sidebar provides author information and links to other content. */}
       <BlogSidebar
         author={{
           name: "Jonathan Hawkins",
