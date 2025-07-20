@@ -96,6 +96,29 @@ export function WorkingPast65Content() {
                 <li>They are great for highlighting key points or features.</li>
                 <li>Each point should be concise and easy to understand.</li>
             </ul>
+             
+            {/*
+              SEO NOTE: Use HTML tables for tabular data. They can appear in featured snippets
+              for comparison-type search queries.
+            */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse my-6">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 text-left">Feature</th>
+                    <th className="border border-gray-300 p-2 text-center">Option 1</th>
+                    <th className="border border-gray-300 p-2 text-center">Option 2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Sample Feature</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="text-green-500 font-bold">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="text-red-500 font-bold">✗</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             <h2 className="text-xl font-bold">Another Section for More Details</h2>
             {/*

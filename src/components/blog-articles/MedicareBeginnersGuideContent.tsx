@@ -110,51 +110,51 @@ export function MedicareBeginnersGuideContent() {
                 <tbody>
                   <tr>
                     <td className="border border-gray-300 p-2">Part A coinsurance (hospital)</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Part B coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Blood (first 3 pints)</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Part A hospice coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Skilled nursing facility coinsurance</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Part A deductible</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Part B deductible</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 p-2">Excess charges</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
-                    <td className="border border-gray-300 p-2 text-center">✓</td>
-                    <td className="border border-gray-300 p-2 text-center">✗</td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-green-600">✓</span></td>
+                    <td className="border border-gray-300 p-2 text-center"><span className="font-bold text-red-600">✗</span></td>
                   </tr>
                 </tbody>
               </table>
