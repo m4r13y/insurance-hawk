@@ -19,7 +19,7 @@ import {
   DentalCareIcon,
   Cardiogram02Icon,
   FirstAidKitIcon,
-  Home as HomeIcon,
+  HomeIcon,
   PiggyBankIcon,
   File01Icon,
 } from '@hugeicons/core-free-icons';
