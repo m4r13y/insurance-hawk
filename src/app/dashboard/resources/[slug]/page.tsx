@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
 
 // A map to connect slugs to their React components
 const articleComponents: Record<string, React.ComponentType> = {
-  'medicare-late-enrollment-penalties': AvoidingPenaltiesContent,
+  'avoiding-penalties': AvoidingPenaltiesContent,
   'working-past-65': WorkingPast65Content,
   // Add other slug-to-component mappings here as you create them
 };
