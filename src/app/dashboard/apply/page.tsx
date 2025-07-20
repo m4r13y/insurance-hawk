@@ -18,7 +18,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { mockPlans, carriers } from "@/lib/mock-data"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, CheckCircle, ArrowRight, User, HeartPulse, FileText, Bot, FileCheck, PartyPopper, Heart, Smile, Hospital, ShieldAlert, FileHeart, UserPlus, Pill, PlusCircle, Trash2, Loader2, Hospital as HospitalIcon, ExternalLink, HeartCrack, Edit } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AutofillInput } from "@/components/ui/autofill-input"
 import Link from "next/link"
@@ -33,6 +32,30 @@ import { useAutofillProfile } from "@/hooks/use-autofill-profile"
 import { db } from "@/lib/firebase"
 import { collection, addDoc, serverTimestamp, setDoc, doc, query, where, getDocs, writeBatch, orderBy, limit } from "firebase/firestore"
 import { AddressSearchInput } from "@/components/ui/address-search-input"
+import { HugeiconsIcon } from '@hugeicons/react';
+import { 
+    ShieldTickIcon,
+    CheckCircleIcon,
+    ArrowRight01Icon,
+    UserIcon,
+    HealthIcon,
+    File01Icon,
+    FileTickIcon,
+    CelebrationIcon,
+    HeartIcon,
+    SmileIcon,
+    Hospital01Icon,
+    ShieldAlertIcon,
+    UserPlusIcon,
+    PillIcon,
+    AddCircleIcon,
+    Trash01Icon,
+    ReloadIcon,
+    ExternalLink01Icon,
+    HeartBreakIcon,
+    PencilEdit02Icon
+} from '@hugeicons/core-free-icons';
+
 
 // --- TYPES FOR SEARCH COMPONENTS --- //
 type SelectedDrug = Drug & {
@@ -156,7 +179,7 @@ const SuccessPage = ({ title }: { title: string }) => (
         <Card className="w-full">
             <CardHeader>
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <PartyPopper className="h-8 w-8" />
+                    <HugeiconsIcon icon={CelebrationIcon} className="h-8 w-8" />
                 </div>
                 <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">{title} Complete!</CardTitle>
                 <CardDescription className="text-base">Thank you for submitting your application.</CardDescription>
@@ -193,7 +216,7 @@ const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierW
                 {carrierWebsite && (
                     <Button asChild variant="ghost" size="sm" className="text-muted-foreground px-2">
                         <a href={carrierWebsite} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${provider} website`}>
-                           Visit Website <ExternalLink className="ml-1.5 h-4 w-4" />
+                           Visit Website <HugeiconsIcon icon={ExternalLink01Icon} className="ml-1.5 h-4 w-4" />
                         </a>
                     </Button>
                 )}
@@ -583,7 +606,7 @@ function CancerApplication() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center space-y-4">
-                            <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+                            <HugeiconsIcon icon={CheckCircleIcon} className="mx-auto h-16 w-16 text-green-500" />
                             <h2 className="text-2xl font-bold text-green-700">Application Submitted Successfully!</h2>
                             <p className="text-gray-600">
                                 Your Cancer Insurance application has been received and is being processed. 
@@ -609,12 +632,12 @@ function CancerApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <HeartCrack className="h-6 w-6" />
+                         <HugeiconsIcon icon={HeartBreakIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Cancer Insurance Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -751,10 +774,10 @@ function CancerApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit" disabled={isSubmitting}>
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <HugeiconsIcon icon={ReloadIcon} className="mr-2 h-4 w-4 animate-spin" />
                                     Submitting...
                                 </>
                             ) : (
@@ -1080,12 +1103,12 @@ function MedicareSupplementApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <FileText className="h-6 w-6" />
+                         <HugeiconsIcon icon={File01Icon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Medicare Supplement Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">This secure application will help us determine your eligibility. The process should take about 5-10 minutes.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -1152,7 +1175,7 @@ function MedicareSupplementApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="provider-search" value={providerQuery} onValueChange={handleProviderQueryChange} onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} placeholder="Search for a doctor or facility..."/>
-                                                {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {providerLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isProviderListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                         {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
@@ -1168,7 +1191,7 @@ function MedicareSupplementApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1186,12 +1209,12 @@ function MedicareSupplementApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="medication-search" value={medicationQuery} onValueChange={handleMedicationQueryChange} onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} placeholder="Search for a medication..."/>
-                                                {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {medicationLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isMedicationListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -1203,7 +1226,7 @@ function MedicareSupplementApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1245,14 +1268,14 @@ function MedicareSupplementApplication() {
 
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
              {/* Affiliation Selection Dialog */}
             <Dialog open={!!providerToSelectAffiliation} onOpenChange={(open) => !open && setProviderToSelectAffiliation(null)}><DialogContent><DialogHeader><DialogTitle>Select Hospital Affiliation</DialogTitle><DialogDescription>{providerToSelectAffiliation?.name} is affiliated with multiple hospitals. Please choose the one you primarily visit.</DialogDescription></DialogHeader><div className="py-4"><RadioGroup onValueChange={(value) => { if (providerToSelectAffiliation) { handleAffiliationSelected(providerToSelectAffiliation, value); } }} className="space-y-2 max-h-60 overflow-y-auto">{providerToSelectAffiliation?.affiliations?.map((aff, index) => (<Label key={index} htmlFor={`aff-${index}`} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary"><RadioGroupItem value={aff.name} id={`aff-${index}`} /><span>{aff.name}</span></Label>))}</RadioGroup></div><DialogFooter><Button variant="outline" onClick={() => setProviderToSelectAffiliation(null)}>Cancel</Button></DialogFooter></DialogContent></Dialog>
             {/* Dosage Selection Dialog */}
-            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select the correct form and strength for this medication.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Alternative Available</p><p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} (Brand) or its generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option above to see available strengths.</p>) : (<>
+            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select the correct form and strength for this medication.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Alternative Available</p><p className="text-sm text-muted-foreground mt-1">Do you take {drugToConfirm.name} (Brand) or its generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><HugeiconsIcon icon={ReloadIcon} className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option above to see available strengths.</p>) : (<>
                 <div className="space-y-2">
                     <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
@@ -1391,12 +1414,12 @@ function DentalApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <Smile className="h-6 w-6" />
+                         <HugeiconsIcon icon={SmileIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Dental Insurance Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -1442,7 +1465,7 @@ function DentalApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
@@ -1565,12 +1588,12 @@ function HospitalIndemnityApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <Hospital className="h-6 w-6" />
+                         <HugeiconsIcon icon={Hospital01Icon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Hospital Indemnity Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -1622,7 +1645,7 @@ function HospitalIndemnityApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
@@ -1751,12 +1774,12 @@ function LifeInsuranceApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <ShieldCheck className="h-6 w-6" />
+                         <HugeiconsIcon icon={ShieldTickIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Life Insurance Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">This secure application should only take a few minutes to complete.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -1814,7 +1837,7 @@ function LifeInsuranceApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
@@ -2055,12 +2078,12 @@ function HealthInsuranceApplication() {
             <Card className="w-full">
                 <CardHeader>
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Heart className="h-6 w-6" />
+                        <HugeiconsIcon icon={HeartIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Health Insurance Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">For individuals and families under 65.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -2107,7 +2130,7 @@ function HealthInsuranceApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="provider-search" value={providerQuery} onValueChange={handleProviderQueryChange} onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} placeholder="Search for a doctor or facility..."/>
-                                                {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {providerLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isProviderListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                         {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
@@ -2123,7 +2146,7 @@ function HealthInsuranceApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2138,12 +2161,12 @@ function HealthInsuranceApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="medication-search" value={medicationQuery} onValueChange={handleMedicationQueryChange} onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} placeholder="Search for a medication..."/>
-                                                {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {medicationLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isMedicationListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -2155,7 +2178,7 @@ function HealthInsuranceApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2174,14 +2197,14 @@ function HealthInsuranceApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
              {/* Affiliation Selection Dialog */}
             <Dialog open={!!providerToSelectAffiliation} onOpenChange={(open) => !open && setProviderToSelectAffiliation(null)}><DialogContent><DialogHeader><DialogTitle>Select Hospital Affiliation</DialogTitle><DialogDescription>{providerToSelectAffiliation?.name} is affiliated with multiple hospitals. Please choose one.</DialogDescription></DialogHeader><div className="py-4"><RadioGroup onValueChange={(value) => { if (providerToSelectAffiliation) { handleAffiliationSelected(providerToSelectAffiliation, value); } }} className="space-y-2 max-h-60 overflow-y-auto">{providerToSelectAffiliation?.affiliations?.map((aff, index) => (<Label key={index} htmlFor={`aff-${index}`} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary"><RadioGroupItem value={aff.name} id={`aff-${index}`} /><span>{aff.name}</span></Label>))}</RadioGroup></div><DialogFooter><Button variant="outline" onClick={() => setProviderToSelectAffiliation(null)}>Cancel</Button></DialogFooter></DialogContent></Dialog>
             {/* Dosage Selection Dialog */}
-            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
+            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><HugeiconsIcon icon={ReloadIcon} className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
                 <div className="space-y-2">
                     <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
@@ -2442,12 +2465,12 @@ function MedicareAdvantageApplication() {
             <Card className="w-full">
                 <CardHeader>
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <UserPlus className="h-6 w-6" />
+                        <HugeiconsIcon icon={UserPlusIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Medicare Advantage Application</CardTitle>
                 </CardHeader>
                 <CardContent><p className="text-base text-muted-foreground">Part C plans that bundle Parts A, B, and often D.</p></CardContent>
-                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <ArrowRight className="ml-2 h-4 w-4" /></Button></CardFooter>
+                <CardFooter><Button className="w-full" size="lg" onClick={() => setStep(1)}>Start Application <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" /></Button></CardFooter>
             </Card>
         </div>
     );
@@ -2503,7 +2526,7 @@ function MedicareAdvantageApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="provider-search" value={providerQuery} onValueChange={handleProviderQueryChange} onFocus={() => { if(providerQuery.length > 0) setIsProviderListVisible(true) }} onBlur={() => setTimeout(() => setIsProviderListVisible(false), 200)} placeholder="Search for a doctor or facility..."/>
-                                                {providerLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {providerLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isProviderListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                         {providerQuery.length > 0 && providerQuery.length < 3 && !providerLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
@@ -2519,7 +2542,7 @@ function MedicareAdvantageApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2534,12 +2557,12 @@ function MedicareAdvantageApplication() {
                                         <Command shouldFilter={false} className="overflow-visible rounded-lg border">
                                             <div className="relative">
                                                 <CommandInput id="medication-search" value={medicationQuery} onValueChange={handleMedicationQueryChange} onFocus={() => { if(medicationQuery.length > 0) setIsMedicationListVisible(true) }} onBlur={() => setTimeout(() => setIsMedicationListVisible(false), 200)} placeholder="Search for a medication..."/>
-                                                {medicationLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                                                {medicationLoading && <HugeiconsIcon icon={ReloadIcon} className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
                                                 {isMedicationListVisible && (
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><Pill className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -2551,7 +2574,7 @@ function MedicareAdvantageApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><Trash2 className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2585,14 +2608,14 @@ function MedicareAdvantageApplication() {
                     )}
                     <div className="flex justify-between">
                         {step > 1 ? (<Button type="button" variant="outline" onClick={handlePrev}>Back</Button>) : <div />}
-                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <ArrowRight className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
+                        {step < steps.length ? (<Button type="button" onClick={handleNext}>Next Step <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/></Button>) : (<Button type="submit">Submit Application</Button>)}
                     </div>
                 </form>
             </Form>
              {/* Affiliation Selection Dialog */}
             <Dialog open={!!providerToSelectAffiliation} onOpenChange={(open) => !open && setProviderToSelectAffiliation(null)}><DialogContent><DialogHeader><DialogTitle>Select Hospital Affiliation</DialogTitle><DialogDescription>{providerToSelectAffiliation?.name} is affiliated with multiple hospitals. Please choose one.</DialogDescription></DialogHeader><div className="py-4"><RadioGroup onValueChange={(value) => { if (providerToSelectAffiliation) { handleAffiliationSelected(providerToSelectAffiliation, value); } }} className="space-y-2 max-h-60 overflow-y-auto">{providerToSelectAffiliation?.affiliations?.map((aff, index) => (<Label key={index} htmlFor={`aff-${index}`} className="flex items-center space-x-3 rounded-md border p-4 has-[:checked]:border-primary"><RadioGroupItem value={aff.name} id={`aff-${index}`} /><span>{aff.name}</span></Label>))}</RadioGroup></div><DialogFooter><Button variant="outline" onClick={() => setProviderToSelectAffiliation(null)}>Cancel</Button></DialogFooter></DialogContent></Dialog>
             {/* Dosage Selection Dialog */}
-            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
+            <Dialog open={!!drugToConfirm} onOpenChange={(open) => { if (!open) { setDrugToConfirm(null); setIsGenericSelected(null); } }}><DialogContent><DialogHeader><DialogTitle>Configure {drugToConfirm?.name}</DialogTitle><DialogDescription>Select form and strength.</DialogDescription></DialogHeader>{drugToConfirm && !drugToConfirm.is_generic && drugToConfirm.generic && isGenericSelected === null && (<div className="p-4 border rounded-md bg-amber-50"><p className="text-sm font-semibold">Generic Available</p><p className="text-sm text-muted-foreground mt-1">Take the brand or generic version?</p><p className="text-xs text-muted-foreground mt-1">Generic: {drugToConfirm.generic.name}</p><div className="mt-3 flex gap-2"><Button size="sm" onClick={() => handleGenericChoice(false)} variant={isGenericSelected === false ? 'default' : 'outline'}>{drugToConfirm.name} (Brand)</Button><Button size="sm" onClick={() => handleGenericChoice(true)} variant={isGenericSelected === true ? 'default' : 'outline'}>Generic Version</Button></div></div>)}<div className="py-4 space-y-4">{dosageLoading ? (<div className="flex items-center justify-center p-8"><HugeiconsIcon icon={ReloadIcon} className="h-6 w-6 animate-spin" /></div>) : (<>{(isGenericSelected === null && drugToConfirm?.generic && !drugToConfirm.is_generic) ? (<p className="text-center text-sm text-muted-foreground p-4">Please select an option to see strengths.</p>) : (<>
                 <div className="space-y-2">
                     <Label htmlFor="drug-form">Form</Label>
                     <Select value={selectedForm} onValueChange={setSelectedForm} disabled={uniqueForms.length === 0}>
@@ -2623,43 +2646,43 @@ const applicationTypes = [
   {
     title: "Medicare Supplement",
     description: "For Medigap plans to cover Original Medicare costs.",
-    icon: FileText,
+    icon: File01Icon,
     type: "medicare-supplement",
   },
   {
     title: "Dental Insurance",
     description: "Coverage for check-ups, procedures, and more.",
-    icon: Smile,
+    icon: SmileIcon,
     type: "dental",
   },
   {
     title: "Cancer Insurance",
     description: "Pays a lump sum upon first diagnosis of cancer.",
-    icon: HeartCrack,
+    icon: HeartBreakIcon,
     type: "cancer",
   },
   {
     title: "Hospital Indemnity",
     description: "Pays a fixed amount for covered hospital stays.",
-    icon: Hospital,
+    icon: Hospital01Icon,
     type: "hospital-indemnity",
   },
   {
     title: "Life Insurance",
     description: "Protect your loved ones with a life insurance policy.",
-    icon: FileHeart,
+    icon: HealthIcon,
     type: "life-insurance",
   },
   {
     title: "Health Insurance",
     description: "For individuals and families under the age of 65.",
-    icon: Heart,
+    icon: HeartIcon,
     type: "health-insurance",
   },
   {
     title: "Medicare Advantage",
     description: "Part C plans that bundle Parts A, B, and often D.",
-    icon: UserPlus,
+    icon: UserPlusIcon,
     type: "medicare-advantage",
   },
 ];
@@ -2802,7 +2825,7 @@ function ApplicationSelectionGrid() {
       <div className="bg-gray-50 dark:bg-neutral-900">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           <div className="flex justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
+            <HugeiconsIcon icon={ReloadIcon} className="h-8 w-8 animate-spin" />
           </div>
         </div>
       </div>
@@ -2815,7 +2838,7 @@ function ApplicationSelectionGrid() {
         
         {userQuotes.length === 0 && (
           <Alert className="shadow-lg border-0 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
-            <ShieldAlert className="h-4 w-4" />
+            <HugeiconsIcon icon={ShieldAlertIcon} className="h-4 w-4" />
             <AlertTitle>Get Quotes First</AlertTitle>
             <AlertDescription>
               You need to get quotes before starting applications. Visit the <Link href="/dashboard/quotes" className="underline font-medium">Quotes page</Link> to get started.
@@ -2847,7 +2870,7 @@ function ApplicationSelectionGrid() {
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group/edit"
                             >
-                              <Edit className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover/edit:text-blue-600 dark:group-hover/edit:text-blue-400 transition-colors duration-200" />
+                              <HugeiconsIcon icon={PencilEdit02Icon} className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover/edit:text-blue-600 dark:group-hover/edit:text-blue-400 transition-colors duration-200" />
                             </Link>
                           </div>
                         )}
@@ -2859,7 +2882,7 @@ function ApplicationSelectionGrid() {
                                 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 group-hover:scale-105' 
                                 : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                             }`}>
-                              <Icon className={`w-7 h-7 ${
+                              <HugeiconsIcon icon={Icon} className={`w-7 h-7 ${
                                 hasQuote ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
                               }`} />
                             </div>
@@ -2891,7 +2914,7 @@ function ApplicationSelectionGrid() {
                                   ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 group-hover:scale-105' 
                                   : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                               }`}>
-                                <Icon className={`w-7 h-7 lg:w-8 lg:h-8 ${
+                                <HugeiconsIcon icon={Icon} className={`w-7 h-7 lg:w-8 lg:h-8 ${
                                   hasQuote ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
                                 }`} />
                               </div>
