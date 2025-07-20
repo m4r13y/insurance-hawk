@@ -1,7 +1,8 @@
+
 import React from "react";
 import { notFound } from 'next/navigation';
 import { resourcesList } from "@/resources/resourcesList";
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 // Import all possible article components
 import { AvoidingPenaltiesContent } from "@/components/blog-articles/AvoidingPenaltiesContent";
@@ -55,10 +56,41 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
       description: "The requested resource could not be found."
     }
   }
+
+  // Define the Article structured data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://www.yourwebsite.com/dashboard/resources/${resource.slug}`, // Replace with your actual domain
+    },
+    headline: resource.title,
+    description: resource.description,
+    author: {
+      '@type': 'Person',
+      name: 'Jonathan Hawkins', // Assuming a single author for now
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'HawkNest',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.yourwebsite.com/logo.png', // Replace with your actual logo URL
+      },
+    },
+    datePublished: new Date().toISOString(), // Placeholder, ideally this would come from your resource data
+    dateModified: new Date().toISOString(), // Placeholder
+  };
+  
   return {
     title: resource.title,
     description: resource.description,
     keywords: resource.tags,
+    // Add the JSON-LD script to the page's head
+    other: {
+      'script:ld+json': JSON.stringify(jsonLd),
+    }
   };
 }
 
