@@ -41,7 +41,7 @@ export default function ResourcesPage() {
   const filteredResources: ResourceCard[] = resources.filter((resource: ResourceCard) => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resource.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      (resource.tags && Array.isArray(resource.tags) && resource.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
 
     const matchesCategory = selectedCategory === "All" || resource.category === selectedCategory;
     const matchesType = selectedType === "All" || resource.type === selectedType;
@@ -151,7 +151,7 @@ export default function ResourcesPage() {
                       </div>
                       
                       <div className="flex flex-wrap gap-1">
-                        {resource.tags && resource.tags.slice(0, 3).map((tag) => (
+                        {resource.tags && Array.isArray(resource.tags) && resource.tags.slice(0, 3).map((tag: string) => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag.replace("'", "&apos;")}
                           </Badge>
@@ -290,7 +290,7 @@ export default function ResourcesPage() {
                       </div>
                       
                       <div className="flex flex-wrap gap-1 mb-4">
-                      {resource.tags && resource.tags.slice(0, 4).map((tag: string) => (
+                        {resource.tags && Array.isArray(resource.tags) && resource.tags.slice(0, 4).map((tag: string) => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag.replace("'", "&apos;")}
                           </Badge>

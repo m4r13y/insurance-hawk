@@ -1,5 +1,6 @@
 
 import React from "react";
+import { TableCaption } from "@/components/ui/table";
 import { BlogHeader } from "@/components/BlogHeader";
 import { BlogSidebar } from "@/components/BlogSidebar";
 import { BlogContent } from "@/components/BlogContent";

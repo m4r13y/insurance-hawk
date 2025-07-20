@@ -88,6 +88,13 @@ export default {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      transitionDuration: {
+        '100': '100ms', // Added for 0.1s
+        '150': '150ms', // Added for 150ms
+        '0.1': '0.1ms', // Added for 0.1ms
+        '150ms': '150ms', // Added for 150ms explicitly
+        // Add other durations you might be using as needed
+      },
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],

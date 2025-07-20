@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    config.module.exprContextCritical = false; // Ignore require.extensions warnings from handlebars
+
+    return config;
+  },
 };
 
 export default nextConfig;
