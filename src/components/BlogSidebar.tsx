@@ -22,10 +22,10 @@ export const BlogSidebar: React.FC<SidebarProps> = ({ author, mediaLinks }) => (
           <img className="size-10 rounded-full" src={author.avatarUrl} alt="Avatar" />
         </a>
         <a className="group grow block focus:outline-hidden" href="">
-          <h5 className="group-hover:text-gray-600 group-focus:text-gray-600 text-sm font-semibold text-gray-800 dark:group-hover:text-neutral-400 dark:group-focus:text-neutral-400 dark:text-neutral-200">
+          <h5 className="group-hover:text-gray-600 group-focus:text-gray-600 text-base font-semibold text-gray-800 dark:group-hover:text-neutral-400 dark:group-focus:text-neutral-400 dark:text-neutral-200">
             {author.name}
           </h5>
-          <p className="text-sm text-gray-500 dark:text-neutral-500">
+          <p className="text-base text-gray-500 dark:text-neutral-500">
             {author.bio}
           </p>
         </a>

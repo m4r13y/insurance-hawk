@@ -19,7 +19,7 @@ export function PartDPenaltyEstimator() {
       setResult(`
         <div class='grow text-left'>
           <div class='font-semibold text-green-700 text-lg mb-1'>No penalty</div>
-          <div class='text-sm text-gray-500'>You enrolled within the grace period. No penalty applies.</div>
+          <div class='text-base text-gray-500'>You enrolled within the grace period. No penalty applies.</div>
         </div>
       `);
       setShowResult(true);
@@ -29,9 +29,9 @@ export function PartDPenaltyEstimator() {
     const roundedPenalty = Math.round(rawPenalty * 10) / 10;
     setResult(`
       <div class='grow text-left'>
-        <div class='text-sm text-gray-500  mb-1'>${months} month(s) without coverage</div>
+        <div class='text-base text-gray-500  mb-1'>${months} month(s) without coverage</div>
         <div class='font-semibold text-lg text-black mb-2'>Penalty: <span class='font-semibold text-red-600'>$${roundedPenalty.toFixed(2)}</span> added to your monthly premium.</div>
-        <div class='text-sm text-gray-500'>* This penalty lasts as long as you have Medicare drug coverage.</div>
+        <div class='text-base text-gray-500'>* This penalty lasts as long as you have Medicare drug coverage.</div>
       </div>
     `);
     setShowResult(true);
@@ -40,7 +40,7 @@ export function PartDPenaltyEstimator() {
   return (
     <>
       <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-100 mt-4">
-        <h4 className="text-start text-lg font-semibold mb-4">Part D Penalty Estimator</h4>
+        <h4 className="text-start text-xl font-semibold mb-4">Part D Penalty Estimator</h4>
         <div className="mb-2">
           <label htmlFor="dmonthsLate" className="block font-medium mb-2">How many months did you go without drug coverage?</label>
       <input

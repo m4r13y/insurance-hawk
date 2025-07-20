@@ -20,7 +20,7 @@ export const PartBPenaltyEstimator: React.FC = () => {
       setResult(`
         <div class='grow text-left'>
           <div class='font-semibold text-green-700 text-lg mb-1'>No penalty</div>
-          <div class='text-sm text-gray-500'>You enrolled within 12 months of your eligibility. No penalty applies.</div>
+          <div class='text-base text-gray-500'>You enrolled within 12 months of your eligibility. No penalty applies.</div>
         </div>
       `);
       setShowResult(true);
@@ -31,10 +31,10 @@ export const PartBPenaltyEstimator: React.FC = () => {
     const totalPremium = basePremium + penaltyAmount;
     setResult(`
       <div class='grow text-left'>
-        <div class='text-sm text-gray-500  mb-1'>${months} month(s) late (${fullYearsLate} year(s))</div>
+        <div class='text-base text-gray-500  mb-1'>${months} month(s) late (${fullYearsLate} year(s))</div>
         <div class='text-lg text-black mb-2'>Penalty: <span class='font-semibold text-red-600'>$${penaltyAmount.toFixed(2)}</span> (${penaltyPercent}% of standard premium)</div>
         <div class='font-semibold text-black text-lg mb-1'>New monthly Part B premium: <span class='text-red-600'>$${totalPremium.toFixed(2)}</span></div>
-        <div class='text-sm text-gray-500'>This penalty is permanent as long as you have Part B coverage.</div>
+        <div class='text-base text-gray-500'>This penalty is permanent as long as you have Part B coverage.</div>
       </div>
     `);
     setShowResult(true);
@@ -42,7 +42,7 @@ export const PartBPenaltyEstimator: React.FC = () => {
   return (
     <>
       <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-100 mt-4">
-        <h4 className="text-start text-lg font-semibold mb-4">Part B Penalty Estimator</h4>
+        <h4 className="text-start text-xl font-semibold mb-4">Part B Penalty Estimator</h4>
         <div className="mb-2">
           <label htmlFor="bmonthsLate" className="block font-medium mb-2">How many months did you delay?</label>
       <input

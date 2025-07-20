@@ -70,8 +70,8 @@ export const EnrollmentPeriodsTool: React.FC = () => {
   return (
     <>
       <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-100 mt-4">
-        <h4 className="text-start text-lg font-semibold mb-2">Medicare Enrollment Periods</h4>
-        <p className="text-center text-sm mb-6">Enter your birthdate to see when you can enroll in Medicare and Medigap.</p>
+        <h4 className="text-start text-xl font-semibold mb-2">Medicare Enrollment Periods</h4>
+        <p className="text-center text-base mb-6">Enter your birthdate to see when you can enroll in Medicare and Medigap.</p>
         <div className="mb-2">
           <label htmlFor="enroll_dob" className="block font-medium mb-1">Date of Birth:</label>
           <input
