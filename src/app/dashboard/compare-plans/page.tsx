@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -102,7 +103,7 @@ const planData: Record<string, PlanData> = {
     title: "MEDIGAP PLAN G",
     subtitle: "Explained in 5 minutes!",
     description: "Plan G helps pay for most out-of-pocket costs left by Original Medicare, like copays, coinsurance, and hospital costs. Plan G covers everything except the Medicare Part B deductible. You can see any doctor that accepts Medicare, and you don't need referrals. It's a good choice for people who want predictable costs and freedom to choose providers.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Use Any Doctor", value: "✓", highlight: true },
@@ -127,7 +128,7 @@ const planData: Record<string, PlanData> = {
     title: "MEDIGAP PLAN F",
     subtitle: "Explained in 5 minutes!",
     description: "Plan F covers all gaps left by Original Medicare, including copays, coinsurance, and deductibles. You can see any doctor that accepts Medicare, and you don't need referrals. Plan F is only available to those who became eligible for Medicare before January 1, 2020.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Use Any Doctor", value: "✓", highlight: true },
@@ -152,7 +153,7 @@ const planData: Record<string, PlanData> = {
     title: "MEDIGAP PLAN N",
     subtitle: "Explained in 5 minutes!",
     description: "Plan N offers lower premiums than Plan G or F, but you may pay small copays for doctor visits and emergency room trips. It covers most out-of-pocket costs except the Part B deductible and excess charges.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Use Any Doctor", value: "✓", highlight: true },
@@ -177,7 +178,7 @@ const planData: Record<string, PlanData> = {
     title: "DRUG PLAN (PART D)",
     subtitle: "Explained in 5 minutes!",
     description: "Medicare Part D helps cover the cost of prescription drugs. Plans vary by coverage, pharmacy network, and formulary. You can choose a plan that fits your medication needs.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Covers Most Prescriptions", value: "✓", highlight: true },
@@ -199,7 +200,7 @@ const planData: Record<string, PlanData> = {
     title: "CANCER PLAN",
     subtitle: "Explained in 5 minutes!",
     description: "Cancer Plans provide a lump-sum cash benefit if you are diagnosed with cancer. This money can be used for treatment, travel, or any expenses you choose. It helps cover costs not paid by Medicare or other insurance.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Lump-Sum Benefit", value: "✓", highlight: true },
@@ -221,7 +222,7 @@ const planData: Record<string, PlanData> = {
     title: "DENTAL, VISION & HEARING",
     subtitle: "Explained in 5 minutes!",
     description: "Dental, Vision & Hearing plans help pay for routine exams, cleanings, eyeglasses, hearing aids, and more. These benefits are not covered by Original Medicare or Medigap.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Dental Coverage", value: "✓", highlight: true },
@@ -245,7 +246,7 @@ const planData: Record<string, PlanData> = {
     title: "PPO (Preferred Provider Organization)",
     subtitle: "Flexible Medicare Advantage Option",
     description: "PPO plans offer flexibility to see any doctor or specialist, in or out of network, often without referrals. You pay less when using network providers, but you can go out-of-network for a higher cost. PPOs may include extra benefits like dental, vision, and hearing.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true },
@@ -269,7 +270,7 @@ const planData: Record<string, PlanData> = {
     title: "HMO (Health Maintenance Organization)",
     subtitle: "Coordinated Medicare Advantage Care",
     description: "HMO plans require you to use network doctors and hospitals except in emergencies. You usually need a referral to see a specialist. HMOs often have lower costs and may include extra benefits like dental, vision, and hearing.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Coordinated Care", value: "✓", highlight: true },
@@ -291,7 +292,7 @@ const planData: Record<string, PlanData> = {
     title: "C-SNP (Chronic Condition Special Needs Plan)",
     subtitle: "Tailored for Chronic Conditions",
     description: "C-SNPs are designed for people with specific chronic conditions (like diabetes, heart disease, or COPD). These plans offer specialized provider networks, care coordination, and benefits tailored to your condition.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Condition-Specific Care", value: "✓", highlight: true },
@@ -314,7 +315,7 @@ const planData: Record<string, PlanData> = {
     title: "D-SNP (Dual Eligible Special Needs Plan)",
     subtitle: "For Medicare & Medicaid Eligible",
     description: "D-SNPs are for people who qualify for both Medicare and Medicaid. These plans coordinate benefits from both programs, often with low or no out-of-pocket costs and extra support services.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true },
@@ -338,7 +339,7 @@ const planData: Record<string, PlanData> = {
     title: "CANCER INSURANCE",
     subtitle: "Lump-Sum Protection for Cancer Diagnosis",
     description: "Cancer Insurance pays a lump-sum cash benefit if you are diagnosed with cancer. Use the money for treatment, travel, or any expenses. It helps cover costs not paid by Medicare or Advantage plans.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Lump-Sum Benefit", value: "✓", highlight: true },
@@ -361,7 +362,7 @@ const planData: Record<string, PlanData> = {
     title: "SHORT TERM CARE",
     subtitle: "Coverage for Short Recovery Periods",
     description: "Short Term Care plans help pay for recovery after illness, injury, or surgery. They cover skilled nursing, rehabilitation, and home health care for a limited time, filling gaps left by Medicare or Advantage plans.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Skilled Nursing Coverage", value: "✓", highlight: true },
@@ -384,7 +385,7 @@ const planData: Record<string, PlanData> = {
     title: "HOSPITAL INDEMNITY",
     subtitle: "Cash Benefit for Hospital Stays",
     description: "Hospital Indemnity plans pay a fixed cash benefit for each day you are hospitalized. Use the money for any expenses, including deductibles, copays, or travel. These plans help cover costs not paid by Medicare or Advantage plans.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
         { label: "Daily Hospital Benefit", value: "✓", highlight: true },
@@ -407,7 +408,7 @@ const planData: Record<string, PlanData> = {
     title: "ORIGINAL MEDICARE",
     subtitle: "Explained in 5 minutes!",
     description: "Original Medicare is government health insurance for people 65+ and those with disabilities. It includes hospital (Part A) and medical (Part B) coverage but only pays 80% of costs.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       details: [
         { label: "Original Medicare", value: "Part A + Part B" },
@@ -433,7 +434,7 @@ const planData: Record<string, PlanData> = {
     title: "MEDICARE ADVANTAGE",
     subtitle: "Explained in 5 minutes!",
     description: "Medicare Advantage is a Medicare-approved plan from a private company that covers hospital, medical, and often prescription drug costs. These plans may also offer extra benefits, like dental or vision, and have a yearly cap on out-of-pocket costs.",
-    videoUrl: "/placeholder-video.mp4",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       costs: [
         { label: "Part B Premium", value: "$185/mo *" },
@@ -615,7 +616,7 @@ export default function ComparePlansPage() {
                     <iframe
                       width="100%"
                       height="100%"
-                      src="https://www.youtube.com/embed/7o3q3med9Dw"
+                      src={currentData.videoUrl}
                       title="YouTube video player"
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -822,7 +823,6 @@ export default function ComparePlansPage() {
           </div>
         </div>
       </div>
-    </div>
     </SidebarProvider>
   );
 }
