@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Policy } from "@/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -14,14 +13,17 @@ import { collection, onSnapshot, query } from "firebase/firestore";
 import { getCarrierLogo } from "@/lib/mock-data";
 import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  HealthIcon,
-  DentalCareIcon,
-  Cardiogram02Icon,
-  FirstAidKitIcon,
-  HomeIcon,
-  PiggyBankIcon,
-  File01Icon,
+import { 
+    HealthIcon,
+    DentalCareIcon,
+    Cardiogram02Icon,
+    FirstAidKitIcon,
+    Home01Icon as HomeIcon,
+    PiggyBankIcon,
+    File01Icon,
+    CheckmarkCircleIcon,
+    LoaderIcon,
+    ArrowRight01Icon,
 } from '@hugeicons/core-free-icons';
 
 const DentalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -44,7 +46,7 @@ const OnboardingGuide = ({ name, onDismiss }: { name: string, onDismiss: () => v
         <Card className="max-w-3xl mx-auto text-center animate-in fade-in-50 zoom-in-95">
             <CardHeader className="p-8 sm:p-12">
                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 mb-6">
-                    <CheckCircle2 className="h-10 w-10" />
+                    <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-10 w-10" />
                 </div>
                 <CardTitle className="font-headline text-3xl sm:text-4xl pt-2">Welcome to Hawk<span className="text-primary">Nest</span>, {name}!</CardTitle>
                 <CardDescription className="text-lg mt-2">Let's get your nest set up. What would you like to do first?</CardDescription>
@@ -114,7 +116,7 @@ export default function DashboardPage() {
     };
 
     if (authLoading || policiesLoading) {
-        return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>;
+        return <div className="flex h-full items-center justify-center"><HugeiconsIcon icon={LoaderIcon} className="h-8 w-8 animate-spin"/></div>;
     }
     
     if (!user) return null; // Layout should redirect
@@ -361,7 +363,7 @@ export default function DashboardPage() {
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors ml-3 whitespace-nowrap">
-                                                                    Get Quotes <ArrowRight className="w-4 h-4 ml-1.5" />
+                                                                    Get Quotes <HugeiconsIcon icon={ArrowRight01Icon} className="w-4 h-4 ml-1.5" />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -379,7 +381,7 @@ export default function DashboardPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="inline-flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm lg:text-base group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                                                                Get Quotes <ArrowRight className="w-4 h-4 ml-1.5" />
+                                                                Get Quotes <HugeiconsIcon icon={ArrowRight01Icon} className="w-4 h-4 ml-1.5" />
                                                             </div>
                                                         </div>
                                                     </CardContent>
@@ -443,4 +445,5 @@ export default function DashboardPage() {
             </div>
         </div>
     );
-}
+
+    
