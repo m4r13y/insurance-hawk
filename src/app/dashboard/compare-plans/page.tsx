@@ -21,26 +21,18 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import {
-  Check,
-  Info,
-  Play,
-  ArrowRight,
-  Clock,
-  DollarSign,
-  Shield,
-  Heart,
-  Users,
-  FileText,
-  ChevronDown,
-  ExternalLink,
-  ArrowLeft,
-  Stethoscope,
-  Pill,
-  Activity,
-  Eye,
-  Ear,
-} from "lucide-react";
+import { HugeiconsIcon } from '@hugeicons/react';
+import { 
+    ShieldIcon,
+    PillIcon,
+    ActivityIcon,
+    EyeIcon,
+    StethoscopeIcon,
+    HeartIcon,
+    ArrowLeft01Icon,
+    ArrowRight01Icon,
+    InformationCircleIcon
+} from '@hugeicons/core-free-icons';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
 
@@ -55,13 +47,13 @@ interface PlanData {
   title: string;
   subtitle: string;
   description: string;
-  videoUrl: string; // Will be replaced with Firebase storage URLs
+  videoUrl: string;
   keyInfo: {
-    details?: Array<{ label: string; value: string; highlight?: boolean }>;
-    premiums?: Array<{ label: string; value: string; highlight?: boolean }>;
-    deductibles?: Array<{ label: string; value: string; highlight?: boolean }>;
-    costs?: Array<{ label: string; value: string; highlight?: boolean }>;
-    benefits?: Array<{ label: string; value: string; highlight?: boolean }>;
+    details?: Array<{ label: string; value: string; highlight?: boolean; icon?: React.ElementType }>;
+    premiums?: Array<{ label: string; value: string; highlight?: boolean; icon?: React.ElementType }>;
+    deductibles?: Array<{ label: string; value: string; highlight?: boolean; icon?: React.ElementType }>;
+    costs?: Array<{ label: string; value: string; highlight?: boolean; icon?: React.ElementType }>;
+    benefits?: Array<{ label: string; value: string; highlight?: boolean; icon?: React.ElementType }>;
   };
   ctaText: string;
   ctaUrl: string;
@@ -75,28 +67,28 @@ interface ResourceArticle {
 }
 
 const originalMedicarePlans: PlanType[] = [
-  { id: "plan-g", name: "Plan G", icon: <Shield className="w-4 h-4" />, isPopular: true },
-  { id: "plan-f", name: "Plan F", icon: <Shield className="w-4 h-4" /> },
-  { id: "plan-n", name: "Plan N", icon: <Shield className="w-4 h-4" /> },
+  { id: "plan-g", name: "Plan G", icon: <HugeiconsIcon icon={ShieldIcon} className="w-4 h-4" />, isPopular: true },
+  { id: "plan-f", name: "Plan F", icon: <HugeiconsIcon icon={ShieldIcon} className="w-4 h-4" /> },
+  { id: "plan-n", name: "Plan N", icon: <HugeiconsIcon icon={ShieldIcon} className="w-4 h-4" /> },
 ];
 
 const originalMedicareAddOns: PlanType[] = [
-  { id: "drug-plan", name: "Drug Plan (Part D)", icon: <Pill className="w-4 h-4" /> },
-  { id: "cancer-plan", name: "Cancer Plan", icon: <Activity className="w-4 h-4" /> },
-  { id: "dental-vision", name: "Dental, Vision & Hearing", icon: <Eye className="w-4 h-4" /> },
+  { id: "drug-plan", name: "Drug Plan (Part D)", icon: <HugeiconsIcon icon={PillIcon} className="w-4 h-4" /> },
+  { id: "cancer-plan", name: "Cancer Plan", icon: <HugeiconsIcon icon={ActivityIcon} className="w-4 h-4" /> },
+  { id: "dental-vision", name: "Dental, Vision & Hearing", icon: <HugeiconsIcon icon={EyeIcon} className="w-4 h-4" /> },
 ];
 
 const advantagePlans: PlanType[] = [
-  { id: "ppo", name: "PPO", icon: <Heart className="w-4 h-4" />, isPopular: true },
-  { id: "hmo", name: "HMO", icon: <Heart className="w-4 h-4" /> },
-  { id: "c-snp", name: "C-SNP", icon: <Heart className="w-4 h-4" /> },
-  { id: "d-snp", name: "D-SNP", icon: <Heart className="w-4 h-4" /> },
+  { id: "ppo", name: "PPO", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" />, isPopular: true },
+  { id: "hmo", name: "HMO", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
+  { id: "c-snp", name: "C-SNP", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
+  { id: "d-snp", name: "D-SNP", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
 ];
 
 const advantageAddOns: PlanType[] = [
-  { id: "cancer-insurance", name: "Cancer Insurance", icon: <Activity className="w-4 h-4" /> },
-  { id: "short-term", name: "Short Term Care", icon: <Stethoscope className="w-4 h-4" /> },
-  { id: "hospital-indemnity", name: "Hospital Indemnity", icon: <Shield className="w-4 h-4" /> },
+  { id: "cancer-insurance", name: "Cancer Insurance", icon: <HugeiconsIcon icon={ActivityIcon} className="w-4 h-4" /> },
+  { id: "short-term", name: "Short Term Care", icon: <HugeiconsIcon icon={StethoscopeIcon} className="w-4 h-4" /> },
+  { id: "hospital-indemnity", name: "Hospital Indemnity", icon: <HugeiconsIcon icon={ShieldIcon} className="w-4 h-4" /> },
 ];
 
 const planData: Record<string, PlanData> = {
@@ -108,19 +100,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true },
-        { label: "Visit Any Hospital", value: "✓", highlight: true },
-        { label: "Exclusive Cancer Centers", value: "✓", highlight: true },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Exclusive Cancer Centers", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *" },
-        { label: "Plan G Premium", value: "Varies" },
-        { label: "Copays", value: "None" },
-        { label: "Deductibles", value: "$257/yr" },
+        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon },
+        { label: "Plan G Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Copays", value: "None", icon: InformationCircleIcon },
+        { label: "Deductibles", value: "$257/yr", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate" },
-        { label: "Health Questions", value: "Yes" },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon },
+        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Instant Quotes Online",
@@ -133,19 +125,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true },
-        { label: "Visit Any Hospital", value: "✓", highlight: true },
-        { label: "No Out-of-Pocket Costs", value: "✓", highlight: true },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "No Out-of-Pocket Costs", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *" },
-        { label: "Plan F Premium", value: "Varies" },
-        { label: "Copays", value: "None" },
-        { label: "Deductibles", value: "$0" },
+        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon },
+        { label: "Plan F Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Copays", value: "None", icon: InformationCircleIcon },
+        { label: "Deductibles", value: "$0", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate" },
-        { label: "Health Questions", value: "Yes" },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon },
+        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Plan F Quotes",
@@ -158,18 +150,18 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true },
-        { label: "Visit Any Hospital", value: "✓", highlight: true },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *" },
-        { label: "Plan N Premium", value: "Varies" },
-        { label: "Copays", value: "Up to $20" },
-        { label: "Deductibles", value: "$257/yr" },
+        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon },
+        { label: "Plan N Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Copays", value: "Up to $20", icon: InformationCircleIcon },
+        { label: "Deductibles", value: "$257/yr", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate" },
-        { label: "Health Questions", value: "Yes" },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon },
+        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Plan N Quotes",
@@ -183,16 +175,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Covers Most Prescriptions", value: "✓", highlight: true },
+        { label: "Covers Most Prescriptions", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "Annual Deductible", value: "Up to $545" },
-        { label: "Copays", value: "Varies" },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Annual Deductible", value: "Up to $545", icon: InformationCircleIcon },
+        { label: "Copays", value: "Varies", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Preferred Pharmacies", value: "Yes" },
-        { label: "Coverage Gap", value: "Possible" },
+        { label: "Preferred Pharmacies", value: "Yes", icon: InformationCircleIcon },
+        { label: "Coverage Gap", value: "Possible", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Drug Plan Quotes",
@@ -205,16 +197,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Lump-Sum Benefit", value: "✓", highlight: true },
-        { label: "Use Anywhere", value: "✓", highlight: true },
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Use Anywhere", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "No Deductible", value: "✓", highlight: true },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "No Deductible", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Pays Directly to You", value: "Yes" },
-        { label: "No Network Restrictions", value: "Yes" },
+        { label: "Pays Directly to You", value: "Yes", icon: InformationCircleIcon },
+        { label: "No Network Restrictions", value: "Yes", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Cancer Plan Quotes",
@@ -227,17 +219,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Dental Coverage", value: "✓", highlight: true },
-        { label: "Vision Coverage", value: "✓", highlight: true },
-        { label: "Hearing Coverage", value: "✓", highlight: true },
+        { label: "Dental Coverage", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Vision Coverage", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Hearing Coverage", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "Copays", value: "Varies" },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Copays", value: "Varies", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Choose Any Provider", value: "Yes" },
-        { label: "No Waiting Periods", value: "On some plans" },
+        { label: "Choose Any Provider", value: "Yes", icon: InformationCircleIcon },
+        { label: "No Waiting Periods", value: "On some plans", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Dental/Vision/Hearing Quotes",
@@ -251,18 +243,18 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true },
-        { label: "No Referral Needed", value: "✓", highlight: true },
-        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most" },
+        { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "No Referral Needed", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$50" },
-        { label: "Copays", value: "Varies" },
-        { label: "Out-of-Network Cost", value: "Higher" },
+        { label: "Monthly Premium", value: "$0-$50", icon: InformationCircleIcon },
+        { label: "Copays", value: "Varies", icon: InformationCircleIcon },
+        { label: "Out-of-Network Cost", value: "Higher", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Network Size", value: "Large" },
-        { label: "Prior Authorization", value: "Sometimes" },
+        { label: "Network Size", value: "Large", icon: InformationCircleIcon },
+        { label: "Prior Authorization", value: "Sometimes", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get PPO Quotes",
@@ -275,16 +267,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Coordinated Care", value: "✓", highlight: true },
-        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most" },
+        { label: "Coordinated Care", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$30" },
-        { label: "Copays", value: "Low" },
+        { label: "Monthly Premium", value: "$0-$30", icon: InformationCircleIcon },
+        { label: "Copays", value: "Low", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Referral Needed", value: "Yes" },
-        { label: "Network Size", value: "Medium-Large" },
+        { label: "Referral Needed", value: "Yes", icon: InformationCircleIcon },
+        { label: "Network Size", value: "Medium-Large", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get HMO Quotes",
@@ -297,17 +289,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Condition-Specific Care", value: "✓", highlight: true },
-        { label: "Care Coordination", value: "✓", highlight: true },
-        { label: "Extra Benefits", value: "Varies" },
+        { label: "Condition-Specific Care", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Care Coordination", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Extra Benefits", value: "Varies", icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$40" },
-        { label: "Copays", value: "Varies" },
+        { label: "Monthly Premium", value: "$0-$40", icon: InformationCircleIcon },
+        { label: "Copays", value: "Varies", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Eligibility", value: "Specific Chronic Condition" },
-        { label: "Network Size", value: "Varies" },
+        { label: "Eligibility", value: "Specific Chronic Condition", icon: InformationCircleIcon },
+        { label: "Network Size", value: "Varies", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get C-SNP Quotes",
@@ -320,17 +312,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true },
-        { label: "Extra Support Services", value: "✓", highlight: true },
-        { label: "Extra Benefits", value: "Most" },
+        { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Extra Support Services", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Extra Benefits", value: "Most", icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0" },
-        { label: "Copays", value: "Low/None" },
+        { label: "Monthly Premium", value: "$0", icon: InformationCircleIcon },
+        { label: "Copays", value: "Low/None", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Eligibility", value: "Medicare & Medicaid" },
-        { label: "Network Size", value: "Varies" },
+        { label: "Eligibility", value: "Medicare & Medicaid", icon: InformationCircleIcon },
+        { label: "Network Size", value: "Varies", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get D-SNP Quotes",
@@ -344,17 +336,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Lump-Sum Benefit", value: "✓", highlight: true },
-        { label: "Pays Directly to You", value: "✓", highlight: true },
-        { label: "No Network Restrictions", value: "✓", highlight: true },
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "No Deductible", value: "✓", highlight: true },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "No Deductible", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Use Anywhere", value: "Yes" },
-        { label: "Waiting Period", value: "Possible" },
+        { label: "Use Anywhere", value: "Yes", icon: InformationCircleIcon },
+        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Cancer Insurance Quotes",
@@ -367,17 +359,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Skilled Nursing Coverage", value: "✓", highlight: true },
-        { label: "Rehabilitation", value: "✓", highlight: true },
-        { label: "Home Health Care", value: "✓", highlight: true },
+        { label: "Skilled Nursing Coverage", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Rehabilitation", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Home Health Care", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "Daily Benefit", value: "$100-$300" },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Daily Benefit", value: "$100-$300", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Benefit Period", value: "Up to 360 days" },
-        { label: "Waiting Period", value: "Possible" },
+        { label: "Benefit Period", value: "Up to 360 days", icon: InformationCircleIcon },
+        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Short Term Care Quotes",
@@ -390,17 +382,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Daily Hospital Benefit", value: "✓", highlight: true },
-        { label: "Pays Directly to You", value: "✓", highlight: true },
-        { label: "No Network Restrictions", value: "✓", highlight: true },
+        { label: "Daily Hospital Benefit", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InformationCircleIcon },
+        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InformationCircleIcon },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies" },
-        { label: "Daily Benefit", value: "$100-$500" },
+        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon },
+        { label: "Daily Benefit", value: "$100-$500", icon: InformationCircleIcon },
       ],
       details: [
-        { label: "Benefit Period", value: "Up to 365 days" },
-        { label: "Waiting Period", value: "Possible" },
+        { label: "Benefit Period", value: "Up to 365 days", icon: InformationCircleIcon },
+        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Hospital Indemnity Quotes",
@@ -413,19 +405,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       details: [
-        { label: "Original Medicare", value: "Part A + Part B" },
-        { label: "Part A", value: "Hospital Coverage" },
-        { label: "Part B", value: "Medical Coverage" },
-        { label: "Part D", value: "Prescription Drug Plan" },
-        { label: "Part C", value: "Medicare Advantage" },
+        { label: "Original Medicare", value: "Part A + Part B", icon: InformationCircleIcon },
+        { label: "Part A", value: "Hospital Coverage", icon: InformationCircleIcon },
+        { label: "Part B", value: "Medical Coverage", icon: InformationCircleIcon },
+        { label: "Part D", value: "Prescription Drug Plan", icon: InformationCircleIcon },
+        { label: "Part C", value: "Medicare Advantage", icon: InformationCircleIcon },
       ],
       premiums: [
-        { label: "Part A Premium", value: "$0 *" },
-        { label: "Part B Premium", value: "$185/mo *" },
+        { label: "Part A Premium", value: "$0 *", icon: InformationCircleIcon },
+        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon },
       ],
       deductibles: [
-        { label: "Part A Deductible", value: "$1,676 *" },
-        { label: "Part B Deductible", value: "$257/yr *" },
+        { label: "Part A Deductible", value: "$1,676 *", icon: InformationCircleIcon },
+        { label: "Part B Deductible", value: "$257/yr *", icon: InformationCircleIcon },
       ],
     },
     ctaText: "Apply for Original Medicare",
@@ -439,19 +431,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       costs: [
-        { label: "Part B Premium", value: "$185/mo *" },
-        { label: "Copays", value: "Varies", highlight: true },
-        { label: "Deductibles", value: "Varies", highlight: true },
-        { label: "Skilled Nursing", value: "Varies", highlight: true },
-        { label: "Hospitalization Cost", value: "Varies" },
-        { label: "Cancer", value: "20%" },
+        { label: "Part B Premium", value: "$185/mo *", highlight: true, icon: InformationCircleIcon },
+        { label: "Copays", value: "Varies", highlight: true, icon: InformationCircleIcon },
+        { label: "Deductibles", value: "Varies", highlight: true, icon: InformationCircleIcon },
+        { label: "Skilled Nursing", value: "Varies", highlight: true, icon: InformationCircleIcon },
+        { label: "Hospitalization Cost", value: "Varies", icon: InformationCircleIcon },
+        { label: "Cancer", value: "20%", icon: InformationCircleIcon },
       ],
       benefits: [
-        { label: "Dental, Vision, Hearing", value: "Most", highlight: true },
+        { label: "Dental, Vision, Hearing", value: "Most", highlight: true, icon: InformationCircleIcon },
       ],
       deductibles: [
-        { label: "Networks", value: "Varies", highlight: true },
-        { label: "Prior Authorization", value: "Varies", highlight: true },
+        { label: "Networks", value: "Varies", highlight: true, icon: InformationCircleIcon },
+        { label: "Prior Authorization", value: "Varies", highlight: true, icon: InformationCircleIcon },
       ],
     },
     ctaText: "Get Medicare Advantage",
@@ -481,6 +473,26 @@ function getRelevantResources(selectedPlan: string, isAdvantage: boolean) {
   let key = planMap[selectedPlan];
   if (!key) key = isAdvantage ? 'advantage' : 'ogMedicare';
   return resourcesList.filter(r => r.products[key as keyof ResourceCard['products']]);
+}
+
+const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyInfo']['details'] }) => {
+    if (!items || items.length === 0) return null;
+    return (
+        <div>
+            <h4 className="font-semibold text-lg mb-3">{title}</h4>
+            <ul className="space-y-3">
+                {items.map((item, index) => (
+                    <li key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            {item.icon && <HugeiconsIcon icon={item.icon} className="h-4 w-4" />}
+                            <span>{item.label}</span>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-white">{item.value}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    )
 }
 
 export default function ComparePlansPage() {
@@ -531,7 +543,7 @@ export default function ComparePlansPage() {
               <div className="px-3 pt-4 pb-2">
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={handleBackToDashboard} tooltip="Back to Dashboard">
-                    <ArrowLeft className="w-4 h-4" />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} className="w-4 h-4" />
                     <span>Back to Dashboard</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -607,223 +619,106 @@ export default function ComparePlansPage() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-            {/* Video and Description Section - More Compact */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Video and Description - Takes up 1 column (50%) on large screens */}
-              <div className="space-y-4">
-                {/* Video Player and Content in single card */}
-                <Card className="overflow-hidden flex flex-col h-full">
-                  {/* YouTube Video Embed */}
-                  <div className="relative bg-black" style={{ aspectRatio: '16/9' }}>
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={currentData.videoUrl}
-                      title="YouTube video player"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full rounded-t"
-                    ></iframe>
-                  </div>
-                  {/* Description and Button at the bottom, spaced evenly */}
-                  <CardContent className="flex flex-col flex-grow justify-between p-4">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">
-                        {currentData.title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
-                        {currentData.description}
-                      </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Left Column (Video & Description) */}
+              <div className="lg:col-span-2 space-y-8">
+                <Card className="overflow-hidden">
+                    <div className="relative bg-black aspect-video">
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={currentData.videoUrl}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="absolute inset-0 w-full h-full"
+                        ></iframe>
                     </div>
-                    <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold mt-4`}>
-                      {currentData.ctaText}
-                    </Button>
-                  </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>What is {currentData.title}?</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {currentData.description}
+                        </p>
+                    </CardContent>
+                </Card>
+                 <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold mt-4`} size="lg">
+                    {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                </Button>
               </div>
 
-              {/* Key Information Sidebar - Table Style */}
-              <div>
-                <Card className="sticky top-4">
-                  <CardHeader className="p-0 align-top">
-                    <CardTitle className="text-lg m-0">Key Information</CardTitle>
+              {/* Right Column (Key Information) */}
+              <div className="lg:col-span-1">
+                <Card className="sticky top-8">
+                  <CardHeader>
+                    <CardTitle>Key Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0 px-0">
-                    {/* Details Section */}
-                    {currentData.keyInfo.details && (
-                      <Table>
-                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white m-0 p-0">
-                          Details
-                        </TableCaption>
-                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                          {currentData.keyInfo.details.map((item, index) => (
-                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
-                                {item.label}
-                              </TableHead>
-                              <TableCell className="py-2.5 px-4 text-right">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {item.value}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                    {/* Premiums Section */}
-                    {currentData.keyInfo.premiums && (
-                      <Table>
-                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
-                          Premiums
-                        </TableCaption>
-                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                          {currentData.keyInfo.premiums.map((item, index) => (
-                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
-                                {item.label}
-                              </TableHead>
-                              <TableCell className="py-2.5 px-4 text-right">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {item.value}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                    {/* Deductibles Section */}
-                    {currentData.keyInfo.deductibles && (
-                      <Table>
-                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
-                          Deductibles
-                        </TableCaption>
-                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                          {currentData.keyInfo.deductibles.map((item, index) => (
-                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
-                                {item.label}
-                              </TableHead>
-                              <TableCell className="py-2.5 px-4 text-right">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {item.value}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                    {/* Benefits Section */}
-                    {currentData.keyInfo.benefits && (
-                      <Table>
-                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
-                          Benefits
-                        </TableCaption>
-                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                          {currentData.keyInfo.benefits.map((item, index) => (
-                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
-                                {item.label}
-                              </TableHead>
-                              <TableCell className="py-2.5 px-4 text-right">
-                                {item.highlight || item.value === "✓" ? (
-                                  <svg className="shrink-0 ml-auto size-5 text-blue-600 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                  </svg>
-                                ) : (
-                                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {item.value}
-                                  </span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                    {/* Costs Section */}
-                    {currentData.keyInfo.costs && (
-                      <Table>
-                        <TableCaption className="bg-gray-50 border-t border-gray-200 py-2 px-4 text-sm font-bold text-gray-800 text-start dark:bg-neutral-700 dark:border-neutral-700 dark:text-white">
-                          Costs
-                        </TableCaption>
-                        <TableBody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                          {currentData.keyInfo.costs.map((item, index) => (
-                            <TableRow key={index} className="border-t border-gray-200 dark:border-neutral-700">
-                              <TableHead className="py-2.5 px-4 text-sm font-normal text-gray-600 text-start dark:text-neutral-400" scope="row">
-                                {item.label}
-                              </TableHead>
-                              <TableCell className="py-2.5 px-4 text-right">
-                                <span className={`text-sm font-medium ${item.highlight ? themeColors.accent : 'text-gray-900 dark:text-white'}`}>
-                                  {item.value}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                    {/* Footer Note */}
-                    <div className="px-4 py-2 bg-gray-50 dark:bg-neutral-800">
-                      <p className="text-xs text-gray-500 italic text-center">
-                        * May vary based on individual situations
-                      </p>
-                    </div>
+                  <CardContent className="space-y-6">
+                    <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
+                    <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
+                    <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
+                    <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
+                    <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
+                    
+                    <p className="text-xs text-gray-500 italic pt-4 border-t">
+                      * May vary based on individual situations
+                    </p>
                   </CardContent>
                 </Card>
               </div>
             </div>
-          </div>
-          {/* Helpful Resources Section - Full Width, Always Visible */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg text-center">Helpful Resources</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {relevantResources.length === 0 ? (
-                    <div className="col-span-3 text-center text-gray-500 py-8">No resources available for this plan/add-on.</div>
-                  ) : (
-                    relevantResources.map((resource, index) => (
+
+            {/* Helpful Resources Section */}
+            <div className="pt-8">
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl text-center">Helpful Resources</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {relevantResources.length > 0 ? relevantResources.map((resource, index) => (
                       <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3 mb-3">
+                        <CardContent className="p-4 flex flex-col h-full">
+                           <div className="flex items-start gap-3 mb-3">
                             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <HugeiconsIcon icon={FileText} className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
                                 <span>{resource.type}</span>
-                                <Clock className="w-3 h-3" />
+                                <span>&bull;</span>
                                 <span>{resource.duration} {resource.durationUnit}</span>
                               </div>
                             </div>
                           </div>
-                          <h3 className="font-semibold text-base mb-2">{resource.title}</h3>
+                          <h3 className="font-semibold text-base mb-2 flex-grow">{resource.title}</h3>
                           <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{resource.description}</p>
                           <Button
                             variant="link"
-                            className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs"
+                            className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs self-start"
                             onClick={() => {
-                              // Always generate slug from resource title
                               const slug = resource.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                               router.push(`/dashboard/resources/${slug}`);
                             }}
                           >
-                            {resource.linkLabel} <ArrowRight className="w-3 h-3 ml-1" />
+                            {resource.linkLabel} <HugeiconsIcon icon={ArrowRight01Icon} className="w-3 h-3 ml-1" />
                           </Button>
                         </CardContent>
                       </Card>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    )) : (
+                      <div className="col-span-3 text-center text-gray-500 py-8">No resources available for this selection.</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
