@@ -4,12 +4,13 @@
 import type { Quote } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Star } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircleIcon, StarIcon } from '@hugeicons/core-free-icons';
 
 const getRatingScore = (rating: string) => {
     if (!rating || rating === "N/A") return 0;
@@ -76,7 +77,7 @@ export function MedigapQuoteCard({ quote }: { quote: Quote }) {
             <CardDescription>{quote.plan_name}</CardDescription>
           </div>
           <div className="flex items-center gap-1 text-amber-500">
-            <Star className="h-4 w-4 fill-current" />
+            <HugeiconsIcon icon={StarIcon} className="h-4 w-4 fill-current" />
             <span className="font-bold text-sm">{getRatingScore(quote.am_best_rating).toFixed(1)}</span>
           </div>
         </div>
@@ -91,16 +92,16 @@ export function MedigapQuoteCard({ quote }: { quote: Quote }) {
         </div>
         <ul className="space-y-3 text-sm text-gray-500 dark:text-neutral-500">
           <li className="flex items-center gap-3">
-            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5 text-teal-500 shrink-0"/>
             <span>AM Best Rating: <strong className="text-gray-800 dark:text-neutral-200">{quote.am_best_rating}</strong></span>
           </li>
           <li className="flex items-center gap-3">
-            <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+            <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5 text-teal-500 shrink-0"/>
             <span>Rate Type: <strong className="text-gray-800 dark:text-neutral-200">{quote.rate_type}</strong></span>
           </li>
           {quote.discounts && quote.discounts.length > 0 && (
             <li className="flex items-center gap-3">
-              <Check className="h-5 w-5 text-teal-500 shrink-0"/>
+              <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5 text-teal-500 shrink-0"/>
               <span><strong className="text-gray-800 dark:text-neutral-200">{quote.discounts.length} Discount{quote.discounts.length > 1 ? 's' : ''}</strong> Available</span>
             </li>
           )}
@@ -115,7 +116,7 @@ export function MedigapQuoteCard({ quote }: { quote: Quote }) {
                 <ul className="space-y-1 text-xs text-gray-500 dark:text-neutral-500">
                   {quote.discounts.map((d, i) => (
                     <li key={i} className="flex items-center gap-2 capitalize">
-                      <Check className="h-4 w-4 shrink-0 text-teal-500"/>
+                      <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-4 w-4 shrink-0 text-teal-500"/>
                       {d.name}: {d.value * 100}%
                     </li>
                   ))}
