@@ -50,8 +50,7 @@ import {
     AddCircleIcon,
     Trash01Icon,
     ReloadIcon,
-    ExternalLink01Icon,
-    HeartBreakIcon,
+    HeartbreakIcon,
     PencilEdit02Icon
 } from '@hugeicons/core-free-icons';
 
@@ -215,7 +214,7 @@ const PlanDetailsCard = ({ planName, provider, premium, carrierLogoUrl, carrierW
                 {carrierWebsite && (
                     <Button asChild variant="ghost" size="sm" className="text-muted-foreground px-2">
                         <a href={carrierWebsite} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${provider} website`}>
-                           Visit Website <HugeiconsIcon icon={ExternalLink01Icon} className="ml-1.5 h-4 w-4" />
+                           Visit Website <HugeiconsIcon icon={ArrowRight01Icon} className="ml-1.5 h-4 w-4" />
                         </a>
                     </Button>
                 )}
@@ -631,7 +630,7 @@ function CancerApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <HugeiconsIcon icon={HeartBreakIcon} className="h-6 w-6" />
+                         <HugeiconsIcon icon={HeartbreakIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Cancer Insurance Application</CardTitle>
                 </CardHeader>
@@ -2657,7 +2656,7 @@ const applicationTypes = [
   {
     title: "Cancer Insurance",
     description: "Pays a lump sum upon first diagnosis of cancer.",
-    icon: HeartBreakIcon,
+    icon: HeartbreakIcon,
     type: "cancer",
   },
   {
