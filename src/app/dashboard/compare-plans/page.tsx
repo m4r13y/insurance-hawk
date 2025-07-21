@@ -24,14 +24,14 @@ import { Logo } from "@/components/logo";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
     ShieldIcon,
-    PillIcon,
+    StethoscopeIcon,
     ActivityIcon,
     EyeIcon,
-    StethoscopeIcon,
-    HeartIcon,
+    HealthIcon,
     ArrowLeft01Icon,
     ArrowRight01Icon,
-    InformationCircleIcon
+    InformationCircleIcon,
+    File01Icon
 } from '@hugeicons/core-free-icons';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
@@ -73,16 +73,16 @@ const originalMedicarePlans: PlanType[] = [
 ];
 
 const originalMedicareAddOns: PlanType[] = [
-  { id: "drug-plan", name: "Drug Plan (Part D)", icon: <HugeiconsIcon icon={PillIcon} className="w-4 h-4" /> },
+  { id: "drug-plan", name: "Drug Plan (Part D)", icon: <HugeiconsIcon icon={StethoscopeIcon} className="w-4 h-4" /> },
   { id: "cancer-plan", name: "Cancer Plan", icon: <HugeiconsIcon icon={ActivityIcon} className="w-4 h-4" /> },
   { id: "dental-vision", name: "Dental, Vision & Hearing", icon: <HugeiconsIcon icon={EyeIcon} className="w-4 h-4" /> },
 ];
 
 const advantagePlans: PlanType[] = [
-  { id: "ppo", name: "PPO", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" />, isPopular: true },
-  { id: "hmo", name: "HMO", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
-  { id: "c-snp", name: "C-SNP", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
-  { id: "d-snp", name: "D-SNP", icon: <HugeiconsIcon icon={HeartIcon} className="w-4 h-4" /> },
+  { id: "ppo", name: "PPO", icon: <HugeiconsIcon icon={HealthIcon} className="w-4 h-4" />, isPopular: true },
+  { id: "hmo", name: "HMO", icon: <HugeiconsIcon icon={HealthIcon} className="w-4 h-4" /> },
+  { id: "c-snp", name: "C-SNP", icon: <HugeiconsIcon icon={HealthIcon} className="w-4 h-4" /> },
+  { id: "d-snp", name: "D-SNP", icon: <HugeiconsIcon icon={HealthIcon} className="w-4 h-4" /> },
 ];
 
 const advantageAddOns: PlanType[] = [
@@ -688,7 +688,7 @@ export default function ComparePlansPage() {
                         <CardContent className="p-4 flex flex-col h-full">
                            <div className="flex items-start gap-3 mb-3">
                             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <HugeiconsIcon icon={FileText} className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <HugeiconsIcon icon={File01Icon} className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
