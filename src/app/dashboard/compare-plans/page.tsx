@@ -34,7 +34,7 @@ import {
     InformationCircleIcon,
     File01Icon
 } from '@hugeicons/core-free-icons';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 
 
 interface PlanType {
@@ -436,7 +436,7 @@ const planData: Record<string, PlanData> = {
         { label: "Copays", value: "Varies", highlight: true, icon: InformationCircleIcon },
         { label: "Deductibles", value: "Varies", highlight: true, icon: InformationCircleIcon },
         { label: "Skilled Nursing", value: "Varies", highlight: true, icon: InformationCircleIcon },
-        { label: "Hospitalization Cost", value: "Varies", icon: InformationCircleIcon },
+        { label: "Hospitalization Cost", value: "Varies", highlight: true, icon: InformationCircleIcon },
         { label: "Cancer", value: "20%", icon: InformationCircleIcon },
       ],
       benefits: [
@@ -479,19 +479,19 @@ function getRelevantResources(selectedPlan: string, isAdvantage: boolean) {
 const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyInfo']['details'] }) => {
     if (!items || items.length === 0) return null;
     return (
-        <div>
-            <h4 className="font-semibold text-lg mb-3">{title}</h4>
-            <ul className="space-y-3">
+        <div className="space-y-4">
+            <h4 className="text-base font-semibold text-gray-700 dark:text-gray-300">{title}</h4>
+            <div className="space-y-2">
                 {items.map((item, index) => (
-                    <li key={index} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div key={index} className="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
+                        <div className="flex items-center gap-2.5 text-gray-600 dark:text-gray-400">
                             {item.icon && <HugeiconsIcon icon={item.icon} className="h-4 w-4" />}
                             <span>{item.label}</span>
                         </div>
-                        <span className="font-medium text-gray-900 dark:text-white">{item.value}</span>
-                    </li>
+                        <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     )
 }
@@ -621,44 +621,45 @@ export default function ComparePlansPage() {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-              {/* Left "content-container" */}
-              <div className="lg:col-span-3 space-y-8">
-                {/* Video Card */}
-                <Card className="overflow-hidden">
-                    <div className="relative bg-black aspect-video">
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={currentData.videoUrl}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="absolute inset-0 w-full h-full"
-                        ></iframe>
-                    </div>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+                
+                {/* Left content container */}
+                <div className="lg:col-span-3 space-y-8">
+                    {/* Video Card */}
+                    <Card className="overflow-hidden">
+                        <div className="relative bg-black aspect-video">
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={currentData.videoUrl}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full"
+                            ></iframe>
+                        </div>
+                    </Card>
 
-                {/* Description Card */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>What is {currentData.title}?</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {currentData.description}
-                        </p>
-                    </CardContent>
-                    <CardFooter>
-                         <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
-                           <a href={currentData.ctaUrl}>
-                              {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                           </a>
-                        </Button>
-                    </CardFooter>
-                </Card>
-              </div>
+                    {/* Description Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>What is {currentData.title}?</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                {currentData.description}
+                            </p>
+                        </CardContent>
+                        <CardFooter>
+                             <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
+                               <a href={currentData.ctaUrl}>
+                                  {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                               </a>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
               
               {/* Right "key-information" container */}
               <div className="lg:col-span-2">
@@ -668,12 +669,16 @@ export default function ComparePlansPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
+                        {currentData.keyInfo.details && <Separator />}
                         <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
+                        {currentData.keyInfo.premiums && <Separator />}
                         <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
+                        {currentData.keyInfo.deductibles && <Separator />}
                         <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
+                        {currentData.keyInfo.costs && <Separator />}
                         <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
                         
-                        <p className="text-xs text-gray-500 italic pt-4 border-t">
+                        <p className="text-xs text-gray-500 italic pt-4">
                         * May vary based on individual situations
                         </p>
                     </CardContent>
@@ -726,3 +731,5 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
+
