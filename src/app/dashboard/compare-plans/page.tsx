@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { resourcesList } from "@/resources/resourcesList";
 import type { ResourceCard } from "@/resources/resourcesList";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -618,10 +618,10 @@ export default function ComparePlansPage() {
         </Sidebar>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               {/* Left Column (Video & Description) */}
               <div className="lg:col-span-2 space-y-8">
@@ -649,8 +649,10 @@ export default function ComparePlansPage() {
                         </p>
                     </CardContent>
                     <CardFooter>
-                         <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
-                            {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                         <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
+                           <a href={currentData.ctaUrl}>
+                              {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                           </a>
                         </Button>
                     </CardFooter>
                 </Card>
@@ -678,53 +680,46 @@ export default function ComparePlansPage() {
             </div>
 
             {/* Helpful Resources Section */}
-            <div className="pt-8">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl text-center">Helpful Resources</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="pt-12 mt-8 border-t">
+                <h2 className="text-2xl font-bold text-center mb-8">Helpful Resources</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {relevantResources.length > 0 ? relevantResources.map((resource, index) => (
-                      <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="p-4 flex flex-col h-full">
-                           <div className="flex items-start gap-3 mb-3">
-                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <HugeiconsIcon icon={File01Icon} className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <Card key={index} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6 flex flex-col h-full">
+                           <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <HugeiconsIcon icon={File01Icon} className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
+                              <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
                                 <span>{resource.type}</span>
                                 <span>&bull;</span>
                                 <span>{resource.duration} {resource.durationUnit}</span>
                               </div>
                             </div>
                           </div>
-                          <h3 className="font-semibold text-base mb-2 flex-grow">{resource.title}</h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed">{resource.description}</p>
+                          <h3 className="font-semibold text-lg mb-2 flex-grow">{resource.title}</h3>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">{resource.description}</p>
                           <Button
                             variant="link"
-                            className="p-0 h-auto text-blue-600 dark:text-blue-400 text-xs self-start"
+                            className="p-0 h-auto text-blue-600 dark:text-blue-400 text-sm self-start mt-auto"
                             onClick={() => {
                               const slug = resource.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                               router.push(`/dashboard/resources/${slug}`);
                             }}
                           >
-                            {resource.linkLabel} <HugeiconsIcon icon={ArrowRight01Icon} className="w-3 h-3 ml-1" />
+                            {resource.linkLabel} <HugeiconsIcon icon={ArrowRight01Icon} className="w-4 h-4 ml-1" />
                           </Button>
                         </CardContent>
                       </Card>
                     )) : (
-                      <div className="col-span-3 text-center text-gray-500 py-8">No resources available for this selection.</div>
+                      <div className="col-span-full text-center text-gray-500 py-12">No resources available for this selection.</div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </SidebarProvider>
   );
 }
-
