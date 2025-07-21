@@ -22,7 +22,7 @@ import {
     PiggyBankIcon,
     File01Icon,
     CheckmarkCircleIcon,
-    LoaderIcon,
+    ReloadIcon,
     ArrowRight01Icon,
 } from '@hugeicons/core-free-icons';
 
@@ -116,7 +116,7 @@ export default function DashboardPage() {
     };
 
     if (authLoading || policiesLoading) {
-        return <div className="flex h-full items-center justify-center"><HugeiconsIcon icon={LoaderIcon} className="h-8 w-8 animate-spin"/></div>;
+        return <div className="flex h-full items-center justify-center"><HugeiconsIcon icon={ReloadIcon} className="h-8 w-8 animate-spin"/></div>;
     }
     
     if (!user) return null; // Layout should redirect
@@ -445,5 +445,7 @@ export default function DashboardPage() {
             </div>
         </div>
     );
+
+    
 
     
