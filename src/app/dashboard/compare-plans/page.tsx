@@ -620,71 +620,93 @@ export default function ComparePlansPage() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                
-                {/* Left Column */}
-                <div className="lg:col-span-3 space-y-8">
-                    <Card className="overflow-hidden">
-                        <div className="relative bg-black aspect-video">
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={currentData.videoUrl}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="absolute inset-0 w-full h-full"
-                        ></iframe>
-                        </div>
-                    </Card>
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+              {/* Left Column */}
+              <div className="lg:col-span-3 space-y-8">
+                {/* Video Card */}
+                <Card className="overflow-hidden">
+                    <div className="relative aspect-video">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src={currentData.videoUrl}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                    </div>
+                </Card>
 
-                    <Card>
-                        <CardHeader>
-                        <CardTitle>What is {currentData.title}?</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {currentData.description}
+                {/* Description Card */}
+                <Card>
+                    <CardHeader>
+                    <CardTitle>What is {currentData.title}?</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {currentData.description}
+                    </p>
+                    </CardContent>
+                </Card>
+                
+                {/* CTA Button */}
+                <a href={currentData.ctaUrl} className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-xl`}>
+                    <div className="flex justify-center items-center">
+                        {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                    </div>
+                </a>
+              </div>
+              
+              {/* Right Column */}
+              <div className="lg:col-span-2">
+                <Card className="sticky top-8">
+                    <CardHeader>
+                        <CardTitle>Key Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && (
+                           <>
+                            <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
+                           </>
+                        )}
+                        
+                        {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && (
+                           <>
+                             <Separator/>
+                            <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
+                           </>
+                        )}
+
+                        {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && (
+                           <>
+                            <Separator/>
+                            <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
+                           </>
+                        )}
+
+                        {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && (
+                           <>
+                            <Separator/>
+                            <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
+                           </>
+                        )}
+                        
+                        {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && (
+                           <>
+                            <Separator/>
+                            <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
+                           </>
+                        )}
+                        
+                        <p className="text-xs text-gray-500 italic pt-4">
+                        * May vary based on individual situations
                         </p>
-                        </CardContent>
-                    </Card>
-                    
-                     <a href={currentData.ctaUrl} className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-xl`}>
-                        <div className="flex justify-center items-center">
-                            {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                        </div>
-                    </a>
-                </div>
-                
-                 {/* Right Column */}
-                <div className="lg:col-span-2">
-                    <Card className="sticky top-8">
-                        <CardHeader>
-                            <CardTitle>Key Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4 pt-4">
-                            {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && <KeyInfoSection title="Details" items={currentData.keyInfo.details} />}
-                            
-                            {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <Separator />}
-                            {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />}
-
-                            {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <Separator />}
-                            {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />}
-
-                            {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <Separator />}
-                            {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />}
-                            
-                            {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <Separator />}
-                            {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />}
-                            
-                            <p className="text-xs text-gray-500 italic pt-4">
-                            * May vary based on individual situations
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
+                    </CardContent>
+                </Card>
+              </div>
             </div>
 
 
@@ -732,6 +754,7 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
 
 
 
