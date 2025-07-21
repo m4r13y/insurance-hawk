@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { resourcesList } from "@/resources/resourcesList";
 import type { ResourceCard } from "@/resources/resourcesList";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -479,12 +479,12 @@ function getRelevantResources(selectedPlan: string, isAdvantage: boolean) {
 const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyInfo']['details'] }) => {
     if (!items || items.length === 0) return null;
     return (
-        <div className="space-y-4">
-            <h4 className="text-base font-semibold text-gray-700 dark:text-gray-300">{title}</h4>
-            <div className="space-y-2">
+        <div>
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{title}</h4>
+            <div className="space-y-3">
                 {items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
-                        <div className="flex items-center gap-2.5 text-gray-600 dark:text-gray-400">
+                    <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                             {item.icon && <HugeiconsIcon icon={item.icon} className="h-4 w-4" />}
                             <span>{item.label}</span>
                         </div>
@@ -622,46 +622,50 @@ export default function ComparePlansPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                
-                {/* Left content container */}
-                <div className="lg:col-span-3 space-y-8">
-                    {/* Video Card */}
-                    <Card className="overflow-hidden">
-                        <div className="relative bg-black aspect-video">
-                            <iframe
-                                width="100%"
-                                height="100%"
-                                src={currentData.videoUrl}
-                                title="YouTube video player"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="absolute inset-0 w-full h-full"
-                            ></iframe>
-                        </div>
-                    </Card>
+              {/* Left Column */}
+              <div className="lg:col-span-3 space-y-8">
+                {/* Video Card */}
+                <Card className="overflow-hidden">
+                  <div className="relative bg-black aspect-video">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={currentData.videoUrl}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                  </div>
+                </Card>
 
-                    {/* Description Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>What is {currentData.title}?</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                {currentData.description}
-                            </p>
-                        </CardContent>
-                        <CardFooter>
-                             <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
-                               <a href={currentData.ctaUrl}>
-                                  {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                               </a>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
+                {/* Description Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>What is {currentData.title}?</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {currentData.description}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                 {/* CTA Card */}
+                <Card>
+                    <CardContent className="p-4">
+                        <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
+                            <a href={currentData.ctaUrl}>
+                                {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                            </a>
+                        </Button>
+                    </CardContent>
+                </Card>
+
+              </div>
               
-              {/* Right "key-information" container */}
+              {/* Right Column */}
               <div className="lg:col-span-2">
                 <Card className="sticky top-8">
                     <CardHeader>
@@ -669,13 +673,13 @@ export default function ComparePlansPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
-                        {currentData.keyInfo.details && <Separator />}
+                        <Separator />
                         <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
-                        {currentData.keyInfo.premiums && <Separator />}
+                        <Separator />
                         <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
-                        {currentData.keyInfo.deductibles && <Separator />}
+                        <Separator />
                         <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
-                        {currentData.keyInfo.costs && <Separator />}
+                        <Separator />
                         <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
                         
                         <p className="text-xs text-gray-500 italic pt-4">
@@ -731,5 +735,6 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
 
 
