@@ -34,23 +34,23 @@ import { collection, addDoc, serverTimestamp, setDoc, doc, query, where, getDocs
 import { AddressSearchInput } from "@/components/ui/address-search-input"
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
-    ShieldTickIcon,
+    ShieldIcon,
     CheckmarkCircleIcon,
     ArrowRight01Icon,
     UserIcon,
     HealthIcon,
     File01Icon,
-    FileTickIcon,
+    FileIcon,
     SmileIcon,
     Hospital01Icon,
-    ShieldAlertIcon,
-    UserPlusIcon,
+    UserAdd01Icon,
     AddCircleIcon,
-    Trash01Icon,
+    Delete01Icon,
     ReloadIcon,
     HeartbreakIcon,
     PencilEdit02Icon,
-    StethoscopeIcon
+    StethoscopeIcon,
+    AlertSquareIcon,
 } from '@hugeicons/core-free-icons';
 
 
@@ -1188,7 +1188,7 @@ function MedicareSupplementApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1223,7 +1223,7 @@ function MedicareSupplementApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1771,7 +1771,7 @@ function LifeInsuranceApplication() {
             <Card className="w-full">
                 <CardHeader>
                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                         <HugeiconsIcon icon={ShieldTickIcon} className="h-6 w-6" />
+                         <HugeiconsIcon icon={ShieldIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Life Insurance Application</CardTitle>
                 </CardHeader>
@@ -2143,7 +2143,7 @@ function HealthInsuranceApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2175,7 +2175,7 @@ function HealthInsuranceApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2462,7 +2462,7 @@ function MedicareAdvantageApplication() {
             <Card className="w-full">
                 <CardHeader>
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <HugeiconsIcon icon={UserPlusIcon} className="h-6 w-6" />
+                        <HugeiconsIcon icon={UserAdd01Icon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Medicare Advantage Application</CardTitle>
                 </CardHeader>
@@ -2539,7 +2539,7 @@ function MedicareAdvantageApplication() {
                                             {_selectedProviders.map(p => (
                                                 <div key={p.npi} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{p.name}</p>{p.selectedAffiliation && <p className="text-xs text-muted-foreground">{p.selectedAffiliation}</p>}</div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveProvider(p.npi)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {p.name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2571,7 +2571,7 @@ function MedicareAdvantageApplication() {
                                             {_selectedDrugs.map(drug => (
                                                 <div key={drug.rxcui} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                     <div className="flex-1"><p className="text-sm font-medium">{drug.full_name}</p><p className="text-xs text-muted-foreground">Qty: {drug.quantity} &bull; {frequencyLabels[drug.frequency]} &bull; {packageLabels[drug.package]}</p></div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveDrug(drug.rxcui)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /><span className="sr-only">Remove {drug.full_name}</span></Button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2679,7 +2679,7 @@ const applicationTypes = [
   {
     title: "Medicare Advantage",
     description: "Part C plans that bundle Parts A, B, and often D.",
-    icon: UserPlusIcon,
+    icon: UserAdd01Icon,
     type: "medicare-advantage",
   },
 ];
@@ -2835,7 +2835,7 @@ function ApplicationSelectionGrid() {
         
         {userQuotes.length === 0 && (
           <Alert className="shadow-lg border-0 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
-            <HugeiconsIcon icon={ShieldAlertIcon} className="h-4 w-4" />
+            <HugeiconsIcon icon={AlertSquareIcon} className="h-4 w-4" />
             <AlertTitle>Get Quotes First</AlertTitle>
             <AlertDescription>
               You need to get quotes before starting applications. Visit the <Link href="/dashboard/quotes" className="underline font-medium">Quotes page</Link> to get started.

@@ -31,7 +31,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { 
     UploadCloudIcon, 
     File01Icon, 
-    Trash01Icon, 
+    Delete01Icon, 
     Download01Icon, 
     AddCircleIcon, 
     ExternalLink01Icon, 
@@ -475,7 +475,7 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                             </DropdownMenuItem>
                         )}
                          <DropdownMenuItem onSelect={() => onDelete(policy.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                            <HugeiconsIcon icon={Trash01Icon} className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={Delete01Icon} className="mr-2 h-4 w-4" />
                             <span>Delete</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -730,7 +730,7 @@ export default function MyAccountPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Button variant="ghost" size="icon" asChild><a href={doc.downloadURL} download={doc.name} target="_blank" rel="noopener noreferrer"><HugeiconsIcon icon={Download01Icon} className="h-4 w-4" /></a></Button>
-                                        <Button variant="ghost" size="icon" onClick={() => setDocumentToDelete(doc)}><HugeiconsIcon icon={Trash01Icon} className="h-4 w-4 text-destructive" /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => setDocumentToDelete(doc)}><HugeiconsIcon icon={Delete01Icon} className="h-4 w-4 text-destructive" /></Button>
                                     </div>
                                 </div>
                              ))}
