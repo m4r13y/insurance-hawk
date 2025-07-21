@@ -41,17 +41,16 @@ import {
     HealthIcon,
     File01Icon,
     FileTickIcon,
-    HeartIcon,
     SmileIcon,
     Hospital01Icon,
     ShieldAlertIcon,
     UserPlusIcon,
-    PillIcon,
     AddCircleIcon,
     Trash01Icon,
     ReloadIcon,
     HeartbreakIcon,
-    PencilEdit02Icon
+    PencilEdit02Icon,
+    StethoscopeIcon
 } from '@hugeicons/core-free-icons';
 
 
@@ -1212,7 +1211,7 @@ function MedicareSupplementApplication() {
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters to search.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={StethoscopeIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -2076,7 +2075,7 @@ function HealthInsuranceApplication() {
             <Card className="w-full">
                 <CardHeader>
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <HugeiconsIcon icon={HeartIcon} className="h-6 w-6" />
+                        <HugeiconsIcon icon={HealthIcon} className="h-6 w-6" />
                     </div>
                     <CardTitle className="font-headline text-2xl sm:text-3xl pt-4">Health Insurance Application</CardTitle>
                 </CardHeader>
@@ -2164,7 +2163,7 @@ function HealthInsuranceApplication() {
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={StethoscopeIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -2560,7 +2559,7 @@ function MedicareAdvantageApplication() {
                                                     <CommandList className="absolute top-full z-10 mt-1 w-full rounded-b-lg border bg-background shadow-lg">
                                                          {medicationQuery.length > 0 && medicationQuery.length < 3 && !medicationLoading && (<CommandEmpty>Please enter at least 3 characters.</CommandEmpty>)}
                                                         {!medicationLoading && medicationResults.length === 0 && medicationSuggestions.length > 0 && medicationQuery.length >= 3 && (<CommandGroup heading="Did you mean?">{medicationSuggestions.map(s => (<CommandItem key={s} value={s} onSelect={() => handleMedicationQueryChange(s)} className="cursor-pointer">{s}</CommandItem>))}</CommandGroup>)}
-                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={PillIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
+                                                        {medicationResults.length > 0 && (<CommandGroup>{medicationResults.map(d => (<CommandItem key={d.rxcui} value={d.name} onSelect={() => handleSelectDrug(d)} className="cursor-pointer"><div className="flex items-center gap-3"><HugeiconsIcon icon={StethoscopeIcon} className="h-4 w-4 text-muted-foreground" /><span className="font-medium">{d.name}</span></div></CommandItem>))}</CommandGroup>)}
                                                     </CommandList>
                                                 )}
                                             </div>
@@ -2674,7 +2673,7 @@ const applicationTypes = [
   {
     title: "Health Insurance",
     description: "For individuals and families under the age of 65.",
-    icon: HeartIcon,
+    icon: HealthIcon,
     type: "health-insurance",
   },
   {
