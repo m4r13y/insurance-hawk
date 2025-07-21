@@ -44,8 +44,8 @@ import {
     BookOpen01Icon,
     LibrariesIcon as LibraryIcon,
     Settings02Icon as Setting01Icon,
-    Search02Icon as Search01Icon,
-    LoginCircle01Icon as Login01Icon,
+    Search01Icon,
+    Login01Icon,
     Cancel01Icon,
     ReloadIcon as LoaderIcon,
 } from '@hugeicons/core-free-icons';
