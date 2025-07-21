@@ -402,7 +402,7 @@ const planData: Record<string, PlanData> = {
     title: "ORIGINAL MEDICARE",
     subtitle: "Explained in 5 minutes!",
     description: "Original Medicare is government health insurance for people 65+ and those with disabilities. It includes hospital (Part A) and medical (Part B) coverage but only pays 80% of costs.",
-    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
+    videoUrl: "https://www.youtube.com/embed/hzP_KO6fwLU",
     keyInfo: {
       details: [
         { label: "Original Medicare", value: "Part A + Part B", icon: InformationCircleIcon },
@@ -648,10 +648,12 @@ export default function ComparePlansPage() {
                             {currentData.description}
                         </p>
                     </CardContent>
+                    <CardFooter>
+                         <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
+                            {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                        </Button>
+                    </CardFooter>
                 </Card>
-                 <Button className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold mt-4`} size="lg">
-                    {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                </Button>
               </div>
 
               {/* Right Column (Key Information) */}
@@ -725,3 +727,4 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
