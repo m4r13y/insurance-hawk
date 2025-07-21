@@ -622,6 +622,8 @@ export default function ComparePlansPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+                
+                {/* Left Column */}
                 <div className="lg:col-span-3 space-y-8">
                     <Card className="overflow-hidden">
                         <div className="relative bg-black aspect-video">
@@ -649,17 +651,14 @@ export default function ComparePlansPage() {
                         </CardContent>
                     </Card>
                     
-                    <Card>
-                        <CardContent className="p-0">
-                             <a href={currentData.ctaUrl} className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-b-xl`}>
-                                <div className="flex justify-center items-center">
-                                    {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                                </div>
-                            </a>
-                        </CardContent>
-                    </Card>
+                     <a href={currentData.ctaUrl} className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-xl`}>
+                        <div className="flex justify-center items-center">
+                            {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                        </div>
+                    </a>
                 </div>
                 
+                 {/* Right Column */}
                 <div className="lg:col-span-2">
                     <Card className="sticky top-8">
                         <CardHeader>
@@ -667,12 +666,16 @@ export default function ComparePlansPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 pt-4">
                             {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && <KeyInfoSection title="Details" items={currentData.keyInfo.details} />}
+                            
                             {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <Separator />}
                             {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />}
+
                             {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <Separator />}
                             {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />}
+
                             {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <Separator />}
                             {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />}
+                            
                             {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <Separator />}
                             {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />}
                             
@@ -729,6 +732,7 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
 
 
 
