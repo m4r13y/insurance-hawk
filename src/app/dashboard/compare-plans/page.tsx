@@ -622,9 +622,7 @@ export default function ComparePlansPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                {/* Left Column Container */}
                 <div className="lg:col-span-3 space-y-8">
-                    {/* Video Card */}
                     <Card className="overflow-hidden">
                         <div className="relative bg-black aspect-video">
                         <iframe
@@ -640,7 +638,6 @@ export default function ComparePlansPage() {
                         </div>
                     </Card>
 
-                    {/* Description Card */}
                     <Card>
                         <CardHeader>
                         <CardTitle>What is {currentData.title}?</CardTitle>
@@ -652,34 +649,32 @@ export default function ComparePlansPage() {
                         </CardContent>
                     </Card>
                     
-                    {/* CTA Card */}
                     <Card>
-                        <CardContent className="p-4">
-                            <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
-                                <a href={currentData.ctaUrl}>
+                        <CardContent className="p-0">
+                             <a href={currentData.ctaUrl} className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-b-xl`}>
+                                <div className="flex justify-center items-center">
                                     {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                                </a>
-                            </Button>
+                                </div>
+                            </a>
                         </CardContent>
                     </Card>
                 </div>
                 
-                {/* Right Column Container */}
                 <div className="lg:col-span-2">
                     <Card className="sticky top-8">
                         <CardHeader>
                             <CardTitle>Key Information</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
-                            <Separator />
-                            <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
-                            <Separator />
-                            <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
-                            <Separator />
-                            <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
-                            <Separator />
-                            <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
+                        <CardContent className="space-y-4 pt-4">
+                            {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && <KeyInfoSection title="Details" items={currentData.keyInfo.details} />}
+                            {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <Separator />}
+                            {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />}
+                            {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <Separator />}
+                            {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />}
+                            {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <Separator />}
+                            {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />}
+                            {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <Separator />}
+                            {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />}
                             
                             <p className="text-xs text-gray-500 italic pt-4">
                             * May vary based on individual situations
@@ -734,6 +729,7 @@ export default function ComparePlansPage() {
     </SidebarProvider>
   );
 }
+
 
 
 
