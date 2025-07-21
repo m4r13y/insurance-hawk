@@ -620,64 +620,66 @@ export default function ComparePlansPage() {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-              
-              {/* Left Column (Video & Description) */}
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="overflow-hidden">
-                    <div className="relative bg-black aspect-video">
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={currentData.videoUrl}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="absolute inset-0 w-full h-full"
-                        ></iframe>
-                    </div>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>What is {currentData.title}?</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {currentData.description}
-                        </p>
-                    </CardContent>
-                    <CardFooter>
-                         <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
-                           <a href={currentData.ctaUrl}>
-                              {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
-                           </a>
-                        </Button>
-                    </CardFooter>
-                </Card>
-              </div>
+                {/* Left Column */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Video Card */}
+                    <Card className="overflow-hidden">
+                        <div className="relative bg-black aspect-video">
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={currentData.videoUrl}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full"
+                            ></iframe>
+                        </div>
+                    </Card>
 
-              {/* Right Column (Key Information) */}
-              <div className="lg:col-span-1">
-                <Card className="sticky top-8">
-                  <CardHeader>
-                    <CardTitle>Key Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
-                    <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
-                    <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
-                    <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
-                    <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
-                    
-                    <p className="text-xs text-gray-500 italic pt-4 border-t">
-                      * May vary based on individual situations
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+                    {/* Description Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>What is {currentData.title}?</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                {currentData.description}
+                            </p>
+                        </CardContent>
+                        <CardFooter>
+                             <Button asChild className={`w-full ${themeColors.button} text-white py-3 text-base font-semibold`} size="lg">
+                               <a href={currentData.ctaUrl}>
+                                  {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                               </a>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+                
+                {/* Right Column */}
+                <div className="lg:col-span-1">
+                    <Card className="sticky top-8">
+                        <CardHeader>
+                            <CardTitle>Key Information</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
+                            <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
+                            <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
+                            <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
+                            <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
+                            
+                            <p className="text-xs text-gray-500 italic pt-4 border-t">
+                            * May vary based on individual situations
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
+
 
             {/* Helpful Resources Section */}
             <div className="pt-12 mt-8 border-t">
