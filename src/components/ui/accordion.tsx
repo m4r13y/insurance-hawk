@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ChevronDownIcon } from '@hugeicons/core-free-icons';
+import { ChevronDown01Icon } from '@hugeicons/core-free-icons';
 
 import { cn } from "@/lib/utils"
 
@@ -35,7 +36,7 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {children}
-      <HugeiconsIcon icon={ChevronDownIcon} className="h-4 w-4 shrink-0 transition-transform duration-200" />
+      <HugeiconsIcon icon={ChevronDown01Icon} className="h-4 w-4 shrink-0 transition-transform duration-200" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))
