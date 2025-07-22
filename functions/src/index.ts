@@ -306,7 +306,7 @@ async function refreshToken(): Promise<string> {
 // Scheduled function to refresh token every 7 hours
 export const refreshCsgToken = v2.scheduler.onSchedule({
   schedule: "0 */7 * * *", // Every 7 hours
-  timeZone: "America/New_York",
+  timeZone: "America/Chicago",
 }, async () => {
   try {
     v2.logger.info("Scheduled token refresh triggered");
@@ -443,6 +443,17 @@ export const getMedigapQuotes = v2.https.onCall(
         total_count: response.data.total_count,
         first_quote_example: response.data.quotes?.[0],
       });
+      v2.logger.info("Quotes data before map:", response.data.quotes);
+
+      // Validate quotes array before returning or mapping
+      if (!response.data.quotes || !Array.isArray(response.data.quotes)) {
+        v2.logger.error("No quotes array returned from API:", response.data);
+        throw new v2.https.HttpsError(
+          "internal",
+          "Unable to process request: No quotes returned from API.",
+          response.data
+        );
+      }
 
       // Return the response data
       return response.data;
