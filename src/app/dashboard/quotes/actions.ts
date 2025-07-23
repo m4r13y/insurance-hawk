@@ -1,5 +1,3 @@
-
-
 "use server";
 import { functions as firebaseFunctions } from "@/lib/firebase";
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
@@ -84,34 +82,11 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
     };
 
     // Call the Medigap Cloud Function
-    const getMedigapQuotesCallable = httpsCallable<typeof transformedData, { quotes: any[]; total_count: number }>(firebaseFunctions!, 'getMedigapQuotes');
-    console.log("Calling getMedigapQuotes Cloud Function with transformed data:", transformedData);
-
+    const getMedigapQuotesCallable = httpsCallable<typeof transformedData, any>(firebaseFunctions!, 'getMedigapQuotes');
     const result = await getMedigapQuotesCallable(transformedData);
-
-    console.log("Received response from getMedigapQuotes Cloud Function:", result.data);
-
-    // Transform the raw CSG API response to our Quote format
-    const transformedQuotes: Quote[] = result.data.quotes.map((quote: any, index: number) => ({
-      id: `medigap-${index}`,
-      premium: parseFloat(quote.monthly_premium) || 0,
-      monthly_premium: parseFloat(quote.monthly_premium) || 0,
-      carrier: {
-        name: quote.company_base?.name_full || 'Unknown Carrier',
-        logo_url: null
-      },
-      plan_name: `Plan ${quote.plan || values.plan}`,
-      plan_type: quote.plan || values.plan,
-      am_best_rating: quote.am_best_rating || 'NR',
-      rate_type: quote.rating_method || 'Unknown',
-      discounts: quote.discounts || []
-    }));
-
-    return { quotes: transformedQuotes };
-
+    return { raw: result.data };
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
-    return { error: e.message || "Failed to fetch quotes." };
     return { error: e.message || "Failed to fetch quotes." };
   }
 }

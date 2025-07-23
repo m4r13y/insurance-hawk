@@ -185,18 +185,15 @@ export const getUserData = v2.https.onCall(
   }
 );
 
-// Ensure CSG_API_KEY is set in environment config
-const CSG_API_KEY = functions.config().csg.api_key;
+// Ensure CSG_API_KEY is set in environment config or environment variable
+const CSG_API_KEY =
+  (functions.config().csg && functions.config().csg.api_key) ||
+  process.env.CSG_API_KEY;
 if (!CSG_API_KEY) {
   v2.logger.error(
-    "CSG_API_KEY environment variable not set. Medigap quotes will not work.",
+    "CSG_API_KEY not set in Firebase config or environment. " +
+    "Medigap quotes will not work.",
   );
-}
-
-// Basic interface for the Medigap API response
-interface MedigapQuoteResponse {
-  quotes: Array<Record<string, unknown>>;
-  total_count: number;
 }
 
 // Interface for CSG API token response
@@ -324,195 +321,38 @@ export const getMedigapQuotes = v2.https.onCall(
   async (request: v2.https.CallableRequest<{
     zip5: string;
     age: number;
-    gender: "M" | "F";
-    tobacco: 0 | 1;
-    plan: "F" | "G" | "N";
+    gender: string;
+    tobacco: number;
+    plan: string;
     effective_date?: string;
-    apply_discounts?: 0 | 1;
-    apply_fees?: 0 | 1;
+    apply_discounts?: number;
+    apply_fees?: number;
     offset?: number;
     limit?: number;
     naic?: string | string[];
     field?: string | string[];
-  }>): Promise<MedigapQuoteResponse> => {
-    const data = request.data;
-    v2.logger.info("--- Starting Medigap Quote Fetch ---", {
-      structuredData: true,
-    });
-    v2.logger.info("1. Received input data:", {data});
-
-    // Input Validation
-    if (!data.zip5 || typeof data.zip5 !== "string") {
-      throw new v2.https.HttpsError(
-        "invalid-argument",
-        "A valid zip5 is required.",
-      );
-    }
-    if (typeof data.age !== "number" || data.age < 1) {
-      throw new v2.https.HttpsError(
-        "invalid-argument",
-        "A valid age is required.",
-      );
-    }
-    if (!data.gender || !["M", "F"].includes(data.gender)) {
-      throw new v2.https.HttpsError(
-        "invalid-argument",
-        "A valid gender (M or F) is required.",
-      );
-    }
-    if (typeof data.tobacco !== "number" || ![0, 1].includes(data.tobacco)) {
-      throw new v2.https.HttpsError(
-        "invalid-argument",
-        "A valid tobacco status (0 or 1) is required.",
-      );
-    }
-    if (!data.plan || !["F", "G", "N"].includes(data.plan)) {
-      throw new v2.https.HttpsError(
-        "invalid-argument",
-        "A valid plan (F, G, or N) is required.",
-      );
-    }
-
-    if (!CSG_API_KEY) {
-      throw new v2.https.HttpsError(
-        "internal",
-        "Server configuration error: CSG API key is not set.",
-      );
-    }
-
+  }>) => {
+    v2.logger.info("getMedigapQuotes called", {data: request.data});
     try {
-      // Construct query parameters
-      const params: Record<string, string | number | string[]> = {
-        zip5: data.zip5,
-        age: data.age,
-        gender: data.gender,
-        tobacco: data.tobacco,
-        plan: data.plan,
-        apply_discounts: data.apply_discounts || 0,
-        apply_fees: data.apply_fees || 0,
-        offset: data.offset || 0,
-        limit: data.limit || 10,
-      };
-
-      // Add optional fields if provided
-      if (data.effective_date) {
-        params.effective_date = data.effective_date;
-      }
-
-      // Handle repeatable parameters
-      if (data.naic) {
-        params.naic = data.naic;
-      }
-      // Handle field parameter
-      if (data.field) {
-        params.field = data.field;
-      } else {
-        // Define default fields if none provided
-        params.field = [
-          "company_base.name_full",
-          "plan",
-          "monthly_premium",
-          "payment_mode",
-          "is_tobacco_rate",
-          "discounts",
-          "fees",
-          "effective_date",
-          "rating_method",
-        ];
-      }
-
-      v2.logger.info("2. Constructed API parameters:", {params});
-
-      // Get current valid token
-      const currentToken = await getCurrentToken();
-
-      // Make the HTTP request to the CSG API
+      const data = request.data;
       const apiUrl = "https://csgapi.appspot.com/v1/med_supp/quotes.json";
-      v2.logger.info(`3. Making GET request to: ${apiUrl}`);
-
-      const response = await axios.get<MedigapQuoteResponse>(apiUrl, {
-        params,
+      const token = await getCurrentToken();
+      v2.logger.info("Calling CSG API", {apiUrl, token, params: data});
+      const response = await axios.get(apiUrl, {
+        params: data,
         headers: {
-          "x-api-token": currentToken,
+          "x-api-token": token,
         },
       });
-
-      v2.logger.info(
-        `4. Received API response with status: ${response.status}`,
-      );
-      v2.logger.info("API response data summary:", {
-        total_count: response.data.total_count,
-        first_quote_example: response.data.quotes?.[0],
+      v2.logger.info("CSG API response", {response: response.data});
+      return response.data;
+    } catch (error) {
+      v2.logger.error("Error in getMedigapQuotes", {error});
+      throw new v2.https.HttpsError("internal", "Error fetching quotes", {
+        message: error instanceof Error ? error.message : "Unknown error",
       });
-      v2.logger.info("Quotes data before map:", response.data.quotes);
-
-      // Validate quotes array before returning or mapping
-      if (!response.data.quotes || !Array.isArray(response.data.quotes)) {
-        v2.logger.error("No quotes array returned from API:", response.data);
-        throw new v2.https.HttpsError(
-          "internal",
-          "Unable to process request: No quotes returned from API.",
-          response.data
-        );
-      }
-
-      // Only return the minimal set of fields needed for display
-      const filteredQuotes = response.data.quotes.map((quote: any) => ({
-        id: quote.key || null,
-        plan: quote.plan || null,
-        rate: {
-          annual: quote.rate?.annual ?? null,
-          month: quote.rate?.month ?? null,
-          quarter: quote.rate?.quarter ?? null,
-          semi_annual: quote.rate?.semi_annual ?? null,
-        },
-        company:
-          quote.company_base?.name_full ||
-          quote.company_base?.name ||
-          null,
-        company_id: quote.company || null,
-        rating_class: quote.rating_class || null,
-        rate_type: quote.rate_type || null,
-        effective_date: quote.effective_date || null,
-        expires_date: quote.expires_date || null,
-        tobacco: quote.tobacco ?? null,
-        gender: quote.gender ?? null,
-        age: quote.age ?? null,
-        select: quote.select ?? false,
-        riders: quote.riders || [],
-        view_type: quote.view_type || [],
-        location: quote.location || null,
-        location_base: quote.location_base || null,
-      }));
-
-      return {
-        quotes: filteredQuotes,
-        total_count: filteredQuotes.length,
-      };
-    } catch (error: unknown) {
-      v2.logger.error("--- ERROR fetching Medigap Quotes ---", error);
-
-      // Handle specific Axios errors or re-throw as HttpsError
-      if (isAxiosError(error)) {
-        v2.logger.error("Axios error details:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        throw new v2.https.HttpsError(
-          "internal",
-          `Failed to fetch Medigap quotes from API: ${error.message}`,
-          error.response?.data,
-        );
-      } else {
-        // Handle other potential errors
-        throw new v2.https.HttpsError(
-          "internal",
-          "An unexpected error occurred while fetching quotes.",
-        );
-      }
     }
-  },
+  }
 );
 
 // Save user profile data

@@ -91,6 +91,7 @@ export default function QuotesPage() {
   const [isMedigapPending, startMedigapTransition] = useTransition();
   const [medigapQuotes, setMedigapQuotes] = useState<Quote[] | null>(null);
   const [medigapError, setMedigapError] = useState<string | null>(null);
+  const [medigapRaw, setMedigapRaw] = useState<any>(null);
 
   const [isDentalPending, startDentalTransition] = useTransition();
   const [dentalQuotes, setDentalQuotes] = useState<DentalQuote[] | null>(null);
@@ -279,6 +280,7 @@ export default function QuotesPage() {
   function onMedigapSubmit(values: z.infer<typeof medigapFormSchema>) {
     setMedigapError(null);
     setMedigapQuotes(null);
+    setMedigapRaw(null);
     startMedigapTransition(async () => {
       const result = await getMedigapQuotes({
         ...values,
@@ -287,8 +289,8 @@ export default function QuotesPage() {
       if (result.error) {
         setMedigapError(result.error);
       }
-      if (result.quotes) {
-        setMedigapQuotes(result.quotes);
+      if (result.raw) {
+        setMedigapRaw(result.raw);
       }
     });
   }
@@ -766,6 +768,23 @@ export default function QuotesPage() {
                             <p className="text-sm">Try adjusting your preferences above</p>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Raw API Response - Debugging */}
+            {medigapRaw && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
+                    <div className="text-center mb-8">
+                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            Raw Medigap API Response
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            This is the unformatted response from the CSG API for debugging.
+                        </p>
+                    </div>
+                    <pre className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 text-xs overflow-x-auto max-h-[600px]">
+                        {JSON.stringify(medigapRaw, null, 2)}
+                    </pre>
                 </div>
             )}
         </TabsContent>
@@ -1293,3 +1312,4 @@ export default function QuotesPage() {
     </div>
   );
 }
+
