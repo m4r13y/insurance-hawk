@@ -61,30 +61,33 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
 
 export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
-    // Check if firebaseFunctions is initialized
-    if (!firebaseFunctions) {
-      console.error("Firebase Functions not initialized.");
-      throw new Error("Server error: Firebase Functions are not initialized.");
+    // Use the same API route as Test Quotes page for Medigap quotes
+    // Use absolute URL for server-side fetch
+    const apiUrl = typeof window === "undefined"
+      ? "http://localhost:3000/api/test-quotes"
+      : "/api/test-quotes";
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        zip5: values.zipCode,
+        age: Number(values.age),
+        gender: values.gender === "male" ? "M" : "F",
+        tobacco: values.tobacco === "true" ? 1 : 0,
+        plan: values.plan,
+        effective_date: values.effectiveDate,
+        apply_discounts: values.apply_discounts ? 1 : 0,
+        apply_fees: 0,
+        offset: 0,
+        limit: 50,
+      }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { error: errorData.message || "Failed to fetch quotes." };
     }
-
-    // Transform the form data to match the CSG API format expected by the Cloud Function
-    const transformedData = {
-      zip5: values.zipCode,
-      age: values.age,
-      gender: values.gender === 'male' ? 'M' : 'F' as 'M' | 'F',
-      tobacco: values.tobacco === 'true' ? 1 : 0 as 0 | 1,
-      plan: values.plan as 'F' | 'G' | 'N',
-      effective_date: values.effectiveDate,
-      apply_discounts: values.apply_discounts ? 1 : 0 as 0 | 1,
-      apply_fees: 0 as 0 | 1,
-      offset: 0,
-      limit: 50,
-    };
-
-    // Call the Medigap Cloud Function
-    const getMedigapQuotesCallable = httpsCallable<typeof transformedData, any>(firebaseFunctions!, 'getMedigapQuotes');
-    const result = await getMedigapQuotesCallable(transformedData);
-    return { raw: result.data };
+    const result = await response.json();
+    return { raw: result };
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
     return { error: e.message || "Failed to fetch quotes." };
