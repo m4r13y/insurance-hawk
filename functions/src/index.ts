@@ -5,6 +5,7 @@ import * as v2 from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import {getFirestore} from "firebase-admin/firestore";
 import axios, {isAxiosError} from "axios";
+import * as functions from "firebase-functions";
 
 // Initialize the Firebase Admin SDK.
 let app: admin.app.App;
@@ -185,7 +186,7 @@ export const getUserData = v2.https.onCall(
 );
 
 // Ensure CSG_API_KEY is set in environment config
-const CSG_API_KEY = process.env.CSG_API_KEY;
+const CSG_API_KEY = functions.config().csg.api_key;
 if (!CSG_API_KEY) {
   v2.logger.error(
     "CSG_API_KEY environment variable not set. Medigap quotes will not work.",
@@ -455,8 +456,39 @@ export const getMedigapQuotes = v2.https.onCall(
         );
       }
 
-      // Return the response data
-      return response.data;
+      // Only return the minimal set of fields needed for display
+      const filteredQuotes = response.data.quotes.map((quote: any) => ({
+        id: quote.key || null,
+        plan: quote.plan || null,
+        rate: {
+          annual: quote.rate?.annual ?? null,
+          month: quote.rate?.month ?? null,
+          quarter: quote.rate?.quarter ?? null,
+          semi_annual: quote.rate?.semi_annual ?? null,
+        },
+        company:
+          quote.company_base?.name_full ||
+          quote.company_base?.name ||
+          null,
+        company_id: quote.company || null,
+        rating_class: quote.rating_class || null,
+        rate_type: quote.rate_type || null,
+        effective_date: quote.effective_date || null,
+        expires_date: quote.expires_date || null,
+        tobacco: quote.tobacco ?? null,
+        gender: quote.gender ?? null,
+        age: quote.age ?? null,
+        select: quote.select ?? false,
+        riders: quote.riders || [],
+        view_type: quote.view_type || [],
+        location: quote.location || null,
+        location_base: quote.location_base || null,
+      }));
+
+      return {
+        quotes: filteredQuotes,
+        total_count: filteredQuotes.length,
+      };
     } catch (error: unknown) {
       v2.logger.error("--- ERROR fetching Medigap Quotes ---", error);
 
