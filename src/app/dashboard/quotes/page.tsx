@@ -547,16 +547,18 @@ export default function QuotesPage() {
                               <FormItem>
                                 <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Gender</FormLabel>
                                 <FormControl>
-                                  <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4 pt-2">
-                                    <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
-                                      <RadioGroupItem value="female" className="text-blue-600" />
-                                      <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
-                                    </div>
-                                    <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
-                                      <RadioGroupItem value="male" className="text-blue-600" />
-                                      <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
-                                    </div>
-                                  </RadioGroup>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="female" className="text-blue-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="male" className="text-blue-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -565,16 +567,18 @@ export default function QuotesPage() {
                               <FormItem>
                                 <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Tobacco</FormLabel>
                                 <FormControl>
-                                  <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4 pt-2">
-                                    <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
-                                      <RadioGroupItem value="false" className="text-blue-600" />
-                                      <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">No</label>
-                                    </div>
-                                    <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 transition-colors cursor-pointer">
-                                      <RadioGroupItem value="true" className="text-blue-600" />
-                                      <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Yes</label>
-                                    </div>
-                                  </RadioGroup>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="false" className="text-blue-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">No</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="true" className="text-blue-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Yes</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -703,172 +707,130 @@ export default function QuotesPage() {
             )}
         </TabsContent>
         <TabsContent value="dental" className="mt-4 sm:mt-6">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-6 sm:p-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Dental Insurance Quotes
+            <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">
+              <div className="grid md:grid-cols-2 items-center gap-12">
+                {/* Left: Headline, description, features */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl lg:leading-tight dark:text-white">
+                    Dental Insurance Quotes
+                  </h1>
+                  <p className="mt-1 md:text-lg text-gray-800 dark:text-neutral-200">
+                    Provide your information to receive competitive dental insurance quotes from leading providers.
+                  </p>
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                      Why choose us?
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                        Provide your information to receive competitive dental insurance quotes from leading providers.
-                    </p>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-green-600 dark:text-green-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Top dental carriers</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-green-600 dark:text-green-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Instant quotes, no spam</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-green-600 dark:text-green-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Affordable plans</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                
-                <div className="p-6 sm:p-8">
+                {/* Right: Form in card */}
+                <div className="relative">
+                  <div className="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-10 dark:border-neutral-700 bg-white dark:bg-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-2">
+                      Fill in the form
+                    </h2>
                     <Form {...dentalForm}>
-                        <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)} className="space-y-8">
-                            
-                            {/* Location Information */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">1</span>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
-                                </div>
-                                <div className="ml-11">
-                                    <FormField 
-                                        control={dentalForm.control} 
-                                        name="zipCode" 
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ZIP Code</FormLabel>
-                                                <FormControl>
-                                                    <Input 
-                                                        placeholder="Enter your ZIP code" 
-                                                        {...field} 
-                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} 
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Personal Information */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">2</span>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h3>
-                                </div>
-                                <div className="ml-11 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <FormField 
-                                        control={dentalForm.control} 
-                                        name="age" 
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Age</FormLabel>
-                                                <FormControl>
-                                                    <Input 
-                                                        type="number" 
-                                                        placeholder="25" 
-                                                        {...field} 
-                                                        className="text-lg py-3 px-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} 
-                                    />
-                                    <FormField 
-                                        control={dentalForm.control} 
-                                        name="gender" 
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Gender</FormLabel>
-                                                <FormControl>
-                                                    <RadioGroup 
-                                                        onValueChange={field.onChange} 
-                                                        defaultValue={field.value} 
-                                                        className="flex gap-4 pt-2"
-                                                    >
-                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
-                                                            <RadioGroupItem value="female" className="text-green-600" />
-                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
-                                                            <RadioGroupItem value="male" className="text-green-600" />
-                                                            <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Health Information */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                        <span className="text-green-600 dark:text-green-400 font-semibold text-sm">3</span>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Health Information</h3>
-                                </div>
-                                <div className="ml-11">
-                                    <FormField 
-                                        control={dentalForm.control} 
-                                        name="tobacco" 
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Tobacco Use</FormLabel>
-                                                <FormControl>
-                                                    <RadioGroup 
-                                                        onValueChange={field.onChange} 
-                                                        defaultValue={field.value} 
-                                                        className="flex gap-4 pt-2"
-                                                    >
-                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
-                                                            <RadioGroupItem value="false" className="text-green-600" />
-                                                            <div>
-                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Non-Tobacco User</label>
-                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Preferred rates available</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-300 transition-colors cursor-pointer">
-                                                            <RadioGroupItem value="true" className="text-green-600" />
-                                                            <div>
-                                                                <label className="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Tobacco User</label>
-                                                                <p className="text-sm text-gray-500 dark:text-gray-400">Standard rates apply</p>
-                                                            </div>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Submit Button */}
-                            <div className="flex justify-center pt-4">
-                                <Button 
-                                    type="submit" 
-                                    disabled={isDentalPending} 
-                                    size="lg" 
-                                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isDentalPending ? (
-                                        <>
-                                            <Loader2 className="mr-3 h-5 w-5 animate-spin" /> 
-                                            Generating Quotes...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Get Dental Insurance Quotes
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
+                      <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)}>
+                        <div className="mt-2 grid gap-4 lg:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={dentalForm.control} name="zipCode" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">ZIP Code</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="ZIP" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-green-500 focus:ring-green-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={dentalForm.control} name="age" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Age</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} placeholder="25" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-green-500 focus:ring-green-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={dentalForm.control} name="gender" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Gender</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="female" className="text-green-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="male" className="text-green-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={dentalForm.control} name="tobacco" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Tobacco</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="false" className="text-green-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">No</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="true" className="text-green-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Yes</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                        </div>
+                        <div className="mt-6 grid">
+                          <Button type="submit" disabled={isDentalPending} size="lg" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 focus:outline-hidden focus:bg-green-700 disabled:opacity-50 disabled:pointer-events-none">
+                            {isDentalPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating Quotes...
+                              </>
+                            ) : (
+                              <>Get Dental Insurance Quotes</>
+                            )}
+                          </Button>
+                        </div>
+                      </form>
                     </Form>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-500 dark:text-neutral-500">
+                        We'll get back to you in 1-2 business days.
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
 
             {/* Loading State */}
@@ -924,302 +886,363 @@ export default function QuotesPage() {
             )}
         </TabsContent>
         <TabsContent value="cancer" className="mt-4 sm:mt-6">
-            <Card>
-                <CardHeader className="p-4 sm:p-6">
-                    <CardTitle className="text-lg sm:text-xl">Cancer Insurance Quote</CardTitle>
-                    <CardDescription className="text-sm sm:text-base">Fill out the fields below to get a personalized cancer insurance quote.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">
+              <div className="grid md:grid-cols-2 items-center gap-12">
+                {/* Left: Headline, description, features */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl lg:leading-tight dark:text-white">
+                    Cancer Insurance Quote
+                  </h1>
+                  <p className="mt-1 md:text-lg text-gray-800 dark:text-neutral-200">
+                    Fill out the fields below to get a personalized cancer insurance quote.
+                  </p>
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                      Why choose us?
+                    </h2>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-pink-600 dark:text-pink-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Specialized cancer plans</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-pink-600 dark:text-pink-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Fast, confidential quotes</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-pink-600 dark:text-pink-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Flexible coverage options</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                {/* Right: Form in card */}
+                <div className="relative">
+                  <div className="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-10 dark:border-neutral-700 bg-white dark:bg-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-2">
+                      Fill in the form
+                    </h2>
                     <Form {...cancerForm}>
-                        <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)} className="space-y-6 sm:space-y-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                 <FormField control={cancerForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="TX">Texas</SelectItem><SelectItem value="GA">Georgia</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => ( <FormItem><FormLabel>Tobacco Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem><SelectItem value="Tobacco">Tobacco</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="familyType" render={({ field }) => ( <FormItem className="sm:col-span-2 lg:col-span-2"><FormLabel>Family Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Applicant Only">Applicant Only</SelectItem><SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem><SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem><SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => ( <FormItem><FormLabel>Premium Mode</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem><SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem><SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem><SelectItem value="Annual">Annual</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => ( <FormItem><FormLabel>Carcinoma In Situ</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="25%">25%</SelectItem><SelectItem value="100%">100%</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                                 <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => ( <FormItem><FormLabel>Benefit Amount</FormLabel><FormControl><Input type="number" step="1000" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-end items-center gap-3 sm:gap-4">
-                                <Button type="submit" disabled={isCancerPending} size="lg" className="w-full sm:w-auto">
-                                {isCancerPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculating...</> : "Get Quote"}
-                                </Button>
-                            </div>
-                        </form>
+                      <form onSubmit={cancerForm.handleSubmit(onCancerSubmit)}>
+                        <div className="mt-2 grid gap-4 lg:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={cancerForm.control} name="state" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">State</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="text-base py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20">
+                                      <SelectValue placeholder="State" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="TX">Texas</SelectItem>
+                                      <SelectItem value="GA">Georgia</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={cancerForm.control} name="age" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Age</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} placeholder="65" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={cancerForm.control} name="tobaccoStatus" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Tobacco Status</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="text-base py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20">
+                                      <SelectValue placeholder="Tobacco Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Non-Tobacco">Non-Tobacco</SelectItem>
+                                      <SelectItem value="Tobacco">Tobacco</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={cancerForm.control} name="familyType" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Family Type</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="text-base py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20">
+                                      <SelectValue placeholder="Family Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Applicant Only">Applicant Only</SelectItem>
+                                      <SelectItem value="Applicant and Spouse">Applicant and Spouse</SelectItem>
+                                      <SelectItem value="Applicant and Child(ren)">Applicant and Child(ren)</SelectItem>
+                                      <SelectItem value="Applicant and Spouse and Child(ren)">Applicant, Spouse, and Child(ren)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={cancerForm.control} name="premiumMode" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Premium Mode</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="text-base py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20">
+                                      <SelectValue placeholder="Premium Mode" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Monthly Bank Draft">Monthly Bank Draft</SelectItem>
+                                      <SelectItem value="Monthly Credit Card">Monthly Credit Card</SelectItem>
+                                      <SelectItem value="Monthly Direct Mail">Monthly Direct Mail</SelectItem>
+                                      <SelectItem value="Annual">Annual</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={cancerForm.control} name="carcinomaInSitu" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Carcinoma In Situ</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="text-base py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20">
+                                      <SelectValue placeholder="Carcinoma In Situ" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="25%">25%</SelectItem>
+                                      <SelectItem value="100%">100%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 gap-4">
+                            <FormField control={cancerForm.control} name="benefitAmount" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Benefit Amount</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="1000" {...field} placeholder="$25,000" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-pink-500 focus:ring-pink-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                        </div>
+                        <div className="mt-6 grid">
+                          <Button type="submit" disabled={isCancerPending} size="lg" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-pink-600 text-white hover:bg-pink-700 focus:outline-hidden focus:bg-pink-700 disabled:opacity-50 disabled:pointer-events-none">
+                            {isCancerPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Calculating...
+                              </>
+                            ) : (
+                              <>Get Cancer Insurance Quote</>
+                            )}
+                          </Button>
+                        </div>
+                      </form>
                     </Form>
-
-                    {cancerError && (
-                        <Alert variant="destructive" className="mt-8">
-                            <Terminal className="h-4 w-4" />
-                            <AlertTitle>Error Calculating Quote</AlertTitle>
-                            <AlertDescription>{cancerError}</AlertDescription>
-                        </Alert>
-                    )}
-                    
-                    <Dialog open={!!cancerQuote} onOpenChange={(open) => !open && setCancerQuote(null)}>
-                        <DialogContent className="p-0 max-w-md border-0 bg-transparent shadow-none [&>button]:hidden">
-                           {cancerQuote && (
-                                <>
-                                    <DialogHeader className="sr-only">
-                                        <DialogTitle>Your Cancer Insurance Quote</DialogTitle>
-                                        <DialogDescription>
-                                            A quote from {cancerQuote.carrier} for {cancerQuote.plan_name}.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <CancerQuoteCard quote={cancerQuote} />
-                                </>
-                           )}
-                        </DialogContent>
-                    </Dialog>
-
-                </CardContent>
-            </Card>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-500 dark:text-neutral-500">
+                        We'll get back to you in 1-2 business days.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
         </TabsContent>
         <TabsContent value="hospital-indemnity" className="mt-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Hospital Indemnity Quotes</CardTitle>
-                    <CardDescription>Fill out the fields below to get instant quotes. Customize your plan with optional riders.</CardDescription>
-                </CardHeader>
-                <CardContent>
+            <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">
+              <div className="grid md:grid-cols-2 items-center gap-12">
+                {/* Left: Headline, description, features */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl lg:leading-tight dark:text-white">
+                    Hospital Indemnity Quotes
+                  </h1>
+                  <p className="mt-1 md:text-lg text-gray-800 dark:text-neutral-200">
+                    Fill out the fields below to get instant quotes. Customize your plan with optional riders.
+                  </p>
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                      Why choose us?
+                    </h2>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Customize your coverage</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Top-rated carriers</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Instant quotes</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                {/* Right: Form in card */}
+                <div className="relative">
+                  <div className="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-10 dark:border-neutral-700 bg-white dark:bg-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-2">
+                      Fill in the form
+                    </h2>
                     <Form {...hospitalIndemnityForm}>
-                        <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => ( <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input placeholder="e.g., 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)}>
+                        <div className="mt-2 grid gap-4 lg:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">ZIP Code</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="ZIP" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Age</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} placeholder="65" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                             <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Gender</FormLabel>
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Gender</FormLabel>
                                 <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel className="font-normal">Female</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel className="font-normal">Male</FormLabel></FormItem>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="female" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="male" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                      </div>
                                     </RadioGroup>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
-                                </FormItem>
-                            )}
-                            />
+                              </FormItem>
+                            )} />
                             <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                <FormLabel>Uses Tobacco?</FormLabel>
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Tobacco</FormLabel>
                                 <FormControl>
-                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4 pt-2">
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="false" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="true" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="false" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">No</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="true" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Yes</label>
+                                      </div>
                                     </RadioGroup>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
-                                </FormItem>
-                            )}
-                            />
+                              </FormItem>
+                            )} />
+                          </div>
                         </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isHospitalIndemnityPending} size="lg">
+                        <div className="mt-6 grid">
+                          <Button type="submit" disabled={isHospitalIndemnityPending} size="lg" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-hidden focus:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none">
                             {isHospitalIndemnityPending ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Quotes...</>
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating Quotes...
+                              </>
                             ) : (
-                                <>Get Hospital Indemnity Quotes</>
+                              <>Get Hospital Indemnity Quotes</>
                             )}
-                            </Button>
+                          </Button>
                         </div>
-                        </form>
+                      </form>
                     </Form>
-
-                    {isHospitalIndemnityPending && (
-                        <div className="mt-8 flex flex-col items-center justify-center p-12 border rounded-lg bg-slate-50/50">
-                            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                            <h3 className="mt-4 font-headline text-xl font-semibold">Finding hospital indemnity plans...</h3>
-                            <p className="mt-2 text-muted-foreground">Please wait a moment.</p>
-                        </div>
-                    )}
-                    {hospitalIndemnityError && (
-                        <Alert variant="destructive" className="mt-8">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Error Fetching Hospital Indemnity Quotes</AlertTitle>
-                        <AlertDescription>{hospitalIndemnityError}</AlertDescription>
-                        </Alert>
-                    )}
-
-                    {hospitalIndemnityQuotes && (
-                        <div className="mt-12">
-                            {featuredQuote ? (
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    <div className="lg:col-span-2 overflow-hidden rounded-xl border">
-                                        <div className="p-6">
-                                        <h3 className="font-headline text-2xl sm:text-3xl">{featuredQuote.carrier.name}</h3>
-                                        <p className="text-muted-foreground">{featuredQuote.plan_name}</p>
-                                        </div>
-                                        <div className="space-y-8 border-t p-6">
-                                            <div>
-                                                <Label htmlFor="base-benefit-select" className="text-base font-semibold">Hospital Confinement Benefit</Label>
-                                                <Select
-                                                    value={selectedBaseBenefit?.amount}
-                                                    onValueChange={(amount) => {
-                                                        const newBenefit = featuredQuote.baseBenefits.find(b => b.amount === amount);
-                                                        if (newBenefit) setSelectedBaseBenefit(newBenefit);
-                                                    }}
-                                                >
-                                                    <SelectTrigger id="base-benefit-select" className="mt-2 h-11">
-                                                        <SelectValue placeholder="Select a daily benefit" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {featuredQuote.baseBenefits.map(benefit => (
-                                                            <SelectItem key={benefit.amount} value={benefit.amount}>
-                                                                ${benefit.amount} / {benefit.quantifier} (+${benefit.rate.toFixed(2)}/mo)
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <Separator/>
-
-                                            <div>
-                                            <h4 className="font-semibold mb-4 text-base">Optional Riders</h4>
-                                            <div className="space-y-4">
-                                                {featuredQuote.riders?.filter(r => r.benefits.length > 0).map((rider, i) => {
-                                                    if (rider.included) {
-                                                            return (
-                                                            <div key={i} className="flex items-center rounded-md border bg-green-50 p-4">
-                                                                <Check className="mr-4 h-5 w-5 text-green-600"/>
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium">{rider.name} (Included)</p>
-                                                                    {rider.note && <p className="mt-1 text-xs text-muted-foreground">{rider.note}</p>}
-                                                                </div>
-                                                            </div>
-                                                            )
-                                                    }
-                                                    
-                                                    if (rider.benefits.length === 1) {
-                                                        const benefit = rider.benefits[0];
-                                                        return (
-                                                            <div key={i} className="flex items-center rounded-md border bg-background p-4">
-                                                                <Switch 
-                                                                    id={`rider-${i}`}
-                                                                    onCheckedChange={() => handleRiderToggle(rider)}
-                                                                    checked={!!selectedRiders[rider.name]}
-                                                                />
-                                                                <Label htmlFor={`rider-${i}`} className="ml-4 flex w-full cursor-pointer justify-between">
-                                                                    <div className="flex-1">
-                                                                        <p className="font-medium">{rider.name}</p>
-                                                                        {rider.note && <p className="mt-1 text-xs text-muted-foreground">{rider.note}</p>}
-                                                                    </div>
-                                                                    <span className="whitespace-nowrap pl-4 font-semibold">+ ${benefit.rate.toFixed(2)}</span>
-                                                                </Label>
-                                                            </div>
-                                                        )
-                                                    }
-
-                                                    if (rider.benefits.length > 1) {
-                                                        return (
-                                                            <div key={i} className="rounded-md border bg-background p-4">
-                                                                <p className="font-medium">{rider.name}</p>
-                                                                {rider.note && <p className="mb-3 mt-1 text-xs text-muted-foreground">{rider.note}</p>}
-                                                                <RadioGroup
-                                                                    onValueChange={(value) => {
-                                                                        if (value === 'none') {
-                                                                            handleRiderOptionSelect(rider.name, null);
-                                                                        } else {
-                                                                            const selectedBenefit = rider.benefits.find(b => b.amount === value);
-                                                                            if (selectedBenefit) handleRiderOptionSelect(rider.name, selectedBenefit);
-                                                                        }
-                                                                    }}
-                                                                    value={selectedRiders[rider.name]?.amount || 'none'}
-                                                                    className="mt-2 space-y-2"
-                                                                >
-                                                                    {rider.benefits.map((benefit, j) => (
-                                                                        <div key={j} className="flex items-center">
-                                                                            <RadioGroupItem value={benefit.amount} id={`rider-${i}-${j}`} />
-                                                                            <Label htmlFor={`rider-${i}-${j}`} className="ml-3 flex w-full cursor-pointer justify-between font-normal">
-                                                                                <span>${benefit.amount} / {benefit.quantifier}</span>
-                                                                                <span className="font-medium">+ ${benefit.rate.toFixed(2)}</span>
-                                                                            </Label>
-                                                                        </div>
-                                                                    ))}
-                                                                    <div className="flex items-center">
-                                                                        <RadioGroupItem value="none" id={`rider-${i}-none`} />
-                                                                        <Label htmlFor={`rider-${i}-none`} className="ml-3 cursor-pointer font-normal">None</Label>
-                                                                    </div>
-                                                                </RadioGroup>
-                                                            </div>
-                                                        )
-                                                    }
-                                                    return null;
-                                                })}
-                                            </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-8 flex-col items-stretch gap-4 border-t bg-muted/30 p-6">
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-lg font-semibold">Total Monthly Premium</p>
-                                                <p className="font-headline text-3xl font-bold sm:text-4xl">${totalPremium.toFixed(2)}</p>
-                                            </div>
-                                            <Button size="lg" asChild className="mt-4 w-full"><Link href={`/dashboard/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name)}&provider=${encodeURIComponent(featuredQuote.carrier.name)}&premium=${totalPremium}`}>Select This Plan</Link></Button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <h3 className="font-headline text-xl font-semibold">Other Companies</h3>
-                                        {otherQuotes && otherQuotes.length > 0 ? (
-                                            <div className="space-y-4">
-                                                {otherQuotes.map(quote => {
-                                                    const lowestRate = quote.baseBenefits.length > 0 ? 
-                                                        [...quote.baseBenefits].sort((a,b) => a.rate - b.rate)[0].rate : 0;
-                                                    return (
-                                                        <Card 
-                                                            key={quote.id} 
-                                                            className="flex cursor-pointer items-center justify-between p-6 transition-colors hover:border-primary hover:bg-muted/50"
-                                                            onClick={() => setFeaturedQuote(quote)}
-                                                        >
-                                                            <div>
-                                                                <p className="text-lg font-semibold">{quote.carrier.name}</p>
-                                                                <p className="text-sm text-muted-foreground">{quote.plan_name}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <p className="text-lg font-semibold">${lowestRate.toFixed(2)}</p>
-                                                                <p className="text-xs text-muted-foreground">starts from</p>
-                                                            </div>
-                                                        </Card>
-                                                    )
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground">No other companies matched your criteria.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                            <div className="py-16 text-center text-muted-foreground">
-                                    <FileDigit className="mx-auto mb-4 h-10 w-10"/>
-                                    <p>No quotes found for the selected criteria.</p>
-                                    <p className="text-sm">Please try different options.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-             </Card>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-500 dark:text-neutral-500">
+                        We'll get back to you in 1-2 business days.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
         </TabsContent>
         <TabsContent value="life-insurance" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Life Insurance</CardTitle>
-                    <CardDescription>This is a simplified application. For a real quote, a licensed agent would contact you.</CardDescription>
-                </CardHeader>
-                <CardContent>
+            <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">
+              <div className="grid md:grid-cols-2 items-center gap-12">
+                {/* Left: Headline, description, features */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl lg:leading-tight dark:text-white">
+                    Life Insurance
+                  </h1>
+                  <p className="mt-1 md:text-lg text-gray-800 dark:text-neutral-200">
+                    This is a simplified application. For a real quote, a licensed agent would contact you.
+                  </p>
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                      Why choose us?
+                    </h2>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Simple online application</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Trusted by thousands</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Expert support</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                {/* Right: Form in card */}
+                <div className="relative">
+                  <div className="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-10 dark:border-neutral-700 bg-white dark:bg-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-2">
+                      Start your application
+                    </h2>
                     <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>Full Application Coming Soon!</AlertTitle>
-                        <AlertDescription>
-                            We are working to bring you a full online application for this plan type. For now, you can use this simplified version.
-                        </AlertDescription>
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Full Application Coming Soon!</AlertTitle>
+                      <AlertDescription>
+                        We are working to bring you a full online application for this plan type. For now, you can use this simplified version.
+                      </AlertDescription>
                     </Alert>
                     <div className="mt-6 flex justify-end">
-                        <Button asChild size="lg"><Link href="/dashboard/apply?type=life-insurance">Start Life Insurance Application</Link></Button>
+                      <Button asChild size="lg"><Link href="/dashboard/apply?type=life-insurance">Start Life Insurance Application</Link></Button>
                     </div>
-                </CardContent>
-            </Card>
+                  </div>
+                </div>
+              </div>
+            </div>
         </TabsContent>
        </Tabs>
       </div>
