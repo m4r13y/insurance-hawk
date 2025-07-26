@@ -6,13 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Form,
   FormControl,
   FormField,
@@ -31,7 +24,9 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Terminal, FileDigit, Info, Check, HeartCrack, FileText, Smile, Heart, Hospital, Shield } from "lucide-react";
-import { getMedigapQuotes, getDentalQuotes, getHospitalIndemnityQuotes } from "./actions";
+import { getDentalQuotes } from "./dental-actions";
+import { getMedigapQuotes } from "./actions";
+import { getHospitalIndemnityQuotes } from "./hospital-indemnity-actions";
 import type { Quote, DentalQuote, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, CancerQuote, CancerQuoteRequestValues } from "@/types";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
@@ -42,6 +37,7 @@ import { DentalQuoteCard } from "@/components/dental-quote-card";
 import { CancerQuoteCard } from "@/components/cancer-quote-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { HospitalIndemnityQuoteCard } from "@/components/hospital-indemnity-quote-card";
 import { useAutofillProfile } from "@/hooks/use-autofill-profile";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
@@ -347,15 +343,7 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
     setSelectedBaseBenefit(null);
     setSelectedRiders({});
     startHospitalIndemnityTransition(async () => {
-      // Map form values to API params (like Dental/Medigap)
-      const { zipCode, age, gender, tobacco } = values;
-      const apiValues = {
-        zip5: zipCode,
-        age,
-        gender: (gender === 'male' ? 'M' : 'F') as 'M' | 'F',
-        tobacco: tobacco === 'true' ? 1 : 0,
-      };
-      const result = await getHospitalIndemnityQuotes(apiValues);
+      const result = await getHospitalIndemnityQuotes(values);
       if (result.error) {
         setHospitalIndemnityError(result.error);
       }
@@ -364,9 +352,7 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
         const processedQuotes = result.quotes.map((quote: any) => {
           // Some APIs return base_plans instead of baseBenefits
           let baseBenefits = quote.baseBenefits || (quote.base_plans && quote.base_plans[0]?.benefits) || [];
-          // Defensive: ensure array
           if (!Array.isArray(baseBenefits)) baseBenefits = [];
-          // Remove duplicate amounts
           const uniqueBaseBenefits = baseBenefits.reduce((acc: any[], current: any) => {
             if (!acc.find(item => item.amount === current.amount)) {
               acc.push(current);
@@ -387,7 +373,14 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
                 }, [])
               : [],
           }));
-          return { ...quote, baseBenefits: uniqueBaseBenefits, riders: processedRiders };
+          // Normalize carrier object to always include full_name from company_base.name_full
+          const companyBase = quote.company_base || {};
+          const carrier = {
+            name: companyBase.name ?? companyBase.full_name ?? "Unknown",
+            full_name: companyBase.name_full ?? companyBase.full_name ?? companyBase.name ?? undefined,
+            logo_url: companyBase.logo_url ?? null,
+          };
+          return { ...quote, baseBenefits: uniqueBaseBenefits, riders: processedRiders, carrier };
         });
         setHospitalIndemnityQuotes(processedQuotes);
         setFeaturedQuote(processedQuotes[0]);
@@ -454,7 +447,61 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
   };
 
   const totalPremium = calculateTotalPremium();
-  const otherQuotes = hospitalIndemnityQuotes?.filter(q => q.id !== featuredQuote?.id);
+
+  // Group hospitalIndemnityQuotes by carrier (excluding featured company)
+  const groupedOtherCompanies = React.useMemo(() => {
+    if (!hospitalIndemnityQuotes || !featuredQuote) return [];
+    // Exclude featured company
+    const others = hospitalIndemnityQuotes.filter((q: HospitalIndemnityQuote) => q.carrier?.full_name !== featuredQuote.carrier?.full_name);
+    // Group by carrier full_name
+    const map = new Map<string, HospitalIndemnityQuote[]>();
+    for (const q of others) {
+      const key = q.carrier?.full_name || q.carrier?.name || 'Unknown';
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+      map.get(key)!.push(q);
+    }
+    // For each company, show the lowest price and available benefit days
+    return Array.from(map.entries()).map(([carrier, quotes]: [string, HospitalIndemnityQuote[]]) => {
+      // Collect all unique base benefit days and their rates
+      const benefitOptions = quotes.flatMap((q: HospitalIndemnityQuote) => (q.baseBenefits || []).map((b: HospitalIndemnityBenefit) => ({
+        amount: Number(b.amount),
+        rate: b.rate,
+      })));
+      // Remove duplicate benefit days (by amount)
+      const uniqueBenefits = benefitOptions.reduce<{ amount: number; rate: number }[]>((acc, curr) => {
+        if (!acc.find((b) => b.amount === curr.amount)) acc.push(curr);
+        return acc;
+      }, []);
+      // Find the lowest price
+      const minBenefit = uniqueBenefits.reduce<{ amount: number; rate: number }>((min, curr) => curr.rate < min.rate ? curr : min, uniqueBenefits[0]);
+      return {
+        carrier,
+        planName: quotes[0].plan_name || '',
+        price: minBenefit?.rate || 0,
+        benefitOptions: uniqueBenefits,
+      };
+    });
+  }, [hospitalIndemnityQuotes, featuredQuote]);
+
+  // For featured company, collect all available base benefit day options
+  const featuredBenefitOptions = React.useMemo(() => {
+    if (!hospitalIndemnityQuotes || !featuredQuote) return [];
+    const sameCarrierQuotes = hospitalIndemnityQuotes.filter((q: HospitalIndemnityQuote) => q.carrier?.full_name === featuredQuote.carrier?.full_name);
+    // Collect all unique base benefit days and their rates
+    const benefitOptions = sameCarrierQuotes.flatMap((q: HospitalIndemnityQuote) => (q.baseBenefits || []).map((b: HospitalIndemnityBenefit) => ({
+      amount: Number(b.amount),
+      rate: b.rate,
+      quoteKey: q.key,
+      quote: q,
+    })));
+    // Remove duplicate benefit days (by amount)
+    return benefitOptions.reduce<typeof benefitOptions>((acc, curr) => {
+      if (!acc.find((b) => b.amount === curr.amount)) acc.push(curr);
+      return acc;
+    }, []);
+  }, [hospitalIndemnityQuotes, featuredQuote]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
@@ -741,6 +788,415 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
             )}
 
 
+              {/* Results Section */}
+              {isHospitalIndemnityPending && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-4">
+                      <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      Processing Your Request
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Comparing hospital indemnity plans from multiple carriers...
+                    </p>
+                  </div>
+                </div>
+              )}
+              {hospitalIndemnityError && (
+                <Alert variant="destructive" className="mt-6">
+                  <Terminal className="h-4 w-4" />
+                  <AlertTitle>Unable to Process Request</AlertTitle>
+                  <AlertDescription>{hospitalIndemnityError}</AlertDescription>
+                </Alert>
+              )}
+              {featuredQuote && selectedBaseBenefit && (
+                <div className="mt-6">
+                  {/* Rider selection UI with working toggles and option selection */}
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
+                    <h3 className="text-lg font-semibold mb-4">Customize Your Plan</h3>
+                    <div className="mb-4">
+                      <div className="font-medium mb-2">Optional Riders</div>
+                      {featuredQuote.riders && featuredQuote.riders.length > 0 ? (
+                        <div className="space-y-4">
+                          {featuredQuote.riders.map((rider: any) => {
+                            const selectedBenefit = selectedRiders[rider.name] || rider.benefits[0];
+                            return (
+                              <div key={rider.id || rider.name} className="flex flex-col sm:flex-row sm:items-center gap-2 border-b pb-3 last:border-b-0 last:pb-0">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!selectedRiders[rider.name]}
+                                      onChange={e => {
+                                        if (e.target.checked) {
+                                          handleRiderOptionSelect(rider.name, rider.benefits[0]);
+                                        } else {
+                                          handleRiderOptionSelect(rider.name, null);
+                                        }
+                                      }}
+                                      id={`rider-toggle-${rider.name}`}
+                                    />
+                                    <label htmlFor={`rider-toggle-${rider.name}`} className="font-medium cursor-pointer">
+                                      {rider.name}
+                                    </label>
+                                  </div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400 ml-6">{rider.description || rider.note}</div>
+                                </div>
+                                {/* If multiple options, show dropdown */}
+                                {rider.benefits && rider.benefits.length > 1 && !!selectedRiders[rider.name] && (
+                                  <select
+                                    className="border rounded px-2 py-1 text-sm"
+                                    value={selectedBenefit.amount}
+                                    onChange={e => {
+                                      const benefit = rider.benefits.find((b: any) => String(b.amount) === e.target.value);
+                                      if (benefit) handleRiderOptionSelect(rider.name, benefit);
+                                    }}
+                                  >
+                                    {rider.benefits.map((b: any) => (
+                                      <option key={String(b.amount)} value={String(b.amount)}>
+                                        {b.amount} {b.quantifier} (${b.rate.toFixed(2)}/mo)
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                                {/* Show price for selected benefit */}
+                                {!!selectedRiders[rider.name] && (
+                                  <div className="ml-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                    +${selectedBenefit.rate.toFixed(2)}/mo
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-gray-500">No optional riders available for this plan.</div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-6">
+                      <div>
+                        <div className="font-medium">Total Premium</div>
+                        <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">${totalPremium.toFixed(2)}/mo</div>
+                      </div>
+                      <button
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow"
+                        onClick={() => {
+                          window.location.href = `/dashboard/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name || "")}&provider=${encodeURIComponent(featuredQuote.carrier?.name || "Unknown")}&premium=${totalPremium}`;
+                        }}
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                    {/* Other companies UI remains below if needed */}
+                    {groupedOtherCompanies && groupedOtherCompanies.length > 0 && (
+                      <div className="mt-8">
+                        <h4 className="font-semibold mb-2">Other Companies</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {groupedOtherCompanies.map(company => (
+                            <div key={company.carrier + company.planName} className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                              <div className="font-medium">{company.carrier}</div>
+                              <div className="text-sm text-gray-500">{company.planName}</div>
+                              <div className="text-indigo-700 dark:text-indigo-300 font-semibold mt-1">${company.price.toFixed(2)}/mo</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {hospitalIndemnityQuotes && hospitalIndemnityQuotes.length === 0 && !isHospitalIndemnityPending && !hospitalIndemnityError && (
+                <div className="mt-6 text-center text-gray-500 dark:text-gray-400">
+                  <FileDigit className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg mb-2">No hospital indemnity plans found</p>
+                  <p className="text-sm">Try different criteria above</p>
+                </div>
+              )}
+            </TabsContent>
+        <TabsContent value="hospital-indemnity" className="mt-6">
+            <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">
+              <div className="grid md:grid-cols-2 items-center gap-12">
+                {/* Left: Headline, description, features */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl lg:leading-tight dark:text-white">
+                    Hospital Indemnity Quotes
+                  </h1>
+                  <p className="mt-1 md:text-lg text-gray-800 dark:text-neutral-200">
+                    Fill out the fields below to get instant quotes. Customize your plan with optional riders.
+                  </p>
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+                      Why choose us?
+                    </h2>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Customize your coverage</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Top-rated carriers</span>
+                      </li>
+                      <li className="flex gap-x-3">
+                        <Check className="shrink-0 mt-0.5 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="text-gray-600 dark:text-neutral-400">Instant quotes</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                {/* Right: Form in card */}
+                <div className="relative">
+                  <div className="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-10 dark:border-neutral-700 bg-white dark:bg-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-2">
+                      Fill in the form
+                    </h2>
+                    <Form {...hospitalIndemnityForm}>
+                      <form onSubmit={hospitalIndemnityForm.handleSubmit(onHospitalIndemnitySubmit)}>
+                        <div className="mt-2 grid gap-4 lg:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={hospitalIndemnityForm.control} name="zipCode" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">ZIP Code</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="ZIP" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={hospitalIndemnityForm.control} name="age" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Age</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} placeholder="65" className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={hospitalIndemnityForm.control} name="gender" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Gender</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="female" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Female</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="male" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Male</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={hospitalIndemnityForm.control} name="tobacco" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Tobacco</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center bg-white dark:bg-neutral-900 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 gap-6">
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="false" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">No</label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="true" className="text-indigo-600" />
+                                        <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Yes</label>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                        </div>
+                        <div className="mt-6 grid">
+                          <Button type="submit" disabled={isHospitalIndemnityPending} size="lg" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-hidden focus:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none">
+                            {isHospitalIndemnityPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating Quotes...
+                              </>
+                            ) : (
+                              <>Get Hospital Indemnity Quotes</>
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-500 dark:text-neutral-500">
+                        We'll get back to you in 1-2 business days.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {isHospitalIndemnityPending && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-4">
+                      <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      Processing Your Request
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Comparing hospital indemnity plans from multiple carriers...
+                    </p>
+                  </div>
+                </div>
+            )}
+            {/* Error State */}
+            {hospitalIndemnityError && (
+                <Alert variant="destructive" className="mt-6">
+                  <Terminal className="h-4 w-4" />
+                  <AlertTitle>Unable to Process Request</AlertTitle>
+                  <AlertDescription>{hospitalIndemnityError}</AlertDescription>
+                </Alert>
+            )}
+            {/* Results Section */}
+              {featuredQuote && selectedBaseBenefit && (
+                <div className="mt-6">
+                  {/* Dropdown for base benefit days */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Benefit Days</label>
+                    <select
+                      className="border rounded px-3 py-2"
+                      value={selectedBaseBenefit.amount}
+                      onChange={e => {
+                        const selectedAmount = e.target.value;
+                        // Find the quote and benefit for this amount
+                        const found = featuredBenefitOptions.find(opt => String(opt.amount) === selectedAmount);
+                        if (found) {
+                          setFeaturedQuote(found.quote);
+                          setSelectedBaseBenefit({
+                            amount: String(found.amount),
+                            rate: found.rate,
+                            quantifier: "days" // always use default, since not present on found
+                          });
+                        }
+                      }}
+                    >
+                      {featuredBenefitOptions.map(opt => (
+                        <option key={String(opt.amount)} value={String(opt.amount)}>
+                          {opt.amount} Days (${opt.rate.toFixed(2)}/mo)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* Rider selection UI with working toggles and option selection */}
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
+                    <h3 className="text-lg font-semibold mb-4">Customize Your Plan</h3>
+                    <div className="mb-4">
+                      <div className="font-medium mb-2">Optional Riders</div>
+                      {featuredQuote.riders && featuredQuote.riders.length > 0 ? (
+                        <div className="space-y-4">
+                          {featuredQuote.riders.map((rider: any) => {
+                            const selectedBenefit = selectedRiders[rider.name] || rider.benefits[0];
+                            return (
+                              <div key={rider.id || rider.name} className="flex flex-col sm:flex-row sm:items-center gap-2 border-b pb-3 last:border-b-0 last:pb-0">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!selectedRiders[rider.name]}
+                                      onChange={e => {
+                                        if (e.target.checked) {
+                                          handleRiderOptionSelect(rider.name, rider.benefits[0]);
+                                        } else {
+                                          handleRiderOptionSelect(rider.name, null);
+                                        }
+                                      }}
+                                      id={`rider-toggle-${rider.name}`}
+                                    />
+                                    <label htmlFor={`rider-toggle-${rider.name}`} className="font-medium cursor-pointer">
+                                      {rider.name}
+                                    </label>
+                                  </div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400 ml-6">{rider.description || rider.note}</div>
+                                </div>
+                                {/* If multiple options, show dropdown */}
+                                {rider.benefits && rider.benefits.length > 1 && !!selectedRiders[rider.name] && (
+                                  <select
+                                    className="border rounded px-2 py-1 text-sm"
+                                    value={selectedBenefit.amount}
+                                    onChange={e => {
+                                      const benefit = rider.benefits.find((b: any) => String(b.amount) === e.target.value);
+                                      if (benefit) handleRiderOptionSelect(rider.name, benefit);
+                                    }}
+                                  >
+                                    {rider.benefits.map((b: any) => (
+                                      <option key={String(b.amount)} value={String(b.amount)}>
+                                        {b.amount} {b.quantifier} (${b.rate.toFixed(2)}/mo)
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                                {/* Show price for selected benefit */}
+                                {!!selectedRiders[rider.name] && (
+                                  <div className="ml-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                    +${selectedBenefit.rate.toFixed(2)}/mo
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-gray-500">No optional riders available for this plan.</div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-6">
+                      <div>
+                        <div className="font-medium">Total Premium</div>
+                        <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">${totalPremium.toFixed(2)}/mo</div>
+                      </div>
+                      <button
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow"
+                        onClick={() => {
+                          window.location.href = `/dashboard/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name || "")}&provider=${encodeURIComponent(featuredQuote.carrier?.name || "Unknown")}&premium=${totalPremium}`;
+                        }}
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                    {/* Other companies UI remains below if needed */}
+                    {groupedOtherCompanies && groupedOtherCompanies.length > 0 && (
+                      <div className="mt-8">
+                        <h4 className="font-semibold mb-2">Other Companies</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {groupedOtherCompanies.map(company => (
+                            <div key={company.carrier + company.planName} className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                              <div className="font-medium">{company.carrier}</div>
+                              <div className="text-sm text-gray-500">{company.planName}</div>
+                              <div className="text-indigo-700 dark:text-indigo-300 font-semibold mt-1">${company.price.toFixed(2)}/mo</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            {hospitalIndemnityQuotes && hospitalIndemnityQuotes.length === 0 && !isHospitalIndemnityPending && !hospitalIndemnityError && (
+                <div className="mt-6 text-center text-gray-500 dark:text-gray-400">
+                  <FileDigit className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg mb-2">No hospital indemnity plans found</p>
+                  <p className="text-sm">Try different criteria above</p>
+                </div>
+            )}
         </TabsContent>
         <TabsContent value="dental" className="mt-4 sm:mt-6">
             <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">

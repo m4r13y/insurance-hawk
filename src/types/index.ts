@@ -133,9 +133,13 @@ export type HospitalIndemnityRider = {
 
 export type HospitalIndemnityQuote = {
     id: string; 
+    key?: string; // Optional key property for compatibility
     carrier: {
         name: string;
-        full_name?: string;
+        /**
+         * The full name of the carrier, mapped from result[#].company_base.name_full
+         */
+        full_name: string;
         logo_url: string | null;
     };
     plan_name: string;

@@ -1104,3 +1104,59 @@ export const getDentalQuotes = v2.https.onCall(
     }
   }
 );
+
+// Hospital Indemnity quotes function
+export const getHospitalIndemnityQuotes = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    zip5: string;
+    age: number;
+    gender: "M" | "F";
+    tobacco: number;
+    offset?: number;
+  }>) => {
+    // Defensive: Ensure this is a valid callable request
+    if (!request || typeof request !== "object" || !request.data) {
+      v2.logger.error(
+        "Invalid callable request: missing data property",
+        {request}
+      );
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Request must be made using Firebase Callable Functions and " +
+        "include a data property."
+      );
+    }
+    v2.logger.info("getHospitalIndemnityQuotes called", {data: request.data});
+    try {
+      // Only use required parameters
+      const {zip5, age, gender, tobacco, offset} = request.data;
+      const apiUrl = "https://csgapi.appspot.com/v1/hospital_indemnity/quotes.json";
+      const token = await getCurrentToken();
+      const params: Record<string, any> = {zip5, age, gender, tobacco};
+      if (offset !== undefined) params.offset = offset;
+      v2.logger.info(
+        "Calling CSG Hospital Indemnity API", {apiUrl, token, params}
+      );
+      const response = await axios.get(apiUrl, {
+        params,
+        headers: {
+          "x-api-token": token,
+        },
+      });
+      v2.logger.info(
+        "CSG Hospital Indemnity API response",
+        {response: response.data}
+      );
+      return response.data;
+    } catch (error) {
+      v2.logger.error("Error in getHospitalIndemnityQuotes", {error});
+      throw new v2.https.HttpsError(
+        "internal",
+        "Error fetching hospital indemnity quotes",
+        {
+          message: error instanceof Error ? error.message : "Unknown error",
+        }
+      );
+    }
+  }
+);
