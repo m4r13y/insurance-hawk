@@ -2684,7 +2684,10 @@ const applicationTypes = [
   },
 ];
 
+import { useRouter } from "next/navigation";
+
 function ApplicationSelectionGrid() {
+  const router = useRouter();
   const [user] = useFirebaseAuth();
   const [userQuotes, setUserQuotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -2862,13 +2865,17 @@ function ApplicationSelectionGrid() {
                         {/* Edit Quote Button - Top Right */}
                         {hasQuote && (
                           <div className="absolute top-3 right-3 z-10">
-                            <Link 
-                              href={getQuotePageUrl(app.type)} 
-                              onClick={(e) => e.stopPropagation()}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(getQuotePageUrl(app.type));
+                              }}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group/edit"
+                              aria-label={`Edit ${app.title} Quote`}
                             >
                               <HugeiconsIcon icon={PencilEdit02Icon} className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover/edit:text-blue-600 dark:group-hover/edit:text-blue-400 transition-colors duration-200" />
-                            </Link>
+                            </button>
                           </div>
                         )}
                         <CardContent className="p-4">

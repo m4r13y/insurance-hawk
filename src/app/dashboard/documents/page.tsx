@@ -29,21 +29,21 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { carriers } from '@/lib/mock-data';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
-    UploadCloudIcon, 
+    UploadIcon, 
     File01Icon, 
     Delete01Icon, 
     Download01Icon, 
     AddCircleIcon, 
-    ExternalLink01Icon, 
+    ExternalDriveIcon, 
     ArrowLeft01Icon, 
-    MenuDotsVerticalIcon, 
+    MenuCircleIcon, 
     UserIcon, 
     EyeIcon, 
-    EyeOffIcon, 
+    ViewOffIcon, 
     StethoscopeIcon, 
-    PillIcon, 
+    GivePillIcon, 
     ReloadIcon, 
-    CheckIcon,
+    TextCheckIcon,
     PencilEdit02Icon,
     ShieldIcon,
     LayersIcon
@@ -133,7 +133,7 @@ const InfoRow = ({ label, value, isSensitive = false }: { label: string; value: 
                 <span className="font-medium">{displayValue || 'N/A'}</span>
                 {isSensitive && value && (
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsVisible(!isVisible)}>
-                        {isVisible ? <HugeiconsIcon icon={EyeOffIcon} className="h-4 w-4"/> : <HugeiconsIcon icon={EyeIcon} className="h-4 w-4"/>}
+                        {isVisible ? <HugeiconsIcon icon={ViewOffIcon} className="h-4 w-4"/> : <HugeiconsIcon icon={EyeIcon} className="h-4 w-4"/>}
                     </Button>
                 )}
             </div>
@@ -457,7 +457,7 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <HugeiconsIcon icon={MenuDotsVerticalIcon} className="h-4 w-4" />
+                            <HugeiconsIcon icon={MenuCircleIcon} className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
                         </Button>
                     </DropdownMenuTrigger>
@@ -469,7 +469,7 @@ function PolicyCard({ policy, onEdit, onDelete }: { policy: PolicyType; onEdit: 
                         {policy.carrierWebsite && (
                              <DropdownMenuItem asChild>
                                 <a href={policy.carrierWebsite} target="_blank" rel="noopener noreferrer">
-                                    <HugeiconsIcon icon={ExternalLink01Icon} className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={ExternalDriveIcon} className="mr-2 h-4 w-4" />
                                     <span>Visit Site</span>
                                 </a>
                             </DropdownMenuItem>
@@ -737,7 +737,7 @@ export default function MyAccountPage() {
                         </div>
                     ) : (
                         <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                            <HugeiconsIcon icon={UploadCloudIcon} className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <HugeiconsIcon icon={UploadIcon} className="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 className="text-lg font-semibold mt-4">No Documents Uploaded</h3>
                             <p className="text-muted-foreground mt-2">Click the button below to upload your first document.</p>
                         </div>
@@ -746,7 +746,7 @@ export default function MyAccountPage() {
                 <CardFooter>
                      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                      <Button onClick={triggerFileUpload}>
-                        <HugeiconsIcon icon={UploadCloudIcon} className="mr-2 h-4 w-4" />
+                        <HugeiconsIcon icon={UploadIcon} className="mr-2 h-4 w-4" />
                         Upload Document
                     </Button>
                 </CardFooter>
@@ -801,7 +801,7 @@ export default function MyAccountPage() {
                         )}
                     </div>
                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2"><HugeiconsIcon icon={PillIcon} className="h-5 w-5"/>Your Medications</h4>
+                        <h4 className="font-semibold mb-2 flex items-center gap-2"><HugeiconsIcon icon={GivePillIcon} className="h-5 w-5"/>Your Medications</h4>
                         {profile.medications && profile.medications.length > 0 ? (
                            <div className="space-y-2 rounded-md border p-2 max-h-60 overflow-y-auto mt-4">
                                 {profile.medications.map((drug: SelectedDrug) => (
