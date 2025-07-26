@@ -64,21 +64,19 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
     }
   };
 
+  // Prefer plan name from base_plans[0].name if available
+  const planName = Array.isArray(quote.base_plans) && quote.base_plans.length > 0 && quote.base_plans[0].name
+    ? quote.base_plans[0].name
+    : quote.plan_name;
   return (
     <Card className="group transition-all duration-300 relative hover:shadow-md focus:outline-hidden focus:shadow-md">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
-              Dental
-            </span>
-            <CardTitle>{quote.carrier.name}</CardTitle>
-            <CardDescription>{quote.plan_name}</CardDescription>
-          </div>
-          <div className="flex items-center gap-1 text-amber-500">
-            <HugeiconsIcon icon={StarIcon} className="h-4 w-4 fill-current" />
-            <span className="font-bold text-sm">{getRatingScore(quote.am_best_rating).toFixed(1)}</span>
-          </div>
+        <div className="flex flex-col items-start">
+          <span className="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
+            Dental
+          </span>
+          <CardTitle>{quote.carrier.name}</CardTitle>
+          <CardDescription>{planName}</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="flex-1 space-y-6">
@@ -97,10 +95,6 @@ export function DentalQuoteCard({ quote }: { quote: DentalQuote }) {
           <li className="flex items-center gap-3">
             <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5 text-teal-500 shrink-0"/>
             <span>Benefit Period: <strong className="text-gray-800 dark:text-neutral-200 capitalize">{quote.benefit_quantifier}</strong></span>
-          </li>
-          <li className="flex items-center gap-3">
-            <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5 text-teal-500 shrink-0"/>
-            <span>AM Best Rating: <strong className="text-gray-800 dark:text-neutral-200">{quote.am_best_rating}</strong></span>
           </li>
         </ul>
         {(quote.benefit_notes || quote.limitation_notes) && (

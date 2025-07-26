@@ -77,10 +77,11 @@ export type Quote = {
 };
 
 export type DentalQuoteRequestValues = {
-  zipCode: string;
+  zip5: string;
   age: number;
-  gender: 'female' | 'male';
-  tobacco: 'false' | 'true';
+  gender: 'M' | 'F';
+  tobacco: number;
+  covered_members?: string;
 };
 
 export type DentalQuote = {
@@ -97,6 +98,17 @@ export type DentalQuote = {
     benefit_quantifier: string;
     benefit_notes?: string;
     limitation_notes?: string;
+    base_plans?: Array<{
+        name: string;
+        benefits: Array<{
+            rate: number;
+            amount?: string;
+            quantifier?: string;
+        }>;
+        benefit_notes?: string;
+        limitation_notes?: string;
+        [key: string]: any;
+    }>;
 };
 
 export type HospitalIndemnityQuoteRequestValues = {

@@ -98,7 +98,6 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
     },
 ];
 
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
@@ -149,15 +148,43 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
   }
 }
 
-export async function getDentalQuotes(values: DentalQuoteRequestValues) {
-    try {
-        console.log("Returning mock Dental quotes for values:", values);
-        return { quotes: mockDentalQuotes };
+import { getFunctions, httpsCallable } from "firebase/functions";
 
-    } catch (e: any) {
-        console.error("Error in getDentalQuotes:", e);
-        return { error: e.message || "Failed to fetch dental quotes." };
+export async function getDentalQuotes(values: DentalQuoteRequestValues) {
+  try {
+    const functions = getFunctions();
+    // Default to individual if not provided
+    const params = { ...values, covered_members: values.covered_members || "I" };
+    const getDentalQuotesFn = httpsCallable(functions, "getDentalQuotes");
+    const result = await getDentalQuotesFn(params);
+    // Expecting result.data to be { quotes: [...] } or similar
+    if (
+      result.data &&
+      typeof result.data === "object" &&
+      "quotes" in result.data &&
+      Array.isArray((result.data as any).quotes)
+    ) {
+      return { quotes: (result.data as any).quotes };
     }
+    // If the response is an array itself
+    if (Array.isArray(result.data)) {
+      return { quotes: result.data };
+    }
+    // If the response is an object with a 'results' array
+    if (
+      result.data &&
+      typeof result.data === "object" &&
+      "results" in result.data &&
+      Array.isArray((result.data as any).results)
+    ) {
+      return { quotes: (result.data as any).results };
+    }
+    // Fallback: return error or empty
+    return { quotes: [] };
+  } catch (e: any) {
+    console.error("Error in getDentalQuotes:", e);
+    return { error: e.message || "Failed to fetch dental quotes." };
+  }
 }
 
 export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteRequestValues) {

@@ -47,48 +47,44 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MedigapQuoteTable } from "./medigap-quote-table";
-import { medigapQuoteToQuery } from "@/components/medigap-quote-to-query";
-import { useRouter } from "next/navigation";
-import { MedigapQuoteDetailsModal } from "./MedigapQuoteDetailsModal";
+
+
+const medigapFormSchema = z.object({
+  zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
+  age: z.coerce.number().min(65, "Must be at least 65").max(120, "Age seems too high"),
+  gender: z.enum(["female", "male"]),
+  tobacco: z.enum(["false", "true"]),
+  plan: z.enum(["A", "F", "G", "N"]), // Plan A is included but CSG might not support it
+  effectiveDate: z.string().optional(),
+  apply_discounts: z.boolean().default(true).optional(),
+});
+
+const dentalFormSchema = z.object({
+  zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
+  age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
+  gender: z.enum(["female", "male"]),
+  tobacco: z.enum(["false", "true"]),
+  covered_members: z.enum(["I", "all"]).default("I"),
+});
+
+const hospitalIndemnityFormSchema = z.object({
+  zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
+  age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
+  gender: z.enum(["female", "male"]),
+  tobacco: z.enum(["false", "true"]),
+});
+
+const cancerFormSchema = z.object({
+    state: z.enum(["TX", "GA"], { required_error: "Please select a state."}),
+    age: z.coerce.number().min(18, "Age must be at least 18").max(99, "Age must be between 18 and 99."),
+    familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"], { required_error: "Please select a family type."}),
+    tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"], { required_error: "Please select a tobacco status."}),
+    premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"], { required_error: "Please select a premium mode."}),
+    carcinomaInSitu: z.enum(["25%", "100%"], { required_error: "Please select a Carcinoma In Situ option."}),
+    benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000").refine(val => val % 1000 === 0, { message: "Benefit amount must be in increments of $1000." }),
+});
 
 export default function QuotesPage() {
-  const router = useRouter();
-  const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-  const medigapFormSchema = z.object({
-    zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
-    age: z.coerce.number().min(65, "Must be at least 65").max(120, "Age seems too high"),
-    gender: z.enum(["female", "male"]),
-    tobacco: z.enum(["false", "true"]),
-    plan: z.enum(["A", "F", "G", "N"]), // Plan A is included but CSG might not support it
-    effectiveDate: z.string().optional(),
-    apply_discounts: z.boolean().default(true).optional(),
-  });
-
-  const dentalFormSchema = z.object({
-    zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
-    age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
-    gender: z.enum(["female", "male"]),
-    tobacco: z.enum(["false", "true"]),
-  });
-
-  const hospitalIndemnityFormSchema = z.object({
-    zipCode: z.string().length(5, "Enter a valid 5-digit ZIP code"),
-    age: z.coerce.number().min(18, "Must be at least 18").max(120, "Age seems too high"),
-    gender: z.enum(["female", "male"]),
-    tobacco: z.enum(["false", "true"]),
-  });
-
-  const cancerFormSchema = z.object({
-      state: z.enum(["TX", "GA"], { required_error: "Please select a state."}),
-      age: z.coerce.number().min(18, "Age must be at least 18").max(99, "Age must be between 18 and 99."),
-      familyType: z.enum(["Applicant Only", "Applicant and Spouse", "Applicant and Child(ren)", "Applicant and Spouse and Child(ren)"], { required_error: "Please select a family type."}),
-      tobaccoStatus: z.enum(["Non-Tobacco", "Tobacco"], { required_error: "Please select a tobacco status."}),
-      premiumMode: z.enum(["Monthly Bank Draft", "Monthly Credit Card", "Monthly Direct Mail", "Annual"], { required_error: "Please select a premium mode."}),
-      carcinomaInSitu: z.enum(["25%", "100%"], { required_error: "Please select a Carcinoma In Situ option."}),
-      benefitAmount: z.coerce.number().min(5000, "Benefit amount must be at least $5,000").max(75000, "Benefit amount cannot exceed $75,000").refine(val => val % 1000 === 0, { message: "Benefit amount must be in increments of $1000." }),
-  });
   // Helper to convert AM Best rating to star value
   function amBestToStars(rating?: string): number {
     switch ((rating || '').toUpperCase()) {
@@ -191,6 +187,7 @@ export default function QuotesPage() {
       age: 65,
       gender: "female",
       tobacco: "false",
+      covered_members: "I",
     },
   });
 
@@ -320,19 +317,28 @@ export default function QuotesPage() {
     });
   }
 
-  function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
-    setDentalError(null);
-    setDentalQuotes(null);
-    startDentalTransition(async () => {
-      const result = await getDentalQuotes(values);
-      if (result.error) {
-        setDentalError(result.error);
-      }
-      if (result.quotes) {
-        setDentalQuotes(result.quotes);
-      }
-    });
-  }
+function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
+  setDentalError(null);
+  setDentalQuotes(null);
+  startDentalTransition(async () => {
+    // Transform gender and tobacco for API
+    const { zipCode, gender, tobacco, covered_members, age } = values;
+    const apiValues = {
+      zip5: zipCode,
+      age,
+      gender: gender === 'male' ? 'M' as 'M' : 'F' as 'F',
+      tobacco: tobacco === 'true' ? 1 : 0,
+      covered_members,
+    };
+    const result = await getDentalQuotes(apiValues);
+    if (result.error) {
+      setDentalError(result.error);
+    }
+    if (result.quotes) {
+      setDentalQuotes(result.quotes);
+    }
+  });
+}
 
   function onHospitalIndemnitySubmit(values: z.infer<typeof hospitalIndemnityFormSchema>) {
     setHospitalIndemnityError(null);
@@ -687,9 +693,8 @@ export default function QuotesPage() {
             {/* Results */}
             {Array.isArray(medigapQuotes) && medigapQuotes.length > 0 ? (
               <div className="mt-6 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4 sm:p-6 lg:p-8">
-                {(() => {
-                  // Map the quotes once, so we can use the mapped list for both the table and modal
-                  const mappedQuotes = medigapQuotes.map((q) => {
+                <MedigapQuoteTable
+                  quotes={medigapQuotes.map((q) => {
                     const companyBase = (q as any).company_base ?? {};
                     const monthly_premium = Number((((typeof (q as any).rate?.month === "number" ? (q as any).rate.month : q?.monthly_premium ?? 0) / 100).toFixed(2)));
                     return {
@@ -698,42 +703,16 @@ export default function QuotesPage() {
                       monthly_premium,
                       carrier: {
                         name: companyBase.name ?? companyBase.full_name ?? "Unknown",
-                        full_name: companyBase.name_full ?? companyBase.full_name ?? undefined,
                         logo_url: companyBase.logo_url ?? null,
                       },
                       plan_name: q?.plan_name ?? "Unknown",
-                      am_best_rating: q?.am_best_rating,
-                      plan_type: q?.plan_type,
-                      discounts: q?.discounts,
                       coverage: q?.plan_type ?? "",
                       additionalInfo: '',
                     };
-                  });
-                  return <>
-                    <MedigapQuoteTable
-                      quotes={mappedQuotes}
-                      onViewDetails={(id: string) => {
-                        const quote = mappedQuotes.find((q) => (q?.id ?? '').toString() === id.toString());
-                        setSelectedQuote(quote ?? null);
-                        setIsDetailsOpen(true);
-                      }}
-                      onSelectQuote={(id: string) => {
-                        const quote = mappedQuotes.find((q) => (q?.id ?? '').toString() === id.toString());
-                        if (quote) {
-                          // Show the quote card and navigate to application
-                          setSelectedQuote(quote);
-                          // Optionally, show the card above the application page
-                          const query = medigapQuoteToQuery(quote);
-                          router.push(`/dashboard/apply?${query}`);
-                        }
-                      }}
-                    />
-                    <MedigapQuoteDetailsModal open={isDetailsOpen} onClose={() => { setIsDetailsOpen(false); setSelectedQuote(null); }} quote={selectedQuote} />
-                    {/* Show the selected quote card above the application if on the /dashboard/apply page and a quote is selected */}
-                    {/* Example: */}
-                    {/* {selectedQuote && <MedigapQuoteCard quote={selectedQuote} />} */}
-                  </>;
-                })()}
+                  })}
+                  onViewDetails={(id: string) => {/* handle details popup or navigation */}}
+                  onSelectQuote={(id: string) => {/* handle quote selection */}}
+                />
               </div>
             ) : (
               medigapQuotes && (
@@ -788,6 +767,24 @@ export default function QuotesPage() {
                       <form onSubmit={dentalForm.handleSubmit(onDentalSubmit)}>
                         <div className="mt-2 grid gap-4 lg:gap-6">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            <FormField control={dentalForm.control} name="covered_members" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">Who is covered?</FormLabel>
+                              <FormControl>
+                                <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-6">
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="I" className="text-green-600" />
+                                    <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Individual</label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="all" className="text-green-600" />
+                                    <label className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">All (Family)</label>
+                                  </div>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
                             <FormField control={dentalForm.control} name="zipCode" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="block mb-2 text-sm text-gray-700 font-medium dark:text-white">ZIP Code</FormLabel>
@@ -911,10 +908,38 @@ export default function QuotesPage() {
                             {dentalQuotes.length} plan{dentalQuotes.length !== 1 ? 's' : ''} available based on your criteria
                         </p>
                     </div>
-                    
                     {dentalQuotes.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                            {dentalQuotes.map((quote) => <DentalQuoteCard key={quote.id} quote={quote} />)}
+                            {dentalQuotes.slice(0, 10).map((quote, idx) => {
+                                // Defensive: ensure key, carrier, and extract premium from benefits[0].rate
+                                const key = quote.id || (quote as any).key || idx;
+                                let premiumValue = 0;
+                                // Try to extract premium from benefits if available
+                                if (
+                                  Array.isArray((quote as any).benefits) &&
+                                  (quote as any).benefits.length > 0 &&
+                                  typeof (quote as any).benefits[0].rate === 'number'
+                                ) {
+                                  premiumValue = (quote as any).benefits[0].rate;
+                                }
+                                // fallback: check for base_plans for legacy support
+                                else if (
+                                  Array.isArray((quote as any).base_plans) &&
+                                  (quote as any).base_plans.length > 0 &&
+                                  Array.isArray((quote as any).base_plans[0].benefits) &&
+                                  (quote as any).base_plans[0].benefits.length > 0 &&
+                                  typeof (quote as any).base_plans[0].benefits[0].rate === 'number'
+                                ) {
+                                  premiumValue = (quote as any).base_plans[0].benefits[0].rate;
+                                }
+                                const safeQuote = {
+                                    ...quote,
+                                    carrier: quote.carrier && quote.carrier.name ? quote.carrier : { name: 'Unknown', logo_url: null },
+                                    premium: premiumValue,
+                                    monthly_premium: premiumValue,
+                                };
+                                return <DentalQuoteCard key={key} quote={safeQuote} />;
+                            })}
                         </div>
                     ) : (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">

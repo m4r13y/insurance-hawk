@@ -1047,3 +1047,60 @@ export const checkRecentQuotes = v2.https.onCall(
     }
   }
 );
+
+// Dental quotes function
+export const getDentalQuotes = v2.https.onCall(
+  async (request: v2.https.CallableRequest<{
+    zip5: string;
+    age: number;
+    gender: string;
+    tobacco: number;
+    plan: string;
+    county?: string;
+    effective_date?: string;
+    apply_discounts?: number;
+    apply_fees?: number;
+    offset?: number;
+    limit?: number;
+    field?: string;
+  }>) => {
+    // Defensive: Ensure this is a valid callable request
+    if (!request || typeof request !== "object" || !request.data) {
+      v2.logger.error(
+        "Invalid callable request: missing data property",
+        {request}
+      );
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Request must be made using Firebase Callable Functions and " +
+        "include a data property."
+      );
+    }
+    v2.logger.info("getDentalQuotes called", {data: request.data});
+    try {
+      // Only use required parameters
+      const {zip5, age, gender, tobacco, plan, ...rest} = request.data;
+      const apiUrl = "https://csgapi.appspot.com/v1/dental/quotes.json";
+      const token = await getCurrentToken();
+      const params = {zip5, age, gender, tobacco, plan, ...rest};
+      v2.logger.info("Calling CSG Dental API", {apiUrl, token, params});
+      const response = await axios.get(apiUrl, {
+        params,
+        headers: {
+          "x-api-token": token,
+        },
+      });
+      v2.logger.info("CSG Dental API response", {response: response.data});
+      return response.data;
+    } catch (error) {
+      v2.logger.error("Error in getDentalQuotes", {error});
+      throw new v2.https.HttpsError(
+        "internal",
+        "Error fetching dental quotes",
+        {
+          message: error instanceof Error ? error.message : "Unknown error",
+        }
+      );
+    }
+  }
+);
