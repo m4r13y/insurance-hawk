@@ -103,9 +103,10 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
 
 
 
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
-    // Map frontend values to CSG API params
     let tobaccoValue = 0;
     if (typeof values.tobacco === "string") {
       tobaccoValue = values.tobacco === "true" ? 1 : 0;
@@ -118,12 +119,12 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
       gender: values.gender === "male" ? "M" : "F",
       tobacco: tobaccoValue,
       plan: values.plan,
-      // Add other params as needed
     };
-    // Replace with your deployed Firebase Cloud Function endpoint
-    const functionUrl = "https://us-central1-medicareally.cloudfunctions.net/getMedigapQuotes";
-    const response = await axios.post(functionUrl, params);
-    return { raw: response.data };
+    // Use Firebase Functions SDK to call the callable function
+    const functions = getFunctions();
+    const getMedigapQuotesFn = httpsCallable(functions, "getMedigapQuotes");
+    const result = await getMedigapQuotesFn(params);
+    return { raw: result.data };
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
     return { error: e.message || "Failed to fetch quotes." };

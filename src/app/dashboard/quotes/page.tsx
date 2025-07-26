@@ -292,19 +292,26 @@ export default function QuotesPage() {
       }
       if (result.raw) {
         setMedigapRaw(result.raw);
-        // Map raw.result to expected table format
-        const mappedQuotes = Array.isArray(result.raw.result)
-          ? result.raw.result.map((q: { key: any; id: any; company_base: { name_full: any; name: any; ambest_rating: any; }; company: any; plan: any; plan_name: any; rate: { month: any; }; monthly_premium: any; plan_type: any; discounts: any; rate_type: any; }) => ({
-              id: q.key || q.id || Math.random().toString(36).slice(2),
-              carrier: q.company_base?.name_full || q.company_base?.name || q.company || "Unknown",
-              plan_name: q.plan || q.plan_name || "Unknown",
-              monthly_premium: Number(((q.rate?.month || q.monthly_premium || 0) / 100).toFixed(2)),
-              plan_type: q.plan || q.plan_type || "",
-              am_best_rating: q.company_base?.ambest_rating || "",
-              discounts: q.discounts || [],
-              rate_type: q.rate_type || "",
-              // Add more fields as needed
-            }))
+        // Map raw.result to expected table format, safely check for result property
+        const rawResult = (result.raw as { result?: any[] }).result;
+        const mappedQuotes = Array.isArray(rawResult)
+          ? rawResult.map((q: { key: any; id: any; company_base: { name_full: any; name: any; ambest_rating: any; logo_url?: string | null }; company: any; plan: any; plan_name: any; rate: { month: any; }; monthly_premium: any; plan_type: any; discounts: any; rate_type: any; }) => {
+              const monthly_premium = Number(((q.rate?.month || q.monthly_premium || 0) / 100).toFixed(2));
+              return {
+                id: q.key || q.id || Math.random().toString(36).slice(2),
+                premium: monthly_premium,
+                monthly_premium,
+                carrier: {
+                  name: q.company_base?.name_full || q.company_base?.name || q.company || "Unknown",
+                  logo_url: q.company_base?.logo_url || null,
+                },
+                plan_name: q.plan || q.plan_name || "Unknown",
+                plan_type: q.plan || q.plan_type || "",
+                am_best_rating: q.company_base?.ambest_rating || "",
+                discounts: q.discounts || [],
+                rate_type: q.rate_type || "",
+              };
+            })
           : [];
         setMedigapQuotes(mappedQuotes);
       }
@@ -686,12 +693,14 @@ export default function QuotesPage() {
                 </div>
                 {/* Remaining quotes in table */}
                 {medigapQuotes.length > 3 && (
-                  <QuoteResultsTable
-                    quotes={medigapQuotes.slice(3)}
-                    quoteType="medigap"
-                    onViewDetails={(id: string) => {/* handle details popup or navigation */}}
-                    onSelectQuote={(id: string) => {/* handle quote selection */}}
-                  />
+                  <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4 sm:p-6 lg:p-8">
+                    <QuoteResultsTable
+                      quotes={medigapQuotes.slice(3)}
+                      quoteType="medigap"
+                      onViewDetails={(id: string) => {/* handle details popup or navigation */}}
+                      onSelectQuote={(id: string) => {/* handle quote selection */}}
+                    />
+                  </div>
                 )}
               </div>
             )}
