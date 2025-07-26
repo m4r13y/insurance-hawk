@@ -187,13 +187,35 @@ export async function getDentalQuotes(values: DentalQuoteRequestValues) {
   }
 }
 
-export async function getHospitalIndemnityQuotes(values: HospitalIndemnityQuoteRequestValues) {
-    try {
-       console.log("Returning mock Hospital Indemnity quotes for values:", values);
-       return { quotes: mockHospitalIndemnityQuotes };
+// Accepts API param shape, not form shape
+export type HospitalIndemnityApiParams = {
+  zip5: string;
+  age: number;
+  gender: 'M' | 'F';
+  tobacco: number;
+};
 
-    } catch (e: any)
-     {
+export async function getHospitalIndemnityQuotes(params: HospitalIndemnityApiParams) {
+    try {
+        const url = "https://csgapi.appspot.com/v1/hospital_indemnity/quotes.json";
+        const token = "0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8";
+        const response = await axios.get(url, {
+            params,
+            headers: {
+                "x-api-token": token
+            }
+        });
+        // API returns an array of quotes
+        if (Array.isArray(response.data)) {
+            return { quotes: response.data };
+        }
+        // If wrapped in a results property
+        if (response.data && Array.isArray(response.data.results)) {
+            return { quotes: response.data.results };
+        }
+        // Fallback: return empty
+        return { quotes: [] };
+    } catch (e: any) {
         console.error("Error in getHospitalIndemnityQuotes:", e);
         return { error: e.message || "Failed to fetch hospital indemnity quotes." };
     }

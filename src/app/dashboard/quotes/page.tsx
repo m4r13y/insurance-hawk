@@ -347,38 +347,54 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
     setSelectedBaseBenefit(null);
     setSelectedRiders({});
     startHospitalIndemnityTransition(async () => {
-        const result = await getHospitalIndemnityQuotes(values);
-        if (result.error) {
-            setHospitalIndemnityError(result.error);
-        }
-        if (result.quotes && result.quotes.length > 0) {
-            const processedQuotes = result.quotes.map(quote => {
-                const uniqueBaseBenefits = quote.baseBenefits.reduce((acc, current) => {
-                    if (!acc.find(item => item.amount === current.amount)) {
-                        acc.push(current);
-                    }
-                    return acc;
-                }, [] as HospitalIndemnityBenefit[]);
-
-                const processedRiders = quote.riders.map(rider => ({
-                    ...rider,
-                    benefits: rider.benefits.reduce((acc, current) => {
-                        if (!acc.find(item => item.amount === current.amount)) {
-                            acc.push(current);
-                        }
-                        return acc;
-                    }, [] as HospitalIndemnityBenefit[]),
-                }));
-
-                return { ...quote, baseBenefits: uniqueBaseBenefits, riders: processedRiders };
-            });
-
-            setHospitalIndemnityQuotes(processedQuotes);
-            setFeaturedQuote(processedQuotes[0]);
-        } else {
-            setHospitalIndemnityQuotes([]);
-            setFeaturedQuote(null);
-        }
+      // Map form values to API params (like Dental/Medigap)
+      const { zipCode, age, gender, tobacco } = values;
+      const apiValues = {
+        zip5: zipCode,
+        age,
+        gender: (gender === 'male' ? 'M' : 'F') as 'M' | 'F',
+        tobacco: tobacco === 'true' ? 1 : 0,
+      };
+      const result = await getHospitalIndemnityQuotes(apiValues);
+      if (result.error) {
+        setHospitalIndemnityError(result.error);
+      }
+      if (result.quotes && result.quotes.length > 0) {
+        // Defensive: flatten/normalize baseBenefits/riders if present
+        const processedQuotes = result.quotes.map((quote: any) => {
+          // Some APIs return base_plans instead of baseBenefits
+          let baseBenefits = quote.baseBenefits || (quote.base_plans && quote.base_plans[0]?.benefits) || [];
+          // Defensive: ensure array
+          if (!Array.isArray(baseBenefits)) baseBenefits = [];
+          // Remove duplicate amounts
+          const uniqueBaseBenefits = baseBenefits.reduce((acc: any[], current: any) => {
+            if (!acc.find(item => item.amount === current.amount)) {
+              acc.push(current);
+            }
+            return acc;
+          }, []);
+          // Riders
+          let riders = quote.riders || [];
+          if (!Array.isArray(riders)) riders = [];
+          const processedRiders = riders.map((rider: any) => ({
+            ...rider,
+            benefits: Array.isArray(rider.benefits)
+              ? rider.benefits.reduce((acc: any[], current: any) => {
+                  if (!acc.find(item => item.amount === current.amount)) {
+                    acc.push(current);
+                  }
+                  return acc;
+                }, [])
+              : [],
+          }));
+          return { ...quote, baseBenefits: uniqueBaseBenefits, riders: processedRiders };
+        });
+        setHospitalIndemnityQuotes(processedQuotes);
+        setFeaturedQuote(processedQuotes[0]);
+      } else {
+        setHospitalIndemnityQuotes([]);
+        setFeaturedQuote(null);
+      }
     });
   }
   
