@@ -66,6 +66,7 @@ export type Quote = {
     monthly_premium: number;
     carrier: {
         name: string;
+        full_name?: string;
         logo_url: string | null;
     };
     plan_name: string;
@@ -87,6 +88,7 @@ export type DentalQuote = {
     monthly_premium: number;
     carrier: {
         name: string;
+        full_name?: string;
         logo_url: string | null;
     };
     plan_name: string;
@@ -121,6 +123,7 @@ export type HospitalIndemnityQuote = {
     id: string; 
     carrier: {
         name: string;
+        full_name?: string;
         logo_url: string | null;
     };
     plan_name: string;

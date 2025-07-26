@@ -41,7 +41,7 @@ export function QuoteResultsTable({
         planType: medigapQuote.plan_type,
         coverage: medigapQuote.plan_type,
         additionalInfo: `Plan ${medigapQuote.plan_type}`,
-        rating: medigapQuote.plan_type === 'F' || medigapQuote.plan_type === 'G' ? 5 : 4
+        rating: (medigapQuote as any).am_best_rating || ''
       };
     } else if (quoteType === 'dental') {
       const dentalQuote = quote as DentalQuote;
@@ -154,21 +154,10 @@ export function QuoteResultsTable({
     },
     {
       key: 'rating',
-      label: 'Rating',
+      label: 'AM Best Rating',
       sortable: true,
-      render: (value: number) => (
-        <div className="flex items-center gap-1">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`w-4 h-4 ${
-                i < value 
-                  ? 'text-yellow-400 fill-current' 
-                  : 'text-gray-300 dark:text-neutral-600'
-              }`}
-            />
-          ))}
-        </div>
+      render: (value: string) => (
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{value || 'N/A'}</span>
       )
     },
     {

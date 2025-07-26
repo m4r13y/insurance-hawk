@@ -46,7 +46,7 @@ import { useAutofillProfile } from "@/hooks/use-autofill-profile";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app as firebaseApp } from "@/lib/firebase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { QuoteResultsTable } from "./quote-results-table";
+import { MedigapQuoteTable } from "./medigap-quote-table";
 
 
 const medigapFormSchema = z.object({
@@ -84,6 +84,25 @@ const cancerFormSchema = z.object({
 });
 
 export default function QuotesPage() {
+  // Helper to convert AM Best rating to star value
+  function amBestToStars(rating?: string): number {
+    switch ((rating || '').toUpperCase()) {
+      case 'A++': return 5;
+      case 'A+': return 4.66;
+      case 'A': return 4.33;
+      case 'A-': return 4;
+      case 'B++': return 3.66;
+      case 'B+': return 3.33;
+      case 'B': return 3;
+      case 'B-': return 2.66;
+      case 'C++': return 2.33;
+      case 'C+': return 2;
+      case 'C': return 1.66;
+      case 'C-': return 1.33;
+      case 'D': return 1;
+      default: return 0;
+    }
+  }
   // Tab animation state
   const [activeTab, setActiveTab] = useState("medigap");
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -281,7 +300,6 @@ export default function QuotesPage() {
   function onMedigapSubmit(values: z.infer<typeof medigapFormSchema>) {
     setMedigapError(null);
     setMedigapQuotes(null);
-    setMedigapRaw(null);
     startMedigapTransition(async () => {
       const result = await getMedigapQuotes({
         ...values,
@@ -289,31 +307,10 @@ export default function QuotesPage() {
       });
       if (result.error) {
         setMedigapError(result.error);
-      }
-      if (result.raw) {
-        setMedigapRaw(result.raw);
-        // Map raw.result to expected table format, safely check for result property
-        const rawResult = (result.raw as { result?: any[] }).result;
-        const mappedQuotes = Array.isArray(rawResult)
-          ? rawResult.map((q: { key: any; id: any; company_base: { name_full: any; name: any; ambest_rating: any; logo_url?: string | null }; company: any; plan: any; plan_name: any; rate: { month: any; }; monthly_premium: any; plan_type: any; discounts: any; rate_type: any; }) => {
-              const monthly_premium = Number(((q.rate?.month || q.monthly_premium || 0) / 100).toFixed(2));
-              return {
-                id: q.key || q.id || Math.random().toString(36).slice(2),
-                premium: monthly_premium,
-                monthly_premium,
-                carrier: {
-                  name: q.company_base?.name_full || q.company_base?.name || q.company || "Unknown",
-                  logo_url: q.company_base?.logo_url || null,
-                },
-                plan_name: q.plan || q.plan_name || "Unknown",
-                plan_type: q.plan || q.plan_type || "",
-                am_best_rating: q.company_base?.ambest_rating || "",
-                discounts: q.discounts || [],
-                rate_type: q.rate_type || "",
-              };
-            })
-          : [];
-        setMedigapQuotes(mappedQuotes);
+      } else if (result.quotes) {
+        setMedigapQuotes(result.quotes);
+      } else {
+        setMedigapQuotes([]);
       }
     });
   }
@@ -683,37 +680,40 @@ export default function QuotesPage() {
             )}
 
             {/* Results */}
-            {medigapQuotes && (
-              <div className="mt-6">
-                {/* Top 3 MedigapQuoteCards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {medigapQuotes.slice(0, 3).map((quote) => (
-                    <MedigapQuoteCard key={quote.id} quote={quote} />
-                  ))}
-                </div>
-                {/* Remaining quotes in table */}
-                {medigapQuotes.length > 3 && (
-                  <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4 sm:p-6 lg:p-8">
-                    <QuoteResultsTable
-                      quotes={medigapQuotes.slice(3)}
-                      quoteType="medigap"
-                      onViewDetails={(id: string) => {/* handle details popup or navigation */}}
-                      onSelectQuote={(id: string) => {/* handle quote selection */}}
-                    />
-                  </div>
-                )}
+            {Array.isArray(medigapQuotes) && medigapQuotes.length > 0 ? (
+              <div className="mt-6 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4 sm:p-6 lg:p-8">
+                <MedigapQuoteTable
+                  quotes={medigapQuotes.map((q) => {
+                    const companyBase = (q as any).company_base ?? {};
+                    const monthly_premium = Number((((typeof (q as any).rate?.month === "number" ? (q as any).rate.month : q?.monthly_premium ?? 0) / 100).toFixed(2)));
+                    return {
+                      id: q?.id ?? Math.random().toString(36).slice(2),
+                      premium: monthly_premium,
+                      monthly_premium,
+                      carrier: {
+                        name: companyBase.name ?? companyBase.full_name ?? "Unknown",
+                        logo_url: companyBase.logo_url ?? null,
+                      },
+                      plan_name: q?.plan_name ?? "Unknown",
+                      coverage: q?.plan_type ?? "",
+                      additionalInfo: '',
+                    };
+                  })}
+                  onViewDetails={(id: string) => {/* handle details popup or navigation */}}
+                  onSelectQuote={(id: string) => {/* handle quote selection */}}
+                />
               </div>
+            ) : (
+              medigapQuotes && (
+                <div className="mt-6 text-center text-gray-500 dark:text-gray-400">
+                  <FileDigit className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg mb-2">No Medigap quotes found</p>
+                  <p className="text-sm">Try different criteria above</p>
+                </div>
+              )
             )}
 
-            {/* Raw API Response - Debugging */}
-            {medigapRaw && (
-              <div className="mt-6 bg-yellow-50 dark:bg-yellow-900 rounded-2xl shadow-lg border border-yellow-200 dark:border-yellow-700 p-6">
-                <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-100 mb-2">Medigap Raw API Response</h3>
-                <pre className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 text-xs overflow-x-auto max-h-[600px]">
-                  {JSON.stringify(medigapRaw, null, 2)}
-                </pre>
-              </div>
-            )}
+
         </TabsContent>
         <TabsContent value="dental" className="mt-4 sm:mt-6">
             <div className="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto">

@@ -50,7 +50,7 @@ const mockDentalQuotes: DentalQuote[] = [
     {
         id: "dental-1",
         monthly_premium: 35.50,
-        carrier: { name: "Delta Dental", logo_url: null },
+        carrier: { name: "Delta Dental", full_name: "Delta Dental Insurance Company", logo_url: null },
         plan_name: "PPO Plus",
         am_best_rating: "A",
         benefit_amount: "1500",
@@ -61,7 +61,7 @@ const mockDentalQuotes: DentalQuote[] = [
      {
         id: "dental-2",
         monthly_premium: 42.00,
-        carrier: { name: "Guardian", logo_url: null },
+        carrier: { name: "Guardian", full_name: "Guardian Life Insurance Company", logo_url: null },
         plan_name: "Advantage Gold",
         am_best_rating: "A+",
         benefit_amount: "2000",
@@ -72,7 +72,7 @@ const mockDentalQuotes: DentalQuote[] = [
 const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
     {
         id: "hi-1",
-        carrier: { name: "Aetna", logo_url: null },
+        carrier: { name: "Aetna", full_name: "Aetna Life Insurance Company", logo_url: null },
         plan_name: "Recovery Choice",
         baseBenefits: [
             { amount: "100", quantifier: "Day", rate: 25.00 },
@@ -86,7 +86,7 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
     },
     {
         id: "hi-2",
-        carrier: { name: "Cigna", logo_url: null },
+        carrier: { name: "Cigna", full_name: "Cigna Health and Life Insurance Company", logo_url: null },
         plan_name: "Hospital Assist",
         baseBenefits: [
             { amount: "150", quantifier: "Day", rate: 30.00 },
@@ -97,11 +97,6 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
         ]
     },
 ];
-
-
-
-
-
 
 import { getFunctions, httpsCallable } from "firebase/functions";
 
@@ -124,7 +119,30 @@ export async function getMedigapQuotes(values: QuoteRequestValues) {
     const functions = getFunctions();
     const getMedigapQuotesFn = httpsCallable(functions, "getMedigapQuotes");
     const result = await getMedigapQuotesFn(params);
-    return { raw: result.data };
+    // Expecting result.data to be { quotes: [...] } or similar
+    if (
+      result.data &&
+      typeof result.data === "object" &&
+      "quotes" in result.data &&
+      Array.isArray((result.data as any).quotes)
+    ) {
+      return { quotes: (result.data as any).quotes };
+    }
+    // If the response is an array itself
+    if (Array.isArray(result.data)) {
+      return { quotes: result.data };
+    }
+    // If the response is an object with a 'results' array
+    if (
+      result.data &&
+      typeof result.data === "object" &&
+      "results" in result.data &&
+      Array.isArray((result.data as any).results)
+    ) {
+      return { quotes: (result.data as any).results };
+    }
+    // Fallback: return error or empty
+    return { quotes: [] };
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
     return { error: e.message || "Failed to fetch quotes." };
