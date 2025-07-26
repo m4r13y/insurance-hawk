@@ -323,6 +323,18 @@ export const getMedigapQuotes = v2.https.onCall(
     tobacco: number;
     plan: string;
   }>) => {
+    // Defensive: Ensure this is a valid callable request
+    if (!request || typeof request !== "object" || !request.data) {
+      v2.logger.error(
+        "Invalid callable request: missing data property",
+        {request}
+      );
+      throw new v2.https.HttpsError(
+        "invalid-argument",
+        "Request must be made using Firebase Callable Functions and " +
+        "include a data property."
+      );
+    }
     v2.logger.info("getMedigapQuotes called", {data: request.data});
     try {
       // Only use required parameters
