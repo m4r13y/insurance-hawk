@@ -253,7 +253,17 @@ export default function ResourcesPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredResources.map((resource) => (
-              <Link key={resource.id} href={getResourceHref(resource)} legacyBehavior passHref>
+              <Link
+                key={
+                  resource.slug && typeof resource.slug === 'string' ? `slug-${resource.slug}` :
+                  resource.id && typeof resource.id === 'string' ? `id-${resource.id}` :
+                  resource.title && typeof resource.title === 'string' ? `title-${resource.title.replace(/\s+/g, '-')}` :
+                  Math.random().toString(36).slice(2) // fallback, should never hit
+                }
+                href={getResourceHref(resource)}
+                legacyBehavior
+                passHref
+              >
                 <a onClick={(e) => handleResourceClick(e, resource)} target={resource.url ? '_blank' : undefined} rel={resource.url ? 'noopener noreferrer' : undefined} className="block h-full">
                   <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-6">

@@ -361,7 +361,7 @@ const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, ...props }, ref) => (
-  <li
+  <span
     ref={ref}
     data-sidebar="menu-item"
     className={cn("group/menu-item relative", className)}

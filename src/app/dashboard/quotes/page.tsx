@@ -488,20 +488,46 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
   // For featured company, collect all available base benefit day options
   const featuredBenefitOptions = React.useMemo(() => {
     if (!hospitalIndemnityQuotes || !featuredQuote) return [];
-    const sameCarrierQuotes = hospitalIndemnityQuotes.filter((q: HospitalIndemnityQuote) => q.carrier?.full_name === featuredQuote.carrier?.full_name);
+    const sameCarrierQuotes = hospitalIndemnityQuotes.filter(q => q.carrier?.full_name === featuredQuote.carrier?.full_name);
     // Collect all unique base benefit days and their rates
-    const benefitOptions = sameCarrierQuotes.flatMap((q: HospitalIndemnityQuote) => (q.baseBenefits || []).map((b: HospitalIndemnityBenefit) => ({
+    const benefitOptions = sameCarrierQuotes.flatMap(q => (q.baseBenefits || []).map(b => ({
       amount: Number(b.amount),
       rate: b.rate,
       quoteKey: q.key,
       quote: q,
     })));
     // Remove duplicate benefit days (by amount)
-    return benefitOptions.reduce<typeof benefitOptions>((acc, curr) => {
-      if (!acc.find((b) => b.amount === curr.amount)) acc.push(curr);
+    type BenefitOption = { amount: number; rate: number; quoteKey?: string; quote: any };
+    return benefitOptions.reduce<BenefitOption[]>((acc, curr) => {
+      if (!acc.find(b => b.amount === curr.amount)) acc.push(curr);
       return acc;
     }, []);
   }, [hospitalIndemnityQuotes, featuredQuote]);
+
+  // Disable vertical scroll until quotes are generated for the active tab
+  React.useEffect(() => {
+    let shouldDisableScroll = false;
+    if (activeTab === 'medigap') {
+      shouldDisableScroll = !Array.isArray(medigapQuotes) || medigapQuotes.length === 0;
+    } else if (activeTab === 'dental') {
+      shouldDisableScroll = !Array.isArray(dentalQuotes) || dentalQuotes.length === 0;
+    } else if (activeTab === 'hospital-indemnity') {
+      shouldDisableScroll = !Array.isArray(hospitalIndemnityQuotes) || hospitalIndemnityQuotes.length === 0;
+    } else if (activeTab === 'cancer') {
+      shouldDisableScroll = !cancerQuote;
+    }
+    if (shouldDisableScroll) {
+      document.documentElement.style.overflowY = 'hidden';
+      document.body.style.overflowY = 'hidden';
+    } else {
+      document.documentElement.style.overflowY = '';
+      document.body.style.overflowY = '';
+    }
+    return () => {
+      document.documentElement.style.overflowY = '';
+      document.body.style.overflowY = '';
+    };
+  }, [activeTab, medigapQuotes, dentalQuotes, hospitalIndemnityQuotes, cancerQuote]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">

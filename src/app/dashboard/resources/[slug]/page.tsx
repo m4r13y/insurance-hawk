@@ -96,7 +96,7 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
   };
 }
 
-// A map to connect slugs to their React components
+// A map to connect slugs to their React components (add more as needed)
 const articleComponents: Record<string, React.ComponentType> = {
   'avoiding-penalties': AvoidingPenaltiesContent,
   'working-past-65': WorkingPast65Content,
@@ -125,20 +125,46 @@ const articleComponents: Record<string, React.ComponentType> = {
   'top-plan-g-addons': TopPlanGAddonsContent,
   'top-plan-n-addons': TopPlanNAddonsContent,
   'cancer-plans-with-advantage': CancerPlansWithAdvantageContent,
+  // Add more as you add new article components
 };
 
 export default function BlogArticlePage({ params }: BlogArticlePageProps) {
   const { slug } = params;
+  const resource = resourcesList.find(r => r.slug === slug);
   const ArticleComponent = articleComponents[slug];
 
-  // If no component is found for the slug, show a 404 page
-  if (!ArticleComponent) {
-    notFound();
+  if (ArticleComponent) {
+    return (
+      <div className="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
+        <ArticleComponent />
+      </div>
+    );
   }
-  
-  return (
-    <div className="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
-      <ArticleComponent />
-    </div>
-  );
+
+  // Fallback UI for non-article resources
+  if (resource) {
+    if (resource.type === 'Video' && resource.url) {
+      return (
+        <div className="max-w-2xl mx-auto py-12 text-center">
+          <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
+          <p className="mb-6 text-gray-600">{resource.description}</p>
+          <div className="aspect-video mb-6">
+            <iframe src={resource.url} title={resource.title} allowFullScreen className="w-full h-full rounded-lg border" />
+          </div>
+          <a href={resource.url} target="_blank" rel="noopener" className="text-blue-600 underline">Watch on YouTube</a>
+        </div>
+      );
+    }
+    // Fallback for guides or other types
+    return (
+      <div className="max-w-2xl mx-auto py-12 text-center">
+        <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
+        <p className="mb-6 text-gray-600">{resource.description}</p>
+        <p className="italic text-gray-400">No detailed article is available for this resource.</p>
+      </div>
+    );
+  }
+
+  // If no resource or component found, show 404
+  notFound();
 }
