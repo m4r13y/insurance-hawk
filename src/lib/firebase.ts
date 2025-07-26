@@ -9,17 +9,14 @@ import { getAnalytics } from "firebase/analytics";
 import type { FirebaseStorage } from 'firebase/storage';
 import type { Functions } from 'firebase/functions';
 
-const firebaseConfig =
-  typeof process !== "undefined" && process.env.FIREBASE_WEBAPP_CONFIG
-    ? JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG)
-    : {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+const firebaseConfig = {
+        apiKey: "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
+        authDomain: "medicareally.firebaseapp.com",
+        projectId: "medicareally",
+        storageBucket: "medicareally.appspot.com",
+        messagingSenderId: "168459812655",
+        appId: "1:168459812655:web:401f6b21c424efb0672bda",
+        measurementId: "G-GZ708G7D8W"
       };
 
 let app: FirebaseApp | null = null;
