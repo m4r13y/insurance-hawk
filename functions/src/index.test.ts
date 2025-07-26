@@ -15,7 +15,10 @@ describe("getMedigapQuotes", () => {
           tobacco: 0,
           plan: "A",
         },
-        rawRequest: {} as any,
+        rawRequest: {
+          rawBody: Buffer.from(""),
+        } as import("firebase-functions/lib/common/providers/https").Request,
+        acceptsStreaming: false,
       })
     ).rejects.toThrow();
   });

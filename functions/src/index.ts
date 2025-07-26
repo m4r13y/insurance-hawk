@@ -5,9 +5,8 @@ import * as v2 from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import {getFirestore} from "firebase-admin/firestore";
 import axios, {isAxiosError} from "axios";
-import * as functions from "firebase-functions";
 
-// Initialize the Firebase Admin SDK.
+// Initialize the Firebase Admin SDK.ffirebqa
 let app: admin.app.App;
 try {
   app = admin.initializeApp();
@@ -185,14 +184,11 @@ export const getUserData = v2.https.onCall(
   }
 );
 
-// Ensure CSG_API_KEY is set in environment config or environment variable
-const CSG_API_KEY =
-  (functions.config().csg && functions.config().csg.api_key) ||
-  process.env.CSG_API_KEY;
+// Ensure CSG_API_KEY is set in environment variable
+const CSG_API_KEY = process.env.CSG_API_KEY;
 if (!CSG_API_KEY) {
   v2.logger.error(
-    "CSG_API_KEY not set in Firebase config or environment. " +
-    "Medigap quotes will not work.",
+    "CSG_API_KEY not set in environment. Medigap quotes will not work."
   );
 }
 
@@ -317,6 +313,8 @@ export const refreshCsgToken = v2.scheduler.onSchedule({
 });
 
 // Medigap quotes function
+
+
 export const getMedigapQuotes = v2.https.onCall(
   async (request: v2.https.CallableRequest<{
     zip5: string;
@@ -324,22 +322,17 @@ export const getMedigapQuotes = v2.https.onCall(
     gender: string;
     tobacco: number;
     plan: string;
-    effective_date?: string;
-    apply_discounts?: number;
-    apply_fees?: number;
-    offset?: number;
-    limit?: number;
-    naic?: string | string[];
-    field?: string | string[];
   }>) => {
     v2.logger.info("getMedigapQuotes called", {data: request.data});
     try {
-      const data = request.data;
+      // Only use required parameters
+      const {zip5, age, gender, tobacco, plan} = request.data;
       const apiUrl = "https://csgapi.appspot.com/v1/med_supp/quotes.json";
       const token = await getCurrentToken();
-      v2.logger.info("Calling CSG API", {apiUrl, token, params: data});
+      const params = {zip5, age, gender, tobacco, plan};
+      v2.logger.info("Calling CSG API", {apiUrl, token, params});
       const response = await axios.get(apiUrl, {
-        params: data,
+        params,
         headers: {
           "x-api-token": token,
         },

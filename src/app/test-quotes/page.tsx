@@ -1,5 +1,4 @@
 "use client";
-"use client";
 import { useState } from "react";
 import axios from "axios";
 
@@ -51,7 +50,7 @@ export default function TestQuotes() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-8 border">
         <h1 className="text-3xl font-bold mb-6 text-blue-700">Test Quotes</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Apply Discounts</label>
             <button
@@ -199,13 +198,13 @@ export default function TestQuotes() {
                   >✕</button>
                   <h3 className="text-lg font-bold mb-2 text-blue-700">{result.result[detailsIdx].company_base?.name ?? ""}</h3>
                   <div className="mb-2 text-sm text-gray-700">
-                    <strong>Plan:</strong> {result.result[detailsIdx].plan}<br />
-                    <strong>Rating Class:</strong> {result.result[detailsIdx].rating_class}<br />
-                    <strong>Effective Date:</strong> {result.result[detailsIdx].effective_date}<br />
-                    <strong>Expires Date:</strong> {result.result[detailsIdx].expires_date}<br />
-                    <strong>Gender:</strong> {result.result[detailsIdx].gender}<br />
-                    <strong>Tobacco:</strong> {result.result[detailsIdx].tobacco ? "Yes" : "No"}<br />
-                    <strong>Discounts:</strong> {Array.isArray(result.result[detailsIdx].discounts) && result.result[detailsIdx].discounts.length > 0 ? (
+                    <strong>Plan:</strong> {result.result[detailsIdx]?.plan ?? ""}<br />
+                    <strong>Rating Class:</strong> {result.result[detailsIdx]?.rating_class ?? ""}<br />
+                    <strong>Effective Date:</strong> {result.result[detailsIdx]?.effective_date ?? ""}<br />
+                    <strong>Expires Date:</strong> {result.result[detailsIdx]?.expires_date ?? ""}<br />
+                    <strong>Gender:</strong> {result.result[detailsIdx]?.gender ?? ""}<br />
+                    <strong>Tobacco:</strong> {result.result[detailsIdx]?.tobacco ? "Yes" : "No"}<br />
+                    <strong>Discounts:</strong> {Array.isArray(result.result[detailsIdx]?.discounts) && result.result[detailsIdx]?.discounts.length > 0 ? (
                       result.result[detailsIdx].discounts.map((d: any, i: number) => (
                         <span key={i} className="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 mr-1 mb-1 text-xs">
                           {d.name} ({d.type}): {d.value}
@@ -215,9 +214,9 @@ export default function TestQuotes() {
                   </div>
                   <div className="text-xs text-gray-500">
                     <strong>Company Info:</strong><br />
-                    {result.result[detailsIdx].company_base?.name_full}<br />
-                    <strong>AM Best Rating:</strong> {result.result[detailsIdx].company_base?.ambest_rating}<br />
-                    <strong>Business Type:</strong> {result.result[detailsIdx].company_base?.business_type}<br />
+                    {result.result[detailsIdx]?.company_base?.name_full ?? ""}<br />
+                    <strong>AM Best Rating:</strong> {result.result[detailsIdx]?.company_base?.ambest_rating ?? ""}<br />
+                    <strong>Business Type:</strong> {result.result[detailsIdx]?.company_base?.business_type ?? ""}<br />
                   </div>
                 </div>
               </div>
@@ -225,8 +224,7 @@ export default function TestQuotes() {
           </div>
         </div>
       )}
-    </div>
-  );
+      </div>
     </div>
   );
 }

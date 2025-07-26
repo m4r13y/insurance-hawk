@@ -66,7 +66,10 @@ const mapPremiumModeToKey = (
 
 // --- MAIN CLOUD FUNCTION ---
 export const getCancerInsuranceQuote = functions.https.onCall(
-  async (data: CancerQuoteRequestData): Promise<CancerQuoteResponse> => {
+  async (
+    request: functions.https.CallableRequest<CancerQuoteRequestData>
+  ): Promise<CancerQuoteResponse> => {
+    const data = request.data;
     functions.logger.info("--- Starting Cancer Quote Calculation ---", {
       structuredData: true,
     });

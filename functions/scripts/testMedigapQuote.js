@@ -8,11 +8,17 @@ async function getMedigapQuote() {
     gender: "M",
     tobacco: 0,
     plan: "A"
+    // Add other params as needed
   };
 
   try {
     console.log("Sending request to:", url);
-    const response = await axios.post(url, { data });
+    const response = await axios.get(url, {
+      params,
+      headers: {
+        "x-api-token": token
+      }
+    });
     console.log("Medigap Quote Response:", response.data);
   } catch (error) {
     if (error.response) {

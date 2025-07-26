@@ -1,10 +1,50 @@
-"use server";
+
+import axios from "axios";
 import { functions as firebaseFunctions } from "@/lib/firebase";
 import type { Quote, QuoteRequestValues, DentalQuote, DentalQuoteRequestValues, CsgDiscount, HospitalIndemnityQuote, HospitalIndemnityRider, HospitalIndemnityBenefit, HospitalIndemnityQuoteRequestValues, CancerQuote, CancerQuoteRequestValues } from "@/types";
 
-// Note: As per the new architecture, firebase-admin is no longer needed here on the frontend.
-// The quote logic is now handled by dedicated Cloud Functions.
-import { httpsCallable } from "firebase/functions";
+// Direct CSG API request for Medigap quotes
+
+export async function fetchMedigapQuotesDirect(params: {
+  zip5: string;
+  age: number;
+  gender: string;
+  tobacco: number;
+  plan: string;
+  county?: string;
+  select?: number;
+  naic?: string;
+  effective_date?: string;
+  apply_discounts?: number;
+  apply_fees?: number;
+  offset?: number;
+  limit?: number;
+  field?: string;
+}) {
+  const url = "https://csgapi.appspot.com/v1/med_supp/quotes.json";
+  const token = "dc4c5c9f2987ba35803f8dbfa784bb557b328b30cd2e69e3646caf40912a00fd";
+  // Ensure required parameters are present
+  const required = ["zip5", "age", "gender", "tobacco", "plan"];
+  for (const key of required) {
+    if (!(params as any)[key]) {
+      return { error: `Missing required parameter: ${key}` };
+    }
+  }
+  try {
+    const response = await axios.get(url, {
+      params,
+      headers: {
+        "x-api-token": token
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      return { error: error.response.data, status: error.response.status };
+    }
+    return { error: error.message };
+  }
+}
 
 const mockDentalQuotes: DentalQuote[] = [
     {
@@ -59,35 +99,31 @@ const mockHospitalIndemnityQuotes: HospitalIndemnityQuote[] = [
 ];
 
 
+
+
+
+
 export async function getMedigapQuotes(values: QuoteRequestValues) {
   try {
-    // Use the same API route as Test Quotes page for Medigap quotes
-    // Use absolute URL for server-side fetch
-    const apiUrl = typeof window === "undefined"
-      ? "http://localhost:3000/api/test-quotes"
-      : "/api/test-quotes";
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        zip5: values.zipCode,
-        age: Number(values.age),
-        gender: values.gender === "male" ? "M" : "F",
-        tobacco: values.tobacco === "true" ? 1 : 0,
-        plan: values.plan,
-        effective_date: values.effectiveDate,
-        apply_discounts: values.apply_discounts ? 1 : 0,
-        apply_fees: 0,
-        offset: 0,
-        limit: 50,
-      }),
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { error: errorData.message || "Failed to fetch quotes." };
+    // Map frontend values to CSG API params
+    let tobaccoValue = 0;
+    if (typeof values.tobacco === "string") {
+      tobaccoValue = values.tobacco === "true" ? 1 : 0;
+    } else if (typeof values.tobacco === "number") {
+      tobaccoValue = values.tobacco;
     }
-    const result = await response.json();
-    return { raw: result };
+    const params = {
+      zip5: values.zipCode,
+      age: Number(values.age),
+      gender: values.gender === "male" ? "M" : "F",
+      tobacco: tobaccoValue,
+      plan: values.plan,
+      // Add other params as needed
+    };
+    // Replace with your deployed Firebase Cloud Function endpoint
+    const functionUrl = "https://us-central1-medicareally.cloudfunctions.net/getMedigapQuotes";
+    const response = await axios.post(functionUrl, params);
+    return { raw: response.data };
   } catch (e: any) {
     console.error("Error in getMedigapQuotes:", e);
     return { error: e.message || "Failed to fetch quotes." };
