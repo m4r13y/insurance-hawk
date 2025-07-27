@@ -1,7 +1,7 @@
 
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
+// import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics } from "firebase/analytics";
@@ -9,18 +9,18 @@ import type { FirebaseStorage } from 'firebase/storage';
 import type { Functions } from 'firebase/functions';
 
 const firebaseConfig = {
-        apiKey: "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
-        authDomain: "medicareally.firebaseapp.com",
-        projectId: "medicareally",
-        storageBucket: "medicareally.appspot.com",
-        messagingSenderId: "168459812655",
-        appId: "1:168459812655:web:401f6b21c424efb0672bda",
-        measurementId: "G-GZ708G7D8W"
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "medicareally.firebaseapp.com",
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "medicareally",
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "medicareally.appspot.com",
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "168459812655",
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:168459812655:web:401f6b21c424efb0672bda",
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-GZ708G7D8W"
       };
 
 let app: FirebaseApp | null = null;
 // let auth: Auth | null = null;
-let db: Firestore | null = null;
+// let db: Firestore | null = null; // Firestore removed for this app
 let storage: FirebaseStorage | null = null;
 let functions: Functions | null = null;
 let isFirebaseConfigured = false;
@@ -36,8 +36,7 @@ if (hasEssentialConfig) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     // auth = getAuth(app);
-    // Connect to the hawknest-database to match the Cloud Function
-    db = getFirestore(app, "hawknest-database");
+    // Firestore removed for this app
     storage = getStorage(app);
     functions = getFunctions(app);
     isFirebaseConfigured = true;
@@ -45,7 +44,7 @@ if (hasEssentialConfig) {
     console.error("Firebase initialization error:", e);
     app = null;
     // auth = null;
-    db = null;
+    // db = null; // Firestore removed for this app
     storage = null;
     functions = null;
     isFirebaseConfigured = false;
@@ -53,7 +52,7 @@ if (hasEssentialConfig) {
 }
 
 if (!isFirebaseConfigured) {
-    console.warn("Firebase is not configured or failed to initialize. Please check your .env file and Firebase project setup. User-related features will be disabled.");
+    console.warn("Firebase is not configured or failed to initialize. Please check your Firebase project setup. Database and storage features will be disabled.");
 }
 
-export { app, db, storage, functions, isFirebaseConfigured };
+export { app, storage, functions, isFirebaseConfigured };

@@ -1,11 +1,5 @@
 
 {
-  "firestore": {
-    "database": "hawknest-database",
-    "location": "nam5",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
   "functions": [
     {
       "source": "functions",
