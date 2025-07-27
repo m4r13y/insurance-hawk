@@ -12,10 +12,10 @@ const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
         authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "medicareally.firebaseapp.com",
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "medicareally",
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "medicareally.appspot.com",
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "medicareally.firebasestorage.app",
         messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "168459812655",
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:168459812655:web:401f6b21c424efb0672bda",
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-GZ708G7D8W"
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:168459812655:web:f9eeaeaecbd92275672bda",
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-HQKP8C1XX2"
       };
 
 let app: FirebaseApp | null = null;
@@ -23,6 +23,7 @@ let app: FirebaseApp | null = null;
 // let db: Firestore | null = null; // Firestore removed for this app
 let storage: FirebaseStorage | null = null;
 let functions: Functions | null = null;
+let analytics: any = null; // Analytics for this app
 let isFirebaseConfigured = false;
 
 const hasEssentialConfig = !!(
@@ -39,6 +40,7 @@ if (hasEssentialConfig) {
     // Firestore removed for this app
     storage = getStorage(app);
     functions = getFunctions(app);
+    analytics = getAnalytics(app);
     isFirebaseConfigured = true;
   } catch (e) {
     console.error("Firebase initialization error:", e);
@@ -55,4 +57,4 @@ if (!isFirebaseConfigured) {
     console.warn("Firebase is not configured or failed to initialize. Please check your Firebase project setup. Database and storage features will be disabled.");
 }
 
-export { app, storage, functions, isFirebaseConfigured };
+export { app, storage, functions, analytics, isFirebaseConfigured };
