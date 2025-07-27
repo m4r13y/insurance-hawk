@@ -34,19 +34,19 @@ interface NavItem {
 const getInsuranceItems: NavItem[] = [
   {
     title: "Health Quotes (Under 65)",
-    href: "/dashboard/health-quotes",
+    href: "/health-quotes",
     description: "Find individual & family health plans.",
     icon: Health01Icon,
   },
   {
     title: "Supplemental Quotes (65+)",
-    href: "/dashboard/quotes",
+    href: "/quotes",
     description: "Get quotes for Medigap, Dental, and more.",
     icon: DocumentTextIcon,
   },
   {
     title: "Submit Application",
-    href: "/dashboard/apply",
+    href: "/apply",
     description: "Complete and submit your insurance application.",
     icon: DocumentTextIcon,
   },
@@ -55,31 +55,31 @@ const getInsuranceItems: NavItem[] = [
 const toolsAndResourcesItems: NavItem[] = [
   {
     title: "Compare Plans",
-    href: "/dashboard/compare-plans",
+    href: "/compare-plans",
     description: "Side-by-side plan comparisons.",
     icon: GitCompareIcon,
   },
   {
     title: "Retirement Plan",
-    href: "/dashboard/recommendations",
+    href: "/recommendations",
     description: "Get a personalized retirement analysis.",
     icon: BankIcon,
   },
   {
     title: "Provider Lookup",
-    href: "/dashboard/provider-lookup",
+    href: "/provider-lookup",
     description: "Find Medicare-accepted providers.",
     icon: Stethoscope01Icon,
   },
   {
     title: "Education Center",
-    href: "/dashboard/education",
+    href: "/education",
     description: "Learn about Medicare with our AI assistant.",
     icon: BookOpen01Icon,
   },
   {
     title: "Resource Library",
-    href: "/dashboard/resources",
+    href: "/resources",
     description: "Articles, guides, and official documents.",
     icon: LibraryIcon,
   },
@@ -104,7 +104,7 @@ export function Header() {
     <header className="flex flex-wrap  md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
       <nav className="relative max-w-[85rem] w-full mx-auto md:flex md:items-center md:justify-between md:gap-3 py-2 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center gap-x-1">
-          <Link href="/dashboard" className="flex-none" aria-label="Brand">
+          <Link href="" className="flex-none" aria-label="Brand">
             <Logo />
           </Link>
 
@@ -122,7 +122,7 @@ export function Header() {
             <div className="py-2 md:py-0 flex flex-col md:flex-row md:items-center gap-0.5 md:gap-1">
               <div className="grow">
                 <div className="flex flex-col md:flex-row md:justify-end md:items-center gap-0.5 md:gap-1">
-                  <Link className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined}>
+                  <Link className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" href="" aria-current={pathname === '' ? 'page' : undefined}>
                     Home
                   </Link>
 
@@ -192,7 +192,7 @@ export function Header() {
                     </div>
                   </div>
 
-                  <Link href="/dashboard/documents" className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+                  <Link href="/documents" className="p-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
                     My Account
                   </Link>
                 </div>

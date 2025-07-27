@@ -30,9 +30,9 @@ export function AnnualChangesContent() {
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
         mediaLinks={[
-          { title: "Enrollment Periods Explained", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/enrollment-periods" },
-          { title: "How to Choose the Right Medicare Advantage Plan", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/compare-advantage-plans" },
-          { title: "How Medicare Drug Plans Work", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/drug-plans-explained" }
+          { title: "Enrollment Periods Explained", imageUrl: "https://placehold.co/320x320.png", href: "/resources/enrollment-periods" },
+          { title: "How to Choose the Right Medicare Advantage Plan", imageUrl: "https://placehold.co/320x320.png", href: "/resources/compare-advantage-plans" },
+          { title: "How Medicare Drug Plans Work", imageUrl: "https://placehold.co/320x320.png", href: "/resources/drug-plans-explained" }
         ]}
       />
     </div>

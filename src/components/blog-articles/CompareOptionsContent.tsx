@@ -30,9 +30,9 @@ export function CompareOptionsContent() {
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
         mediaLinks={[
-          { title: "How to Choose the Right Medicare Advantage Plan", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/compare-advantage-plans" },
-          { title: "Compare PDP Plans", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/compare-pdp-plans" },
-          { title: "Medicare Beginner's Guide", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/medicare-beginners-guide" }
+          { title: "How to Choose the Right Medicare Advantage Plan", imageUrl: "https://placehold.co/320x320.png", href: "/resources/compare-advantage-plans" },
+          { title: "Compare PDP Plans", imageUrl: "https://placehold.co/320x320.png", href: "/resources/compare-pdp-plans" },
+          { title: "Medicare Beginner's Guide", imageUrl: "https://placehold.co/320x320.png", href: "/resources/medicare-beginners-guide" }
         ]}
       />
     </div>

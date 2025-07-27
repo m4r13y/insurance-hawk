@@ -30,8 +30,8 @@ export function HipForIndividualsContent() {
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
         mediaLinks={[
-          { title: "Benefits of HIP Plans", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/benefits-of-hip-plans" },
-          { title: "Designing Hospital Indemnity Plans", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/designing-hip-plans" }
+          { title: "Benefits of HIP Plans", imageUrl: "https://placehold.co/320x320.png", href: "/resources/benefits-of-hip-plans" },
+          { title: "Designing Hospital Indemnity Plans", imageUrl: "https://placehold.co/320x320.png", href: "/resources/designing-hip-plans" }
         ]}
       />
     </div>

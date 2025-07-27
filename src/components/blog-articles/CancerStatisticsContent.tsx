@@ -131,7 +131,7 @@ export function CancerStatisticsContent() {
             <p>Having a plan in place doesn’t mean you’re expecting the worst. It means you’re smart enough to know that if it ever happens, you’ll be ready. Cancer doesn’t come with a warning, but protecting yourself from the financial side of it doesn’t have to be hard—or expensive.</p>
             
             <Button asChild size="lg" className="my-8 px-6 py-3">
-              <Link href="/dashboard/quotes?tab=cancer">Get a Cancer Insurance Quote</Link>
+              <Link href="/quotes?tab=cancer">Get a Cancer Insurance Quote</Link>
             </Button>
         </div>
 

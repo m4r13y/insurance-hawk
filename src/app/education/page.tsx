@@ -134,7 +134,7 @@ function Chatbot() {
                     </div>
                 </div>
                 <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/settings">
+                    <Link href="/settings">
                         <Phone className="mr-2 h-4 w-4" />
                         <span className="hidden sm:inline">Contact Us</span>
                     </Link>

@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
     '@type': 'Article',
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://www.theinsurancehawk.com/dashboard/resources/${resource.slug}`, 
+      '@id': `https://www.theinsurancehawk.com/resources/${resource.slug}`, 
     },
     headline: resource.title,
     description: resource.description,

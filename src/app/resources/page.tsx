@@ -93,7 +93,7 @@ export default function ResourcesPage() {
   
   const getResourceHref = (resource: ResourceCard) => {
     if (resource.type === 'article' && resource.slug) {
-      return `/dashboard/resources/${resource.slug}`;
+      return `/resources/${resource.slug}`;
     }
     return resource.url || '#';
   };

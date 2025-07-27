@@ -166,7 +166,7 @@ export function HipForAdvantageContent() {
             <p>Hospital indemnity insurance offers peace of mind for people with Medicare Advantage. With rising out-of-pocket costs, this small policy can deliver big financial relief.</p>
             
             <Button asChild size="lg" className="my-8 px-6 py-3">
-              <Link href="/dashboard/quotes?tab=hospital-indemnity">Compare Hospital Indemnity Plans</Link>
+              <Link href="/quotes?tab=hospital-indemnity">Compare Hospital Indemnity Plans</Link>
             </Button>
         </div>
 

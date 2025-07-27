@@ -71,7 +71,7 @@ export function EnrollmentPeriodsContent() {
                 <li>Sign up for a Part D prescription drug plan (PDP)</li>
             </ul>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
-                Missing your IEP can mean late enrollment penalties or gaps in coverage. Read our <Link href="/dashboard/resources/avoiding-penalties">guide on avoiding penalties</Link> for more information.
+                Missing your IEP can mean late enrollment penalties or gaps in coverage. Read our <Link href="/resources/avoiding-penalties">guide on avoiding penalties</Link> for more information.
             </blockquote>
             
             <h3 className="text-lg font-semibold">2. Annual Enrollment Period (AEP)</h3>
@@ -156,7 +156,7 @@ export function EnrollmentPeriodsContent() {
 
             <h2 className="text-xl font-bold">The Bottom Line</h2>
             <p>
-                Medicare enrollment windows can be confusing, but getting familiar with the key dates can save you money and stress. If you need help sorting out your options or have questions about the right plan for you, our team can guide you—just reach out for a free consultation. For more basic information, check out our <Link href="/dashboard/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.
+                Medicare enrollment windows can be confusing, but getting familiar with the key dates can save you money and stress. If you need help sorting out your options or have questions about the right plan for you, our team can guide you—just reach out for a free consultation. For more basic information, check out our <Link href="/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.
             </p>
             
             <Button size="lg" className="my-8 px-6 py-3">

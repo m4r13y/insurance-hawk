@@ -118,7 +118,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Instant Quotes Online",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   "plan-f": {
     title: "MEDIGAP PLAN F",
@@ -143,7 +143,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Plan F Quotes",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   "plan-n": {
     title: "MEDIGAP PLAN N",
@@ -167,7 +167,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Plan N Quotes",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   // Original Medicare Add-Ons
   "drug-plan": {
@@ -190,7 +190,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Drug Plan Quotes",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   "cancer-plan": {
     title: "CANCER PLAN",
@@ -212,7 +212,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Cancer Plan Quotes",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   "dental-vision": {
     title: "DENTAL, VISION & HEARING",
@@ -235,7 +235,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Dental/Vision/Hearing Quotes",
-    ctaUrl: "/dashboard/quotes",
+    ctaUrl: "/quotes",
   },
   // Advantage Plans
   "ppo": {
@@ -260,7 +260,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get PPO Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "hmo": {
     title: "HMO (Health Maintenance Organization)",
@@ -282,7 +282,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get HMO Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "c-snp": {
     title: "C-SNP (Chronic Condition Special Needs Plan)",
@@ -305,7 +305,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get C-SNP Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "d-snp": {
     title: "D-SNP (Dual Eligible Special Needs Plan)",
@@ -328,7 +328,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get D-SNP Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   // Advantage Add-Ons
   "cancer-insurance": {
@@ -352,7 +352,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Cancer Insurance Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "short-term": {
     title: "SHORT TERM CARE",
@@ -375,7 +375,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Short Term Care Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "hospital-indemnity": {
     title: "HOSPITAL INDEMNITY",
@@ -398,7 +398,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Hospital Indemnity Quotes",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
   "original-medicare": {
     title: "ORIGINAL MEDICARE",
@@ -449,7 +449,7 @@ const planData: Record<string, PlanData> = {
       ],
     },
     ctaText: "Get Medicare Advantage",
-    ctaUrl: "/dashboard/health-quotes",
+    ctaUrl: "/health-quotes",
   },
 };
 
@@ -524,7 +524,7 @@ export default function ComparePlansPage() {
     setSelectedPlan(isAdvantage ? "medicare-advantage" : "original-medicare");
   };
 
-  const handleBackToDashboard = () => {
+  const handleBackToHome = () => {
     router.back();
   };
 
@@ -544,7 +544,7 @@ export default function ComparePlansPage() {
               {/* Back Button - moved above the toggle */}
               <div className="px-3 pt-4 pb-2">
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleBackToDashboard} tooltip="Go Back">
+                  <SidebarMenuButton onClick={handleBackToHome} tooltip="Go Back">
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="w-4 h-4" />
                     <span>
                       {typeof window !== "undefined" && window.document.referrer
@@ -764,7 +764,7 @@ export default function ComparePlansPage() {
                                 className="p-0 h-auto text-blue-600 dark:text-blue-400 text-sm self-start mt-auto"
                                 onClick={() => {
                                   if (resource.slug) {
-                                    router.push(`/dashboard/resources/${resource.slug}`);
+                                    router.push(`/resources/${resource.slug}`);
                                   } else if (resource.url) {
                                     window.open(resource.url, '_blank');
                                   } else {

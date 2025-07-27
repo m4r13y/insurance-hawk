@@ -62,7 +62,7 @@ export function MedicareBeginnersGuideContent() {
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
                 <strong>Mary’s Story:</strong> Mary turned 65 in July. Three months before her birthday, she got a letter letting her know she’d be enrolled in Medicare automatically since she was already getting Social Security. Her friend John, who hadn’t filed for Social Security yet, had to sign up for Medicare on his own.
             </blockquote>
-            <p>Your <Link href="/dashboard/resources/enrollment-periods">enrollment window</Link> is 7 months: it starts three months before your birthday, includes your birthday month, and runs three months after. Missing this window can mean higher costs, so set a reminder.</p>
+            <p>Your <Link href="/resources/enrollment-periods">enrollment window</Link> is 7 months: it starts three months before your birthday, includes your birthday month, and runs three months after. Missing this window can mean higher costs, so set a reminder.</p>
             
             <h2 className="text-xl font-bold">What Are the Parts of Medicare—and What Do You Really Need?</h2>
             <p>Medicare has four main parts, but you don’t need to memorize them all. Here’s what matters:</p>
@@ -189,7 +189,7 @@ export function MedicareBeginnersGuideContent() {
 
             <h2 className="text-xl font-bold">Common Situations & What To Do</h2>
             <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Still working at 65?</strong> Ask your employer if you should delay Part B and D. Sometimes it makes sense to keep your job’s health plan, but don’t risk a <Link href="/dashboard/resources/avoiding-penalties">penalty by guessing</Link>. Check out our guide on <Link href="/dashboard/resources/working-past-65">how to handle Medicare when working past 65</Link> for more details.</li>
+                <li><strong>Still working at 65?</strong> Ask your employer if you should delay Part B and D. Sometimes it makes sense to keep your job’s health plan, but don’t risk a <Link href="/resources/avoiding-penalties">penalty by guessing</Link>. Check out our guide on <Link href="/resources/working-past-65">how to handle Medicare when working past 65</Link> for more details.</li>
                 <li><strong>Retiring later or already have health insurance?</strong> If you have other coverage (from work, a union, the VA, or TRICARE), talk to your benefits administrator. There are special enrollment periods if you lose this coverage later.</li>
                 <li><strong>Tight on money?</strong> Check for Extra Help, Medicare Savings Programs, or Medicaid—these can lower or even eliminate your premiums and copays if you qualify.</li>
                 <li><strong>Moved or want to change plans?</strong> Each fall (Oct 15–Dec 7) is Medicare Open Enrollment. You can switch plans or add coverage with no penalty.</li>
@@ -197,7 +197,7 @@ export function MedicareBeginnersGuideContent() {
             
             <h2 className="text-xl font-bold">Mistakes to Avoid</h2>
             <ul className="list-disc pl-6">
-                <li>Missing your 7-month sign-up window—<Link href="/dashboard/resources/avoiding-penalties">late sign-up can mean higher costs</Link> forever.</li>
+                <li>Missing your 7-month sign-up window—<Link href="/resources/avoiding-penalties">late sign-up can mean higher costs</Link> forever.</li>
                 <li>Skipping drug coverage—penalties apply even if you don’t take prescriptions now.</li>
                 <li>Not checking if your doctor or pharmacy is in your new plan’s network (especially with Medicare Advantage).</li>
                 <li>Forgetting to review your plan every year. Plans and coverage change.</li>
@@ -208,7 +208,7 @@ export function MedicareBeginnersGuideContent() {
 
             <h2 className="text-xl font-bold">Next Steps</h2>
             <p>Medicare doesn’t have to be confusing or overwhelming. Start by marking your calendar, decide what coverage fits your life, and ask questions along the way. After you enroll, review your plan each year, stay aware of new benefits, and get help if you need it. The right plan gives you peace of mind, saves money, and helps you get the care you need—now and for years to come.</p>
-            <p>Ready to get started? Head to Medicare.gov or call your local SHIP counselor today. For more specific questions, see our <Link href="/dashboard/resources/medicare-questions">50 Most Asked Medicare Questions article</Link>.</p>
+            <p>Ready to get started? Head to Medicare.gov or call your local SHIP counselor today. For more specific questions, see our <Link href="/resources/medicare-questions">50 Most Asked Medicare Questions article</Link>.</p>
             
             <Button size="lg" className="my-8 px-6 py-3">Schedule Your Medicare Review</Button>
 

@@ -1,6 +1,6 @@
 "use client"
 
-export default function DashboardPage() {
+export default function HomePage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
             <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">

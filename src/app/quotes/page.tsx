@@ -1064,7 +1064,7 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
                       <button
                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow"
                         onClick={() => {
-                          window.location.href = `/dashboard/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name || "")}&provider=${encodeURIComponent(featuredQuote.carrier?.name || "Unknown")}&premium=${totalPremium}`;
+                          window.location.href = `/apply?type=hospital-indemnity&planName=${encodeURIComponent(featuredQuote.plan_name || "")}&provider=${encodeURIComponent(featuredQuote.carrier?.name || "Unknown")}&premium=${totalPremium}`;
                         }}
                       >
                         Apply Now
@@ -1547,7 +1547,7 @@ function onDentalSubmit(values: z.infer<typeof dentalFormSchema>) {
                       </AlertDescription>
                     </Alert>
                     <div className="mt-6 flex justify-end">
-                      <Button asChild size="lg"><Link href="/dashboard/apply?type=life-insurance">Start Life Insurance Application</Link></Button>
+                      <Button asChild size="lg"><Link href="/apply?type=life-insurance">Start Life Insurance Application</Link></Button>
                     </div>
                   </div>
                 </div>

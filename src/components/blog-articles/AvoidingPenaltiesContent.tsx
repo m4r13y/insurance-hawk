@@ -127,9 +127,9 @@ export function AvoidingPenaltiesContent() {
         bio: "CFP | Medicare Specialist",
       }}
       mediaLinks={[
-        { title: "Enrollment Periods Explained", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/enrollment-periods" },
-        { title: "How to Handle Medicare If You’re Working After 65", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/working-past-65" },
-        { title: "How Medicare Drug Plans Work", imageUrl: "https://placehold.co/320x320.png", href: "/dashboard/resources/drug-plans-explained" }
+        { title: "Enrollment Periods Explained", imageUrl: "https://placehold.co/320x320.png", href: "/resources/enrollment-periods" },
+        { title: "How to Handle Medicare If You’re Working After 65", imageUrl: "https://placehold.co/320x320.png", href: "/resources/working-past-65" },
+        { title: "How Medicare Drug Plans Work", imageUrl: "https://placehold.co/320x320.png", href: "/resources/drug-plans-explained" }
       ]}
     />
     </div>

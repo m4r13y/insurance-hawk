@@ -62,7 +62,7 @@ export function CancerPlansWithAdvantageContent() {
                 <li>For non-medical expenses like travel, lodging, or special diets.</li>
                 <li>To replace lost income or pay household bills while you undergo treatment.</li>
             </ul>
-            <p>This flexibility makes lump-sum cancer policies especially helpful when you're facing a sudden health and financial crisis. Learn more by checking our <Link href="/dashboard/resources/cancer-statistics">cancer statistics article</Link>.</p>
+            <p>This flexibility makes lump-sum cancer policies especially helpful when you're facing a sudden health and financial crisis. Learn more by checking our <Link href="/resources/cancer-statistics">cancer statistics article</Link>.</p>
 
              <figure className="my-8">
               <Image 
@@ -119,7 +119,7 @@ export function CancerPlansWithAdvantageContent() {
                 <li>You want more control over where and how you receive care.</li>
                 <li>You're on a fixed income and want to avoid large surprise expenses.</li>
             </ul>
-            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn't a replacement for Medicare Advantage, but it can be a smart addition. For more foundational information, see our <Link href="/dashboard/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.</p>
+            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn't a replacement for Medicare Advantage, but it can be a smart addition. For more foundational information, see our <Link href="/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.</p>
             
             <FaqSection title="FAQs About Cancer Insurance and Medicare Advantage" items={faqItems} />
             

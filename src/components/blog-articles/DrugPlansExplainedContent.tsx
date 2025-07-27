@@ -85,7 +85,7 @@ export function DrugPlansExplainedContent() {
             </figure>
 
             <h2 className="text-xl font-bold">The Late Enrollment Penalty: Why You Need a Plan Now</h2>
-            <p>You might think you can skip a drug plan if you don’t take medications, but Medicare charges a late enrollment penalty for that. The fee is added to your monthly premium for life. The best way to avoid it is to get coverage when you’re first eligible, even if it's a low-cost plan. Learn more in our <Link href="/dashboard/resources/avoiding-penalties">Guide to Avoiding Penalties</Link>.</p>
+            <p>You might think you can skip a drug plan if you don’t take medications, but Medicare charges a late enrollment penalty for that. The fee is added to your monthly premium for life. The best way to avoid it is to get coverage when you’re first eligible, even if it's a low-cost plan. Learn more in our <Link href="/resources/avoiding-penalties">Guide to Avoiding Penalties</Link>.</p>
             
             <div className="overflow-x-auto my-6">
               <Table>
@@ -134,7 +134,7 @@ export function DrugPlansExplainedContent() {
             </p>
             
             <Button asChild size="lg" className="my-8 px-6 py-3">
-                <Link href="/dashboard/quotes?tab=medigap">Schedule Your Medicare Review</Link>
+                <Link href="/quotes?tab=medigap">Schedule Your Medicare Review</Link>
             </Button>
         </div>
 

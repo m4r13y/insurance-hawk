@@ -76,7 +76,7 @@ export function CompareAdvantagePlansContent() {
                     <strong>Review Prescription Drug Coverage:</strong> Not all plans cover the same drugs, and some plans have different rules about how you get your medicine. In 2025, out-of-pocket drug costs will be capped at $2,000 for the year. You can also choose to spread your costs throughout the year with new payment options.
                 </li>
                 <li>
-                    <strong>Compare Costs:</strong> Each plan sets its own costs, including monthly premiums, deductibles, and copays. Some plans have $0 premiums, but you still have to pay your Medicare Part B premium. Look at the plan’s yearly maximum out-of-pocket limit, since this protects you from very high costs. A <Link href="/dashboard/resources/hip-for-advantage">hospital indemnity plan</Link> can help cover these costs.
+                    <strong>Compare Costs:</strong> Each plan sets its own costs, including monthly premiums, deductibles, and copays. Some plans have $0 premiums, but you still have to pay your Medicare Part B premium. Look at the plan’s yearly maximum out-of-pocket limit, since this protects you from very high costs. A <Link href="/resources/hip-for-advantage">hospital indemnity plan</Link> can help cover these costs.
                 </li>
             </ol>
 

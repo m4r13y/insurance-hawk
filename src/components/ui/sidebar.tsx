@@ -204,7 +204,7 @@ const Sidebar = React.forwardRef<
           >
             <SheetTitle className="sr-only">Sidebar Menu</SheetTitle>
             <SheetDescription className="sr-only">
-              The main navigation menu for the dashboard.
+              The main navigation menu.
             </SheetDescription>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>

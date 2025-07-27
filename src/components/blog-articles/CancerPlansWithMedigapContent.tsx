@@ -83,7 +83,7 @@ export function CancerPlansWithMedigapContent() {
             </figure>
 
             <h2 className="text-xl font-bold">The Hidden Costs of Cancer Treatment</h2>
-            <p>Even with the right doctors, cancer care comes with extra financial pressure. Oral chemotherapy drugs might not be fully covered by your Part D plan. If you live far from a major treatment center, you might have to pay for travel and hotel stays. These are not covered by Medicare or Medigap, but they’re very real expenses. For more on the numbers, see our article on <Link href="/dashboard/resources/cancer-statistics">cancer statistics</Link>.</p>
+            <p>Even with the right doctors, cancer care comes with extra financial pressure. Oral chemotherapy drugs might not be fully covered by your Part D plan. If you live far from a major treatment center, you might have to pay for travel and hotel stays. These are not covered by Medicare or Medigap, but they’re very real expenses. For more on the numbers, see our article on <Link href="/resources/cancer-statistics">cancer statistics</Link>.</p>
             
             <h2 className="text-xl font-bold">How Cancer Insurance Fills the Gaps</h2>
             <p>Cancer insurance is a standalone policy that pays a lump-sum cash benefit if you’re diagnosed. That money can be used for anything you need—medical bills, travel, groceries, or even a mortgage payment. There are no restrictions. This flexibility means you can focus on getting better, not figuring out how to pay for care.</p>
@@ -108,7 +108,7 @@ export function CancerPlansWithMedigapContent() {
             {/* Notes: Every article should guide the reader on what to do next. */}
             {/* A prominent button is more effective than a simple text link. */}
             <Button asChild size="lg" className="my-8 px-6 py-3">
-              <Link href="/dashboard/quotes?tab=cancer">Explore Cancer Insurance Options</Link>
+              <Link href="/quotes?tab=cancer">Explore Cancer Insurance Options</Link>
             </Button>
         </div>
 

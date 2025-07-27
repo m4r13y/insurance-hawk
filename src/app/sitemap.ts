@@ -8,17 +8,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Static pages
   const staticRoutes = [
     '/',
-    '/dashboard',
-    '/dashboard/recommendations',
-    '/dashboard/provider-lookup',
-    '/dashboard/health-quotes',
-    '/dashboard/quotes',
-    '/dashboard/compare-plans',
-    '/dashboard/apply',
-    '/dashboard/documents',
-    '/dashboard/education',
-    '/dashboard/resources',
-    '/dashboard/settings',
+    '',
+    '/recommendations',
+    '/provider-lookup',
+    '/health-quotes',
+    '/quotes',
+    '/compare-plans',
+    '/apply',
+    '/documents',
+    '/education',
+    '/resources',
+    '/settings',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
@@ -30,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const articleRoutes = resourcesList
     .filter(resource => resource.slug)
     .map(resource => ({
-      url: `${baseUrl}/dashboard/resources/${resource.slug}`,
+      url: `${baseUrl}/resources/${resource.slug}`,
       lastModified: new Date(), // Ideally, you'd have a date in your resource data
       changeFrequency: 'monthly' as const,
       priority: 0.7,
