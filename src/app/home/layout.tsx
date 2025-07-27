@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react";
-import { Header } from "@/components/ui/header";
 
 
 type LayoutProps = {

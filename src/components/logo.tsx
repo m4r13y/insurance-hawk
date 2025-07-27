@@ -1,9 +1,10 @@
-import { cn } from '@/lib/utils';
-
+import insurancehawklogo from '@/lib/images/insurancehawklogo.png';
 export function Logo({className}: {className?: string}) {
   return (
-    <h1 className={cn("text-2xl font-bold tracking-tight", className)}>
-      Hawk<span className="text-primary">Nest</span>
-    </h1>
+    <img
+      src={insurancehawklogo.src}
+      alt="Insurance Hawk Logo"
+      className={`h-14 w-auto ${className || ''}`}
+    />
   );
 }

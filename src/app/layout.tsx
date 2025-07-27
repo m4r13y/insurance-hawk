@@ -4,7 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import PrelineScriptWrapper from '../components/PrelineScriptWrapper';
-import { Header } from "@/components/ui/header";
+import { HeaderLower } from "@/components/ui/header-lower";
+import { HeaderUpper } from "@/components/ui/header-upper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("font-sans antialiased", inter.variable)}>
-                <Header />
+                <HeaderUpper />
+                <HeaderLower />
               <main className="flex-1 p-4 sm:p-6 md:p-8">
                 {children}
               </main>
