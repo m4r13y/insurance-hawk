@@ -3,10 +3,10 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 // import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getFunctions } from "firebase/functions";
+// import { getFunctions } from "firebase/functions"; // Functions removed - not used in this app
 import { getAnalytics } from "firebase/analytics";
 import type { FirebaseStorage } from 'firebase/storage';
-import type { Functions } from 'firebase/functions';
+// import type { Functions } from 'firebase/functions'; // Functions removed - not used in this app
 
 const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
@@ -22,7 +22,7 @@ let app: FirebaseApp | null = null;
 // let auth: Auth | null = null;
 // let db: Firestore | null = null; // Firestore removed for this app
 let storage: FirebaseStorage | null = null;
-let functions: Functions | null = null;
+// let functions: Functions | null = null; // Functions removed - not used in this app
 let analytics: any = null; // Analytics for this app
 let isFirebaseConfigured = false;
 
@@ -39,7 +39,7 @@ if (hasEssentialConfig) {
     // auth = getAuth(app);
     // Firestore removed for this app
     storage = getStorage(app);
-    functions = getFunctions(app);
+    // functions = getFunctions(app); // Functions removed - not used in this app
     analytics = getAnalytics(app);
     isFirebaseConfigured = true;
   } catch (e) {
@@ -48,7 +48,7 @@ if (hasEssentialConfig) {
     // auth = null;
     // db = null; // Firestore removed for this app
     storage = null;
-    functions = null;
+    // functions = null; // Functions removed - not used in this app
     isFirebaseConfigured = false;
   }
 }
@@ -57,4 +57,4 @@ if (!isFirebaseConfigured) {
     console.warn("Firebase is not configured or failed to initialize. Please check your Firebase project setup. Database and storage features will be disabled.");
 }
 
-export { app, storage, functions, analytics, isFirebaseConfigured };
+export { app, storage, analytics, isFirebaseConfigured };
