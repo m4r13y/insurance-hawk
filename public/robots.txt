@@ -6,4 +6,4 @@ User-agent: *
 Disallow:
 
 # Sitemap location
-Sitemap: https://hawknest.com/sitemap.xml
+Sitemap: https://theinsurancehawk.com/sitemap.xml

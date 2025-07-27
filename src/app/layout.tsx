@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import PrelineScriptWrapper from '../components/PrelineScriptWrapper';
+import { Header } from "@/components/ui/header";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -11,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HawkNest",
-  description: "Your policies, all in one nest.",
+  title: "The Insurance Hawk",
+  description: "Save your money, keep your freedom",
 };
 
 export default function RootLayout({
@@ -23,6 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("font-sans antialiased", inter.variable)}>
+                <Header />
+              <main className="flex-1 p-4 sm:p-6 md:p-8">
+                {children}
+              </main>
         {children}
         <Toaster />
         <PrelineScriptWrapper />

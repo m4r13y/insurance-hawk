@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
     '@type': 'Article',
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://www.yourwebsite.com/dashboard/resources/${resource.slug}`, // Replace with your actual domain
+      '@id': `https://www.theinsurancehawk.com/dashboard/resources/${resource.slug}`, 
     },
     headline: resource.title,
     description: resource.description,
@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
     },
     publisher: {
       '@type': 'Organization',
-      name: 'HawkNest',
+      name: 'The Insurance Hawk',
       logo: {
         '@type': 'ImageObject',
         url: 'https://www.yourwebsite.com/logo.png', // Replace with your actual logo URL

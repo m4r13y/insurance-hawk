@@ -1,7 +1,6 @@
 
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
@@ -20,7 +19,7 @@ const firebaseConfig = {
       };
 
 let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
+// let auth: Auth | null = null;
 let db: Firestore | null = null;
 let storage: FirebaseStorage | null = null;
 let functions: Functions | null = null;
@@ -36,7 +35,7 @@ const hasEssentialConfig = !!(
 if (hasEssentialConfig) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
+    // auth = getAuth(app);
     // Connect to the hawknest-database to match the Cloud Function
     db = getFirestore(app, "hawknest-database");
     storage = getStorage(app);
@@ -45,7 +44,7 @@ if (hasEssentialConfig) {
   } catch (e) {
     console.error("Firebase initialization error:", e);
     app = null;
-    auth = null;
+    // auth = null;
     db = null;
     storage = null;
     functions = null;
@@ -57,4 +56,4 @@ if (!isFirebaseConfigured) {
     console.warn("Firebase is not configured or failed to initialize. Please check your .env file and Firebase project setup. User-related features will be disabled.");
 }
 
-export { app, auth, db, storage, functions, isFirebaseConfigured };
+export { app, db, storage, functions, isFirebaseConfigured };

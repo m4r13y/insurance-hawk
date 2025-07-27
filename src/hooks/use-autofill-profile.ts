@@ -45,7 +45,7 @@ const AUTOFILL_FIELDS = [
 ];
 
 export function useAutofillProfile(): AutofillHookReturn {
-  const [user] = useFirebaseAuth();
+  
   const { toast } = useToast();
   const [profileData, setProfileData] = useState<ProfileData>({});
   const [isLoading, setIsLoading] = useState(false);

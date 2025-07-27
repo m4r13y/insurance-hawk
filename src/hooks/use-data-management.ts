@@ -43,7 +43,7 @@ interface UseDataManagementReturn {
 }
 
 export function useDataManagement(): UseDataManagementReturn {
-  const [user] = useFirebaseAuth();
+  
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
