@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -191,6 +191,19 @@ export default function BusinessHub() {
   const [isCorporate, setIsCorporate] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("small-group-health");
 
+  // Apply dark theme to entire document when component mounts
+  useEffect(() => {
+    // Add dark class to html and body elements
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    
+    // Cleanup function to remove dark class when component unmounts
+    return () => {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    };
+  }, []);
+
   const currentPlans = isCorporate ? corporateServices : smallBusinessPlans;
   const currentAddOns = isCorporate ? corporateAddOns : smallBusinessAddOns;
   const currentData = businessData[selectedPlan] || businessData["small-group-health"];
@@ -210,11 +223,10 @@ export default function BusinessHub() {
   };
 
   return (
-    <div className="dark">
-      <SidebarProvider>
-        <div className="min-h-screen bg-neutral-900 flex overflow-hidden">
-          {/* Custom Sidebar for Business - Matching Main Sidebar Style */}
-          <Sidebar className="w-80">
+    <SidebarProvider>
+      <div className="min-h-screen bg-neutral-900 flex overflow-hidden">
+        {/* Custom Sidebar for Business - Matching Main Sidebar Style */}
+        <Sidebar className="w-80">
             <SidebarRail />
             <SidebarContent className="flex flex-col justify-between">
               <div>
@@ -427,6 +439,5 @@ export default function BusinessHub() {
           </main>
         </div>
       </SidebarProvider>
-    </div>
   );
 }

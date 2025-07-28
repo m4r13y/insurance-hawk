@@ -28,10 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("font-sans antialiased", inter.variable)}>
+      <body className={cn("font-sans antialiased bg-background text-foreground dark:bg-gray-1 dark:text-gray-12", inter.variable)}>
                 <HeaderUpper />
                 <MedicareHeader />
-              <main className="flex-1 p-4 sm:p-6 md:p-8">
+              <main className="flex-1 p-4 sm:p-6 md:p-8 dark:bg-gray-1">
                 {children}
               </main>
         <Toaster />
