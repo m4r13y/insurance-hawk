@@ -3,9 +3,8 @@ import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import PrelineScriptWrapper from '../components/PrelineScriptWrapper';
-import { HeaderLower } from "@/components/ui/header-lower";
-import { HeaderUpper } from "@/components/ui/header-upper";
+import { MedicareHeader } from "@/components/library/layout/medicare-header";
+import { HeaderUpper } from "@/components/library/layout/medicare-header-upper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,12 +30,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("font-sans antialiased", inter.variable)}>
                 <HeaderUpper />
-                <HeaderLower />
+                <MedicareHeader />
               <main className="flex-1 p-4 sm:p-6 md:p-8">
                 {children}
               </main>
         <Toaster />
-        <PrelineScriptWrapper />
       </body>
     </html>
   );

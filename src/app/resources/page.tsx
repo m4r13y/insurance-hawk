@@ -7,20 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ExternalLink,
-  Search,
-  Phone,
-  Star,
-  FileText,
-  Globe,
-  Heart,
-  Shield,
-  Calculator,
-  BookOpen,
-  Users,
-  AlertCircle,
-  Filter,
-} from "lucide-react";
+  ExternalLinkIcon,
+  MagnifyingGlassIcon,
+  SymbolIcon,
+  StarIcon,
+  FileTextIcon,
+  GlobeIcon,
+  HeartIcon,
+  TokensIcon,
+  ComponentInstanceIcon,
+  ReaderIcon,
+  PersonIcon,
+  ExclamationTriangleIcon,
+  MixerHorizontalIcon,
+} from "@radix-ui/react-icons";
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { resourcesList } from "@/resources/resourcesList";
@@ -29,7 +29,7 @@ import type { ResourceCard } from "@/resources/resourcesList";
 const resources = resourcesList;
 
 const categories = ["All", "Official", "Support", "Financial", "Education", "Health", "Tools", "Research"];
-const types = ["All", "article", "website", "document", "phone", "tool", "video"];
+const types = ["All", "article", "website", "document", "SymbolIcon", "tool", "video"];
 
 export default function ResourcesPage() {
   const router = useRouter();
@@ -54,26 +54,26 @@ export default function ResourcesPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'website': return <Globe className="w-4 h-4" />;
-      case 'document': return <FileText className="w-4 h-4" />;
-      case 'phone': return <Phone className="w-4 h-4" />;
-      case 'tool': return <Calculator className="w-4 h-4" />;
-      case 'video': return <BookOpen className="w-4 h-4" />;
-      case 'article': return <FileText className="w-4 h-4" />;
-      default: return <ExternalLink className="w-4 h-4" />;
+      case 'website': return <GlobeIcon className="w-4 h-4" />;
+      case 'document': return <FileTextIcon className="w-4 h-4" />;
+      case 'SymbolIcon': return <SymbolIcon className="w-4 h-4" />;
+      case 'tool': return <ComponentInstanceIcon className="w-4 h-4" />;
+      case 'video': return <ReaderIcon className="w-4 h-4" />;
+      case 'article': return <FileTextIcon className="w-4 h-4" />;
+      default: return <ExternalLinkIcon className="w-4 h-4" />;
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Official': return <Shield className="w-4 h-4" />;
-      case 'Support': return <Users className="w-4 h-4" />;
-      case 'Financial': return <Calculator className="w-4 h-4" />;
-      case 'Education': return <BookOpen className="w-4 h-4" />;
-      case 'Health': return <Heart className="w-4 h-4" />;
-      case 'Tools': return <Calculator className="w-4 h-4" />;
-      case 'Research': return <AlertCircle className="w-4 h-4" />;
-      default: return <ExternalLink className="w-4 h-4" />;
+      case 'Official': return <TokensIcon className="w-4 h-4" />;
+      case 'Support': return <PersonIcon className="w-4 h-4" />;
+      case 'Financial': return <ComponentInstanceIcon className="w-4 h-4" />;
+      case 'Education': return <ReaderIcon className="w-4 h-4" />;
+      case 'Health': return <HeartIcon className="w-4 h-4" />;
+      case 'Tools': return <ComponentInstanceIcon className="w-4 h-4" />;
+      case 'Research': return <ExclamationTriangleIcon className="w-4 h-4" />;
+      default: return <ExternalLinkIcon className="w-4 h-4" />;
     }
   };
 
@@ -86,8 +86,8 @@ export default function ResourcesPage() {
     e.preventDefault();
     if (resource.url) {
       window.open(resource.url, '_blank');
-    } else if (resource.phone) {
-      window.location.href = `tel:${resource.phone}`;
+    } else if (resource.SymbolIcon) {
+      window.location.href = `tel:${resource.SymbolIcon}`;
     }
   };
   
@@ -115,7 +115,7 @@ export default function ResourcesPage() {
         {/* Featured Resources */}
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Star className="w-6 h-6 text-yellow-500" />
+            <StarIcon className="w-6 h-6 text-yellow-500" />
             Featured Resources
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -124,7 +124,7 @@ export default function ResourcesPage() {
                 <a onClick={(e) => handleResourceClick(e, resource)} target={resource.url ? '_blank' : undefined} rel={resource.url ? 'noopener noreferrer' : undefined} className="block h-full">
                   <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {getIcon(resource.type)}
                           <CardTitle className="text-lg">{resource.title}</CardTitle>
@@ -144,7 +144,7 @@ export default function ResourcesPage() {
                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{resource.category.replace("'", "&apos;")}</span>
                         {resource.rating && (
                           <div className="flex items-center gap-1 ml-auto">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                             <span className="text-sm font-medium">{resource.rating}</span>
                           </div>
                         )}
@@ -165,7 +165,7 @@ export default function ResourcesPage() {
                           asChild
                         >
                           <span>
-                            <ExternalLink className="w-4 h-4 mr-2" />
+                            <ExternalLinkIcon className="w-4 h-4 mr-2" />
                             Visit Resource
                           </span>
                         </Button>
@@ -182,7 +182,7 @@ export default function ResourcesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
+              <MagnifyingGlassIcon className="w-5 h-5" />
               Find Resources
             </CardTitle>
             <CardDescription>
@@ -192,7 +192,7 @@ export default function ResourcesPage() {
           <CardContent className="space-y-4">
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Search resources, topics, or keywords..."
                 value={searchTerm}
@@ -204,7 +204,7 @@ export default function ResourcesPage() {
             {/* Filters */}
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
+                <MixerHorizontalIcon className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</span>
                 <select
                   value={selectedCategory}
@@ -267,14 +267,14 @@ export default function ResourcesPage() {
                 <a onClick={(e) => handleResourceClick(e, resource)} target={resource.url ? '_blank' : undefined} rel={resource.url ? 'noopener noreferrer' : undefined} className="block h-full">
                   <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           {getIcon(resource.type)}
                           <h3 className="font-semibold text-lg">{resource.title}</h3>
                         </div>
                         <div className="flex items-center gap-2">
                           {resource.featured && (
-                            <Star className="w-4 h-4 text-yellow-500" />
+                            <StarIcon className="w-4 h-4 text-yellow-500" />
                           )}
                           {resource.official && (
                             <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">
@@ -293,7 +293,7 @@ export default function ResourcesPage() {
                         </div>
                         {resource.rating && (
                           <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                             <span className="text-sm font-medium">{resource.rating}</span>
                           </div>
                         )}
@@ -313,7 +313,7 @@ export default function ResourcesPage() {
                           variant={resource.official ? "default" : "outline"}
                           className="flex-1"
                         >
-                          <ExternalLink className="w-4 h-4 mr-2" />
+                          <ExternalLinkIcon className="w-4 h-4 mr-2" />
                           Visit
                         </Button>
                       </div>
@@ -326,7 +326,7 @@ export default function ResourcesPage() {
           
           {filteredResources.length === 0 && (
             <div className="text-center py-12">
-              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <ExclamationTriangleIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No resources found</h3>
               <p className="text-gray-600 dark:text-gray-400">Try adjusting your search terms or filters.</p>
             </div>
@@ -336,9 +336,9 @@ export default function ResourcesPage() {
         {/* Help Section */}
         <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <CardContent className="p-6">
-            <div className="flex items-start gap-4">
+            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
-                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <PersonIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200">Need Personal Help?</h3>
@@ -347,7 +347,7 @@ export default function ResourcesPage() {
                 </p>
                 <Button asChild variant="outline" size="sm" className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900">
                   <a href="https://www.shiphelp.org" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" />
+                    <ExternalLinkIcon className="w-4 h-4 mr-2" />
                     Find Local SHIP
                   </a>
                 </Button>

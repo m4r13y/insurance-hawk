@@ -6,29 +6,30 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { 
-    Menu01Icon, 
-    Cancel01Icon, 
-    ArrowDown01Icon, 
-    ArrowRight01Icon, 
-    Rocket01Icon, 
-    PiggyBankIcon as BankIcon, 
-    HealthIcon as Health01Icon, 
-    File01Icon as DocumentTextIcon, 
-    GitCompareIcon, 
-    UserIcon as User01Icon, 
-    BookOpen01Icon, 
-    LibrariesIcon as LibraryIcon, 
-    Settings02Icon as Setting01Icon, 
-    StethoscopeIcon as Stethoscope01Icon 
-} from "@hugeicons/core-free-icons";
+    HamburgerMenuIcon,
+    Cross1Icon,
+    ChevronDownIcon,
+    ChevronRightIcon,
+    RocketIcon,
+    TokensIcon,
+    HeartIcon,
+    FileTextIcon,
+    GitHubLogoIcon,
+    PersonIcon,
+    ReaderIcon,
+    ArchiveIcon,
+    GearIcon,
+    ActivityLogIcon
+} from "@radix-ui/react-icons";
 
 interface NavItem {
   title: string
   href: string
   description: string
-  icon: any 
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const getInsuranceItems: NavItem[] = [
@@ -36,19 +37,19 @@ const getInsuranceItems: NavItem[] = [
     title: "Health Quotes (Under 65)",
     href: "/health-quotes",
     description: "Find individual & family health plans.",
-    icon: Health01Icon,
+    icon: HeartIcon,
   },
   {
     title: "Supplemental Quotes (65+)",
     href: "/quotes",
     description: "Get quotes for Medigap, Dental, and more.",
-    icon: DocumentTextIcon,
+    icon: FileTextIcon,
   },
   {
     title: "Submit Application",
     href: "/apply",
     description: "Complete and submit your insurance application.",
-    icon: DocumentTextIcon,
+    icon: FileTextIcon,
   },
 ];
 
@@ -57,38 +58,39 @@ const toolsAndResourcesItems: NavItem[] = [
     title: "Medicare",
     href: "/Medicare",
     description: "Side-by-side plan comparisons.",
-    icon: GitCompareIcon,
+    icon: GitHubLogoIcon,
   },
   {
     title: "Retirement Plan",
     href: "/recommendations",
     description: "Get a personalized retirement analysis.",
-    icon: BankIcon,
+    icon: TokensIcon,
   },
   {
     title: "Provider Lookup",
     href: "/provider-lookup",
     description: "Find Medicare-accepted providers.",
-    icon: Stethoscope01Icon,
+    icon: ActivityLogIcon,
   },
   {
     title: "Education Center",
     href: "/education",
     description: "Learn about Medicare with our AI assistant.",
-    icon: BookOpen01Icon,
+    icon: ReaderIcon,
   },
   {
     title: "Resource Library",
     href: "/resources",
     description: "Articles, guides, and official documents.",
-    icon: LibraryIcon,
+    icon: ArchiveIcon,
   },
 ];
 
 function MegaMenuLink({ item }: { item: NavItem }) {
+  const IconComponent = item.icon;
   return (
     <Link href={item.href} className="p-3 flex gap-x-4 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 rounded-lg dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-      <HugeiconsIcon icon={item.icon} className="shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200" />
+      <IconComponent className="shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200" />
       <div className="grow">
         <p className="font-medium text-sm text-gray-800 dark:text-neutral-200">{item.title}</p>
         <p className="text-sm text-gray-500 dark:text-neutral-500">{item.description}</p>
@@ -109,15 +111,40 @@ export function HeaderLower() {
           </Link>
 
           <div className="md:hidden flex items-center gap-2">
-            <button type="button" className="hs-collapse-toggle md:hidden relative size-9 flex justify-center items-center font-medium text-sm rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" id="hs-header-base-collapse"  aria-expanded="false" aria-controls="hs-header-base" aria-label="Toggle navigation"  data-hs-collapse="#hs-header-base" >
-              <HugeiconsIcon icon={Menu01Icon} className="hs-collapse-open:hidden size-4" />
-              <HugeiconsIcon icon={Cancel01Icon} className="hs-collapse-open:block shrink-0 hidden size-4" />
-              <span className="sr-only">Toggle navigation</span>
-            </button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <HamburgerMenuIcon className="size-4" />
+                  <span className="sr-only">Toggle navigation</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px]">
+                <div className="flex flex-col space-y-4 mt-6">
+                  <Link href="/Medicare/" className="text-sm font-medium">
+                    Medicare
+                  </Link>
+                  <Link href="/business/" className="text-sm font-medium">
+                    Business
+                  </Link>
+                  <Link href="/life/" className="text-sm font-medium">
+                    Life
+                  </Link>
+                  <Link href="/critical-illness/" className="text-sm font-medium">
+                    Critical Illness
+                  </Link>
+                  <Link href="/hospital-indemnity/" className="text-sm font-medium">
+                    Hospital Indemnity
+                  </Link>
+                  <Link href="/resources/" className="text-sm font-medium">
+                    Resources
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
-        <div id="hs-header-base" className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block "  aria-labelledby="hs-header-base-collapse" >
+        <div className="hidden md:block basis-full grow">
           <div className="overflow-hidden overflow-y-auto max-h-[75vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
             <div className="py-2 md:py-0 flex flex-col md:flex-row md:items-center gap-0.5 md:gap-1">
               <div className="grow">
@@ -149,7 +176,7 @@ export function HeaderLower() {
                       data-hs-dropdown-toggle
                     >
                       Tools & Resources
-                      <HugeiconsIcon icon={ArrowDown01Icon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <ChevronDownIcon className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
 
                     <div
@@ -175,7 +202,7 @@ export function HeaderLower() {
                                     </p>
                                     <p className="mt-3 inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 group-hover:underline group-focus:underline font-medium dark:text-blue-400">
                                         Contact an Advisor
-                                        <HugeiconsIcon icon={ArrowRight01Icon} className="shrink-0 size-4" />
+                                        <ChevronRightIcon className="shrink-0 size-4" />
                                     </p>
                                     </div>
                                 </a>
@@ -194,7 +221,7 @@ export function HeaderLower() {
                       aria-expanded="false"
                     >
                       Get Insurance
-                      <HugeiconsIcon icon={ArrowDown01Icon} className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
+                      <ChevronDownIcon className="hs-dropdown-open:-rotate-180 md:hs-dropdown-open:rotate-0 duration-300 shrink-0 size-4 ms-auto md:ms-1" />
                     </button>
                     <div
                       className="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 w-full hidden z-10 top-full start-0 min-w-60 md:bg-white md:shadow-md md:rounded-lg p-2 dark:md:bg-neutral-800 md:dark:border dark:md:border-neutral-700"

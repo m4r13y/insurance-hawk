@@ -21,18 +21,17 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import { HugeiconsIcon } from '@hugeicons/react';
 import { 
-    ShieldIcon,
-    HealthIcon,
-    ActivityIcon,
-    EyeIcon,
-    StethoscopeIcon,
-    ArrowLeft01Icon,
-    ArrowRight01Icon,
-    InformationCircleIcon,
-    File01Icon
-} from '@hugeicons/core-free-icons';
+    TokensIcon,
+    HeartIcon,
+    ActivityLogIcon,
+    EyeOpenIcon,
+    PersonIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    InfoCircledIcon,
+    FileTextIcon
+} from '@radix-ui/react-icons';
 import { Separator } from "@/components/ui/separator";
 
 
@@ -67,28 +66,28 @@ interface ResourceArticle {
 }
 
 const originalMedicarePlans: PlanType[] = [
-  { id: "plan-g", name: "Plan G", icon: ShieldIcon, isPopular: true },
-  { id: "plan-f", name: "Plan F", icon: ShieldIcon },
-  { id: "plan-n", name: "Plan N", icon: ShieldIcon },
+  { id: "plan-g", name: "Plan G", icon: TokensIcon, isPopular: true },
+  { id: "plan-f", name: "Plan F", icon: TokensIcon },
+  { id: "plan-n", name: "Plan N", icon: TokensIcon },
 ];
 
 const originalMedicareAddOns: PlanType[] = [
-  { id: "drug-plan", name: "Drug Plan (Part D)", icon: StethoscopeIcon },
-  { id: "cancer-plan", name: "Cancer Plan", icon: ActivityIcon },
-  { id: "dental-vision", name: "Dental, Vision & Hearing", icon: EyeIcon },
+  { id: "drug-plan", name: "Drug Plan (Part D)", icon: PersonIcon },
+  { id: "cancer-plan", name: "Cancer Plan", icon: ActivityLogIcon },
+  { id: "dental-vision", name: "Dental, Vision & Hearing", icon: EyeOpenIcon },
 ];
 
 const advantagePlans: PlanType[] = [
-  { id: "ppo", name: "PPO", icon: HealthIcon, isPopular: true },
-  { id: "hmo", name: "HMO", icon: HealthIcon },
-  { id: "c-snp", name: "C-SNP", icon: HealthIcon },
-  { id: "d-snp", name: "D-SNP", icon: HealthIcon },
+  { id: "ppo", name: "PPO", icon: HeartIcon, isPopular: true },
+  { id: "hmo", name: "HMO", icon: HeartIcon },
+  { id: "c-snp", name: "C-SNP", icon: HeartIcon },
+  { id: "d-snp", name: "D-SNP", icon: HeartIcon },
 ];
 
 const advantageAddOns: PlanType[] = [
-  { id: "cancer-insurance", name: "Cancer Insurance", icon: ActivityIcon },
-  { id: "short-term", name: "Short Term Care", icon: StethoscopeIcon },
-  { id: "hospital-indemnity", name: "Hospital Indemnity", icon: ShieldIcon },
+  { id: "cancer-insurance", name: "Cancer Insurance", icon: ActivityLogIcon },
+  { id: "short-term", name: "Short Term Care", icon: PersonIcon },
+  { id: "hospital-indemnity", name: "Hospital Indemnity", icon: TokensIcon },
 ];
 
 const planData: Record<string, PlanData> = {
@@ -100,19 +99,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Exclusive Cancer Centers", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Exclusive Cancer Centers", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon as any },
-        { label: "Plan G Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "None", icon: InformationCircleIcon as any },
-        { label: "Deductibles", value: "$257/yr", icon: InformationCircleIcon as any },
+        { label: "Part B Premium", value: "$185/mo *", icon: InfoCircledIcon as any },
+        { label: "Plan G Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "None", icon: InfoCircledIcon as any },
+        { label: "Deductibles", value: "$257/yr", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon as any },
-        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon as any },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InfoCircledIcon as any },
+        { label: "Health Questions", value: "Yes", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Instant Quotes Online",
@@ -125,19 +124,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "No Out-of-Pocket Costs", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "No Out-of-Pocket Costs", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon as any },
-        { label: "Plan F Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "None", icon: InformationCircleIcon as any },
-        { label: "Deductibles", value: "$0", icon: InformationCircleIcon as any },
+        { label: "Part B Premium", value: "$185/mo *", icon: InfoCircledIcon as any },
+        { label: "Plan F Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "None", icon: InfoCircledIcon as any },
+        { label: "Deductibles", value: "$0", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon as any },
-        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon as any },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InfoCircledIcon as any },
+        { label: "Health Questions", value: "Yes", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Plan F Quotes",
@@ -150,18 +149,18 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Use Any Doctor", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Visit Any Hospital", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon as any },
-        { label: "Plan N Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Up to $20", icon: InformationCircleIcon as any },
-        { label: "Deductibles", value: "$257/yr", icon: InformationCircleIcon as any },
+        { label: "Part B Premium", value: "$185/mo *", icon: InfoCircledIcon as any },
+        { label: "Plan N Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Up to $20", icon: InfoCircledIcon as any },
+        { label: "Deductibles", value: "$257/yr", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Dental, Vision, Hearing", value: "Separate", icon: InformationCircleIcon as any },
-        { label: "Health Questions", value: "Yes", icon: InformationCircleIcon as any },
+        { label: "Dental, Vision, Hearing", value: "Separate", icon: InfoCircledIcon as any },
+        { label: "Health Questions", value: "Yes", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Plan N Quotes",
@@ -175,16 +174,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Covers Most Prescriptions", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Covers Most Prescriptions", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Annual Deductible", value: "Up to $545", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Annual Deductible", value: "Up to $545", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Varies", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Preferred Pharmacies", value: "Yes", icon: InformationCircleIcon as any },
-        { label: "Coverage Gap", value: "Possible", icon: InformationCircleIcon as any },
+        { label: "Preferred Pharmacies", value: "Yes", icon: InfoCircledIcon as any },
+        { label: "Coverage Gap", value: "Possible", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Drug Plan Quotes",
@@ -197,16 +196,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Use Anywhere", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Use Anywhere", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "No Deductible", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "No Deductible", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Pays Directly to You", value: "Yes", icon: InformationCircleIcon as any },
-        { label: "No Network Restrictions", value: "Yes", icon: InformationCircleIcon as any },
+        { label: "Pays Directly to You", value: "Yes", icon: InfoCircledIcon as any },
+        { label: "No Network Restrictions", value: "Yes", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Cancer Plan Quotes",
@@ -219,17 +218,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Dental Coverage", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Vision Coverage", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Hearing Coverage", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Dental Coverage", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Vision Coverage", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Hearing Coverage", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Varies", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Choose Any Provider", value: "Yes", icon: InformationCircleIcon as any },
-        { label: "No Waiting Periods", value: "On some plans", icon: InformationCircleIcon as any },
+        { label: "Choose Any Provider", value: "Yes", icon: InfoCircledIcon as any },
+        { label: "No Waiting Periods", value: "On some plans", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Dental/Vision/Hearing Quotes",
@@ -243,18 +242,18 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "No Referral Needed", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InformationCircleIcon as any },
+        { label: "See Any Doctor (Higher Cost Out-of-Network)", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "No Referral Needed", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$50", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Out-of-Network Cost", value: "Higher", icon: InformationCircleIcon },
+        { label: "Monthly Premium", value: "$0-$50", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Out-of-Network Cost", value: "Higher", icon: InfoCircledIcon },
       ],
       details: [
-        { label: "Network Size", value: "Large", icon: InformationCircleIcon as any },
-        { label: "Prior Authorization", value: "Sometimes", icon: InformationCircleIcon as any },
+        { label: "Network Size", value: "Large", icon: InfoCircledIcon as any },
+        { label: "Prior Authorization", value: "Sometimes", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get PPO Quotes",
@@ -267,16 +266,16 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Coordinated Care", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InformationCircleIcon as any },
+        { label: "Coordinated Care", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Extra Benefits (Dental, Vision, Hearing)", value: "Most", icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$30", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Low", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "$0-$30", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Low", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Referral Needed", value: "Yes", icon: InformationCircleIcon as any },
-        { label: "Network Size", value: "Medium-Large", icon: InformationCircleIcon as any },
+        { label: "Referral Needed", value: "Yes", icon: InfoCircledIcon as any },
+        { label: "Network Size", value: "Medium-Large", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get HMO Quotes",
@@ -289,17 +288,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Condition-Specific Care", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Care Coordination", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Extra Benefits", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Condition-Specific Care", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Care Coordination", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Extra Benefits", value: "Varies", icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0-$40", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "$0-$40", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Varies", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Eligibility", value: "Specific Chronic Condition", icon: InformationCircleIcon as any },
-        { label: "Network Size", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Eligibility", value: "Specific Chronic Condition", icon: InfoCircledIcon as any },
+        { label: "Network Size", value: "Varies", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get C-SNP Quotes",
@@ -312,17 +311,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Extra Support Services", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Extra Benefits", value: "Most", icon: InformationCircleIcon as any },
+        { label: "Medicare & Medicaid Coordination", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Extra Support Services", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Extra Benefits", value: "Most", icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "$0", icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Low/None", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "$0", icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Low/None", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Eligibility", value: "Medicare & Medicaid", icon: InformationCircleIcon as any },
-        { label: "Network Size", value: "Varies", icon: InformationCircleIcon as any },
+        { label: "Eligibility", value: "Medicare & Medicaid", icon: InfoCircledIcon as any },
+        { label: "Network Size", value: "Varies", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get D-SNP Quotes",
@@ -336,17 +335,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Lump-Sum Benefit", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "No Deductible", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "No Deductible", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Use Anywhere", value: "Yes", icon: InformationCircleIcon as any },
-        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon as any },
+        { label: "Use Anywhere", value: "Yes", icon: InfoCircledIcon as any },
+        { label: "Waiting Period", value: "Possible", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Cancer Insurance Quotes",
@@ -359,17 +358,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Skilled Nursing Coverage", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Rehabilitation", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Home Health Care", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Skilled Nursing Coverage", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Rehabilitation", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Home Health Care", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Daily Benefit", value: "$100-$300", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Daily Benefit", value: "$100-$300", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Benefit Period", value: "Up to 360 days", icon: InformationCircleIcon as any },
-        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon as any },
+        { label: "Benefit Period", value: "Up to 360 days", icon: InfoCircledIcon as any },
+        { label: "Waiting Period", value: "Possible", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Short Term Care Quotes",
@@ -382,17 +381,17 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       benefits: [
-        { label: "Daily Hospital Benefit", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InformationCircleIcon as any },
-        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Daily Hospital Benefit", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Pays Directly to You", value: "✓", highlight: true, icon: InfoCircledIcon as any },
+        { label: "No Network Restrictions", value: "✓", highlight: true, icon: InfoCircledIcon as any },
       ],
       costs: [
-        { label: "Monthly Premium", value: "Varies", icon: InformationCircleIcon as any },
-        { label: "Daily Benefit", value: "$100-$500", icon: InformationCircleIcon as any },
+        { label: "Monthly Premium", value: "Varies", icon: InfoCircledIcon as any },
+        { label: "Daily Benefit", value: "$100-$500", icon: InfoCircledIcon as any },
       ],
       details: [
-        { label: "Benefit Period", value: "Up to 365 days", icon: InformationCircleIcon as any },
-        { label: "Waiting Period", value: "Possible", icon: InformationCircleIcon as any },
+        { label: "Benefit Period", value: "Up to 365 days", icon: InfoCircledIcon as any },
+        { label: "Waiting Period", value: "Possible", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Hospital Indemnity Quotes",
@@ -405,19 +404,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/hzP_KO6fwLU",
     keyInfo: {
       details: [
-        { label: "Original Medicare", value: "Part A + Part B", icon: InformationCircleIcon as any },
-        { label: "Part A", value: "Hospital Coverage", icon: InformationCircleIcon as any },
-        { label: "Part B", value: "Medical Coverage", icon: InformationCircleIcon as any },
-        { label: "Part D", value: "Prescription Drug Plan", icon: InformationCircleIcon as any },
-        { label: "Part C", value: "Medicare Advantage", icon: InformationCircleIcon as any },
+        { label: "Original Medicare", value: "Part A + Part B", icon: InfoCircledIcon as any },
+        { label: "Part A", value: "Hospital Coverage", icon: InfoCircledIcon as any },
+        { label: "Part B", value: "Medical Coverage", icon: InfoCircledIcon as any },
+        { label: "Part D", value: "Prescription Drug Plan", icon: InfoCircledIcon as any },
+        { label: "Part C", value: "Medicare Advantage", icon: InfoCircledIcon as any },
       ],
       premiums: [
-        { label: "Part A Premium", value: "$0 *", icon: InformationCircleIcon as any },
-        { label: "Part B Premium", value: "$185/mo *", icon: InformationCircleIcon as any },
+        { label: "Part A Premium", value: "$0 *", icon: InfoCircledIcon as any },
+        { label: "Part B Premium", value: "$185/mo *", icon: InfoCircledIcon as any },
       ],
       deductibles: [
-        { label: "Part A Deductible", value: "$1,676 *", icon: InformationCircleIcon as any },
-        { label: "Part B Deductible", value: "$257/yr *", icon: InformationCircleIcon as any },
+        { label: "Part A Deductible", value: "$1,676 *", icon: InfoCircledIcon as any },
+        { label: "Part B Deductible", value: "$257/yr *", icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Apply for Original Medicare",
@@ -431,19 +430,19 @@ const planData: Record<string, PlanData> = {
     videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     keyInfo: {
       costs: [
-        { label: "Part B Premium", value: "$185/mo *", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Copays", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Deductibles", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Skilled Nursing", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Hospitalization Cost", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Cancer", value: "20%", icon: InformationCircleIcon as any },
+        { label: "Part B Premium", value: "$185/mo *", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Copays", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Deductibles", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Skilled Nursing", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Hospitalization Cost", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Cancer", value: "20%", icon: InfoCircledIcon as any },
       ],
       benefits: [
-        { label: "Dental, Vision, Hearing", value: "Most", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Dental, Vision, Hearing", value: "Most", highlight: true, icon: InfoCircledIcon as any },
       ],
       deductibles: [
-        { label: "Networks", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
-        { label: "Prior Authorization", value: "Varies", highlight: true, icon: InformationCircleIcon as any },
+        { label: "Networks", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
+        { label: "Prior Authorization", value: "Varies", highlight: true, icon: InfoCircledIcon as any },
       ],
     },
     ctaText: "Get Medicare Advantage",
@@ -484,7 +483,7 @@ const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyI
                 {items.map((item, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            {item.icon && typeof item.icon === "object" && <HugeiconsIcon icon={item.icon} className="h-4 w-4" />}
+                            {item.icon && typeof item.icon === "object" && <item.icon className="h-4 w-4" />}
                             <span>{item.label}</span>
                         </div>
                         <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
@@ -539,7 +538,7 @@ export default function MedicarePage() {
               <div className="px-3 pt-4 pb-2">
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={handleBackToHome} tooltip="Go Back">
-                    <HugeiconsIcon icon={ArrowLeft01Icon} className="w-4 h-4" />
+                    <ChevronLeftIcon className="w-4 h-4" />
                     <span>
                       {typeof window !== "undefined" && window.document.referrer
                         ? (() => {
@@ -589,7 +588,7 @@ export default function MedicarePage() {
                         isActive={selectedPlan === plan.id}
                         tooltip={plan.name}
                       >
-                        <HugeiconsIcon icon={plan.icon} className="w-4 h-4" />
+                        <plan.icon className="w-4 h-4" />
                         <span>{plan.name}</span>
                         {plan.isPopular && selectedPlan !== plan.id && (
                           <Badge variant="secondary" className="ml-auto text-xs">
@@ -613,7 +612,7 @@ export default function MedicarePage() {
                         isActive={selectedPlan === addon.id}
                         tooltip={addon.name}
                       >
-                        <HugeiconsIcon icon={addon.icon} className="w-4 h-4" />
+                        <addon.icon className="w-4 h-4" />
                         <span>{addon.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -664,7 +663,7 @@ export default function MedicarePage() {
                   className={`block p-4 w-full text-center ${themeColors.button} text-white py-3 text-base font-semibold rounded-xl`}
                 >
                   <div className="flex justify-center items-center">
-                    {currentData.ctaText} <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4"/>
+                    {currentData.ctaText} <ChevronRightIcon className="ml-2 h-4 w-4"/>
                   </div>
                 </Link>
               </div>
@@ -741,7 +740,7 @@ export default function MedicarePage() {
                             <CardContent className="p-6 flex flex-col h-full">
                               <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <HugeiconsIcon icon={File01Icon} className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                  <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
@@ -766,7 +765,7 @@ export default function MedicarePage() {
                                   }
                                 }}
                               >
-                                {resource.linkLabel} <HugeiconsIcon icon={ArrowRight01Icon} className="w-4 h-4 ml-1" />
+                                {resource.linkLabel} <ChevronRightIcon className="w-4 h-4 ml-1" />
                               </Button>
                             </CardContent>
                           </Card>

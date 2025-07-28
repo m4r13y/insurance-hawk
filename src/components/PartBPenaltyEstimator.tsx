@@ -81,7 +81,7 @@ export const PartBPenaltyEstimator: React.FC = () => {
       </div>
       {showResult && (
         <div id="partb-modal" className="fixed inset-0 z-80 overflow-x-hidden overflow-y-auto flex items-center justify-center bg-black bg-opacity-40" role="dialog" tabIndex={-1} aria-labelledby="partb-modal-label">
-          <div className="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-100 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto">
+          <div className="mt-0 opacity-100 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto">
             <div className="bg-white border border-gray-200 rounded-xl shadow-2xs pointer-events-auto">
               <div className="p-6 sm:p-7">
                 <div className="text-center">
