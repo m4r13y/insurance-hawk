@@ -23,7 +23,7 @@ let app: FirebaseApp | null = null;
 // let db: Firestore | null = null; // Firestore removed for this app
 let storage: FirebaseStorage | null = null;
 // let functions: Functions | null = null; // Functions removed - not used in this app
-let analytics: any = null; // Analytics for this app
+let analytics: any = null; // Analytics for this app - using any due to Firebase types
 let isFirebaseConfigured = false;
 
 const hasEssentialConfig = !!(

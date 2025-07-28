@@ -35,9 +35,9 @@ import { CancerPlansWithAdvantageContent } from "@/components/blog-articles/Canc
 
 
 interface BlogArticlePageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 // Generate static pages for each resource with a slug
@@ -51,7 +51,8 @@ export async function generateStaticParams() {
 
 // Dynamically generate metadata for each page
 export async function generateMetadata({ params }: BlogArticlePageProps): Promise<Metadata> {
-  const resource = resourcesList.find(r => r.slug === params.slug);
+  const { slug } = await params;
+  const resource = resourcesList.find(r => r.slug === slug);
   if (!resource) {
     return {
       title: "Resource Not Found",
@@ -128,8 +129,8 @@ const articleComponents: Record<string, React.ComponentType> = {
   // Add more as you add new article components
 };
 
-export default function BlogArticlePage({ params }: BlogArticlePageProps) {
-  const { slug } = params;
+export default async function BlogArticlePage({ params }: BlogArticlePageProps) {
+  const { slug } = await params;
   const resource = resourcesList.find(r => r.slug === slug);
   const ArticleComponent = articleComponents[slug];
 
