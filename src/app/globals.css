@@ -594,3 +594,13 @@
     transform: translateX(100%);
   }
 }
+
+/* Force navigation menu background */
+[data-radix-navigation-menu-viewport] {
+  background-color: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.dark [data-radix-navigation-menu-viewport] {
+  background-color: hsl(var(--background)) !important;
+}

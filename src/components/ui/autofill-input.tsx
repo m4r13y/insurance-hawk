@@ -7,7 +7,7 @@ import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/f
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lock } from "lucide-react";
+import { LockClosedIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
 interface AutofillInputProps {
@@ -46,7 +46,7 @@ function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, for
                             className="bg-gray-50 text-gray-600 cursor-pointer pr-10"
                             onClick={() => setShowConfirmDialog(true)}
                         />
-                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <LockClosedIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground mt-1">

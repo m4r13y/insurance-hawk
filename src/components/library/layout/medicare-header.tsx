@@ -8,7 +8,7 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon, BackpackIcon, PersonIcon } from '@radix-ui/react-icons';
 
 const medicarePages = [
   {
@@ -33,16 +33,52 @@ const medicarePages = [
   }
 ];
 
+const businessPages = [
+  {
+    title: 'Small Business',
+    href: '/business/',
+    description: 'Insurance solutions for small businesses'
+  },
+  {
+    title: 'Corporate Plans',
+    href: '/business/corporate',
+    description: 'Enterprise-level insurance coverage'
+  },
+  {
+    title: 'Employee Benefits',
+    href: '/business/benefits',
+    description: 'Comprehensive employee benefit packages'
+  }
+];
+
+const individualPages = [
+  {
+    title: 'Health Insurance',
+    href: '/individual/',
+    description: 'Individual and family health coverage'
+  },
+  {
+    title: 'Life Insurance',
+    href: '/individual/life',
+    description: 'Term and permanent life insurance options'
+  },
+  {
+    title: 'Cancer Plans',
+    href: '/individual/cancer',
+    description: 'Supplemental cancer insurance coverage'
+  }
+];
+
 const resources = [
   {
     title: 'Blog Articles',
-    href: '/resources/',
-    description: 'Educational content about Medicare options'
+    href: '/library/',
+    description: 'Educational content about insurance options'
   },
   {
     title: 'Guides & Tools',
-    href: '/resources/guides',
-    description: 'Helpful Medicare planning resources'
+    href: '/library/guides',
+    description: 'Helpful insurance planning resources'
   }
 ];
 
@@ -59,6 +95,88 @@ export function MedicareHeader() {
           </Link>
           <NavigationMenu>
             <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="h-9">
+                  <BackpackIcon className="mr-2 h-4 w-4" />
+                  Business
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <li className="row-span-3">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          href="/business/"
+                        >
+                          <BackpackIcon className="h-6 w-6" />
+                          <div className="mb-2 mt-4 text-lg font-medium">
+                            Business Hub
+                          </div>
+                          <p className="text-sm leading-tight text-muted-foreground">
+                            Comprehensive insurance solutions for businesses of all sizes, from startups to corporations.
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    {businessPages.map((page) => (
+                      <li key={page.href}>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href={page.href}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{page.title}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              {page.description}
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="h-9">
+                  <PersonIcon className="mr-2 h-4 w-4" />
+                  Individual
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <li className="row-span-3">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          href="/individual/"
+                        >
+                          <PersonIcon className="h-6 w-6" />
+                          <div className="mb-2 mt-4 text-lg font-medium">
+                            Individual Hub
+                          </div>
+                          <p className="text-sm leading-tight text-muted-foreground">
+                            Personal insurance solutions including health, life, and supplemental coverage options.
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    {individualPages.map((page) => (
+                      <li key={page.href}>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href={page.href}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{page.title}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              {page.description}
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="h-9">
                   <ActivityLogIcon className="mr-2 h-4 w-4" />
@@ -150,6 +268,38 @@ export function MedicareHeader() {
             </Link>
             <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
               <div className="flex flex-col space-y-3">
+                <div className="flex flex-col space-y-3 pt-6">
+                  <h4 className="font-medium">Business</h4>
+                  {businessPages.map((page) => (
+                    <Link
+                      key={page.href}
+                      href={page.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "text-muted-foreground hover:text-foreground",
+                        pathname === page.href && "text-foreground"
+                      )}
+                    >
+                      {page.title}
+                    </Link>
+                  ))}
+                </div>
+                <div className="flex flex-col space-y-3 pt-6">
+                  <h4 className="font-medium">Individual</h4>
+                  {individualPages.map((page) => (
+                    <Link
+                      key={page.href}
+                      href={page.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "text-muted-foreground hover:text-foreground",
+                        pathname === page.href && "text-foreground"
+                      )}
+                    >
+                      {page.title}
+                    </Link>
+                  ))}
+                </div>
                 <div className="flex flex-col space-y-3 pt-6">
                   <h4 className="font-medium">Medicare</h4>
                   {medicarePages.map((page) => (

@@ -1,4 +1,4 @@
-"use"use client";
+"use client";
 
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,19 +192,22 @@ export default function ResourcesPage() {
             </Card>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
 
-import React from "react";
-
-export default function ResourcesPage() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-4xl font-bold mb-4">Resource Library</h1>
-        <p className="text-lg text-gray-600">Resources page is working!</p>
+        {/* Call to Action */}
+        <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center">
+          <h3 className="text-2xl font-bold mb-4">Can't Find What You're Looking For?</h3>
+          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+            Our team of insurance experts is here to help you find the right information and make informed decisions about your coverage.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-50">
+              Contact an Expert
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+              Schedule a Consultation
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

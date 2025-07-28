@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { CheckIcon, CaretSortIcon } from "@radix-ui/react-icons"
 
 export type ComboboxOption = { value: string; label: string; }
 export type ComboboxGroup = { heading: string; options: ComboboxOption[]; }
@@ -64,7 +64,7 @@ export function Combobox({
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
           {displayValue || placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
@@ -81,7 +81,7 @@ export function Combobox({
                 <CommandGroup key={group.heading} heading={group.heading}>
                   {group.options.map((option) => (
                     <CommandItem key={option.value} value={option.value} onSelect={handleSelect}>
-                      <Check className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")} />
+                      <CheckIcon className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")} />
                       {option.label}
                     </CommandItem>
                   ))}
@@ -91,7 +91,7 @@ export function Combobox({
               <CommandGroup>
                 {options?.map((option) => (
                   <CommandItem key={option.value} value={option.value} onSelect={handleSelect}>
-                    <Check className={cn("mr-2 h-4 w-4", value === option.value && !onInputChange ? "opacity-100" : "opacity-0")} />
+                    <CheckIcon className={cn("mr-2 h-4 w-4", value === option.value && !onInputChange ? "opacity-100" : "opacity-0")} />
                     {option.label}
                   </CommandItem>
                 ))}

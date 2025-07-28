@@ -483,7 +483,7 @@ const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyI
                 {items.map((item, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            {item.icon && typeof item.icon === "object" && <item.icon className="h-4 w-4" />}
+                            {item.icon && React.createElement(item.icon, { className: "h-4 w-4" })}
                             <span>{item.label}</span>
                         </div>
                         <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
