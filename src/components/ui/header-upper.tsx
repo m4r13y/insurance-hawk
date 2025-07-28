@@ -52,8 +52,8 @@ const getInsuranceItems: NavItem[] = [
 
 const toolsAndResourcesItems: NavItem[] = [
   {
-    title: "Compare Plans",
-    href: "/compare-plans",
+    title: "Medicare",
+    href: "/Medicare",
     description: "Side-by-side plan comparisons.",
     icon: GitCompareIcon,
   },
@@ -102,7 +102,7 @@ export function HeaderUpper() {
     <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
       <nav className="relative max-w-[85rem] w-full mx-auto md:flex md:items-center md:justify-between md:gap-3 py-6 px-4 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center gap-x-1">
-                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/medicare/" aria-current={pathname === '' ? 'page' : undefined}>
+                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/Medicare/" aria-current={pathname === '' ? 'page' : undefined}>
                     Medicare
                   </Link>
 

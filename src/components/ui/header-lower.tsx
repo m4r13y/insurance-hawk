@@ -54,8 +54,8 @@ const getInsuranceItems: NavItem[] = [
 
 const toolsAndResourcesItems: NavItem[] = [
   {
-    title: "Compare Plans",
-    href: "/compare-plans",
+    title: "Medicare",
+    href: "/Medicare",
     description: "Side-by-side plan comparisons.",
     icon: GitCompareIcon,
   },
@@ -122,6 +122,18 @@ export function HeaderLower() {
             <div className="py-2 md:py-0 flex flex-col md:flex-row md:items-center gap-0.5 md:gap-1">
               <div className="grow">
                 <div className="flex flex-col md:flex-row md:justify-end md:items-center gap-0.5 md:gap-1">
+                   <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/Medicare/" aria-current={pathname === '' ? 'page' : undefined}>
+                    Medicare
+                  </Link>
+
+                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/business/" aria-current={pathname === '' ? 'page' : undefined}>
+                    Business
+                  </Link>
+
+                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/individual/" aria-current={pathname === '' ? 'page' : undefined}>
+                    Individual
+                  </Link>
+                  
                   <Link className="p-2 mr-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" href="" aria-current={pathname === '' ? 'page' : undefined}>
                     Home
                   </Link>

@@ -13,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/provider-lookup',
     '/health-quotes',
     '/quotes',
-    '/compare-plans',
+    '/medicare',
     '/apply',
     '/documents',
     '/education',

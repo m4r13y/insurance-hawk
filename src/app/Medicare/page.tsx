@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -497,7 +495,7 @@ const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyI
     )
 }
 
-export default function ComparePlansPage() {
+export default function MedicarePage() {
   const router = useRouter();
   const [isAdvantage, setIsAdvantage] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("original-medicare");
@@ -532,15 +530,11 @@ export default function ComparePlansPage() {
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex overflow-hidden">
-        {/* Custom Sidebar for Compare Plans - Matching Main Sidebar Style */}
+        {/* Custom Sidebar for Medicare - Matching Main Sidebar Style */}
         <Sidebar className="w-80">
           <SidebarRail />
           <SidebarContent className="flex flex-col justify-between">
             <div>
-              <SidebarHeader>
-                <Logo />
-              </SidebarHeader>
-
               {/* Back Button - moved above the toggle */}
               <div className="px-3 pt-4 pb-2">
                 <SidebarMenuItem>

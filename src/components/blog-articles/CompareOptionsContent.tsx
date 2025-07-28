@@ -13,7 +13,7 @@ export function CompareOptionsContent() {
           title="Compare Options"
           category="Medicare"
           date="July 22, 2025"
-          intro="Compare plans side by side to see what works best for you."
+          intro="Medicare side by side to see what works best for you."
           breadcrumbLabel="Resources"
         />
         <div className="prose prose-lg dark:prose-invert max-w-none">

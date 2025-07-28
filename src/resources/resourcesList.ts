@@ -1,4 +1,4 @@
-// Comprehensive list of Helpful Resources for Compare Plans
+// Comprehensive list of Helpful Resources for Medicare
 // Each resource can be used to generate article/blog pages and filter by product
 
 export interface ResourceCard {
@@ -35,7 +35,7 @@ export interface ResourceCard {
 
 export const resourcesList: ResourceCard[] = [
   // --- BEGIN CSV IMPORT ---
-  { rating: null, id: null, official: null, phone: null, url: null, category: "", featured: false, tags: null, title: "Compare Options", type: "Guide", linkLabel: "View", duration: "6", durationUnit: "min read", description: "Compare plans side by side to see what works best for you.", slug: "compare-options", products: { ogMedicare: true, advantage: true, planG: true, planN: true, planF: true, hmo: true, ppo: true, snp: true, pdp: false, cancer: false, hip: false, dvh: false } },
+  { rating: null, id: null, official: null, phone: null, url: null, category: "", featured: false, tags: null, title: "Compare Options", type: "Guide", linkLabel: "View", duration: "6", durationUnit: "min read", description: "Medicare side by side to see what works best for you.", slug: "compare-options", products: { ogMedicare: true, advantage: true, planG: true, planN: true, planF: true, hmo: true, ppo: true, snp: true, pdp: false, cancer: false, hip: false, dvh: false } },
   { rating: null, id: null, official: null, phone: null, url: null, category: "", featured: false, tags: null, title: "Medicare Beginner's Guide", type: "Guide", linkLabel: "View", duration: "8", durationUnit: "min read", description: "Learn everything you need to know when starting Medicare.", slug: "medicare-beginner-s-guide", products: { ogMedicare: true, advantage: true, planG: true, planN: true, planF: true, hmo: true, ppo: true, snp: true, pdp: false, cancer: false, hip: false, dvh: false } },
   { rating: null, id: null, official: null, phone: null, url: null, category: "", featured: false, tags: null, title: "Medicare Mistakes", type: "Article", linkLabel: "Read", duration: "7", durationUnit: "min read", description: "Uncover the common Medicare mistakes so you can avoid them.", slug: "medicare-mistakes", products: { ogMedicare: true, advantage: true, planG: false, planN: false, planF: false, hmo: false, ppo: false, snp: false, pdp: false, cancer: false, hip: false, dvh: false } },
   { rating: null, id: null, official: null, phone: null, url: null, category: "", featured: false, tags: null, title: "Enrollment Periods", type: "Article", linkLabel: "Read", duration: "4", durationUnit: "min read", description: "Know when to sign up and make changes to your Medicare.", slug: "enrollment-periods", products: { ogMedicare: true, advantage: true, planG: true, planN: true, planF: true, hmo: true, ppo: true, snp: true, pdp: true, cancer: false, hip: false, dvh: false } },

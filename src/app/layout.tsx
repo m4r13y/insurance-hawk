@@ -35,7 +35,6 @@ export default function RootLayout({
               <main className="flex-1 p-4 sm:p-6 md:p-8">
                 {children}
               </main>
-        {children}
         <Toaster />
         <PrelineScriptWrapper />
       </body>
