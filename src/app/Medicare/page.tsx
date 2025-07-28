@@ -30,7 +30,8 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     InfoCircledIcon,
-    FileTextIcon
+    FileTextIcon,
+    ComponentInstanceIcon
 } from '@radix-ui/react-icons';
 import { Separator } from "@/components/ui/separator";
 
@@ -474,26 +475,6 @@ function getRelevantResources(selectedPlan: string, isAdvantage: boolean) {
   return resourcesList.filter(r => r.products[key as keyof ResourceCard['products']]);
 }
 
-const KeyInfoSection = ({ title, items }: { title: string, items: PlanData['keyInfo']['details'] }) => {
-    if (!items || items.length === 0) return null;
-    return (
-        <div>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{title}</h4>
-            <div className="space-y-3">
-                {items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            {item.icon && React.createElement(item.icon, { className: "h-4 w-4" })}
-                            <span>{item.label}</span>
-                        </div>
-                        <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-}
-
 export default function MedicarePage() {
   const router = useRouter();
   const [isAdvantage, setIsAdvantage] = useState(false);
@@ -668,51 +649,145 @@ export default function MedicarePage() {
                 </Link>
               </div>
               
-              {/* Right Column */}
-              <div className="lg:col-span-2">
-                <Card className="sticky top-8">
+              {/* Right Column - Key Information */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Benefits */}
+                {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && (
+                  <Card>
                     <CardHeader>
-                        <CardTitle>Key Information</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <HeartIcon className="w-5 h-5 text-green-600" />
+                        Benefits
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && (
-                           <>
-                            <KeyInfoSection title="Details" items={currentData.keyInfo.details} />
-                           </>
-                        )}
-                        
-                        {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && (
-                           <>
-                             <Separator/>
-                            <KeyInfoSection title="Premiums" items={currentData.keyInfo.premiums} />
-                           </>
-                        )}
-
-                        {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && (
-                           <>
-                            <Separator/>
-                            <KeyInfoSection title="Deductibles" items={currentData.keyInfo.deductibles} />
-                           </>
-                        )}
-
-                        {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && (
-                           <>
-                            <Separator/>
-                            <KeyInfoSection title="Costs" items={currentData.keyInfo.costs} />
-                           </>
-                        )}
-                        
-                        {currentData.keyInfo.benefits && currentData.keyInfo.benefits.length > 0 && (
-                           <>
-                            <Separator/>
-                            <KeyInfoSection title="Benefits" items={currentData.keyInfo.benefits} />
-                           </>
-                        )}
-                        
-                        <p className="text-xs text-gray-500 italic pt-4">
-                        * May vary based on individual situations
-                        </p>
+                    <CardContent className="space-y-3">
+                      {currentData.keyInfo.benefits.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {item.icon && <item.icon className="w-4 h-4 text-green-600" />}
+                            <span className="text-sm font-medium">{item.label}</span>
+                          </div>
+                          <span className={`text-sm font-semibold ${item.highlight ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'}`}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
                     </CardContent>
+                  </Card>
+                )}
+
+                {/* Coverage Details */}
+                {currentData.keyInfo.details && currentData.keyInfo.details.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ComponentInstanceIcon className="w-5 h-5 text-blue-600" />
+                        Coverage Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {currentData.keyInfo.details.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {item.icon && <item.icon className="w-4 h-4 text-blue-600" />}
+                            <span className="text-sm font-medium">{item.label}</span>
+                          </div>
+                          <span className={`text-sm font-semibold ${item.highlight ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Premiums */}
+                {currentData.keyInfo.premiums && currentData.keyInfo.premiums.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TokensIcon className="w-5 h-5 text-purple-600" />
+                        Premiums
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {currentData.keyInfo.premiums.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {item.icon && <item.icon className="w-4 h-4 text-purple-600" />}
+                            <span className="text-sm font-medium">{item.label}</span>
+                          </div>
+                          <span className={`text-sm font-semibold ${item.highlight ? 'text-purple-600' : 'text-gray-600 dark:text-gray-300'}`}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Deductibles */}
+                {currentData.keyInfo.deductibles && currentData.keyInfo.deductibles.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <InfoCircledIcon className="w-5 h-5 text-indigo-600" />
+                        Deductibles
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {currentData.keyInfo.deductibles.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {item.icon && <item.icon className="w-4 h-4 text-indigo-600" />}
+                            <span className="text-sm font-medium">{item.label}</span>
+                          </div>
+                          <span className={`text-sm font-semibold ${item.highlight ? 'text-indigo-600' : 'text-gray-600 dark:text-gray-300'}`}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Cost Information */}
+                {currentData.keyInfo.costs && currentData.keyInfo.costs.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ActivityLogIcon className="w-5 h-5 text-orange-600" />
+                        Cost Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {currentData.keyInfo.costs.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {item.icon && <item.icon className="w-4 h-4 text-orange-600" />}
+                            <span className="text-sm font-medium">{item.label}</span>
+                          </div>
+                          <span className={`text-sm font-semibold ${item.highlight ? 'text-orange-600' : 'text-gray-600 dark:text-gray-300'}`}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* CTA Button */}
+                <Card>
+                  <CardContent className="p-6">
+                    <Button asChild className={`w-full ${themeColors.button}`} size="lg">
+                      <Link href={currentData.ctaUrl}>
+                        {currentData.ctaText}
+                      </Link>
+                    </Button>
+                    <p className="text-xs text-gray-500 italic text-center mt-3">
+                      * Information may vary based on individual situations
+                    </p>
+                  </CardContent>
                 </Card>
               </div>
             </div>
