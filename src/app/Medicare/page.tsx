@@ -8,7 +8,6 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarHeader,
@@ -538,22 +537,35 @@ export default function MedicarePage() {
 
               {/* Plan Type Toggle - now below the back button */}
               <div className="px-3 pb-2">
-                <div className="flex items-center justify-center space-x-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                  <span className={`font-semibold text-sm ${!isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
-                    Original
-                  </span>
-                  <Switch
-                    checked={isAdvantage}
-                    onCheckedChange={(checked) => {
-                      setIsAdvantage(checked);
-                      setSelectedPlan(checked ? "medicare-advantage" : "original-medicare");
-                    }}
-                    className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-blue-600"
-                  />
-                  <span className={`font-semibold text-sm ${isAdvantage ? themeColors.accent : 'text-gray-500'}`}>
-                    Advantage
-                  </span>
-                </div>
+                <h3 className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+                  MEDICARE TYPE
+                </h3>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={() => {
+                        setIsAdvantage(false);
+                        setSelectedPlan("original-medicare");
+                      }}
+                      isActive={!isAdvantage}
+                      tooltip="Original Medicare Plans"
+                    >
+                      <span>Original Medicare</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={() => {
+                        setIsAdvantage(true);
+                        setSelectedPlan("medicare-advantage");
+                      }}
+                      isActive={isAdvantage}
+                      tooltip="Medicare Advantage Plans"
+                    >
+                      <span>Medicare Advantage</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
               </div>
 
               <SidebarMenu>
@@ -569,7 +581,6 @@ export default function MedicarePage() {
                         isActive={selectedPlan === plan.id}
                         tooltip={plan.name}
                       >
-                        <plan.icon className="w-4 h-4" />
                         <span>{plan.name}</span>
                         {plan.isPopular && selectedPlan !== plan.id && (
                           <Badge variant="secondary" className="ml-auto text-xs z-index-10">
@@ -593,7 +604,6 @@ export default function MedicarePage() {
                         isActive={selectedPlan === addon.id}
                         tooltip={addon.name}
                       >
-                        <addon.icon className="w-4 h-4" />
                         <span>{addon.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

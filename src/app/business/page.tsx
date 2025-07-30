@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarHeader,
@@ -229,22 +228,35 @@ export default function BusinessHub() {
 
                 {/* Business Type Toggle */}
                 <div className="px-3 pb-2">
-                  <div className="flex items-center justify-center space-x-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm">
-                    <span className={`font-semibold text-sm ${!isCorporate ? themeColors.accent : 'text-gray-500 dark:text-gray-400'}`}>
-                      Small Business
-                    </span>
-                    <Switch
-                      checked={isCorporate}
-                      onCheckedChange={(checked) => {
-                        setIsCorporate(checked);
-                        setSelectedPlan(checked ? "employee-benefits" : "small-group-health");
-                      }}
-                      className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-blue-600"
-                    />
-                    <span className={`font-semibold text-sm ${isCorporate ? themeColors.accent : 'text-gray-500 dark:text-gray-400'}`}>
-                      Corporate
-                    </span>
-                  </div>
+                  <h3 className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+                    BUSINESS TYPE
+                  </h3>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        onClick={() => {
+                          setIsCorporate(false);
+                          setSelectedPlan("small-group-health");
+                        }}
+                        isActive={!isCorporate}
+                        tooltip="Small Business Plans"
+                      >
+                        <span>Small Business</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        onClick={() => {
+                          setIsCorporate(true);
+                          setSelectedPlan("employee-benefits");
+                        }}
+                        isActive={isCorporate}
+                        tooltip="Corporate Services"
+                      >
+                        <span>Corporate</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
                 </div>
 
                 <SidebarMenu>
@@ -260,7 +272,6 @@ export default function BusinessHub() {
                           isActive={selectedPlan === plan.id}
                           tooltip={plan.name}
                         >
-                          <plan.icon className="w-4 h-4" />
                           <span>{plan.name}</span>
                           {plan.isPopular && selectedPlan !== plan.id && (
                             <Badge variant="secondary" className="ml-auto text-xs">
@@ -284,7 +295,6 @@ export default function BusinessHub() {
                           isActive={selectedPlan === addon.id}
                           tooltip={addon.name}
                         >
-                          <addon.icon className="w-4 h-4" />
                           <span>{addon.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

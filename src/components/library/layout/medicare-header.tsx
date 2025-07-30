@@ -8,7 +8,7 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon, BackpackIcon, PersonIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon, BackpackIcon, PersonIcon } from '@radix-ui/react-icons';
 
 const medicarePages = [
   {
@@ -85,28 +85,19 @@ const resources = [
 export function MedicareHeader() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
-
-  // Apply dark mode to document
-  React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   return (
     <header className="sticky py-2 top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-gray-1 dark:border-gray-6">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+      <div className="w-full max-w-none px-12 flex h-14 items-center justify-between">
+        {/* Logo - Left Side */}
+        <div className="hidden md:flex">
+          <Link href="/" className="flex items-center space-x-2">
             <Logo className='max-w-30'/>
           </Link>
+        </div>
+        
+        {/* Navigation Menu - Right Side */}
+        <div className="hidden md:flex">
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>

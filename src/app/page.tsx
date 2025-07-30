@@ -94,28 +94,46 @@ export default function HomePage() {
             {/* Page Container - Microsoft-style structured layout */}
             <div className="max-w-full">
                 
-                {/* Hero Section - Full width with contained content */}
-                <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 dark:from-blue-700 dark:via-blue-800 dark:to-purple-900" aria-labelledby="hero-title">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+                {/* Hero Section - Video Background */}
+                <section className="relative overflow-hidden h-screen min-h-[600px] flex items-center justify-center" aria-labelledby="hero-title">
+                    {/* Video Background */}
+                    <div className="absolute inset-0 w-full h-full">
+                        <video
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="absolute inset-0 w-full h-full object-cover"
+                            poster="/video-poster.jpg" // Optional: Add a poster image
+                        >
+                            <source src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/0615(2).mp4?alt=media" type="video/mp4" />
+                            {/* Fallback for browsers that don't support video */}
+                            Your browser does not support the video tag.
+                        </video>
+                        {/* Dark overlay for better text readability */}
+                        <div className="absolute inset-0 bg-black/40"></div>
+                    </div>
+                    
+                    {/* Hero Content */}
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
                         <div className="max-w-4xl mx-auto text-center space-y-8">
                             <div className="space-y-4">
-                                <h1 id="hero-title" className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white">
+                                <h1 id="hero-title" className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white drop-shadow-lg">
                                     The Insurance Hawk
                                 </h1>
-                                <div className="text-xl lg:text-3xl text-blue-100 font-medium">
+                                <div className="text-xl lg:text-3xl text-white font-medium drop-shadow-md">
                                    Save Your Money - Keep Your Freedom
                                 </div>
                             </div>
-                            <p className="text-blue-100 text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto">
+                            <p className="text-white text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto drop-shadow-md">
                                 We help families and businesses find the best insurance coverage at the lowest prices. No sales pressure, no hidden fees - just honest advice that puts your needs first.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-                                <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg">
+                                <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg backdrop-blur-sm">
                                     Get Free Quote
                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
                                 </Button>
-                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-700 shadow-lg">
+                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 hover:text-white shadow-lg backdrop-blur-sm">
                                     Call (555) 123-4567
                                 </Button>
                             </div>
