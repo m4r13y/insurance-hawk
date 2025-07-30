@@ -25,7 +25,8 @@ export function TopPlanFAddonsContent() {
             badges={[{ tag: "Medicare" }, { tag: "Plan F" }]}
             likes={0}
             comments={0}
-          />
+          shareUrl="/resources/top-plan-f-addons"
+        />
       </BlogContent>
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
@@ -37,3 +38,4 @@ export function TopPlanFAddonsContent() {
     </div>
   );
 }
+

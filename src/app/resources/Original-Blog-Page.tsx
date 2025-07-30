@@ -122,6 +122,7 @@ export default function BlogArticlePage() {
             ]}
             likes={875}
             comments={16}
+            shareUrl="/resources/original-blog"
           />
         {/* End Badges/Tags/Buttons */}
         </BlogContent>

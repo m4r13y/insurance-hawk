@@ -116,6 +116,7 @@ export function AvoidingPenaltiesContent() {
           ]}
           likes={875}
           comments={16}
+          shareUrl="/resources/avoiding-penalties"
         />
       {/* End Badges/Tags/Buttons */}
       </BlogContent>
@@ -135,3 +136,4 @@ export function AvoidingPenaltiesContent() {
     </div>
   );
 }
+

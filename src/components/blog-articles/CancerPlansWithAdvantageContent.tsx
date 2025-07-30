@@ -52,17 +52,17 @@ export function CancerPlansWithAdvantageContent() {
             <h2 className="text-xl font-bold">Why Medicare Advantage Might Not Be Enough</h2>
             <p>Medicare Advantage (MA) plans are an all-in-one alternative to Original Medicare, often including extra benefits like vision and dental. But when it comes to serious illnesses like cancer, you may still face high out-of-pocket costs. Copays for chemotherapy, coinsurance for radiation, and the price of out-of-network specialists can add up quickly.</p>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
-                Every MA plan is different, but across the board, cancer treatment often involves repeated services and unexpected expenses that basic coverage doesn't fully protect against.
+                Every MA plan is different, but across the board, cancer treatment often involves repeated services and unexpected expenses that basic coverage doesn&apos;t fully protect against.
             </blockquote>
             
             <h2 className="text-xl font-bold">What Is Cancer Insurance?</h2>
-            <p>Cancer insurance is a type of supplemental health policy that pays you a lump-sum cash benefit if you're diagnosed with cancer. Unlike your MA plan, which pays doctors and hospitals directly, this benefit goes straight to you. You can use the funds however you want:</p>
+            <p>Cancer insurance is a type of supplemental health policy that pays you a lump-sum cash benefit if you&apos;re diagnosed with cancer. Unlike your MA plan, which pays doctors and hospitals directly, this benefit goes straight to you. You can use the funds however you want:</p>
             <ul className="list-disc pl-6">
                 <li>To cover medical costs not paid by your MA plan (deductibles, copays).</li>
                 <li>For non-medical expenses like travel, lodging, or special diets.</li>
                 <li>To replace lost income or pay household bills while you undergo treatment.</li>
             </ul>
-            <p>This flexibility makes lump-sum cancer policies especially helpful when you're facing a sudden health and financial crisis. Learn more by checking our <Link href="/resources/cancer-statistics">cancer statistics article</Link>.</p>
+            <p>This flexibility makes lump-sum cancer policies especially helpful when you&apos;re facing a sudden health and financial crisis. Learn more by checking our <Link href="/resources/cancer-statistics">cancer statistics article</Link>.</p>
 
              <figure className="my-8">
               <Image 
@@ -74,12 +74,12 @@ export function CancerPlansWithAdvantageContent() {
                 data-ai-hint="financial planning security"
               />
               <figcaption className="mt-2 text-sm text-center text-gray-500">
-                A cancer insurance policy can provide a financial safety net for costs your MA plan doesn't cover.
+                A cancer insurance policy can provide a financial safety net for costs your MA plan doesn&apos;t cover.
               </figcaption>
             </figure>
 
             <h2 className="text-xl font-bold">How It Helps with Medicare Advantage Costs</h2>
-            <p>If you're enrolled in a Medicare Advantage plan, you're likely dealing with network restrictions and significant cost-sharing. Many plans require 20% coinsurance for treatments like chemotherapy and radiation until you reach your annual out-of-pocket maximum, which can be thousands of dollars.</p>
+            <p>If you&apos;re enrolled in a Medicare Advantage plan, you&apos;re likely dealing with network restrictions and significant cost-sharing. Many plans require 20% coinsurance for treatments like chemotherapy and radiation until you reach your annual out-of-pocket maximum, which can be thousands of dollars.</p>
             
             <div className="overflow-x-auto my-6">
               <Table>
@@ -117,15 +117,15 @@ export function CancerPlansWithAdvantageContent() {
                 <li>You have a family history of cancer.</li>
                 <li>You live far from a major treatment center.</li>
                 <li>You want more control over where and how you receive care.</li>
-                <li>You're on a fixed income and want to avoid large surprise expenses.</li>
+                <li>You&apos;re on a fixed income and want to avoid large surprise expenses.</li>
             </ul>
-            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn't a replacement for Medicare Advantage, but it can be a smart addition. For more foundational information, see our <Link href="/resources/medicare-beginners-guide">Medicare Beginner's Guide</Link>.</p>
+            <p>Ultimately, it comes down to your comfort level and financial goals. Cancer insurance isn&apos;t a replacement for Medicare Advantage, but it can be a smart addition. For more foundational information, see our <Link href="/resources/medicare-beginners-guide">Medicare Beginner&apos;s Guide</Link>.</p>
             
             <FaqSection title="FAQs About Cancer Insurance and Medicare Advantage" items={faqItems} />
             
             <h2 className="text-xl font-bold">The Bottom Line</h2>
             <p>
-                Cancer insurance isn't for everyone, but it's worth considering if you want added protection and peace of mind. For many on Medicare Advantage, it provides a safety net when you're most vulnerable.
+                Cancer insurance isn&apos;t for everyone, but it&apos;s worth considering if you want added protection and peace of mind. For many on Medicare Advantage, it provides a safety net when you&apos;re most vulnerable.
             </p>
             
             <Button size="lg" className="my-8 px-6 py-3">
@@ -137,7 +137,8 @@ export function CancerPlansWithAdvantageContent() {
             badges={[ { tag: "Medicare Advantage" }, { tag: "Cancer Insurance" }, ]}
             likes={21}
             comments={4}
-          />
+          shareUrl="/resources/cancer-plans-with-advantage"
+        />
       </BlogContent>
 
       <BlogSidebar
@@ -151,3 +152,4 @@ export function CancerPlansWithAdvantageContent() {
     </div>
   );
 }
+

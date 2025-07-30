@@ -8,7 +8,7 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon, BackpackIcon, PersonIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, ActivityLogIcon, ReaderIcon, FileTextIcon, BackpackIcon, PersonIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
 
 const medicarePages = [
   {
@@ -85,19 +85,32 @@ const resources = [
 export function MedicareHeader() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
+  // Apply dark mode to document
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-gray-1 dark:border-gray-6">
+    <header className="sticky py-2 top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-gray-1 dark:border-gray-6">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Logo />
+            <Logo className='max-w-30'/>
           </Link>
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="h-9">
-                  <BackpackIcon className="mr-2 h-4 w-4" />
                   Business
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -105,11 +118,10 @@ export function MedicareHeader() {
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
                         <Link
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          className="flex h-full w-full select-none flex-col justify-start rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md text-foreground"
                           href="/business/"
                         >
-                          <BackpackIcon className="h-6 w-6" />
-                          <div className="mb-2 mt-4 text-lg font-medium">
+                          <div className="mb-2 mt-4 text-lg font-medium text-foreground">
                             Business Hub
                           </div>
                           <p className="text-sm leading-tight text-muted-foreground">
@@ -138,7 +150,6 @@ export function MedicareHeader() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="h-9">
-                  <PersonIcon className="mr-2 h-4 w-4" />
                   Individual
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -146,11 +157,10 @@ export function MedicareHeader() {
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
                         <Link
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          className="flex h-full w-full select-none flex-col justify-start rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md text-foreground"
                           href="/individual/"
                         >
-                          <PersonIcon className="h-6 w-6" />
-                          <div className="mb-2 mt-4 text-lg font-medium">
+                          <div className="mb-2 mt-4 text-lg font-medium text-foreground">
                             Individual Hub
                           </div>
                           <p className="text-sm leading-tight text-muted-foreground">
@@ -179,7 +189,6 @@ export function MedicareHeader() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="h-9">
-                  <ActivityLogIcon className="mr-2 h-4 w-4" />
                   Medicare
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -187,11 +196,10 @@ export function MedicareHeader() {
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
                         <Link
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          className="flex h-full w-full select-none flex-col justify-start rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md text-foreground"
                           href="/Medicare/"
                         >
-                          <ActivityLogIcon className="h-6 w-6" />
-                          <div className="mb-2 mt-4 text-lg font-medium">
+                          <div className="mb-2 mt-4 text-lg font-medium text-foreground">
                             Medicare Hub
                           </div>
                           <p className="text-sm leading-tight text-muted-foreground">
@@ -220,7 +228,6 @@ export function MedicareHeader() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="h-9">
-                  <ReaderIcon className="mr-2 h-4 w-4" />
                   Resources
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>

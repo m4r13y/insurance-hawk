@@ -191,27 +191,14 @@ export default function BusinessHub() {
   const [isCorporate, setIsCorporate] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("small-group-health");
 
-  // Apply dark theme to entire document when component mounts
-  useEffect(() => {
-    // Add dark class to html and body elements
-    document.documentElement.classList.add('dark');
-    document.body.classList.add('dark');
-    
-    // Cleanup function to remove dark class when component unmounts
-    return () => {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-    };
-  }, []);
-
   const currentPlans = isCorporate ? corporateServices : smallBusinessPlans;
   const currentAddOns = isCorporate ? corporateAddOns : smallBusinessAddOns;
   const currentData = businessData[selectedPlan] || businessData["small-group-health"];
 
   const themeColors = {
-    primary: isCorporate ? "text-purple-400" : "text-blue-400",
-    accent: isCorporate ? "text-purple-400" : "text-blue-400",
-    bg: isCorporate ? "bg-purple-900/20" : "bg-blue-900/20",
+    primary: isCorporate ? "text-purple-600 dark:text-purple-400" : "text-blue-600 dark:text-blue-400",
+    accent: isCorporate ? "text-purple-600 dark:text-purple-400" : "text-blue-600 dark:text-blue-400",
+    bg: isCorporate ? "bg-purple-50 dark:bg-purple-900/20" : "bg-blue-50 dark:bg-blue-900/20",
   };
 
   const handlePlanSelect = (planId: string) => {
@@ -224,9 +211,9 @@ export default function BusinessHub() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-neutral-900 flex overflow-hidden">
+      <div className="min-h-screen flex overflow-hidden bg-gray-50 dark:bg-neutral-900">
         {/* Custom Sidebar for Business - Matching Main Sidebar Style */}
-        <Sidebar className="w-80">
+        <Sidebar className="w-100">
             <SidebarRail />
             <SidebarContent className="flex flex-col justify-between">
               <div>
@@ -242,8 +229,8 @@ export default function BusinessHub() {
 
                 {/* Business Type Toggle */}
                 <div className="px-3 pb-2">
-                  <div className="flex items-center justify-center space-x-4 p-3 bg-gray-800 rounded-lg shadow-sm">
-                    <span className={`font-semibold text-sm ${!isCorporate ? themeColors.accent : 'text-gray-500'}`}>
+                  <div className="flex items-center justify-center space-x-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm">
+                    <span className={`font-semibold text-sm ${!isCorporate ? themeColors.accent : 'text-gray-500 dark:text-gray-400'}`}>
                       Small Business
                     </span>
                     <Switch
@@ -254,7 +241,7 @@ export default function BusinessHub() {
                       }}
                       className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-blue-600"
                     />
-                    <span className={`font-semibold text-sm ${isCorporate ? themeColors.accent : 'text-gray-500'}`}>
+                    <span className={`font-semibold text-sm ${isCorporate ? themeColors.accent : 'text-gray-500 dark:text-gray-400'}`}>
                       Corporate
                     </span>
                   </div>
@@ -309,13 +296,13 @@ export default function BusinessHub() {
           </Sidebar>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto bg-white dark:bg-neutral-900">
              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
                 {/* Left Column */}
                 <div className="lg:col-span-3 space-y-8">
                   {/* Video Card */}
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                       <div className="relative aspect-video">
                       <iframe
                           width="100%"
@@ -331,15 +318,15 @@ export default function BusinessHub() {
                   </Card>
 
                   {/* Description Card */}
-                  <Card>
+                  <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                       <CardHeader>
                           <CardTitle className={themeColors.primary}>{currentData.title}</CardTitle>
-                          <CardDescription className="text-lg font-medium">
+                          <CardDescription className="text-lg font-medium text-gray-600 dark:text-gray-300">
                               {currentData.subtitle}
                           </CardDescription>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-gray-300 leading-relaxed">
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                               {currentData.description}
                           </p>
                       </CardContent>
@@ -350,21 +337,21 @@ export default function BusinessHub() {
                 <div className="lg:col-span-2 space-y-6">
                   {/* Benefits */}
                   {currentData.keyInfo.benefits && (
-                    <Card>
+                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <HeartIcon className="w-5 h-5 text-green-400" />
+                        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                          <HeartIcon className="w-5 h-5 text-green-500 dark:text-green-400" />
                           Key Benefits
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {currentData.keyInfo.benefits.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg">
+                          <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800/30">
                             <div className="flex items-center gap-2">
-                              {item.icon && <item.icon className="w-4 h-4 text-green-400" />}
-                              <span className="text-sm font-medium">{item.label}</span>
+                              {item.icon && <item.icon className="w-4 h-4 text-green-600 dark:text-green-400" />}
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-100">{item.label}</span>
                             </div>
-                            <span className={`text-sm font-semibold ${item.highlight ? 'text-green-400' : 'text-gray-300'}`}>
+                            <span className={`text-sm font-semibold ${item.highlight ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'}`}>
                               {item.value}
                             </span>
                           </div>
@@ -375,21 +362,21 @@ export default function BusinessHub() {
 
                   {/* Coverage Details */}
                   {currentData.keyInfo.coverage && (
-                    <Card>
+                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ComponentInstanceIcon className="w-5 h-5 text-blue-400" />
+                        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                          <ComponentInstanceIcon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                           Coverage Details
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {currentData.keyInfo.coverage.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-blue-900/20 rounded-lg">
+                          <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
                             <div className="flex items-center gap-2">
-                              {item.icon && <item.icon className="w-4 h-4 text-blue-400" />}
-                              <span className="text-sm font-medium">{item.label}</span>
+                              {item.icon && <item.icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-100">{item.label}</span>
                             </div>
-                            <span className={`text-sm font-semibold ${item.highlight ? 'text-blue-400' : 'text-gray-300'}`}>
+                            <span className={`text-sm font-semibold ${item.highlight ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>
                               {item.value}
                             </span>
                           </div>
@@ -400,21 +387,21 @@ export default function BusinessHub() {
 
                   {/* Cost Information */}
                   {currentData.keyInfo.costs && (
-                    <Card>
+                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ActivityLogIcon className="w-5 h-5 text-orange-400" />
+                        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                          <ActivityLogIcon className="w-5 h-5 text-orange-500 dark:text-orange-400" />
                           Cost Information
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {currentData.keyInfo.costs.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-orange-900/20 rounded-lg">
+                          <div key={index} className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800/30">
                             <div className="flex items-center gap-2">
-                              {item.icon && <item.icon className="w-4 h-4 text-orange-400" />}
-                              <span className="text-sm font-medium">{item.label}</span>
+                              {item.icon && <item.icon className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-100">{item.label}</span>
                             </div>
-                            <span className={`text-sm font-semibold ${item.highlight ? 'text-orange-400' : 'text-gray-300'}`}>
+                            <span className={`text-sm font-semibold ${item.highlight ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-300'}`}>
                               {item.value}
                             </span>
                           </div>
@@ -424,7 +411,7 @@ export default function BusinessHub() {
                   )}
 
                   {/* CTA Button */}
-                  <Card>
+                  <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
                     <CardContent className="p-6">
                       <Button asChild className="w-full" size="lg">
                         <Link href={currentData.ctaUrl}>

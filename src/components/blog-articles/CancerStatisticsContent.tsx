@@ -107,7 +107,7 @@ export function CancerStatisticsContent() {
             </figure>
             
             <h2 className="text-xl font-bold">How a Lump-Sum Policy Can Save You</h2>
-            <p>Now imagine this: you're dealing with the stress of a cancer diagnosis, and then the bills start coming in. Medicare helps, but it doesn't cover everything. That's where cancer insurance steps in.</p>
+            <p>Now imagine this: you&apos;re dealing with the stress of a cancer diagnosis, and then the bills start coming in. Medicare helps, but it doesn&apos;t cover everything. That&apos;s where cancer insurance steps in.</p>
             <p>With a lump sum cancer policy, you get a tax-free cash payout—typically $5,000 to $50,000—after a diagnosis. It’s fast, flexible money that you control.</p>
             
             <blockquote className="border-l-4 border-blue-500 pl-4 italic">
@@ -139,6 +139,7 @@ export function CancerStatisticsContent() {
             badges={[{ tag: "Medicare" }, { tag: "Cancer Insurance" }, { tag: "Financial Planning" }]}
             likes={42}
             comments={9}
+          shareUrl="/resources/cancer-statistics"
         />
       </BlogContent>
 
@@ -153,3 +154,4 @@ export function CancerStatisticsContent() {
     </div>
   );
 }
+

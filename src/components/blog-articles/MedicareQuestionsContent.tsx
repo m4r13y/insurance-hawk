@@ -140,7 +140,8 @@ export function MedicareQuestionsContent() {
             badges={[{ tag: "Medicare" }, { tag: "FAQ" }, { tag: "2025 Updates" }]}
             likes={78}
             comments={15}
-          />
+          shareUrl="/resources/medicare-questions"
+        />
       </BlogContent>
       <BlogSidebar
         author={{ name: "Jonathan Hawkins", avatarUrl: "https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77", bio: "CFP | Medicare Specialist" }}
@@ -149,3 +150,4 @@ export function MedicareQuestionsContent() {
     </div>
   );
 }
+

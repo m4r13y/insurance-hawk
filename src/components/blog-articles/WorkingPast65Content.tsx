@@ -164,7 +164,8 @@ export function WorkingPast65Content() {
             ]}
             likes={120}
             comments={12}
-          />
+          shareUrl="/resources/working-past-65"
+        />
       </BlogContent>
 
       <BlogSidebar
@@ -178,3 +179,4 @@ export function WorkingPast65Content() {
     </div>
   );
 }
+

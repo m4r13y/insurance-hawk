@@ -174,7 +174,8 @@ export function HipForAdvantageContent() {
             badges={[{ tag: "Medicare Advantage" }, { tag: "Hospital Indemnity" }]}
             likes={28}
             comments={3}
-          />
+          shareUrl="/resources/hip-for-advantage"
+        />
       </BlogContent>
 
       <BlogSidebar
@@ -188,3 +189,4 @@ export function HipForAdvantageContent() {
     </div>
   );
 }
+

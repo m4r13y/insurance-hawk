@@ -509,7 +509,7 @@ export default function MedicarePage() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex overflow-hidden">
+      <div className="min-h-screen dark:bg-neutral-900 flex overflow-hidden">
         {/* Custom Sidebar for Medicare - Matching Main Sidebar Style */}
         <Sidebar className="w-80">
           <SidebarRail />
@@ -572,7 +572,7 @@ export default function MedicarePage() {
                         <plan.icon className="w-4 h-4" />
                         <span>{plan.name}</span>
                         {plan.isPopular && selectedPlan !== plan.id && (
-                          <Badge variant="secondary" className="ml-auto text-xs">
+                          <Badge variant="secondary" className="ml-auto text-xs z-index-10">
                             Popular
                           </Badge>
                         )}

@@ -25,6 +25,7 @@ export function AnnualChangesContent() {
             badges={[{ tag: "Medicare" }, { tag: "Advantage" }]}
             likes={0}
             comments={0}
+            shareUrl="/resources/annual-changes"
           />
       </BlogContent>
       <BlogSidebar
@@ -38,3 +39,4 @@ export function AnnualChangesContent() {
     </div>
   );
 }
+

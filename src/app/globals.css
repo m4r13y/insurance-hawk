@@ -316,7 +316,7 @@
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0.922 0 0);
+    --border: oklch(0.85 0.005 240);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.463 0.184 255.75);
     --chart-1: oklch(0.646 0.222 41.116);
@@ -371,7 +371,7 @@
 }
 @layer base {
   * {
-    @apply border-border;
+    @apply border-neutral-200 dark:border-neutral-600;
   }
   body {
     @apply bg-background text-foreground;
@@ -967,4 +967,28 @@
 
 .dark [data-radix-navigation-menu-viewport] {
   background-color: hsl(var(--background)) !important;
+}
+
+/* Fix initial hover text color delay */
+[data-radix-navigation-menu-content] * {
+  color: inherit !important;
+  transition: none !important;
+}
+
+[data-radix-navigation-menu-content] .text-foreground {
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-radix-navigation-menu-content] .text-muted-foreground {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Ensure immediate text visibility on navigation menu open */
+[data-radix-navigation-menu-viewport][data-state="open"] * {
+  color: inherit !important;
+}
+
+/* Additional CSS */
+.ring-0{
+  background-color: var(--gray-1)
 }

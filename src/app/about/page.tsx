@@ -135,7 +135,7 @@ export default function AboutPage() {
                   The Insurance Hawk was born from a simple frustration: insurance was too complicated, too expensive, and too one-size-fits-all.
                 </p>
                 <p>
-                  After 20+ years in the insurance industry, our founder saw too many families and businesses overpaying for coverage that didn't meet their actual needs. Traditional insurance brokers were focused on selling products, not solving problems.
+                  After 20+ years in the insurance industry, our founder saw too many families and businesses overpaying for coverage that didn&apos;t meet their actual needs. Traditional insurance brokers were focused on selling products, not solving problems.
                 </p>
                 <p>
                   We decided to flip the script. Instead of working for insurance companies, we work exclusively for you - our clients. We use technology to compare dozens of options quickly, and we provide honest, transparent advice that puts your financial wellbeing first.
@@ -197,7 +197,7 @@ export default function AboutPage() {
           <div className="text-center space-y-4">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">What Our Clients Say</h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Real stories from real people who've saved money and gained peace of mind.
+              Real stories from real people who&apos;ve saved money and gained peace of mind.
             </p>
           </div>
 
@@ -229,7 +229,7 @@ export default function AboutPage() {
                   <div className="relative">
                     <QuoteIcon className="absolute -top-2 -left-2 h-6 w-6 text-blue-200 dark:text-blue-800" />
                     <p className="text-gray-600 dark:text-gray-300 italic pl-4">
-                      "{testimonial.text}"
+                      &ldquo;{testimonial.text}&rdquo;
                     </p>
                   </div>
                 </CardContent>
@@ -243,7 +243,7 @@ export default function AboutPage() {
           <div className="text-center space-y-4 mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Get in Touch</h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Ready to save money on insurance? We're here to help in whatever way works best for you.
+              Ready to save money on insurance? We&apos;re here to help in whatever way works best for you.
             </p>
           </div>
 
@@ -272,7 +272,7 @@ export default function AboutPage() {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Saving?</h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Join thousands of satisfied clients who've already discovered how much they can save with The Insurance Hawk.
+            Join thousands of satisfied clients who&apos;ve already discovered how much they can save with The Insurance Hawk.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary">

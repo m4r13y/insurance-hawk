@@ -116,6 +116,7 @@ export function CancerPlansWithMedigapContent() {
             badges={[{ tag: "Medigap" }, { tag: "Cancer Insurance" }]}
             likes={31}
             comments={7}
+            shareUrl="https://insurancehawk.com/resources/cancer-insurance-with-medigap"
           />
       </BlogContent>
 

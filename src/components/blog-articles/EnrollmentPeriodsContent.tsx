@@ -167,7 +167,8 @@ export function EnrollmentPeriodsContent() {
             badges={[{ tag: "Medicare" }, { tag: "Enrollment" }]}
             likes={18}
             comments={5}
-          />
+          shareUrl="/resources/enrollment-periods"
+        />
       </BlogContent>
 
       <BlogSidebar
@@ -181,3 +182,4 @@ export function EnrollmentPeriodsContent() {
     </div>
   );
 }
+

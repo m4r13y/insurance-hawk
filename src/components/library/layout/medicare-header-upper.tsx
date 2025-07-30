@@ -10,7 +10,7 @@ export function HeaderUpper() {
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="text-sm text-blue-800 dark:text-blue-200">
-            📋 Medicare Education & Guidance
+            Medicare Education & Guidance
           </div>
           <div className="flex items-center space-x-4 text-sm">
             <Link 

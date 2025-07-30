@@ -142,6 +142,7 @@ export function DrugPlansExplainedContent() {
             badges={[{ tag: "Medicare" }, { tag: "Part D" }, { tag: "Prescription Drugs" }]}
             likes={25}
             comments={6}
+            shareUrl="https://insurancehawk.com/blog/drug-plans-explained"
           />
       </BlogContent>
 

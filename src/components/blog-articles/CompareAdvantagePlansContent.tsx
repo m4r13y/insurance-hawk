@@ -135,7 +135,8 @@ export function CompareAdvantagePlansContent() {
             badges={[{ tag: "Medicare Advantage" }, { tag: "Plan Comparison" }]}
             likes={15}
             comments={3}
-          />
+          shareUrl="/resources/compare-advantage-plans"
+        />
       </BlogContent>
 
       <BlogSidebar
@@ -149,3 +150,4 @@ export function CompareAdvantagePlansContent() {
     </div>
   );
 }
+

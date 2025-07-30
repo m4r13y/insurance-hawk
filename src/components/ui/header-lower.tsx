@@ -22,7 +22,9 @@ import {
     ReaderIcon,
     ArchiveIcon,
     GearIcon,
-    ActivityLogIcon
+    ActivityLogIcon,
+    SunIcon,
+    MoonIcon
 } from "@radix-ui/react-icons";
 
 interface NavItem {
@@ -101,9 +103,23 @@ function MegaMenuLink({ item }: { item: NavItem }) {
 
 export function HeaderLower() {
   const pathname = usePathname();
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
+  // Apply dark mode to document
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   return (
-    <header className="flex flex-wrap  md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
+    <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-300 dark:bg-[--gray-a2] dark:border-neutral-700">
       <nav className="relative max-w-[85rem] w-full mx-auto md:flex md:items-center md:justify-between md:gap-3 py-2 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center gap-x-1">
           <Link href="" className="flex-none px-4" aria-label="Brand">
@@ -149,15 +165,15 @@ export function HeaderLower() {
             <div className="py-2 md:py-0 flex flex-col md:flex-row md:items-center gap-0.5 md:gap-1">
               <div className="grow">
                 <div className="flex flex-col md:flex-row md:justify-end md:items-center gap-0.5 md:gap-1">
-                   <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/Medicare/" aria-current={pathname === '' ? 'page' : undefined}>
+                   <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-400 dark:text-neutral-200" href="/Medicare/" aria-current={pathname === '' ? 'page' : undefined}>
                     Medicare
                   </Link>
 
-                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/business/" aria-current={pathname === '' ? 'page' : undefined}>
+                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-400 dark:text-neutral-200" href="/business/" aria-current={pathname === '' ? 'page' : undefined}>
                     Business
                   </Link>
 
-                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-300 dark:text-neutral-200" href="/individual/" aria-current={pathname === '' ? 'page' : undefined}>
+                  <Link className="px-4 h-full flex items-center text-sm text-gray-800 border-r border-gray-400 dark:text-neutral-200" href="/individual/" aria-current={pathname === '' ? 'page' : undefined}>
                     Individual
                   </Link>
                   
@@ -234,6 +250,21 @@ export function HeaderLower() {
                   <Link href="/documents" className="p-2 ml-2 flex items-center text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
                     My Account
                   </Link>
+                  
+                  {/* Dark Mode Toggle Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleDarkMode}
+                    className="h-9 w-9 p-0 ml-2"
+                    aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                  >
+                    {isDarkMode ? (
+                      <SunIcon className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <MoonIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    )}
+                  </Button>
                 </div>
               </div>
               

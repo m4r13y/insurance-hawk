@@ -195,7 +195,7 @@ export default function ResourcesPage() {
 
         {/* Call to Action */}
         <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center">
-          <h3 className="text-2xl font-bold mb-4">Can't Find What You're Looking For?</h3>
+          <h3 className="text-2xl font-bold mb-4">Can&apos;t Find What You&apos;re Looking For?</h3>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
             Our team of insurance experts is here to help you find the right information and make informed decisions about your coverage.
           </p>
