@@ -22,7 +22,7 @@ export function HeaderUpper() {
   };
   return (
     <header className="bg-blue-50 border-b border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
-      <div className="w-full max-w-none px-12 py-2">
+      <div className="w-full max-w-[1440px] mx-auto px-12 py-2">
         <div className="flex items-center justify-between">
           <div className="text-sm text-blue-800 dark:text-blue-200">
             Medicare Education & Guidance

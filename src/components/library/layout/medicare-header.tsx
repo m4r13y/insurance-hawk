@@ -88,7 +88,7 @@ export function MedicareHeader() {
 
   return (
     <header className="sticky py-2 top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-gray-1 dark:border-gray-6">
-      <div className="w-full max-w-none px-12 flex h-14 items-center justify-between">
+      <div className="w-full max-w-[1440px] mx-auto px-12 flex h-14 items-center justify-between">
         {/* Logo - Left Side */}
         <div className="hidden md:flex">
           <Link href="/" className="flex items-center space-x-2">

@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -33,7 +37,10 @@ export default function RootLayout({
           <MedicareHeader />
         </div>
         
-        <main className="flex-1 p-4 sm:p-6 md:p-8 bg-gray-50 dark:bg-neutral-900">
+        <main className={cn(
+          "flex-1 bg-gray-50 dark:bg-neutral-900",
+          !isHomePage && "p-4 sm:p-6 md:p-8"
+        )}>
           {children}
         </main>
         <Toaster />

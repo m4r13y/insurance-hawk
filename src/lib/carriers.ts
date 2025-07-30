@@ -1,5 +1,19 @@
 import type { Plan, Document } from '@/types';
 
+// Featured carriers for homepage display - using local logos
+export const featuredCarriers = [
+  { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "/carrier-logos/1.png", "website": "https://uhc.com" },
+  { "id": "elevance", "name": "Elevance Health (Anthem)", "logoUrl": "/carrier-logos/2.png", "website": "https://anthem.com" },
+  { "id": "humana", "name": "Humana", "logoUrl": "/carrier-logos/3.png", "website": "https://humana.com" },
+  { "id": "cvs_aetna", "name": "CVS Health (Aetna)", "logoUrl": "/carrier-logos/4.png", "website": "https://aetna.com" },
+  { "id": "kaiser", "name": "Kaiser Permanente", "logoUrl": "/carrier-logos/5.png", "website": "https://kaiserpermanente.org" },
+  { "id": "cigna", "name": "Cigna", "logoUrl": "/carrier-logos/6.png", "website": "https://cigna.com" },
+  { "id": "molina", "name": "Molina Healthcare", "logoUrl": "/carrier-logos/7.png", "website": "https://molinahealthcare.com" },
+  { "id": "bcbsm", "name": "Blue Cross Blue Shield", "logoUrl": "/carrier-logos/8.png", "website": "https://bcbsm.com" },
+  { "id": "oscar", "name": "Oscar Health", "logoUrl": "/carrier-logos/9.png", "website": "https://oscar.com" },
+  { "id": "aflac", "name": "Aflac", "logoUrl": "/carrier-logos/10.png", "website": "https://aflac.com" }
+];
+
 export const carriers = [
   { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "https://logo.clearbit.com/uhc.com", "website": "https://uhc.com" },
   { "id": "elevance", "name": "Elevance Health (Anthem)", "logoUrl": "https://logo.clearbit.com/anthem.com", "website": "https://anthem.com" },

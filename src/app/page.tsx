@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { featuredCarriers } from "@/lib/carriers"
 import {
   HeartIcon,
   ComponentInstanceIcon,
@@ -91,10 +92,10 @@ const testimonialHighlights = [
 export default function HomePage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
-            {/* Page Container - Microsoft-style structured layout */}
-            <div className="max-w-full">
+            {/* Page Container - Full width, no padding */}
+            <div className="w-full">
                 
-                {/* Hero Section - Video Background */}
+                {/* Hero Section - Video Background - No padding, touches nav */}
                 <section className="relative overflow-hidden h-screen min-h-[600px] flex items-center justify-center" aria-labelledby="hero-title">
                     {/* Video Background */}
                     <div className="absolute inset-0 w-full h-full">
@@ -106,7 +107,7 @@ export default function HomePage() {
                             className="absolute inset-0 w-full h-full object-cover"
                             poster="/video-poster.jpg" // Optional: Add a poster image
                         >
-                            <source src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/0615(2).mp4?alt=media" type="video/mp4" />
+                            <source src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/public-videos%2F0615(2).mp4?alt=media" type="video/mp4" />
                             {/* Fallback for browsers that don't support video */}
                             Your browser does not support the video tag.
                         </video>
@@ -114,8 +115,8 @@ export default function HomePage() {
                         <div className="absolute inset-0 bg-black/40"></div>
                     </div>
                     
-                    {/* Hero Content */}
-                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+                    {/* Hero Content - Reduced padding */}
+                    <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
                         <div className="max-w-4xl mx-auto text-center space-y-8">
                             <div className="space-y-4">
                                 <h1 id="hero-title" className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white drop-shadow-lg">
@@ -200,6 +201,53 @@ export default function HomePage() {
                                     </Card>
                                 )
                             })}
+                        </div>
+                    </section>
+
+                    {/* Trusted Carriers Section */}
+                    <section className="py-12" aria-labelledby="carriers-title">
+                        <div className="text-center space-y-6 mb-8">
+                            <h2 id="carriers-title" className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                                Trusted by Leading Insurance Carriers
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                                We partner with top-rated insurance companies to bring you the best coverage options and competitive rates.
+                            </p>
+                        </div>
+                        
+                        {/* Carousel Container with Fade Effects */}
+                        <div className="relative overflow-hidden">
+                            {/* Left Fade Gradient */}
+                            <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-gray-50 via-gray-50/80 to-transparent dark:from-neutral-900 dark:via-neutral-900/80 pointer-events-none"></div>
+                            
+                            {/* Right Fade Gradient */}
+                            <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-gray-50 via-gray-50/80 to-transparent dark:from-neutral-900 dark:via-neutral-900/80 pointer-events-none"></div>
+                            
+                            {/* Carousel Track */}
+                            <div className="flex animate-scroll gap-8 py-4">
+                                {/* First Set of Logos */}
+                                {featuredCarriers.map((carrier, index) => (
+                                    <div key={`first-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-48">
+                                        <img 
+                                            className="h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
+                                            alt={carrier.name}
+                                            src={carrier.logoUrl}
+                                            title={carrier.name}
+                                        />
+                                    </div>
+                                ))}
+                                {/* Duplicate Set for Seamless Loop */}
+                                {featuredCarriers.map((carrier, index) => (
+                                    <div key={`second-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-48">
+                                        <img 
+                                            className="h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
+                                            alt={carrier.name}
+                                            src={carrier.logoUrl}
+                                            title={carrier.name}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </section>
 

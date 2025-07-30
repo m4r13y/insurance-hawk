@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   TokensIcon,
   HeartIcon,
@@ -28,9 +27,7 @@ import {
   CalendarIcon,
   AvatarIcon,
   DotFilledIcon,
-  HomeIcon,
-  BackpackIcon,
-  GearIcon
+  CrossCircledIcon
 } from '@radix-ui/react-icons';
 import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart } from "recharts";
 import {
@@ -67,125 +64,123 @@ interface KeyFeature {
 
 const productCategories: ProductCategory[] = [
   {
-    id: "health",
-    name: "Health Insurance",
-    description: "Individual and family health coverage",
-    icon: HeartFilledIcon,
+    id: "original",
+    name: "Original Medicare",
+    description: "Traditional Medicare Parts A & B",
+    icon: CrossCircledIcon, // Medical cross icon for Original Medicare
+    plans: [
+      {
+        id: "part-a",
+        name: "Part A (Hospital)",
+        description: "Inpatient hospital, skilled nursing, hospice",
+        premiumRange: "Free for most",
+        features: ["Hospital stays", "Skilled nursing", "Hospice care", "Home health"]
+      },
+      {
+        id: "part-b",
+        name: "Part B (Medical)",
+        description: "Doctor visits, outpatient care, medical equipment",
+        premiumRange: "$174.70/mo",
+        features: ["Doctor visits", "Outpatient care", "Preventive services", "Medical equipment"]
+      },
+      {
+        id: "combined",
+        name: "Parts A + B",
+        description: "Complete Original Medicare coverage",
+        isPopular: true,
+        premiumRange: "$174.70/mo",
+        features: ["Hospital coverage", "Medical coverage", "Nationwide acceptance", "Choice of doctors"]
+      }
+    ]
+  },
+  {
+    id: "medigap",
+    name: "Medigap (Supplement)",
+    description: "Fill the gaps in Original Medicare",
+    icon: HeartFilledIcon, // Blue heart for Medigap
     isPopular: true,
     plans: [
       {
-        id: "bronze",
-        name: "Bronze Plans",
-        description: "Lower premiums, higher deductibles",
-        premiumRange: "$200-400/mo",
-        features: ["Essential health benefits", "Preventive care covered", "Lower monthly cost", "Higher out-of-pocket"]
-      },
-      {
-        id: "silver",
-        name: "Silver Plans", 
-        description: "Moderate premiums and deductibles",
+        id: "plan-g",
+        name: "Plan G",
+        description: "Most comprehensive coverage, excluding Part B deductible",
         isPopular: true,
-        premiumRange: "$300-600/mo",
-        features: ["Cost-sharing reductions", "Balanced coverage", "Moderate deductibles", "Good value"]
+        premiumRange: "$150-250/mo",
+        features: ["No copays", "Any doctor", "Covers excess charges"]
       },
       {
-        id: "gold",
-        name: "Gold Plans",
-        description: "Higher premiums, lower deductibles",
-        premiumRange: "$400-800/mo",
-        features: ["Lower deductibles", "Higher monthly cost", "More coverage", "Better for frequent care"]
+        id: "plan-n",
+        name: "Plan N",
+        description: "Lower premiums with small copays",
+        premiumRange: "$120-180/mo",
+        features: ["Small copays", "Any doctor", "Lower premiums"]
+      },
+      {
+        id: "plan-f",
+        name: "Plan F",
+        description: "Full coverage (if eligible)",
+        premiumRange: "$180-280/mo",
+        features: ["No out-of-pocket", "Any doctor", "Pre-2020 eligible only"]
       }
     ]
   },
   {
-    id: "life",
-    name: "Life Insurance",
-    description: "Protect your family's financial future",
-    icon: PersonIcon,
+    id: "advantage",
+    name: "Medicare Advantage",
+    description: "All-in-one Medicare alternative",
+    icon: HeartIcon, // Red heart for Medicare Advantage
     plans: [
       {
-        id: "term",
-        name: "Term Life",
-        description: "Affordable coverage for a specific period",
+        id: "ppo",
+        name: "PPO Plans",
+        description: "Flexibility to see specialists without referrals",
         isPopular: true,
-        premiumRange: "$20-100/mo",
-        features: ["Temporary coverage", "Lower premiums", "Level death benefit", "Convertible options"]
+        premiumRange: "$0-100/mo",
+        features: ["Network flexibility", "Often includes extras", "May have copays"]
       },
       {
-        id: "whole",
-        name: "Whole Life",
-        description: "Permanent coverage with cash value",
-        premiumRange: "$100-500/mo",
-        features: ["Permanent coverage", "Cash value growth", "Fixed premiums", "Guaranteed benefits"]
+        id: "hmo",
+        name: "HMO Plans",
+        description: "Coordinated care through primary care physician",
+        premiumRange: "$0-80/mo",
+        features: ["Lower costs", "Coordinated care", "Referrals required"]
       }
     ]
   },
   {
-    id: "auto",
-    name: "Auto Insurance",
-    description: "Vehicle protection and liability coverage",
-    icon: GearIcon,
+    id: "part-d",
+    name: "Part D (Drug Plans)",
+    description: "Prescription drug coverage",
+    icon: DotFilledIcon, // Pill icon for drug plans
     plans: [
       {
-        id: "liability",
-        name: "Liability Only",
-        description: "Basic coverage required by law",
-        premiumRange: "$50-150/mo",
-        features: ["Bodily injury coverage", "Property damage", "State minimums", "Most affordable"]
-      },
-      {
-        id: "full-coverage",
-        name: "Full Coverage",
-        description: "Comprehensive protection for your vehicle",
-        isPopular: true,
-        premiumRange: "$100-300/mo",
-        features: ["Collision coverage", "Comprehensive", "Liability protection", "Complete peace of mind"]
+        id: "pdp",
+        name: "Standalone PDP",
+        description: "Add to Original Medicare + Medigap",
+        premiumRange: "$20-80/mo",
+        features: ["Works with any plan", "Various formularies", "Deductible varies"]
       }
     ]
   },
   {
-    id: "home",
-    name: "Home Insurance",
-    description: "Protect your home and belongings",
-    icon: HomeIcon,
+    id: "supplemental",
+    name: "Supplemental Insurance",
+    description: "Extra protection beyond Medicare",
+    icon: ActivityLogIcon, // Keep activity icon for supplemental
     plans: [
       {
-        id: "ho3",
-        name: "HO-3 Policy",
-        description: "Most common homeowners coverage",
-        isPopular: true,
-        premiumRange: "$100-300/mo",
-        features: ["Dwelling protection", "Personal property", "Liability coverage", "Additional living expenses"]
+        id: "cancer",
+        name: "Cancer Insurance",
+        description: "Lump-sum benefits for cancer diagnosis",
+        premiumRange: "$30-100/mo",
+        features: ["Cash benefits", "Use anywhere", "No network restrictions"]
       },
       {
-        id: "condo",
-        name: "Condo Insurance",
-        description: "Coverage for condo owners",
-        premiumRange: "$50-200/mo",
-        features: ["Personal property", "Interior improvements", "Liability protection", "Loss of use"]
-      }
-    ]
-  },
-  {
-    id: "disability",
-    name: "Disability Insurance",
-    description: "Income protection if you can't work",
-    icon: ActivityLogIcon,
-    plans: [
-      {
-        id: "short-term",
-        name: "Short-Term Disability",
-        description: "Coverage for temporary disabilities",
-        premiumRange: "$50-150/mo",
-        features: ["3-12 month benefits", "Quick benefit start", "Temporary coverage", "Supplement sick leave"]
-      },
-      {
-        id: "long-term",
-        name: "Long-Term Disability",
-        description: "Protection for extended disabilities",
-        isPopular: true,
-        premiumRange: "$100-400/mo",
-        features: ["Long-term benefits", "Income replacement", "Own occupation coverage", "Inflation protection"]
+        id: "dental-vision",
+        name: "Dental & Vision",
+        description: "Coverage for routine dental and vision care",
+        premiumRange: "$25-60/mo",
+        features: ["Routine cleanings", "Eye exams", "Frames allowance"]
       }
     ]
   }
@@ -194,102 +189,102 @@ const productCategories: ProductCategory[] = [
 const keyFeatures: KeyFeature[] = [
   {
     title: "Expert Guidance",
-    description: "Licensed agents help you find the right coverage",
+    description: "Licensed agents help you understand your options",
     icon: PersonIcon,
     highlight: true
   },
   {
-    title: "Multiple Quotes",
-    description: "Compare rates from top-rated insurers",
+    title: "Instant Quotes",
+    description: "Compare plans and prices in real-time",
     icon: TargetIcon
   },
   {
     title: "No Cost Service",
-    description: "Our guidance and quotes are always free",
+    description: "Our guidance is always free to you",
     icon: CheckCircledIcon,
     highlight: true
   },
   {
-    title: "Top Carriers",
-    description: "Access to A-rated insurance companies",
+    title: "All Major Carriers",
+    description: "Access to top-rated insurance companies",
     icon: StarFilledIcon
   },
   {
     title: "Ongoing Support",
-    description: "Help with claims and policy changes",
+    description: "Help with enrollment and annual reviews",
     icon: HeartFilledIcon
   }
 ];
 
 const resources = [
   {
-    title: "Health Insurance Basics",
-    description: "Understanding deductibles, copays, and networks",
+    title: "Medicare Basics Guide",
+    description: "Understanding Parts A, B, C, and D",
     type: "guide",
     readTime: "8 min read",
-    url: "/resources/health-insurance-basics"
+    url: "/resources/medicare-basics"
   },
   {
-    title: "Life Insurance Calculator",
-    description: "Determine how much coverage you need",
-    type: "tool",
-    readTime: "Try now",
-    url: "/tools/life-insurance-calculator"
-  },
-  {
-    title: "Auto Insurance Discounts",
-    description: "Ways to save on your car insurance",
+    title: "Enrollment Periods",
+    description: "When you can sign up or make changes",
     type: "guide",
     readTime: "5 min read",
-    url: "/resources/auto-insurance-discounts"
+    url: "/resources/enrollment-periods"
   },
   {
-    title: "Homeowners Insurance Guide",
-    description: "Complete guide to protecting your home",
+    title: "Plan Comparison Tool",
+    description: "Interactive tool to compare your options",
+    type: "tool",
+    readTime: "Try now",
+    url: "/tools/compare-plans"
+  },
+  {
+    title: "What's New in 2025",
+    description: "Latest changes to Medicare benefits",
     type: "article",
-    readTime: "10 min read",
-    url: "/resources/homeowners-insurance-guide"
+    readTime: "6 min read",
+    url: "/resources/2025-changes"
   }
 ];
 
 // Chart data for plan popularity
 const planPopularityData = [
-  { plan: "Health", enrollment: 40, fill: "#3b82f6" }, // blue-500
-  { plan: "Auto", enrollment: 35, fill: "#60a5fa" }, // blue-400
-  { plan: "Life", enrollment: 15, fill: "#93c5fd" }, // blue-300
-  { plan: "Home", enrollment: 10, fill: "#bfdbfe" }, // blue-200
+  { plan: "Plan G", enrollment: 45, fill: "#3b82f6" }, // blue-500
+  { plan: "Advantage", enrollment: 32, fill: "#60a5fa" }, // blue-400
+  { plan: "Plan N", enrollment: 15, fill: "#93c5fd" }, // blue-300
+  { plan: "Plan F", enrollment: 8, fill: "#bfdbfe" }, // blue-200
 ];
 
 const planPopularityConfig = {
   enrollment: {
     label: "Enrollment %",
   },
-  health: {
-    label: "Health",
+  planG: {
+    label: "Plan G",
     color: "#3b82f6",
   },
-  auto: {
-    label: "Auto",
+  advantage: {
+    label: "Advantage",
     color: "#60a5fa",
   },
-  life: {
-    label: "Life",
+  planN: {
+    label: "Plan N",
     color: "#93c5fd",
   },
-  home: {
-    label: "Home",
+  planF: {
+    label: "Plan F",
     color: "#bfdbfe",
   },
 } satisfies ChartConfig;
 
 // Chart data for customer satisfaction
 const satisfactionData = [
-  { month: "Jan", satisfaction: 4.6 },
-  { month: "Feb", satisfaction: 4.7 },
-  { month: "Mar", satisfaction: 4.5 },
-  { month: "Apr", satisfaction: 4.8 },
-  { month: "May", satisfaction: 4.7 },
-  { month: "Jun", satisfaction: 4.8 },
+  { month: "Jan", satisfaction: 4.7 },
+  { month: "Feb", satisfaction: 4.8 },
+  { month: "Mar", satisfaction: 4.6 },
+  { month: "Apr", satisfaction: 4.9 },
+  { month: "May", satisfaction: 4.8 },
+  { month: "Jun", satisfaction: 4.9 },
 ];
 
 const satisfactionConfig = {
@@ -299,52 +294,28 @@ const satisfactionConfig = {
   },
 } satisfies ChartConfig;
 
-export default function IndividualHub() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("health");
+export default function MedicareTestHub() {
+  const [selectedCategory, setSelectedCategory] = useState<string>("medigap");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCompareSheetOpen, setIsCompareSheetOpen] = useState(false);
-  const [isArticleSheetOpen, setIsArticleSheetOpen] = useState(false);
 
   const currentCategory = productCategories.find(cat => cat.id === selectedCategory);
-
-  const resources = [
-    {
-      title: "Insurance Basics: A Complete Guide",
-      description: "Everything you need to know about personal insurance coverage",
-      url: "/resources/insurance-basics-guide",
-      readTime: "8 min read"
-    },
-    {
-      title: "Health vs Life Insurance",
-      description: "Compare different types of personal protection",
-      url: "/resources/health-vs-life-insurance",
-      readTime: "6 min read"
-    },
-    {
-      title: "When to Update Your Coverage",
-      description: "Life events that trigger insurance reviews",
-      url: "/resources/when-to-update-coverage",
-      readTime: "5 min read"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <div className="border-b">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-full">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">Individual Insurance</Badge>
-              <Badge variant="outline">2025 Coverage Available</Badge>
+              <Badge variant="secondary">Medicare Hub</Badge>
+              <Badge variant="outline">2025 Plans Available</Badge>
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight break-words">
-                Find Your Perfect Insurance Coverage
+                Find Your Perfect Medicare Plan
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mt-2 break-words">
-                Compare all your personal insurance options in one place. Expert guidance included.
+                Compare all your Medicare options in one place. Expert guidance included.
               </p>
             </div>
           </div>
@@ -352,11 +323,11 @@ export default function IndividualHub() {
       </div>
 
       {/* Main Content Area - Responsive Layout */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full overflow-x-hidden">
         {/* Mobile Category Selector - Improved */}
         <div className="lg:hidden mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Choose Your Insurance Type</h2>
+            <h2 className="text-base font-semibold">Choose Your Medicare Plan</h2>
             <Badge variant="outline" className="text-xs">
               {productCategories.find(cat => cat.id === selectedCategory)?.name}
             </Badge>
@@ -432,7 +403,7 @@ export default function IndividualHub() {
           <div className="hidden lg:block space-y-2">
             <div className="pb-4">
               <h2 className="text-sm font-medium text-muted-foreground mb-3">
-                INSURANCE CATEGORIES
+                PRODUCT CATEGORIES
               </h2>
               <div className="space-y-1">
                 {productCategories.map((category) => {
@@ -453,10 +424,10 @@ export default function IndividualHub() {
                       <Icon className={`h-4 w-4 shrink-0 ${
                         selectedCategory === category.id 
                           ? 'text-blue-600 dark:text-blue-400'
-                          : category.id === 'health' ? 'text-red-600' :
-                            category.id === 'life' ? 'text-green-600' :
-                            category.id === 'auto' ? 'text-orange-600' :
-                            category.id === 'home' ? 'text-purple-600' :
+                          : category.id === 'original' ? 'text-green-600' :
+                            category.id === 'medigap' ? 'text-blue-600' :
+                            category.id === 'advantage' ? 'text-red-600' :
+                            category.id === 'part-d' ? 'text-purple-600' :
                             'text-muted-foreground'
                       }`} />
                       <div className="flex-1 min-w-0">
@@ -483,25 +454,25 @@ export default function IndividualHub() {
               </h3>
               <div className="space-y-1">
                 <Link
-                  href="/tools/coverage-calculator"
+                  href="/tools/premium-estimator"
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50"
                 >
                   <TokensIcon className="h-4 w-4" />
-                  Coverage Calculator
+                  Premium Calculator
                 </Link>
                 <Link
-                  href="/tools/quote-comparison"
+                  href="/tools/enrollment-checker"
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50"
                 >
-                  <TargetIcon className="h-4 w-4" />
-                  Quote Comparison
+                  <CalendarIcon className="h-4 w-4" />
+                  Enrollment Periods
                 </Link>
                 <Link
-                  href="/tools/agent-finder"
+                  href="/tools/doctor-finder"
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50"
                 >
                   <PersonIcon className="h-4 w-4" />
-                  Find Local Agent
+                  Find Doctors
                 </Link>
               </div>
             </div>
@@ -581,7 +552,7 @@ export default function IndividualHub() {
                   </div>
                   <Button className="hidden sm:flex items-center gap-2 self-start sm:self-auto">
                     <ArchiveIcon className="h-4 w-4" />
-                    <span className="hidden sm:inline">Get</span> Quotes
+                    <span className="hidden sm:inline">View</span> Quotes
                   </Button>
                 </div>
 
@@ -610,8 +581,8 @@ export default function IndividualHub() {
                 <div className="relative">
                   <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
                     <iframe
-                      src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                      title={`Learn About ${currentCategory.name}`}
+                      src="https://www.youtube.com/embed/7o3q3med9Dw"
+                      title="Learn About Medicare"
                       className="w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
@@ -622,7 +593,7 @@ export default function IndividualHub() {
                       <div className="flex items-center justify-between text-white">
                         <div>
                           <p className="text-sm font-medium">Understanding {currentCategory.name}</p>
-                          <p className="text-xs opacity-90">6:45 min • Expert explanation</p>
+                          <p className="text-xs opacity-90">5:30 min • Expert explanation</p>
                         </div>
                         <Button size="sm" variant="secondary" className="text-xs">
                           📱 Fullscreen
@@ -725,17 +696,17 @@ export default function IndividualHub() {
                                 plan.isPopular ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''
                               }`}>
                                 <div className="text-xs font-medium text-muted-foreground">
-                                  {planIndex === 0 && currentCategory.id === 'health' && "Lower costs"}
-                                  {planIndex === 1 && currentCategory.id === 'health' && "Balanced value"}
-                                  {planIndex === 2 && currentCategory.id === 'health' && "Comprehensive"}
-                                  {planIndex === 0 && currentCategory.id === 'life' && "Young families"}
-                                  {planIndex === 1 && currentCategory.id === 'life' && "Estate planning"}
-                                  {planIndex === 0 && currentCategory.id === 'auto' && "Budget conscious"}
-                                  {planIndex === 1 && currentCategory.id === 'auto' && "Complete protection"}
-                                  {planIndex === 0 && currentCategory.id === 'home' && "Homeowners"}
-                                  {planIndex === 1 && currentCategory.id === 'home' && "Condo owners"}
-                                  {planIndex === 0 && currentCategory.id === 'disability' && "Short-term needs"}
-                                  {planIndex === 1 && currentCategory.id === 'disability' && "Long-term security"}
+                                  {planIndex === 0 && currentCategory.id === 'medigap' && "Comprehensive coverage"}
+                                  {planIndex === 1 && currentCategory.id === 'medigap' && "Budget conscious"}
+                                  {planIndex === 2 && currentCategory.id === 'medigap' && "Legacy coverage"}
+                                  {planIndex === 0 && currentCategory.id === 'advantage' && "Flexibility seekers"}
+                                  {planIndex === 1 && currentCategory.id === 'advantage' && "Cost savers"}
+                                  {planIndex === 0 && currentCategory.id === 'part-d' && "Original Medicare users"}
+                                  {planIndex === 0 && currentCategory.id === 'supplemental' && "Extra protection"}
+                                  {planIndex === 1 && currentCategory.id === 'supplemental' && "Routine care"}
+                                  {planIndex === 0 && currentCategory.id === 'original' && "Hospital coverage"}
+                                  {planIndex === 1 && currentCategory.id === 'original' && "Medical coverage"}
+                                  {planIndex === 2 && currentCategory.id === 'original' && "Complete Medicare"}
                                 </div>
                               </td>
                             ))}
@@ -744,6 +715,136 @@ export default function IndividualHub() {
                       </table>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Short Article Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileTextIcon className="h-5 w-5" />
+                      Understanding {currentCategory.name}
+                    </CardTitle>
+                    <CardDescription>
+                      Essential information to help you make informed decisions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="prose prose-sm max-w-none">
+                    {currentCategory.id === 'original' && (
+                      <div className="space-y-4">
+                        <p>
+                          Original Medicare is the traditional fee-for-service health insurance program managed by the federal government. 
+                          It consists of Part A (Hospital Insurance) and Part B (Medical Insurance), providing essential coverage for 
+                          hospital stays, doctor visits, and medical services.
+                        </p>
+                        <p>
+                          <strong>Part A Coverage:</strong> Hospital insurance covers inpatient hospital stays, skilled nursing facility 
+                          care, hospice care, and some home health care. Most people don't pay a premium for Part A if they or their 
+                          spouse paid Medicare taxes while working.
+                        </p>
+                        <p>
+                          <strong>Part B Coverage:</strong> Medical insurance covers doctor visits, outpatient care, medical supplies, 
+                          preventive services, and durable medical equipment. Part B requires a monthly premium, which is $174.70 
+                          for most people in 2025.
+                        </p>
+                        <p>
+                          Original Medicare allows you to see any doctor or specialist who accepts Medicare, giving you nationwide 
+                          coverage and flexibility. However, it doesn't cover prescription drugs, so you may want to consider adding 
+                          Part D coverage or a Medigap supplement plan.
+                        </p>
+                      </div>
+                    )}
+                    {currentCategory.id === 'medigap' && (
+                      <div className="space-y-4">
+                        <p>
+                          Medigap (Medicare Supplement Insurance) is private insurance designed to help pay for costs that Original 
+                          Medicare doesn't cover, such as copayments, coinsurance, and deductibles. These standardized plans work 
+                          alongside Original Medicare to reduce your out-of-pocket expenses.
+                        </p>
+                        <p>
+                          <strong>Plan G</strong> is currently the most comprehensive plan available to new Medicare beneficiaries, 
+                          covering nearly all out-of-pocket costs except the Part B deductible. This makes healthcare costs predictable 
+                          and manageable.
+                        </p>
+                        <p>
+                          <strong>Plan N</strong> offers substantial coverage at a lower premium, requiring small copayments for doctor 
+                          visits and emergency room visits. It's an excellent choice for those who want comprehensive coverage while 
+                          keeping monthly costs lower.
+                        </p>
+                        <p>
+                          All Medigap plans allow you to see any doctor who accepts Medicare, anywhere in the United States. There are 
+                          no networks to worry about, and you don't need referrals to see specialists.
+                        </p>
+                      </div>
+                    )}
+                    {currentCategory.id === 'advantage' && (
+                      <div className="space-y-4">
+                        <p>
+                          Medicare Advantage (Part C) plans are an alternative way to receive Medicare benefits through private 
+                          insurance companies approved by Medicare. These plans combine Parts A and B, and often include Part D 
+                          prescription drug coverage and extra benefits.
+                        </p>
+                        <p>
+                          <strong>HMO Plans</strong> typically offer lower costs and coordinated care through a primary care physician. 
+                          You'll generally need referrals to see specialists and must use providers within the plan's network, except 
+                          for emergency care.
+                        </p>
+                        <p>
+                          <strong>PPO Plans</strong> provide more flexibility, allowing you to see specialists without referrals and 
+                          use out-of-network providers (though at higher cost). These plans often cost more but offer greater freedom 
+                          in choosing healthcare providers.
+                        </p>
+                        <p>
+                          Many Medicare Advantage plans include extra benefits like dental, vision, hearing aids, wellness programs, 
+                          and transportation services. However, you're limited to the plan's network of providers and the coverage 
+                          area where you live.
+                        </p>
+                      </div>
+                    )}
+                    {currentCategory.id === 'part-d' && (
+                      <div className="space-y-4">
+                        <p>
+                          Medicare Part D provides prescription drug coverage through private insurance companies. If you have Original 
+                          Medicare, you can add a standalone Part D plan (PDP) to get prescription drug coverage. Medicare Advantage 
+                          plans often include Part D coverage.
+                        </p>
+                        <p>
+                          <strong>Formularies:</strong> Each Part D plan has a formulary (list of covered drugs) that determines which 
+                          medications are covered and at what cost. It's important to check that your current medications are covered 
+                          before enrolling in a plan.
+                        </p>
+                        <p>
+                          <strong>Cost Structure:</strong> Part D plans typically have deductibles, copayments, and coinsurance. 
+                          There's also a coverage gap (donut hole) where you pay more for drugs until you reach catastrophic coverage.
+                        </p>
+                        <p>
+                          If you don't enroll in Part D when you're first eligible and don't have other creditable prescription drug 
+                          coverage, you may pay a late enrollment penalty for as long as you have Medicare prescription drug coverage.
+                        </p>
+                      </div>
+                    )}
+                    {currentCategory.id === 'supplemental' && (
+                      <div className="space-y-4">
+                        <p>
+                          Supplemental insurance provides additional protection beyond what Medicare covers. These plans can help 
+                          with specific health conditions, routine care, or situations where Medicare benefits may be limited.
+                        </p>
+                        <p>
+                          <strong>Cancer Insurance</strong> provides lump-sum cash benefits upon cancer diagnosis, which can be used 
+                          for any purpose - medical bills, living expenses, or treatment-related costs. This coverage is especially 
+                          valuable given the high costs associated with cancer treatment.
+                        </p>
+                        <p>
+                          <strong>Dental and Vision Plans</strong> cover routine care that Medicare typically doesn't include. These 
+                          plans can help with regular cleanings, eye exams, glasses, and major dental work, helping you maintain 
+                          overall health and catch problems early.
+                        </p>
+                        <p>
+                          These supplemental plans work independently of Medicare and can provide peace of mind and financial 
+                          protection for specific healthcare needs that traditional Medicare doesn't adequately address.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -847,7 +948,7 @@ export default function IndividualHub() {
                     <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center overflow-hidden">
                       <img 
                         src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/app-photos%2FHeadshot%20Four-2.jpg?alt=media&token=536d05ff-db44-498a-8a28-5a65f5a76d77"
-                        alt="Insurance Expert Sarah Thompson"
+                        alt="Medicare Expert Jonathan Hawkins"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -857,7 +958,7 @@ export default function IndividualHub() {
                         Free consultation with licensed agent
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Sarah Thompson, CLU
+                        Jonathan Hawkins, CFP
                       </p>
                     </div>
                     <Button className="w-full">
@@ -879,9 +980,9 @@ export default function IndividualHub() {
               </h3>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Most Requested Coverage</CardTitle>
+                  <CardTitle className="text-base">Most Chosen Plans</CardTitle>
                   <CardDescription className="text-sm">
-                    Based on 2024 quotes
+                    Based on 2024 enrollments
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-2">
@@ -958,8 +1059,8 @@ export default function IndividualHub() {
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl font-bold">25,000+</div>
-                      <div className="text-sm text-muted-foreground">Quotes Delivered</div>
+                      <div className="text-2xl font-bold">50,000+</div>
+                      <div className="text-sm text-muted-foreground">Plans Compared</div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-chart-1/20 flex items-center justify-center">
                       <ArchiveIcon className="h-4 w-4 text-chart-1" />
@@ -969,7 +1070,7 @@ export default function IndividualHub() {
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl font-bold">4.8/5</div>
+                      <div className="text-2xl font-bold">4.9/5</div>
                       <div className="text-sm text-muted-foreground">Customer Rating</div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-chart-2/20 flex items-center justify-center">
@@ -980,7 +1081,7 @@ export default function IndividualHub() {
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl font-bold">$350+</div>
+                      <div className="text-2xl font-bold">$500+</div>
                       <div className="text-sm text-muted-foreground">Avg. Savings</div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-chart-3/20 flex items-center justify-center">
@@ -1046,71 +1147,6 @@ export default function IndividualHub() {
           </button>
         </div>
       </div>
-
-      {/* Mobile Compare Sheet */}
-      <Sheet open={isCompareSheetOpen} onOpenChange={setIsCompareSheetOpen}>
-        <SheetContent side="bottom" className="h-[90vh]">
-          <SheetHeader>
-            <SheetTitle>Compare Plans</SheetTitle>
-            <SheetDescription>
-              Compare different {currentCategory?.name} plans side by side
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4 overflow-y-auto">
-            {currentCategory?.plans.map((plan) => (
-              <Card key={plan.id} className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold">{plan.name}</h3>
-                  <div className="text-right">
-                    <div className="font-bold text-primary">{plan.premiumRange}</div>
-                    <div className="text-xs text-muted-foreground">per month</div>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
-                <div className="space-y-1">
-                  {plan.features.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2 text-sm">
-                      <CheckIcon className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Mobile Article Sheet */}
-      <Sheet open={isArticleSheetOpen} onOpenChange={setIsArticleSheetOpen}>
-        <SheetContent side="bottom" className="h-[90vh]">
-          <SheetHeader>
-            <SheetTitle>Learn More About {currentCategory?.name}</SheetTitle>
-            <SheetDescription>
-              Educational resources and guides
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4 overflow-y-auto">
-            {resources.map((resource, index) => (
-              <Link
-                key={index}
-                href={resource.url}
-                className="block p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                onClick={() => setIsArticleSheetOpen(false)}
-              >
-                <div className="flex items-start gap-3">
-                  <FileTextIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-medium mb-1">{resource.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{resource.description}</p>
-                    <div className="text-xs text-blue-600">{resource.readTime}</div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
