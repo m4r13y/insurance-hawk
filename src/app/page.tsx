@@ -40,7 +40,7 @@ const mainServices = [
   {
     title: "Medicare Solutions",
     description: "Navigate Medicare with confidence and expert guidance",
-    href: "/Medicare",
+    href: "/medicare",
     icon: HeartIcon,
     features: ["Medicare Advantage", "Supplement Plans", "Part D Drug Plans", "Provider Networks"],
     color: "from-purple-500 to-purple-600",

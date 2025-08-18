@@ -294,7 +294,7 @@ const satisfactionConfig = {
   },
 } satisfies ChartConfig;
 
-export default function MedicareTestHub() {
+export default function Medicare() {
   const [selectedCategory, setSelectedCategory] = useState<string>("medigap");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
