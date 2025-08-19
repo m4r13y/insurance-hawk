@@ -25,7 +25,7 @@ const mainServices = [
     href: "/business",
     icon: ComponentInstanceIcon,
     features: ["Group Health Plans", "Liability Coverage", "Workers' Compensation", "Business Property"],
-    color: "from-blue-500 to-blue-600",
+    color: "from-navy-600 to-navy-700",
     savings: "Save up to 30%"
   },
   {
@@ -34,7 +34,7 @@ const mainServices = [
     href: "/individual",
     icon: PersonIcon,
     features: ["Health Insurance", "Life Insurance", "Dental & Vision", "Cancer Coverage"],
-    color: "from-green-500 to-green-600",
+    color: "from-gray-600 to-gray-700",
     savings: "Plans from $50/month"
   },
   {
@@ -43,7 +43,7 @@ const mainServices = [
     href: "/medicare",
     icon: HeartIcon,
     features: ["Medicare Advantage", "Supplement Plans", "Part D Drug Plans", "Provider Networks"],
-    color: "from-purple-500 to-purple-600",
+    color: "from-blue-800 to-blue-900",
     savings: "Free consultation"
   }
 ]
@@ -104,13 +104,21 @@ export default function HomePage() {
                             muted
                             loop
                             playsInline
+                            preload="metadata"
                             className="absolute inset-0 w-full h-full object-cover"
-                            poster="/video-poster.jpg" // Optional: Add a poster image
+                            onError={(e) => {
+                                const video = e.target as HTMLVideoElement;
+                                console.error('Video failed to load:', video.error?.code, video.error?.message);
+                            }}
+                            onLoadedData={() => {
+                                console.log('Video loaded successfully');
+                            }}
                         >
-                            <source src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/public-videos%2F0615(2).mp4?alt=media" type="video/mp4" />
+                            <source src="https://firebasestorage.googleapis.com/v0/b/medicareally.firebasestorage.app/o/public-videos%2F0615(2).mp4?alt=media&token=cfc161e0-6323-4a43-96db-ef9e8a4fa77d" type="video/mp4" />
                             {/* Fallback for browsers that don't support video */}
                             Your browser does not support the video tag.
                         </video>
+                        
                         {/* Dark overlay for better text readability */}
                         <div className="absolute inset-0 bg-black/40"></div>
                     </div>
@@ -130,7 +138,7 @@ export default function HomePage() {
                                 We help families and businesses find the best insurance coverage at the lowest prices. No sales pressure, no hidden fees - just honest advice that puts your needs first.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-                                <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg backdrop-blur-sm">
+                                <Button size="lg" variant="secondary" className="bg-white text-blue-900 hover:bg-gray-50 shadow-lg backdrop-blur-sm">
                                     Get Free Quote
                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
                                 </Button>
@@ -171,7 +179,7 @@ export default function HomePage() {
                                                 </Badge>
                                             </div>
                                             <div className="space-y-3">
-                                                <CardTitle className="text-xl lg:text-2xl group-hover:text-blue-600 transition-colors">
+                                                <CardTitle className="text-xl lg:text-2xl group-hover:text-blue-900 transition-colors">
                                                     {service.title}
                                                 </CardTitle>
                                                 <CardDescription className="text-base leading-relaxed">
@@ -185,14 +193,14 @@ export default function HomePage() {
                                                 <div className="grid grid-cols-1 gap-2">
                                                     {service.features.map((feature, idx) => (
                                                         <div key={idx} className="flex items-center space-x-3">
-                                                            <CheckIcon className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                            <CheckIcon className="h-4 w-4 text-blue-800 flex-shrink-0" />
                                                             <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                             <Link href={service.href} className="block">
-                                                <Button className="w-full group-hover:bg-blue-600 transition-all duration-300 shadow-md hover:shadow-lg">
+                                                <Button className="w-full group-hover:bg-blue-900 transition-all duration-300 shadow-md hover:shadow-lg bg-blue-800">
                                                     Explore Options
                                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
                                                 </Button>
@@ -268,8 +276,8 @@ export default function HomePage() {
                                     const IconComponent = item.icon
                                     return (
                                         <div key={index} className="text-center space-y-4 group">
-                                            <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                                <IconComponent className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                                            <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <IconComponent className="h-8 w-8 text-blue-900 dark:text-blue-300" />
                                             </div>
                                             <h3 className="font-bold text-lg text-gray-900 dark:text-white">{item.title}</h3>
                                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
@@ -291,19 +299,19 @@ export default function HomePage() {
                                 <CardContent>
                                     <div className="grid grid-cols-2 gap-8 text-center">
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-blue-600">$2M+</div>
+                                            <div className="text-4xl font-bold text-blue-900">$2M+</div>
                                             <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Saved for Clients</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-green-600">5,000+</div>
+                                            <div className="text-4xl font-bold text-gray-700">5,000+</div>
                                             <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Families Protected</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-purple-600">20+</div>
+                                            <div className="text-4xl font-bold text-blue-800">20+</div>
                                             <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Years Experience</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-orange-600">98%</div>
+                                            <div className="text-4xl font-bold text-gray-800">98%</div>
                                             <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Satisfaction Rate</div>
                                         </div>
                                     </div>
@@ -314,13 +322,13 @@ export default function HomePage() {
                             <Card className="shadow-lg">
                                 <CardHeader className="pb-6">
                                     <CardTitle className="flex items-center space-x-3 text-xl">
-                                        <ChatBubbleIcon className="h-6 w-6 text-blue-600" />
+                                        <ChatBubbleIcon className="h-6 w-6 text-blue-900" />
                                         <span>What Clients Say</span>
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     {testimonialHighlights.map((testimonial, index) => (
-                                        <div key={index} className="border-l-4 border-blue-200 pl-6 py-2">
+                                        <div key={index} className="border-l-4 border-gray-300 pl-6 py-2">
                                             <p className="text-gray-600 dark:text-gray-300 italic text-lg leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
                                             <p className="text-sm font-medium text-gray-500 mt-3">
                                                 - {testimonial.author}, {testimonial.location}
@@ -369,7 +377,7 @@ export default function HomePage() {
                                 <Card className="hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
                                     <CardHeader className="text-center pb-6">
                                         <ComponentInstanceIcon className="h-12 w-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                                        <CardTitle className="group-hover:text-purple-600 transition-colors text-xl">Ecosystem</CardTitle>
+                                        <CardTitle className="group-hover:text-blue-900 transition-colors text-xl">Ecosystem</CardTitle>
                                         <CardDescription className="text-base">Connect with us across all platforms</CardDescription>
                                     </CardHeader>
                                 </Card>
@@ -379,16 +387,16 @@ export default function HomePage() {
 
                     {/* Final CTA Section */}
                     <section className="py-16" aria-labelledby="final-cta">
-                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 lg:p-12 text-center text-white shadow-xl">
+                        <div className="bg-gradient-to-r from-blue-900 to-gray-800 rounded-2xl p-8 lg:p-12 text-center text-white shadow-xl">
                             <h2 id="final-cta" className="text-3xl lg:text-4xl font-bold mb-6">Ready to Save Money on Insurance?</h2>
-                            <p className="text-blue-100 mb-8 max-w-3xl mx-auto text-lg leading-relaxed">
+                            <p className="text-gray-200 mb-8 max-w-3xl mx-auto text-lg leading-relaxed">
                                 Get personalized quotes from top-rated carriers in minutes. No obligation, no pressure, no hidden fees.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Button size="lg" variant="secondary" className="shadow-lg">
                                     Get Free Quotes Now
                                 </Button>
-                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 shadow-lg">
+                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900 shadow-lg">
                                     Schedule Consultation
                                 </Button>
                             </div>
