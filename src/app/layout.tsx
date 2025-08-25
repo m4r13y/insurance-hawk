@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { MedicareHeader } from "@/components/library/layout/medicare-header";
+import { SimpleHeader } from "@/components/library/layout/simple-header";
 import { HeaderUpper } from "@/components/library/layout/medicare-header-upper";
 
 const inter = Inter({
@@ -33,7 +33,7 @@ export default function RootLayout({
         
         {/* Main Header */}
         <div className="relative">
-          <MedicareHeader />
+          <SimpleHeader />
         </div>
         
         <main className={cn(

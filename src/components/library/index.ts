@@ -11,11 +11,8 @@ export { FormGroup, FormLabel, FormTextarea, FormCheckbox, FormRadio, InputGroup
 export { EnhancedModal, ModalHeader, ModalTitle, ModalDescription, ModalBody, ModalFooter, ModalCloseButton } from './feedback/enhanced-modal';
 export { EnhancedBadge, StatusBadge, CountBadge, CategoryBadge, PriorityBadge } from './feedback/enhanced-badge';
 
-// Navigation Components
-export { EnhancedDropdown, DropdownButton, DropdownItem, DropdownSeparator, DropdownLabel, DropdownCheckboxItem, DropdownRadioGroup, DropdownRadioItem } from './navigation/enhanced-dropdown';
-
 // Layout Components
-export { MedicareHeader } from './layout/medicare-header';
+export { SimpleHeader } from './layout/simple-header';
 
 // Content Components (for Medicare-specific content)
 export { ActionButtons } from '../ActionButtons';

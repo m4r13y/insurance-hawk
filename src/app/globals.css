@@ -423,54 +423,6 @@
   .dark .container {
     background-color: transparent !important;
   }
-
-  /* Navigation Menu Dark Mode Styles */
-  .dark [data-radix-navigation-menu-viewport] {
-    background-color: #19191b !important;
-    border-color: #393a40 !important;
-  }
-
-  .dark [data-radix-navigation-menu-content] {
-    background-color: #19191b !important;
-    color: #eeeef0 !important;
-  }
-
-  .dark .navigation-menu-link {
-    color: #eeeef0 !important;
-  }
-
-  .dark .navigation-menu-link:hover {
-    background-color: #222325 !important;
-    color: #eeeef0 !important;
-  }
-
-  /* Additional navigation menu viewport targeting */
-  .dark .absolute.left-0.top-full div[data-radix-navigation-menu-viewport] {
-    background-color: #19191b !important;
-    border: 1px solid #393a40 !important;
-  }
-
-  /* Force navigation menu content background */
-  .dark nav [data-radix-navigation-menu-content] {
-    background-color: #19191b !important;
-  }
-
-  /* Target the specific navigation menu wrapper */
-  .dark [data-radix-navigation-menu-viewport][data-state="open"] {
-    background-color: #19191b !important;
-  }
-
-  /* Ultimate fallback for navigation menu backgrounds */
-  .dark [data-radix-navigation-menu-viewport] * {
-    background-color: inherit !important;
-  }
-
-  /* Specific targeting for the header navigation megamenu */
-  .dark header [data-radix-navigation-menu-viewport] {
-    background: #19191b !important;
-    color: #eeeef0 !important;
-    border: 1px solid #393a40 !important;
-  }
 }
 
 @layer components {
@@ -957,35 +909,6 @@
   to {
     transform: translateX(100%);
   }
-}
-
-/* Force navigation menu background */
-[data-radix-navigation-menu-viewport] {
-  background-color: white !important;
-  border: 1px solid hsl(var(--border)) !important;
-}
-
-.dark [data-radix-navigation-menu-viewport] {
-  background-color: hsl(var(--background)) !important;
-}
-
-/* Fix initial hover text color delay */
-[data-radix-navigation-menu-content] * {
-  color: inherit !important;
-  transition: none !important;
-}
-
-[data-radix-navigation-menu-content] .text-foreground {
-  color: hsl(var(--foreground)) !important;
-}
-
-[data-radix-navigation-menu-content] .text-muted-foreground {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-/* Ensure immediate text visibility on navigation menu open */
-[data-radix-navigation-menu-viewport][data-state="open"] * {
-  color: inherit !important;
 }
 
 /* Additional CSS */
