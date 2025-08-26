@@ -14,7 +14,7 @@ import { ecosystemData } from "@/components/ecosystem/ecosystemData"
 
 export default function EcosystemPage() {
   return (
-    <div className="bg-background mt-16">
+    <div className="mt-16">
       <motion.div 
         variants={staggerContainer}
         initial="initial"
