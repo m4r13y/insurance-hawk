@@ -1,0 +1,5 @@
+export { default as HeroSection } from './HeroSection'
+export { default as OriginStory } from './OriginStory'
+export { default as MissionValues } from './MissionValues'
+export { default as Testimonials } from './Testimonials'
+export { default as ContactSection } from './ContactSection'
