@@ -199,7 +199,7 @@ export function SimpleHeader() {
                   pages={medicarePages}
                   hubPage={{
                     title: "Medicare Hub",
-                    href: "/Medicare/",
+                    href: "/medicare/",
                     description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
                   }}
                 />

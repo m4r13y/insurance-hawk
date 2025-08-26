@@ -310,7 +310,7 @@ export default function Medicare() {
 
       {/* Header */}
       <div className="border-b">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-full">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Medicare Hub</Badge>
@@ -329,7 +329,7 @@ export default function Medicare() {
       </div>
 
       {/* Main Content Area - Responsive Layout */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full overflow-x-hidden">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 overflow-x-hidden">
         {/* Mobile Category Selector - Improved */}
         <div className="lg:hidden mb-6">
           <div className="flex items-center justify-between mb-4">
