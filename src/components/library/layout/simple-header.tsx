@@ -118,44 +118,52 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
       </button>
 
       {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-1 w-[500px] bg-background/95 dark:bg-gray-900/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
-        >
-          <div className="p-6">
-            <div className="grid grid-cols-[0.75fr_1fr] gap-3 ">
-              {hubPage && (
-                <div className="row-span-3">
-                  <Link
-                    href={hubPage.href}
-                    className="flex h-full w-full select-none flex-col justify-start rounded-xl bg-secondary/80 border border-border/30 p-6 no-underline outline-none focus:shadow-md hover:bg-secondary/90 transition-all duration-300"
-                  >
-                    <div className="mb-2 mt-4 text-lg font-medium text-foreground">
-                      {hubPage.title}
-                    </div>
-                    <p className="text-sm leading-tight text-muted-foreground">
-                      {hubPage.description}
-                    </p>
-                  </Link>
-                </div>
-              )}
-              {pages.map((page) => (
-                <div key={page.href}>
-                  <Link
-                    href={page.href}
-                    className="block select-none space-y-1 rounded-xl p-3 leading-none no-underline outline-none transition-all duration-300 hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50 focus:text-accent-foreground"
-                  >
-                    <div className="text-sm font-medium leading-none">{page.title}</div>
-                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                      {page.description}
-                    </p>
-                  </Link>
-                </div>
-              ))}
+        <>
+          {/* Invisible bridge to prevent gap hover issues */}
+          <div
+            className="absolute top-full left-0 w-full h-2 z-[59]"
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+          />
+          <div
+            className="absolute top-full left-0 pt-2 w-[500px] bg-background/95 dark:bg-gray-900/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+          >
+            <div className="p-6">
+              <div className="grid grid-cols-[0.75fr_1fr] gap-3 ">
+                {hubPage && (
+                  <div className="row-span-3">
+                    <Link
+                      href={hubPage.href}
+                      className="flex h-full w-full select-none flex-col justify-start rounded-xl bg-secondary/80 border border-border/30 p-6 no-underline outline-none focus:shadow-md hover:bg-secondary/90 transition-all duration-300"
+                    >
+                      <div className="mb-2 mt-4 text-lg font-medium text-foreground">
+                        {hubPage.title}
+                      </div>
+                      <p className="text-sm leading-tight text-muted-foreground">
+                        {hubPage.description}
+                      </p>
+                    </Link>
+                  </div>
+                )}
+                {pages.map((page) => (
+                  <div key={page.href}>
+                    <Link
+                      href={page.href}
+                      className="block select-none space-y-1 rounded-xl p-3 leading-none no-underline outline-none transition-all duration-300 hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50 focus:text-accent-foreground"
+                    >
+                      <div className="text-sm font-medium leading-none">{page.title}</div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        {page.description}
+                      </p>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
