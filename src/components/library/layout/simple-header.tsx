@@ -119,17 +119,17 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 w-[500px] bg-background border border-border rounded-md shadow-lg z-50"
+          className="absolute top-full left-0 mt-1 w-[500px] bg-[var(--gray-2)] border border-border rounded-md shadow-lg z-50"
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
         >
           <div className="p-6">
-            <div className="grid grid-cols-[0.75fr_1fr] gap-3">
+            <div className="grid grid-cols-[0.75fr_1fr] gap-3 ">
               {hubPage && (
                 <div className="row-span-3">
                   <Link
                     href={hubPage.href}
-                    className="flex h-full w-full select-none flex-col justify-start rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md hover:bg-muted/70 transition-colors"
+                    className="flex h-full w-full select-none flex-col justify-start rounded-md bg-[var(--gray-3)] p-6 no-underline outline-none focus:shadow-md hover:bg-muted/70 transition-colors"
                   >
                     <div className="mb-2 mt-4 text-lg font-medium text-foreground">
                       {hubPage.title}
