@@ -18,7 +18,7 @@ const FacebookIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export const ecosystemPageData = {
+export const ecosystemData = {
   hero: {
     title: "The Insurance Hawk Ecosystem",
     description: "Connect with us across all platforms and discover the complete suite of tools and resources designed to help you save money and make informed insurance decisions."

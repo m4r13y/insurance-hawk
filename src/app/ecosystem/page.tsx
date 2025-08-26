@@ -10,7 +10,7 @@ import {
   NewsletterSignup,
   CTASection
 } from "@/components/ecosystem"
-import { ecosystemPageData } from "./ecosystemData"
+import { ecosystemData } from "./ecosystemData"
 
 export default function EcosystemPage() {
   return (
@@ -24,44 +24,44 @@ export default function EcosystemPage() {
         
         {/* Hero Section */}
         <HeroSection 
-          title={ecosystemPageData.hero.title}
-          description={ecosystemPageData.hero.description}
+          title={ecosystemData.hero.title}
+          description={ecosystemData.hero.description}
         />
 
         {/* Social Media Platforms */}
         <SocialPlatforms 
-          title={ecosystemPageData.socialPlatforms.title}
-          description={ecosystemPageData.socialPlatforms.description}
-          platforms={ecosystemPageData.socialPlatforms.platforms}
+          title={ecosystemData.socialPlatforms.title}
+          description={ecosystemData.socialPlatforms.description}
+          platforms={ecosystemData.socialPlatforms.platforms}
         />
 
         {/* Platform Ecosystem */}
         <PlatformEcosystem 
-          title={ecosystemPageData.platformEcosystem.title}
-          description={ecosystemPageData.platformEcosystem.description}
-          platforms={ecosystemPageData.platformEcosystem.platforms}
+          title={ecosystemData.platformEcosystem.title}
+          description={ecosystemData.platformEcosystem.description}
+          platforms={ecosystemData.platformEcosystem.platforms}
         />
 
         {/* Community Resources */}
         <CommunityResources 
-          title={ecosystemPageData.communityResources.title}
-          description={ecosystemPageData.communityResources.description}
-          resources={ecosystemPageData.communityResources.resources}
+          title={ecosystemData.communityResources.title}
+          description={ecosystemData.communityResources.description}
+          resources={ecosystemData.communityResources.resources}
         />
 
         {/* Newsletter Signup */}
         <NewsletterSignup 
-          title={ecosystemPageData.newsletter.title}
-          description={ecosystemPageData.newsletter.description}
-          placeholder={ecosystemPageData.newsletter.placeholder}
-          buttonText={ecosystemPageData.newsletter.buttonText}
+          title={ecosystemData.newsletter.title}
+          description={ecosystemData.newsletter.description}
+          placeholder={ecosystemData.newsletter.placeholder}
+          buttonText={ecosystemData.newsletter.buttonText}
         />
 
         {/* CTA Section */}
         <CTASection 
-          title={ecosystemPageData.cta.title}
-          description={ecosystemPageData.cta.description}
-          buttons={ecosystemPageData.cta.buttons}
+          title={ecosystemData.cta.title}
+          description={ecosystemData.cta.description}
+          buttons={ecosystemData.cta.buttons}
         />
 
       </motion.div>
