@@ -185,6 +185,15 @@ export function SimpleHeader() {
               
               <div className="hidden lg:flex items-center space-x-8">
                 <DropdownMenu
+                  title="Medicare"
+                  pages={medicarePages}
+                  hubPage={{
+                    title: "Medicare Hub",
+                    href: "/medicare/",
+                    description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
+                  }}
+                />
+                <DropdownMenu
                   title="Business"
                   pages={businessPages}
                   hubPage={{
@@ -200,15 +209,6 @@ export function SimpleHeader() {
                     title: "Individual Hub",
                     href: "/individual/",
                     description: "Personal insurance solutions including health, life, and supplemental coverage options."
-                  }}
-                />
-                <DropdownMenu
-                  title="Medicare"
-                  pages={medicarePages}
-                  hubPage={{
-                    title: "Medicare Hub",
-                    href: "/medicare/",
-                    description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
                   }}
                 />
                 <DropdownMenu
@@ -253,6 +253,22 @@ export function SimpleHeader() {
                   </Link>
                   <div className="flex flex-col space-y-6">
                     <div className="flex flex-col space-y-3">
+                      <h4 className="font-medium text-foreground">Medicare</h4>
+                      {medicarePages.map((page) => (
+                        <Link
+                          key={page.href}
+                          href={page.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground transition-colors",
+                            pathname === page.href && "text-foreground"
+                          )}
+                        >
+                          {page.title}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex flex-col space-y-3">
                       <h4 className="font-medium text-foreground">Business</h4>
                       {businessPages.map((page) => (
                         <Link
@@ -271,22 +287,6 @@ export function SimpleHeader() {
                     <div className="flex flex-col space-y-3">
                       <h4 className="font-medium text-foreground">Individual</h4>
                       {individualPages.map((page) => (
-                        <Link
-                          key={page.href}
-                          href={page.href}
-                          onClick={() => setIsOpen(false)}
-                          className={cn(
-                            "text-muted-foreground hover:text-foreground transition-colors",
-                            pathname === page.href && "text-foreground"
-                          )}
-                        >
-                          {page.title}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="flex flex-col space-y-3">
-                      <h4 className="font-medium text-foreground">Medicare</h4>
-                      {medicarePages.map((page) => (
                         <Link
                           key={page.href}
                           href={page.href}

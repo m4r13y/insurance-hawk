@@ -160,9 +160,9 @@ export default function AnimatedFooter() {
               <h4 className="text-lg font-semibold text-foreground mb-6">Services</h4>
               <ul className="space-y-4">
                 {[
-                  { name: "Individual Insurance", href: "/individual" },
-                  { name: "Business Insurance", href: "/business" },
                   { name: "Medicare Plans", href: "/medicare" },
+                  { name: "Business Insurance", href: "/business" },
+                  { name: "Individual Insurance", href: "/individual" },
                   { name: "Life Insurance", href: "/individual" },
                   { name: "Health Insurance", href: "/individual" }
                 ].map((link) => (

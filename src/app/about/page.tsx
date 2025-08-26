@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import AnimatedButton from "@/components/animated-button"
+import TeamSection from "@/components/TeamSection"
 import { staggerContainer, staggerItem } from "@/components/motion-wrapper"
 import {
   StarIcon,
@@ -170,22 +171,37 @@ export default function AboutPage() {
               variants={staggerItem}
               className="bg-gradient-to-br from-primary/5 to-purple-500/5 p-8 rounded-xl border border-border"
             >
-              <div className="space-y-4">
-                <div className="text-4xl font-bold text-primary">20+</div>
-                <div className="text-muted-foreground">Years of Experience</div>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" style={{ textShadow: "0 0 20px rgba(71, 85, 105, 0.3)" }}>38+</div>
+                  <div className="text-sm font-medium text-foreground mb-1">Years Combined Experience</div>
+                  <div className="text-xs text-muted-foreground">Serving Texas communities</div>
+                </div>
                 
-                <div className="text-4xl font-bold text-purple-600">$2M+</div>
-                <div className="text-muted-foreground">Saved for Clients</div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" style={{ textShadow: "0 0 20px rgba(71, 85, 105, 0.3)" }}>5,000+</div>
+                  <div className="text-sm font-medium text-foreground mb-1">Clients Protected</div>
+                  <div className="text-xs text-muted-foreground">Individuals and families</div>
+                </div>
                 
-                <div className="text-4xl font-bold text-green-600">5,000+</div>
-                <div className="text-muted-foreground">Families Protected</div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" style={{ textShadow: "0 0 20px rgba(71, 85, 105, 0.3)" }}>99%</div>
+                  <div className="text-sm font-medium text-foreground mb-1">Client Satisfaction</div>
+                  <div className="text-xs text-muted-foreground">Based on reviews</div>
+                </div>
                 
-                <div className="text-4xl font-bold text-orange-600">98%</div>
-                <div className="text-muted-foreground">Client Satisfaction</div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" style={{ textShadow: "0 0 20px rgba(71, 85, 105, 0.3)" }}>24/7</div>
+                  <div className="text-sm font-medium text-foreground mb-1">Support Available</div>
+                  <div className="text-xs text-muted-foreground">When you need us most</div>
+                </div>
               </div>
             </motion.div>
           </div>
         </motion.div>
+
+        {/* Team Section */}
+        <TeamSection />
 
         {/* Mission & Values */}
         <motion.div variants={staggerItem} className="space-y-8">
@@ -318,38 +334,7 @@ export default function AboutPage() {
           </motion.div>
         </motion.div>
 
-        {/* CTA Section */}
-        <motion.div 
-          variants={staggerItem}
-          className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg"
-        >
-          <motion.h2 
-            variants={staggerItem}
-            className="text-3xl font-bold mb-4"
-          >
-            Ready to Start Saving?
-          </motion.h2>
-          <motion.p 
-            variants={staggerItem}
-            className="text-primary-foreground/90 mb-6 max-w-2xl mx-auto"
-          >
-            Join thousands of satisfied clients who&apos;ve already discovered how much they can save with The Insurance Hawk.
-          </motion.p>
-          <motion.div 
-            variants={staggerItem}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <Link href="/get-started">
-              <AnimatedButton size="lg" variant="secondary">
-                Get My Free Quote
-                <ArrowRightIcon className="ml-2 h-4 w-4" />
-              </AnimatedButton>
-            </Link>
-            <AnimatedButton size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-              Schedule Consultation
-            </AnimatedButton>
-          </motion.div>
-        </motion.div>
+        
       </motion.div>
     </div>
   )

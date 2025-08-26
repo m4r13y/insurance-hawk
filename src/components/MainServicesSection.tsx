@@ -3,45 +3,34 @@
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import AnimatedButton from "@/components/animated-button"
-import GlossyIcon from "@/components/glossy-icon"
 import { staggerContainer, staggerItem } from "@/components/motion-wrapper"
 import {
-  ComponentInstanceIcon,
-  PersonIcon,
-  HeartIcon,
   CheckIcon,
   ArrowRightIcon,
 } from "@radix-ui/react-icons"
 
 const mainServices = [
   {
+    title: "Medicare Solutions",
+    description: "Navigate Medicare with confidence and expert guidance",
+    href: "/get-started/individual",
+    features: ["Medicare Advantage", "Supplement Plans", "Part D Drug Plans", "Provider Networks"],
+    color: "from-blue-800 to-blue-900"
+  },
+  {
     title: "Business Insurance",
     description: "Comprehensive coverage for businesses of all sizes",
     href: "/get-started/business",
-    icon: ComponentInstanceIcon,
     features: ["Group Health Plans", "Liability Coverage", "Workers' Compensation", "Business Property"],
-    color: "from-navy-600 to-navy-700",
-    savings: "Save up to 30%"
+    color: "from-navy-600 to-navy-700"
   },
   {
     title: "Individual Coverage",
     description: "Personal insurance solutions for you and your family",
     href: "/get-started/individual",
-    icon: PersonIcon,
     features: ["Health Insurance", "Life Insurance", "Dental & Vision", "Cancer Coverage"],
-    color: "from-gray-600 to-gray-700",
-    savings: "Plans from $50/month"
-  },
-  {
-    title: "Medicare Solutions",
-    description: "Navigate Medicare with confidence and expert guidance",
-    href: "/get-started/individual",
-    icon: HeartIcon,
-    features: ["Medicare Advantage", "Supplement Plans", "Part D Drug Plans", "Provider Networks"],
-    color: "from-blue-800 to-blue-900",
-    savings: "Free consultation"
+    color: "from-gray-600 to-gray-700"
   }
 ]
 
@@ -85,8 +74,6 @@ export default function MainServicesSection() {
         className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10"
       >
         {mainServices.map((service, index) => {
-          const IconComponent = service.icon
-          const colors = ["blue", "purple", "green"] as const
           return (
             <motion.div
               key={index}
@@ -96,16 +83,6 @@ export default function MainServicesSection() {
             >
               <Card className="group glass rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 bg-white/80 dark:bg-white/10 border-white/20 hover:border-white/30 glow-primary h-full">
                 <CardHeader className="space-y-6 pb-6">
-                  <div className="flex items-start justify-between">
-                    <div className="transform group-hover:scale-110 transition-transform duration-200">
-                      <GlossyIcon color={colors[index]} size="lg">
-                        <IconComponent className="h-7 w-7" />
-                      </GlossyIcon>
-                    </div>
-                    <Badge variant="secondary" className="bg-secondary/80 text-secondary-foreground font-medium px-3 py-1 backdrop-blur-sm">
-                      {service.savings}
-                    </Badge>
-                  </div>
                   <div className="space-y-3">
                     <CardTitle className="text-xl lg:text-2xl group-hover:text-primary transition-colors">
                       {service.title}
