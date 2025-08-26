@@ -140,7 +140,7 @@ export default function CookiePolicy() {
           </p>
           <div className="bg-secondary p-4 rounded-lg mt-2">
             <p className="text-sm">
-              Email: cookies@insurancehawk.com<br />
+              Email: info@hawkinsig.com<br />
               Phone: 1-800-HAWK-INS<br />
               Or use our cookie consent banner to update preferences
             </p>

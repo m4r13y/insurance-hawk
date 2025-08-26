@@ -18,14 +18,11 @@ export default function HomePage() {
         {/* Main Content Container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Main Services Section */}
-          <MainServicesSection />
-
-          {/* Trusted Carriers Section */}
+        {/* Trusted Carriers Section */}
           <TrustedCarriersSection />
 
-          {/* How We Work Section */}
-          <HowWeWork />
+          {/* Main Services Section */}
+          <MainServicesSection />
 
           {/* About Us Tabs Section */}
           <AboutUsTabs />

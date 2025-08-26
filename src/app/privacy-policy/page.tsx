@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
           </p>
           <div className="bg-secondary p-4 rounded-lg mt-2">
             <p className="text-sm">
-              Email: privacy@insurancehawk.com<br />
+              Email: info@hawkinsig.com<br />
               Phone: 1-800-HAWK-INS<br />
               Address: [Your business address]
             </p>

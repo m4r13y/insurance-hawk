@@ -19,7 +19,7 @@ const mainServices = [
   {
     title: "Business Insurance",
     description: "Comprehensive coverage for businesses of all sizes",
-    href: "/business",
+    href: "/get-started/business",
     icon: ComponentInstanceIcon,
     features: ["Group Health Plans", "Liability Coverage", "Workers' Compensation", "Business Property"],
     color: "from-navy-600 to-navy-700",
@@ -28,7 +28,7 @@ const mainServices = [
   {
     title: "Individual Coverage",
     description: "Personal insurance solutions for you and your family",
-    href: "/individual",
+    href: "/get-started/individual",
     icon: PersonIcon,
     features: ["Health Insurance", "Life Insurance", "Dental & Vision", "Cancer Coverage"],
     color: "from-gray-600 to-gray-700",
@@ -37,7 +37,7 @@ const mainServices = [
   {
     title: "Medicare Solutions",
     description: "Navigate Medicare with confidence and expert guidance",
-    href: "/medicare",
+    href: "/get-started/individual",
     icon: HeartIcon,
     features: ["Medicare Advantage", "Supplement Plans", "Part D Drug Plans", "Provider Networks"],
     color: "from-blue-800 to-blue-900",

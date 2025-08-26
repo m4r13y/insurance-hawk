@@ -1,9 +1,11 @@
 "use client"
 
+import { motion } from "framer-motion"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import AnimatedButton from "@/components/animated-button"
+import { staggerContainer, staggerItem } from "@/components/motion-wrapper"
 import {
   GlobeIcon,
   PersonIcon,
@@ -32,7 +34,7 @@ const socialPlatforms = [
     name: "Facebook",
     description: "Follow us for insurance tips, client stories, and industry updates",
     icon: FacebookIcon,
-    url: "https://facebook.com/insurancehawk",
+    url: "https://www.facebook.com/The-Insurance-Hawk",
     color: "from-blue-600 to-blue-700",
     followers: "2.5K followers",
     badge: "Most Active"
@@ -59,7 +61,7 @@ const socialPlatforms = [
     name: "Instagram",
     description: "Behind-the-scenes content and client success stories",
     icon: InstagramLogoIcon,
-    url: "https://instagram.com/insurancehawk",
+    url: "https://www.instagram.com/theinsurancehawk",
     color: "from-pink-500 to-purple-600",
     followers: "1.2K followers",
     badge: "Visual Stories"
@@ -68,7 +70,7 @@ const socialPlatforms = [
     name: "YouTube",
     description: "Educational videos and webinars about insurance",
     icon: VideoIcon,
-    url: "https://youtube.com/insurancehawk",
+    url: "https://www.youtube.com/@theinsurancehawk9030",
     color: "from-red-500 to-red-600",
     followers: "5.6K subscribers",
     badge: "Education Hub"
@@ -101,7 +103,16 @@ const hawkingEcosystem = [
     icon: LockClosedIcon,
     color: "from-purple-500 to-purple-600",
     features: ["Agent tools", "Commission tracking", "Client management", "Training resources"],
-    badge: "Agent Portal"
+    badge: "Agent Only"
+  },
+  {
+    title: "Insurance Hawk API",
+    description: "Developer API for integrations and custom insurance applications",
+    url: "https://api.insurancehawk.com",
+    icon: ComponentInstanceIcon,
+    color: "from-orange-500 to-orange-600",
+    features: ["Quote API", "Policy API", "Claims API", "Documentation"],
+    badge: "Developer"
   }
 ]
 
@@ -138,181 +149,262 @@ const communityResources = [
 
 export default function EcosystemPage() {
   return (
-    <div className="bg-gray-50 dark:bg-neutral-900 mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="bg-background mt-16">
+      <motion.div 
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12"
+      >
         
         {/* Hero Section */}
-        <div className="text-center space-y-6">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <motion.div variants={staggerItem} className="text-center space-y-6">
+          <motion.h1 
+            variants={staggerItem}
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+          >
             The Insurance Hawk Ecosystem
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Connect with us across all platforms and explore our comprehensive network of insurance solutions and resources.
-          </p>
-        </div>
+          </motion.h1>
+          <motion.p 
+            variants={staggerItem}
+            className="text-xl text-muted-foreground max-w-3xl mx-auto"
+          >
+            Connect with us across all platforms and discover the complete suite of tools and resources designed to help you save money and make informed insurance decisions.
+          </motion.p>
+        </motion.div>
 
         {/* Social Media Platforms */}
-        <div className="space-y-8">
+        <motion.div variants={staggerItem} className="space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Follow Us on Social Media</h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Stay connected and get the latest insurance tips, industry news, and exclusive offers.
+            <h2 className="text-3xl font-bold text-foreground">Follow Us Everywhere</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Stay connected and get the latest insurance insights, tips, and updates across all your favorite platforms.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {socialPlatforms.map((platform, index) => {
               const IconComponent = platform.icon
               return (
-                <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-                  <CardHeader className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`p-3 rounded-lg bg-gradient-to-r ${platform.color} text-white`}>
-                        <IconComponent className="h-6 w-6" />
+                <motion.div key={index} variants={staggerItem}>
+                  <Card className="border border-border shadow-md hover:shadow-lg transition-all duration-300 h-full group">
+                    <CardHeader className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <motion.div 
+                          whileHover={{ scale: 1.1 }}
+                          className={`p-3 rounded-lg bg-gradient-to-r ${platform.color}`}
+                        >
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </motion.div>
+                        <Badge variant="secondary" className="text-xs">
+                          {platform.badge}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                        {platform.badge}
-                      </Badge>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">
-                        {platform.name}
-                      </CardTitle>
-                      <CardDescription className="mt-2">
+                      <div>
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">{platform.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">{platform.followers}</p>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <CardDescription className="text-sm">
                         {platform.description}
                       </CardDescription>
-                      <p className="text-sm font-medium text-gray-500 mt-2">{platform.followers}</p>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Link href={platform.url} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full group-hover:bg-blue-600 transition-colors">
-                        Follow Us
-                        <ExternalLinkIcon className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+                      <Link href={platform.url} target="_blank" rel="noopener noreferrer">
+                        <AnimatedButton variant="outline" className="w-full">
+                          Follow Us
+                          <ExternalLinkIcon className="ml-2 h-4 w-4" />
+                        </AnimatedButton>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* Hawking Insurance Group Ecosystem */}
-        <div className="space-y-8">
+        {/* Hawking Ecosystem */}
+        <motion.div variants={staggerItem} className="space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Hawking Insurance Group Network</h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Access our full suite of insurance platforms and services designed to serve all your needs.
+            <h2 className="text-3xl font-bold text-foreground">Our Platform Ecosystem</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Discover our complete suite of insurance tools, portals, and services designed to make your insurance experience seamless.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <motion.div 
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
             {hawkingEcosystem.map((platform, index) => {
               const IconComponent = platform.icon
               return (
-                <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-                  <CardHeader className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`p-3 rounded-lg bg-gradient-to-r ${platform.color} text-white`}>
-                        <IconComponent className="h-6 w-6" />
+                <motion.div key={index} variants={staggerItem}>
+                  <Card className="border border-border shadow-md hover:shadow-lg transition-all duration-300 h-full group">
+                    <CardHeader className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <motion.div 
+                          whileHover={{ scale: 1.1 }}
+                          className={`p-3 rounded-lg bg-gradient-to-r ${platform.color}`}
+                        >
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </motion.div>
+                        <Badge variant="secondary">
+                          {platform.badge}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
-                        {platform.badge}
-                      </Badge>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
                         {platform.title}
                       </CardTitle>
-                      <CardDescription className="mt-2">
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <CardDescription>
                         {platform.description}
                       </CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Key Features:</h4>
-                      <div className="space-y-1">
-                        {platform.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
-                          </div>
-                        ))}
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-foreground">Key Features:</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {platform.features.map((feature, idx) => (
+                            <div key={idx} className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                              <span className="text-xs text-muted-foreground">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    <Link href={platform.url} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full group-hover:bg-blue-600 transition-colors">
-                        Access Portal
-                        <ExternalLinkIcon className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+
+                      <Link href={platform.url} target="_blank" rel="noopener noreferrer">
+                        <AnimatedButton variant="outline" className="w-full">
+                          Visit Platform
+                          <ExternalLinkIcon className="ml-2 h-4 w-4" />
+                        </AnimatedButton>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Community Resources */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-md">
-          <div className="text-center space-y-4 mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Community Resources</h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Additional resources and tools to help you make informed insurance decisions.
+        <motion.div variants={staggerItem} className="space-y-8">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-bold text-foreground">Community Resources</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Access free educational content, tools, and connect with our community of insurance-savvy individuals.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div 
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {communityResources.map((resource, index) => {
               const IconComponent = resource.icon
               return (
-                <div key={index} className="text-center space-y-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors group">
-                  <div className={`mx-auto w-12 h-12 ${resource.color} rounded-lg flex items-center justify-center`}>
-                    <IconComponent className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                      {resource.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      {resource.description}
-                    </p>
-                    <Link href={resource.url}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        Explore
-                        <ArrowRightIcon className="ml-2 h-3 w-3" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                <motion.div key={index} variants={staggerItem}>
+                  <Card className="text-center border border-border shadow-md hover:shadow-lg transition-all duration-300 h-full group">
+                    <CardHeader className="space-y-4">
+                      <motion.div 
+                        whileHover={{ scale: 1.1 }}
+                        className={`mx-auto w-16 h-16 rounded-lg flex items-center justify-center ${resource.color}`}
+                      >
+                        <IconComponent className="h-8 w-8" />
+                      </motion.div>
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                        {resource.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <CardDescription className="text-sm">
+                        {resource.description}
+                      </CardDescription>
+                      <Link href={resource.url}>
+                        <AnimatedButton variant="outline" size="sm" className="w-full">
+                          Explore
+                          <ArrowRightIcon className="ml-2 h-4 w-4" />
+                        </AnimatedButton>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Newsletter Signup */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">Stay in the Loop</h2>
-          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Subscribe to our newsletter for exclusive insurance tips, industry updates, and special offers delivered directly to your inbox.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <input 
-              type="email" 
-              placeholder="Enter your email address"
-              className="flex-1 px-4 py-2 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
+        <motion.div 
+          variants={staggerItem}
+          className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg"
+        >
+          <motion.h2 
+            variants={staggerItem}
+            className="text-3xl font-bold mb-4"
+          >
+            Stay in the Loop
+          </motion.h2>
+          <motion.p 
+            variants={staggerItem}
+            className="text-primary-foreground/90 mb-6 max-w-2xl mx-auto"
+          >
+            Get weekly insurance tips, exclusive content, and be the first to know about new features and savings opportunities.
+          </motion.p>
+          <motion.div 
+            variants={staggerItem}
+            className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto"
+          >
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
             />
-            <Button variant="secondary" className="whitespace-nowrap">
-              Subscribe Now
-            </Button>
-          </div>
-          <p className="text-xs text-blue-200 mt-4">
-            No spam, unsubscribe anytime. We respect your privacy.
-          </p>
-        </div>
-      </div>
+            <AnimatedButton variant="secondary" className="px-6">
+              Subscribe
+            </AnimatedButton>
+          </motion.div>
+        </motion.div>
+
+        {/* CTA Section */}
+        <motion.div 
+          variants={staggerItem}
+          className="bg-card border border-border rounded-2xl p-8 text-center shadow-md"
+        >
+          <motion.h2 
+            variants={staggerItem}
+            className="text-3xl font-bold text-foreground mb-4"
+          >
+            Ready to Join Our Ecosystem?
+          </motion.h2>
+          <motion.p 
+            variants={staggerItem}
+            className="text-muted-foreground mb-6 max-w-2xl mx-auto"
+          >
+            Experience the full power of The Insurance Hawk ecosystem. Get started with a free quote and discover how much you can save.
+          </motion.p>
+          <motion.div 
+            variants={staggerItem}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Link href="/get-started">
+              <AnimatedButton size="lg" variant="primary">
+                Get Started Today
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </AnimatedButton>
+            </Link>
+            <Link href="/about">
+              <AnimatedButton size="lg" variant="outline">
+                Learn More About Us
+              </AnimatedButton>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

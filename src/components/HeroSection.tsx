@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { ArrowRightIcon } from "@radix-ui/react-icons"
 import AnimatedButton from "@/components/animated-button"
 import { staggerContainer, staggerItem } from "@/components/motion-wrapper"
+import Link from "next/link"
 
 export default function HeroSection() {
   return (
@@ -75,16 +76,18 @@ export default function HeroSection() {
             variants={staggerItem}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6"
           >
-            <AnimatedButton variant="glow" size="lg" className="shadow-xl">
-              Get Free Quote
-              <ArrowRightIcon className="ml-2 h-4 w-4" />
-            </AnimatedButton>
+            <Link href="/get-started">
+              <AnimatedButton variant="glow" size="lg" className="shadow-xl">
+                Get Free Quote
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </AnimatedButton>
+            </Link>
             <AnimatedButton 
               variant="outline" 
               size="lg" 
               className="glass border-white text-white hover:bg-white/20 hover:text-white shadow-lg"
             >
-              Call (555) 123-4567
+              Call (817) 800-4253
             </AnimatedButton>
           </motion.div>
         </div>

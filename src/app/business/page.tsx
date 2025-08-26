@@ -866,7 +866,7 @@ export default function BusinessHub() {
                       Schedule Call
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Mon-Fri 8am-7pm EST
+                      Mon-Fri 8am-6pm CST
                     </p>
                   </div>
                 </CardContent>
