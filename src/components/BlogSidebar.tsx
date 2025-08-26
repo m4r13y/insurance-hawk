@@ -17,7 +17,7 @@ export const BlogSidebar: React.FC<SidebarProps> = ({ author, mediaLinks }) => (
   <div className="lg:col-span-1 lg:w-full lg:h-full bg-gradient-to-r from-gray-50 via-transparent to-transparent dark:from-neutral-800">
     <div className="sticky top-0 start-0 py-16 lg:ps-8">
       {/* Avatar Media */}
-      <div className="group flex items-center gap-x-3 border-b border-gray-200 pb-8 mb-8 dark:border-neutral-700">
+      <div className="group flex items-center gap-x-3 border-b border-border pb-8 mb-8 dark:border-neutral-700">
         <a className="block shrink-0 focus:outline-hidden" href="#">
           <img className="size-10 rounded-full" src={author.avatarUrl} alt="Avatar" />
         </a>

@@ -61,30 +61,30 @@ export function CancerStatisticsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Cancer Diagnoses by Age Group (2025 est.)</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Age Group</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Percent of New Cases</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Age Group</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Percent of New Cases</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Under 45</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">5%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Under 45</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">5%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">45–54</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">10%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">45–54</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">10%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">55–64</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">20%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">55–64</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">20%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">65–74</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">28%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">65–74</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">28%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">75 and older</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">30%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">75 and older</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">30%</td>
                   </tr>
                 </tbody>
               </table>

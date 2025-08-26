@@ -15,7 +15,7 @@ const SwitchDemo = () => (
 				id="airplane-mode"
 				style={{ "-webkit-tap-highlight-color": "rgba(0, 0, 0, 0)" }}
 			>
-				<Switch.Thumb className="block size-[21px] translate-x-0.5 rounded-full bg-white shadow-[0_2px_2px] shadow-blackA4 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]" />
+				<Switch.Thumb className="block size-[21px] translate-x-0.5 rounded-full bg-card shadow-[0_2px_2px] shadow-blackA4 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]" />
 			</Switch.Root>
 		</div>
 	</form>

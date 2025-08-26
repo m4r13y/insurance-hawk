@@ -41,36 +41,36 @@ export function AnnualChangesContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">2025 Part B Premiums by Income</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Single Income</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Married Filing Jointly</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Monthly Premium</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Single Income</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Married Filing Jointly</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Monthly Premium</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$103,000 or less</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$206,000 or less</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$185</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$103,000 or less</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$206,000 or less</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$185</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$103,001–$129,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$206,001–$258,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$259.00</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$103,001–$129,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$206,001–$258,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$259.00</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$129,001–$161,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$258,001–$322,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$370.90</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$129,001–$161,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$258,001–$322,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$370.90</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$161,001–$193,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$322,001–$386,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$482.80</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$161,001–$193,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$322,001–$386,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$482.80</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$193,000+</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">$386,000+</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$518.70</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$193,000+</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">$386,000+</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$518.70</td>
                   </tr>
                 </tbody>
               </table>

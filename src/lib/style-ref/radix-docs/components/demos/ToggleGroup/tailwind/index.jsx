@@ -7,7 +7,7 @@ import {
 } from "@radix-ui/react-icons";
 
 const toggleGroupItemClasses =
-	"flex size-[35px] items-center justify-center bg-white leading-4 text-mauve11 first:rounded-l last:rounded-r hover:bg-violet3 focus:z-10 focus:shadow-[0_0_0_2px] focus:shadow-black focus:outline-none data-[state=on]:bg-violet6 data-[state=on]:text-violet12";
+	"flex size-[35px] items-center justify-center bg-card leading-4 text-mauve11 first:rounded-l last:rounded-r hover:bg-violet3 focus:z-10 focus:shadow-[0_0_0_2px] focus:shadow-black focus:outline-none data-[state=on]:bg-violet6 data-[state=on]:text-violet12";
 
 const ToggleGroupDemo = () => (
 	<ToggleGroup.Root

@@ -70,36 +70,36 @@ export function TopPlanFAddonsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Popular Add-on Benefits for Plan F</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Add-on Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Monthly Cost</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Annual Benefit</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Priority Level</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Add-on Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Monthly Cost</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Annual Benefit</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Priority Level</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Dental</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$25-$60</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$1,000-$2,500</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">High</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Dental</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$25-$60</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$1,000-$2,500</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">High</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Vision</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$15-$30</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$200-$400</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Medium</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Vision</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$15-$30</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$200-$400</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Medium</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Hearing Aids</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$20-$40</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$1,000-$3,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Medium</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Hearing Aids</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$20-$40</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$1,000-$3,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Medium</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Hospital Indemnity</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$30-$70</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$36,500+</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Low</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Hospital Indemnity</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$30-$70</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$36,500+</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Low</td>
                   </tr>
                 </tbody>
               </table>

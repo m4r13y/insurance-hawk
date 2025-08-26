@@ -50,36 +50,36 @@ export function DesigningCancerPlansContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Typical Cancer Coverage</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Cancer Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Full Benefit</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Partial Benefit</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Not Covered</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Cancer Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Full Benefit</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Partial Benefit</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Not Covered</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Invasive Cancer</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">✓</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Invasive Cancer</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">✓</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Carcinoma in Situ</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">✓ (25%)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Carcinoma in Situ</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">✓ (25%)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skin Cancer (melanoma)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">✓</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Skin Cancer (melanoma)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">✓</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skin Cancer (basal/squamous)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">✓</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Skin Cancer (basal/squamous)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">✓</td>
                   </tr>
                 </tbody>
               </table>

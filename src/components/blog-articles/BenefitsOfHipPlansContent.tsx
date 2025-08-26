@@ -41,26 +41,26 @@ export function BenefitsOfHipPlansContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Typical Hospital Indemnity Benefits</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Type of Stay</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Daily Benefit Range</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Maximum Days</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Type of Stay</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Daily Benefit Range</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Maximum Days</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Regular Hospital Room</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$100–$500</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">365 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Regular Hospital Room</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$100–$500</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">365 days</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Intensive Care Unit</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$200–$1,000</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">30–60 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Intensive Care Unit</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$200–$1,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">30–60 days</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skilled Nursing Facility</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$50–$200</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">100 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Skilled Nursing Facility</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$50–$200</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">100 days</td>
                   </tr>
                 </tbody>
               </table>

@@ -55,24 +55,24 @@ export function MedicareMistakesContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Plan Comparison Example</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Plan</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Monthly Premium</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Annual Deductible</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Out-of-Pocket Max</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Plan</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Monthly Premium</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Annual Deductible</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Out-of-Pocket Max</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Plan A</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$500</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$7,550</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Plan A</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$500</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$7,550</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Plan B</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$89</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$3,500</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Plan B</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$89</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$3,500</td>
                   </tr>
                 </tbody>
               </table>

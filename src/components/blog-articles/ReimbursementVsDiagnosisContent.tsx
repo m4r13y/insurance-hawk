@@ -66,31 +66,31 @@ export function ReimbursementVsDiagnosisContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Reimbursement vs Diagnosis Comparison</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Feature</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Reimbursement Plans</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Diagnosis Plans</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Feature</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Reimbursement Plans</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Diagnosis Plans</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Payment Method</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Reimburses expenses</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Lump sum payment</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Payment Method</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Reimburses expenses</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Lump sum payment</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Documentation Needed</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Receipts required</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Medical records only</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Documentation Needed</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Receipts required</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Medical records only</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Spending Restrictions</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Must be covered expenses</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">No restrictions</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Spending Restrictions</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Must be covered expenses</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">No restrictions</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Payment Amount</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Actual costs incurred</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Fixed benefit amount</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Payment Amount</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Actual costs incurred</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Fixed benefit amount</td>
                   </tr>
                 </tbody>
               </table>

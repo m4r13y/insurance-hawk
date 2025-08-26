@@ -51,30 +51,30 @@ export function DesigningHipPlansContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Sample Plan Structure</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Benefit Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Daily Amount</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Maximum Days</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Annual Maximum</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Benefit Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Daily Amount</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Maximum Days</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Annual Maximum</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Hospital Room</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$300</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">365</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$109,500</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Hospital Room</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$300</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">365</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$109,500</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">ICU</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$600</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">30</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$18,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">ICU</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$600</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">30</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$18,000</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Skilled Nursing</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$150</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">100</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$15,000</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Skilled Nursing</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$150</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">100</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$15,000</td>
                   </tr>
                 </tbody>
               </table>

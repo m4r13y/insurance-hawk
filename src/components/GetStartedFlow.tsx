@@ -523,7 +523,7 @@ export default function GetStartedFlow({ initialClientType }: { initialClientTyp
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="flex-1 text-center"
               >
-                <div className="w-20 h-20 bg-white/100/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-card/100/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Check className="w-10 h-10 text-green-500" />
                 </div>
                 

@@ -223,7 +223,7 @@ const Sidebar = React.forwardRef<
         data-side={side}
         {...props}
       >
-        <div className={cn("h-full w-full border rounded-md border-gray-200 bg-white dark:bg-[--gray-a2] dark:border-neutral-700")}>
+        <div className={cn("h-full w-full border rounded-md border-border bg-card dark:bg-[--gray-a2] dark:border-neutral-700")}>
            {children}
         </div>
       </div>

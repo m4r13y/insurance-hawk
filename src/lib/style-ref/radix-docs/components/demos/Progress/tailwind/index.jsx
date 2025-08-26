@@ -20,7 +20,7 @@ const ProgressDemo = () => {
 			value={progress}
 		>
 			<Progress.Indicator
-				className="ease-[cubic-bezier(0.65, 0, 0.35, 1)] size-full bg-white transition-transform duration-[660ms]"
+				className="ease-[cubic-bezier(0.65, 0, 0.35, 1)] size-full bg-card transition-transform duration-[660ms]"
 				style={{ transform: `translateX(-${100 - progress}%)` }}
 			/>
 		</Progress.Root>

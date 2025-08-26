@@ -81,7 +81,7 @@ export default function MainServicesSection() {
               whileHover={{ scale: 1.05, y: -8 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="group glass rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 bg-white/80 dark:bg-white/10 border-white/20 hover:border-white/30 glow-primary h-full">
+              <Card className="group glass rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 bg-card/80 dark:bg-card/10 border-white/20 hover:border-white/30 glow-primary h-full">
                 <CardHeader className="space-y-6 pb-6">
                   <div className="space-y-3">
                     <CardTitle className="text-xl lg:text-2xl group-hover:text-primary transition-colors">

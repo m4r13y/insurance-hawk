@@ -70,36 +70,36 @@ export function WorkingPast65Content() {
               <table className="w-full border-collapse my-6">
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Situation</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Need to Enroll?</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Who Pays First?</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Penalty Risk?</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Situation</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Need to Enroll?</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Who Pays First?</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Penalty Risk?</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Employer has 20+ employees</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Part A optional<br/>Part B & D can be delayed</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Employer Plan</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">No, if you use SEP</td>
+                    <td className="border border-border dark:border-neutral-700 p-3">Employer has 20+ employees</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Part A optional<br/>Part B & D can be delayed</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Employer Plan</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">No, if you use SEP</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Employer has &lt; 20 employees</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Yes, Part A & B</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Yes, if you miss IEP</td>
+                    <td className="border border-border dark:border-neutral-700 p-3">Employer has &lt; 20 employees</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Yes, Part A & B</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Medicare</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Yes, if you miss IEP</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Contributing to an HSA</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Delay all parts of Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">N/A</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Yes, if you enroll</td>
+                    <td className="border border-border dark:border-neutral-700 p-3">Contributing to an HSA</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Delay all parts of Medicare</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">N/A</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Yes, if you enroll</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3">Retiree or COBRA coverage</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Yes, Part A & B</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Medicare</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-3 text-center">Yes, if you miss IEP</td>
+                    <td className="border border-border dark:border-neutral-700 p-3">Retiree or COBRA coverage</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Yes, Part A & B</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Medicare</td>
+                    <td className="border border-border dark:border-neutral-700 p-3 text-center">Yes, if you miss IEP</td>
                   </tr>
                 </tbody>
               </table>

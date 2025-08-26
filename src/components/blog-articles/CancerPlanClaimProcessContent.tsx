@@ -68,22 +68,22 @@ export function CancerPlanClaimProcessContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Typical Claim Processing Times</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Claim Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Processing Time</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Claim Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Processing Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Complete documentation</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">10–15 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Complete documentation</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">10–15 days</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Missing documents</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">30–45 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Missing documents</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">30–45 days</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Complex medical review</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">45–60 days</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Complex medical review</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">45–60 days</td>
                   </tr>
                 </tbody>
               </table>

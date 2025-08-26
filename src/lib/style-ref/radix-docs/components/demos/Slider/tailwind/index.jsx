@@ -10,10 +10,10 @@ const SliderDemo = () => (
 			step={1}
 		>
 			<Slider.Track className="relative h-[3px] grow rounded-full bg-blackA7">
-				<Slider.Range className="absolute h-full rounded-full bg-white" />
+				<Slider.Range className="absolute h-full rounded-full bg-card" />
 			</Slider.Track>
 			<Slider.Thumb
-				className="block size-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-blackA4 hover:bg-violet3 focus:shadow-[0_0_0_5px] focus:shadow-blackA5 focus:outline-none"
+				className="block size-5 rounded-[10px] bg-card shadow-[0_2px_10px] shadow-blackA4 hover:bg-violet3 focus:shadow-[0_0_0_5px] focus:shadow-blackA5 focus:outline-none"
 				aria-label="Volume"
 			/>
 		</Slider.Root>

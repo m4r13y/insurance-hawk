@@ -306,13 +306,13 @@ export default function BusinessHub() {
           </Sidebar>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-neutral-900">
+          <main className="flex-1 overflow-y-auto bg-card dark:bg-neutral-900">
              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
                 {/* Left Column */}
                 <div className="lg:col-span-3 space-y-8">
                   {/* Video Card */}
-                  <Card className="overflow-hidden bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                  <Card className="overflow-hidden bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                       <div className="relative aspect-video">
                       <iframe
                           width="100%"
@@ -328,7 +328,7 @@ export default function BusinessHub() {
                   </Card>
 
                   {/* Description Card */}
-                  <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                  <Card className="bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                       <CardHeader>
                           <CardTitle className={themeColors.primary}>{currentData.title}</CardTitle>
                           <CardDescription className="text-lg font-medium text-gray-600 dark:text-gray-300">
@@ -347,7 +347,7 @@ export default function BusinessHub() {
                 <div className="lg:col-span-2 space-y-6">
                   {/* Benefits */}
                   {currentData.keyInfo.benefits && (
-                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                    <Card className="bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                           <HeartIcon className="w-5 h-5 text-green-500 dark:text-green-400" />
@@ -372,7 +372,7 @@ export default function BusinessHub() {
 
                   {/* Coverage Details */}
                   {currentData.keyInfo.coverage && (
-                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                    <Card className="bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                           <ComponentInstanceIcon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
@@ -397,7 +397,7 @@ export default function BusinessHub() {
 
                   {/* Cost Information */}
                   {currentData.keyInfo.costs && (
-                    <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                    <Card className="bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                           <ActivityLogIcon className="w-5 h-5 text-orange-500 dark:text-orange-400" />
@@ -421,7 +421,7 @@ export default function BusinessHub() {
                   )}
 
                   {/* CTA Button */}
-                  <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+                  <Card className="bg-card dark:bg-neutral-800 border-border dark:border-neutral-700">
                     <CardContent className="p-6">
                       <Button asChild className="w-full" size="lg">
                         <Link href={currentData.ctaUrl}>

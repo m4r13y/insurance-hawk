@@ -342,7 +342,7 @@ export default function Medicare() {
                     className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-200 border-2 snap-start min-w-max ${
                       selectedCategory === category.id
                         ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                        : "bg-card text-gray-700 border-border hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
                     <span className="text-sm font-medium whitespace-nowrap">
@@ -495,7 +495,7 @@ export default function Medicare() {
                       key={index}
                       className={`p-3 rounded-lg border ${
                         feature.highlight
-                          ? "bg-accent/20 border-accent"
+                          ? "bg-card border-accent"
                           : "bg-card border-border/20"
                       }`}
                     >
@@ -522,7 +522,7 @@ export default function Medicare() {
           </div>
 
           {/* Center Content Area */}
-          <div className="space-y-6 lg:space-y-8">
+          <div className="space-y-6 lg:space-y-8 ">
             {/* Category Header */}
             {currentCategory && (
               <div className="space-y-4 lg:space-y-6">
@@ -541,7 +541,7 @@ export default function Medicare() {
                 <div className="lg:hidden overflow-x-hidden">
                   <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-4 -mx-1">
                     <button 
-                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-700 shadow-sm text-blue-600 min-w-0"
+                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-card dark:bg-gray-700 shadow-sm text-blue-600 min-w-0"
                     >
                       <span className="truncate">Overview</span>
                     </button>
@@ -585,7 +585,7 @@ export default function Medicare() {
                 </div>
 
                 {/* Data Table Section */}
-                <Card>
+                <Card className="border !border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <FileTextIcon className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -923,7 +923,7 @@ export default function Medicare() {
               <h3 className="text-sm font-medium text-muted-foreground mb-4">
                 NEED HELP?
               </h3>
-              <Card>
+              <Card className="border !border-border">
                 <CardContent className="p-4">
                   <div className="text-center space-y-3">
                     <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center overflow-hidden">
@@ -959,7 +959,7 @@ export default function Medicare() {
               <h3 className="text-sm font-medium text-muted-foreground mb-4">
                 PLAN POPULARITY
               </h3>
-              <Card>
+              <Card className="border !border-border">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Most Chosen Plans</CardTitle>
                   <CardDescription className="text-sm">
@@ -993,7 +993,7 @@ export default function Medicare() {
               <h3 className="text-sm font-medium text-muted-foreground mb-4">
                 CUSTOMER SATISFACTION
               </h3>
-              <Card>
+              <Card className="border !border-border">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Monthly Ratings</CardTitle>
                   <CardDescription className="text-sm">
@@ -1084,14 +1084,14 @@ export default function Medicare() {
             <Button
               size="sm"
               variant="outline"
-              className="bg-white shadow-lg border-gray-200 hover:bg-blue-50 rounded-full w-12 h-12 p-0"
+              className="bg-card shadow-lg border-border hover:bg-blue-50 rounded-full w-12 h-12 p-0"
             >
               Compare
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="bg-white shadow-lg border-gray-200 hover:bg-green-50 rounded-full w-12 h-12 p-0"
+              className="bg-card shadow-lg border-border hover:bg-green-50 rounded-full w-12 h-12 p-0"
             >
               Call
             </Button>
@@ -1108,7 +1108,7 @@ export default function Medicare() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 safe-area-pb">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card dark:bg-gray-900 border-t border-border dark:border-gray-800 safe-area-pb">
         <div className="grid grid-cols-4 gap-1 px-2 py-2">
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <div className="text-blue-600 text-lg mb-1">Home</div>

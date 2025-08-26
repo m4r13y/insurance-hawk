@@ -6,7 +6,7 @@ const TAGS = Array.from({ length: 50 }).map(
 );
 
 const ScrollAreaDemo = () => (
-	<ScrollArea.Root className="h-[225px] w-[200px] overflow-hidden rounded bg-white shadow-[0_2px_10px] shadow-blackA4">
+	<ScrollArea.Root className="h-[225px] w-[200px] overflow-hidden rounded bg-card shadow-[0_2px_10px] shadow-blackA4">
 		<ScrollArea.Viewport className="size-full rounded">
 			<div className="px-5 py-[15px]">
 				<div className="text-[15px] font-medium leading-[18px] text-violet11">

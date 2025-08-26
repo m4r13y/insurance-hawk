@@ -110,7 +110,7 @@ function Form({
       <Button
         aria-label="Open in v0"
         className={cn(
-          "z-50 h-[calc(theme(spacing.7)_-_1px)] gap-1 rounded-[6px] bg-black px-3 text-xs text-white hover:bg-black hover:text-white dark:bg-white dark:text-black",
+          "z-50 h-[calc(theme(spacing.7)_-_1px)] gap-1 rounded-[6px] bg-black px-3 text-xs text-white hover:bg-black hover:text-white dark:bg-card dark:text-black",
           size === "icon" && "h-7 w-7 p-0",
           className
         )}

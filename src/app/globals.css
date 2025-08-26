@@ -6,7 +6,7 @@
   :root {
     --background: 220 6% 98%; /* Cool but very light off-white */
     --foreground: 222.2 84% 4.9%;
-    --card: 220 14% 98%;
+    --card: 220 14% 98% / 0.7;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 220 6% 99%;
     --popover-foreground: 222.2 84% 4.9%;
@@ -71,11 +71,11 @@
 /* Glass morphism utilities */
 @layer utilities {
   .glass {
-    @apply backdrop-blur-md bg-white/10 border border-white/20;
+    @apply backdrop-blur-md bg-card/10 border border-white/20;
   }
   
   .glass-dark {
-    @apply backdrop-blur-md bg-white/5 border border-white/10;
+    @apply backdrop-blur-md bg-card/5 border border-white/10;
   }
   
   .glow-primary {

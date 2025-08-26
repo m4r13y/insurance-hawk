@@ -57,36 +57,36 @@ export function HipForIndividualsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Real Hospital Stay Costs (5 Days)</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Expense</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Medicare Covers</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">You Pay</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Expense</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Medicare Covers</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">You Pay</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Hospital services</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Most costs</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$1,676 deductible</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Hospital services</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Most costs</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$1,676 deductible</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Phone/TV (5 days)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$100</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Phone/TV (5 days)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$100</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Family meals</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$150</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Family meals</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$150</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Parking</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$75</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Parking</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$75</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2"><strong>Total</strong></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><strong>—</strong></td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center"><strong>$2,001</strong></td>
+                    <td className="border border-border dark:border-neutral-700 p-2"><strong>Total</strong></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"><strong>—</strong></td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center"><strong>$2,001</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -118,30 +118,30 @@ export function HipForIndividualsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Sample Monthly Premiums by Age</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Age</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">$200/day</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">$300/day</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">$400/day</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Age</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">$200/day</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">$300/day</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">$400/day</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">65-69</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$35</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$50</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$65</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">65-69</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$35</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$50</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$65</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">70-74</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$45</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$65</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$85</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">70-74</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$45</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$65</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$85</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">75-79</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$55</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$80</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$105</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">75-79</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$55</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$80</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$105</td>
                   </tr>
                 </tbody>
               </table>

@@ -10,7 +10,7 @@ const AvatarDemo = () => (
 				alt="Colm Tuite"
 			/>
 			<Avatar.Fallback
-				className="leading-1 flex size-full items-center justify-center bg-white text-[15px] font-medium text-violet11"
+				className="leading-1 flex size-full items-center justify-center bg-card text-[15px] font-medium text-violet11"
 				delayMs={600}
 			>
 				CT
@@ -23,14 +23,14 @@ const AvatarDemo = () => (
 				alt="Pedro Duarte"
 			/>
 			<Avatar.Fallback
-				className="leading-1 flex size-full items-center justify-center bg-white text-[15px] font-medium text-violet11"
+				className="leading-1 flex size-full items-center justify-center bg-card text-[15px] font-medium text-violet11"
 				delayMs={600}
 			>
 				JD
 			</Avatar.Fallback>
 		</Avatar.Root>
 		<Avatar.Root className="inline-flex size-[45px] select-none items-center justify-center overflow-hidden rounded-full bg-blackA1 align-middle">
-			<Avatar.Fallback className="leading-1 flex size-full items-center justify-center bg-white text-[15px] font-medium text-violet11">
+			<Avatar.Fallback className="leading-1 flex size-full items-center justify-center bg-card text-[15px] font-medium text-violet11">
 				PD
 			</Avatar.Fallback>
 		</Avatar.Root>

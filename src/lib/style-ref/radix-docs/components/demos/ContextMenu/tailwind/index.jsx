@@ -18,7 +18,7 @@ const ContextMenuDemo = () => {
 			</ContextMenu.Trigger>
 			<ContextMenu.Portal>
 				<ContextMenu.Content
-					className="min-w-[220px] overflow-hidden rounded-md bg-white p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
+					className="min-w-[220px] overflow-hidden rounded-md bg-card p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
 					sideOffset={5}
 					align="end"
 				>
@@ -52,7 +52,7 @@ const ContextMenuDemo = () => {
 						</ContextMenu.SubTrigger>
 						<ContextMenu.Portal>
 							<ContextMenu.SubContent
-								className="min-w-[220px] overflow-hidden rounded-md bg-white p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
+								className="min-w-[220px] overflow-hidden rounded-md bg-card p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
 								sideOffset={2}
 								alignOffset={-5}
 							>

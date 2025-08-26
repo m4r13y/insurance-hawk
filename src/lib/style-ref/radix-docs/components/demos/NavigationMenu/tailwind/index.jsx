@@ -6,7 +6,7 @@ import { CaretDownIcon } from "@radix-ui/react-icons";
 const NavigationMenuDemo = () => {
 	return (
 		<NavigationMenu.Root className="relative z-10 flex w-screen justify-center">
-			<NavigationMenu.List className="center m-0 flex list-none rounded-md bg-white p-1 shadow-[0_2px_10px] shadow-blackA4">
+			<NavigationMenu.List className="center m-0 flex list-none rounded-md bg-card p-1 shadow-[0_2px_10px] shadow-blackA4">
 				<NavigationMenu.Item>
 					<NavigationMenu.Trigger className="group flex select-none items-center justify-between gap-0.5 rounded px-3 py-2 text-[15px] font-medium leading-none text-violet11 outline-none hover:bg-violet3 focus:shadow-[0_0_0_2px] focus:shadow-violet7">
 						Learn{" "}
@@ -115,12 +115,12 @@ const NavigationMenuDemo = () => {
 				</NavigationMenu.Item>
 
 				<NavigationMenu.Indicator className="top-full z-10 flex h-2.5 items-end justify-center overflow-hidden transition-[width,transform_250ms_ease] data-[state=hidden]:animate-fadeOut data-[state=visible]:animate-fadeIn">
-					<div className="relative top-[70%] size-2.5 rotate-45 rounded-tl-sm bg-white" />
+					<div className="relative top-[70%] size-2.5 rotate-45 rounded-tl-sm bg-card" />
 				</NavigationMenu.Indicator>
 			</NavigationMenu.List>
 
 			<div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-				<NavigationMenu.Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
+				<NavigationMenu.Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-card transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
 			</div>
 		</NavigationMenu.Root>
 	);

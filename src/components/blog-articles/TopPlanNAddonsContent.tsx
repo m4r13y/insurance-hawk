@@ -68,36 +68,36 @@ export function TopPlanNAddonsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Plan N Add-on Priority Guide</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Add-on Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Priority</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Monthly Cost</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Best For</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Add-on Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Priority</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Monthly Cost</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Best For</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Dental Insurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Essential</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$35-$55</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Everyone with teeth</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Dental Insurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Essential</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$35-$55</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Everyone with teeth</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Plan N Copay Coverage</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">High</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$15-$25</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Frequent doctor visits</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Plan N Copay Coverage</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">High</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$15-$25</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Frequent doctor visits</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Vision Coverage</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Medium</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$20-$35</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Glasses/contact users</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Vision Coverage</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Medium</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$20-$35</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Glasses/contact users</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Long-Term Care</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">High</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$180-$350</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Ages 65-70</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Long-Term Care</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">High</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$180-$350</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Ages 65-70</td>
                   </tr>
                 </tbody>
               </table>

@@ -245,8 +245,8 @@ export default function AboutUsTabs() {
                             onClick={() => setCurrentImageIndex(index)}
                             className={`w-2 h-2 rounded-full transition-colors ${
                               index === currentImageIndex 
-                                ? 'bg-white' 
-                                : 'bg-white/50 hover:bg-white/75'
+                                ? 'bg-card' 
+                                : 'bg-card/50 hover:bg-card/75'
                             }`}
                             aria-label={`View image ${index + 1}`}
                           />

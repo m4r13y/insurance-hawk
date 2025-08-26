@@ -28,7 +28,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
     whileTap={{ scale: 0.98 }}
     transition={{ duration: 0.2 }}
     className={cn(
-      "group glass rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center backdrop-blur-md bg-white/80 dark:bg-white/10 border border-white/20 hover:border-white/30 glow-primary",
+      "group glass rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center backdrop-blur-md bg-card/80 dark:bg-card/10 border border-white/20 hover:border-white/30 glow-primary",
       className
     )}
   >

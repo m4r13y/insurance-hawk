@@ -85,7 +85,7 @@ export default function HeroSection() {
             <AnimatedButton 
               variant="outline" 
               size="lg" 
-              className="glass border-white text-white hover:bg-white/20 hover:text-white shadow-lg"
+              className="glass border-white text-white hover:bg-card/20 hover:text-white shadow-lg"
             >
               Call (817) 800-4253
             </AnimatedButton>

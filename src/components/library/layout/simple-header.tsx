@@ -175,7 +175,7 @@ export function SimpleHeader() {
 
   return (
     <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-7xl">
-      <nav className="relative backdrop-blur-md bg-white/60 dark:bg-gray-900/80 border border-gray-200/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
+      <nav className="relative backdrop-blur-md bg-card dark:card border border-border/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
         <div className="relative z-10 px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">

@@ -49,31 +49,31 @@ export function MedigapRateIncreasesContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Average Annual Medigap Rate Increases by State (2020-2024)</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">State</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Average Increase</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Range</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">State</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Average Increase</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Range</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Florida</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">8.2%</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">4-15%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Florida</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">8.2%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">4-15%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">California</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">6.1%</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">3-12%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">California</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">6.1%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">3-12%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Texas</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">7.8%</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">5-14%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Texas</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">7.8%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">5-14%</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">New York</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">5.9%</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">2-10%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">New York</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">5.9%</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">2-10%</td>
                   </tr>
                 </tbody>
               </table>
@@ -102,30 +102,30 @@ export function MedigapRateIncreasesContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">10-Year Premium Projection</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Year</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Community-Rated</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Issue-Age</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Attained-Age</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Year</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Community-Rated</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Issue-Age</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Attained-Age</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Year 1 (Age 65)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$180</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$140</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$120</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Year 1 (Age 65)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$180</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$140</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$120</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Year 5 (Age 69)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$215</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$167</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$165</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Year 5 (Age 69)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$215</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$167</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$165</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Year 10 (Age 75)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$270</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$210</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$245</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Year 10 (Age 75)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$270</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$210</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$245</td>
                   </tr>
                 </tbody>
               </table>

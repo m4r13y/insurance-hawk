@@ -243,7 +243,7 @@ export default function CookieConsentBanner() {
                               ? 'bg-blue-600' 
                               : 'bg-gray-300 dark:bg-gray-600'
                           } ${category.required ? 'opacity-50' : ''}`}>
-                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                            <div className={`absolute top-1 left-1 w-4 h-4 bg-card rounded-full transition-transform ${
                               preferences[category.key] ? 'translate-x-4' : 'translate-x-0'
                             }`} />
                           </div>

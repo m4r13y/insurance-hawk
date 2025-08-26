@@ -83,7 +83,7 @@ export function ThemeCustomizer() {
           </PopoverTrigger>
           <PopoverContent
             align="start"
-            className="z-40 w-[340px] rounded-[12px] bg-white p-6 dark:bg-zinc-950"
+            className="z-40 w-[340px] rounded-[12px] bg-card p-6 dark:bg-zinc-950"
           >
             <Customizer />
           </PopoverContent>

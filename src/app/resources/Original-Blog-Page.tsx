@@ -56,7 +56,7 @@ export default function BlogArticlePage() {
             />
           </nav>
         {/* Medicare Enrollment Periods Calculator */}
-        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <section id="enrollment-periods" className="pt-12 pb-8 border-t border-border dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-2xl font-semibold mb-2">Introduction</h2>
@@ -70,7 +70,7 @@ export default function BlogArticlePage() {
         </section>
 
         {/* Part B Penalties */}
-        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <section id="part-b-penalty" className="pt-12 pb-8 border-t border-border dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part B Late Enrollment Penalty</h2>
@@ -85,7 +85,7 @@ export default function BlogArticlePage() {
         </section>
 
         {/* Part D Penalty */}
-        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-gray-200 dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <section id="part-d-penalty" className="pt-12 pb-8 border-t border-border dark:border-neutral-700 grid xl:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="flex flex-col justify-around">
                 <div className="max-w-md mx-auto">
                     <h2 className="text-xl font-bold mb-2">Part D Late Enrollment Penalty</h2>
@@ -100,7 +100,7 @@ export default function BlogArticlePage() {
         </section>
 
 
-          <section id="avoid-penalties" className="py-8 border-t border-gray-200 dark:border-neutral-700">
+          <section id="avoid-penalties" className="py-8 border-t border-border dark:border-neutral-700">
             <h2 className="text-xl font-bold my-4">How to Avoid Late Enrollment Penalties</h2>
             <ul className="list-disc pl-6 mb-4">
               <li>Enroll during your Initial Enrollment Period (IEP): This is the 7-month window around your 65th birthday (3 months before, the month of, and 3 months after).</li>

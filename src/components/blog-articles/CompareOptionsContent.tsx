@@ -75,36 +75,36 @@ export function CompareOptionsContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Original Medicare vs Medicare Advantage</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Feature</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Original Medicare + Medigap</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Medicare Advantage</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Feature</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Original Medicare + Medigap</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Medicare Advantage</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Monthly Premium</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$300–$450</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$0–$150</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Monthly Premium</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$300–$450</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$0–$150</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Doctor Choice</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Any Medicare doctor</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Plan network only</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Doctor Choice</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Any Medicare doctor</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Plan network only</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Referrals</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Not required</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">May be required</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Referrals</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Not required</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">May be required</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Extra Benefits</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Limited</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Often included</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Extra Benefits</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Limited</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Often included</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Travel Coverage</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Nationwide</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">Limited area</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Travel Coverage</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Nationwide</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">Limited area</td>
                   </tr>
                 </tbody>
               </table>

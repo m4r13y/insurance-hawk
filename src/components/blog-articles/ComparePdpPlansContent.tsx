@@ -56,36 +56,36 @@ export function ComparePdpPlansContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">Sample Plan Comparison</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Drug Tier</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan A Cost</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan B Cost</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-center font-semibold">Plan C Cost</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Drug Tier</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Plan A Cost</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Plan B Cost</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Plan C Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Tier 1 (Generic)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$5 copay</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$10 copay</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">15% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Tier 1 (Generic)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$5 copay</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$10 copay</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">15% coinsurance</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Tier 2 (Preferred Brand)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$25 copay</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$40 copay</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Tier 2 (Preferred Brand)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$25 copay</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$40 copay</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Tier 3 (Non-preferred)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">$60 copay</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">45% coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">50% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Tier 3 (Non-preferred)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">$60 copay</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">45% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">50% coinsurance</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Tier 4 (Specialty)</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">33% coinsurance</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Tier 4 (Specialty)</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">33% coinsurance</td>
+                    <td className="border border-border dark:border-neutral-700 p-2 text-center">25% coinsurance</td>
                   </tr>
                 </tbody>
               </table>

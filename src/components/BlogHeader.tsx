@@ -22,7 +22,7 @@ export const BlogHeader: React.FC<BlogHeaderProps> = ({
   const router = useRouter();
 
   return (
-    <div className="mb-8 pb-6 border-b border-gray-200 dark:border-neutral-700">
+    <div className="mb-8 pb-6 border-b border-border dark:border-neutral-700">
       <button
         onClick={() => router.back()}
         className="inline-flex items-center gap-x-1.5 text-sm text-gray-600 decoration-2 hover:underline focus:outline-hidden focus:underline dark:text-blue-500"

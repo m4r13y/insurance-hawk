@@ -51,26 +51,26 @@ export function EnrollmentForSnpContent() {
                 <caption className="text-lg font-semibold mb-2 text-left">SNP Types and Eligibility</caption>
                 <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">SNP Type</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Who Qualifies</th>
-                    <th className="border border-gray-200 dark:border-neutral-700 p-3 text-left font-semibold">Special Features</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">SNP Type</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Who Qualifies</th>
+                    <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Special Features</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">C-SNP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">People with qualifying chronic conditions</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Disease-specific care coordination</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">C-SNP</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">People with qualifying chronic conditions</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Disease-specific care coordination</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">D-SNP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Medicare + Medicaid beneficiaries</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Unified benefits, extra services</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">D-SNP</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Medicare + Medicaid beneficiaries</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Unified benefits, extra services</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">I-SNP</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Nursing home residents or equivalent care needs</td>
-                    <td className="border border-gray-200 dark:border-neutral-700 p-2">Institutional care coordination</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">I-SNP</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Nursing home residents or equivalent care needs</td>
+                    <td className="border border-border dark:border-neutral-700 p-2">Institutional care coordination</td>
                   </tr>
                 </tbody>
               </table>
