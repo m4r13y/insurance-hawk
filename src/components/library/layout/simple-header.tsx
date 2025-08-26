@@ -101,7 +101,7 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
   return (
     <div className="relative group">
       <button
-        className="flex items-center px-4 py-2 text-sm font-medium text-foreground hover:text-accent-foreground hover:bg-accent rounded-md transition-colors"
+        className="flex items-center px-4 py-2 text-sm font-medium text-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-xl transition-all duration-300"
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
       >
@@ -119,7 +119,7 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 w-[500px] bg-[var(--gray-2)] border border-border rounded-md shadow-lg z-50"
+          className="absolute top-full left-0 mt-1 w-[500px] bg-background/95 dark:bg-gray-900/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
         >
@@ -129,7 +129,7 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
                 <div className="row-span-3">
                   <Link
                     href={hubPage.href}
-                    className="flex h-full w-full select-none flex-col justify-start rounded-md bg-[var(--gray-3)] p-6 no-underline outline-none focus:shadow-md hover:bg-muted/70 transition-colors"
+                    className="flex h-full w-full select-none flex-col justify-start rounded-xl bg-secondary/80 border border-border/30 p-6 no-underline outline-none focus:shadow-md hover:bg-secondary/90 transition-all duration-300"
                   >
                     <div className="mb-2 mt-4 text-lg font-medium text-foreground">
                       {hubPage.title}
@@ -144,7 +144,7 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
                 <div key={page.href}>
                   <Link
                     href={page.href}
-                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="block select-none space-y-1 rounded-xl p-3 leading-none no-underline outline-none transition-all duration-300 hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50 focus:text-accent-foreground"
                   >
                     <div className="text-sm font-medium leading-none">{page.title}</div>
                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -166,149 +166,167 @@ export function SimpleHeader() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <header className="sticky py-2 top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="w-full max-w-[1440px] mx-auto px-12 flex h-14 items-center justify-between">
-        {/* Logo - Left Side */}
-        <div className="hidden md:flex">
-          <Link href="/" className="flex items-center space-x-2">
-            <Logo className="max-w-30" />
-          </Link>
-        </div>
-        
-        {/* Navigation Menu - Right Side */}
-        <div className="hidden md:flex space-x-1">
-          <DropdownMenu
-            title="Business"
-            pages={businessPages}
-            hubPage={{
-              title: "Business Hub",
-              href: "/business/",
-              description: "Comprehensive insurance solutions for businesses of all sizes, from startups to corporations."
-            }}
-          />
-          <DropdownMenu
-            title="Individual"
-            pages={individualPages}
-            hubPage={{
-              title: "Individual Hub",
-              href: "/individual/",
-              description: "Personal insurance solutions including health, life, and supplemental coverage options."
-            }}
-          />
-          <DropdownMenu
-            title="Medicare"
-            pages={medicarePages}
-            hubPage={{
-              title: "Medicare Hub",
-              href: "/Medicare/",
-              description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
-            }}
-          />
-          <DropdownMenu
-            title="Resources"
-            pages={resources}
-          />
-        </div>
-        
-        {/* Mobile Navigation */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
-            >
-              <HamburgerMenuIcon className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="pr-0">
-            <Link
-              href="/"
-              className="flex items-center"
-              onClick={() => setIsOpen(false)}
-            >
-              <Logo />
-            </Link>
-            <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
-              <div className="flex flex-col space-y-3">
-                <div className="flex flex-col space-y-3 pt-6">
-                  <h4 className="font-medium">Business</h4>
-                  {businessPages.map((page) => (
-                    <Link
-                      key={page.href}
-                      href={page.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground",
-                        pathname === page.href && "text-foreground"
-                      )}
-                    >
-                      {page.title}
-                    </Link>
-                  ))}
-                </div>
-                <div className="flex flex-col space-y-3 pt-6">
-                  <h4 className="font-medium">Individual</h4>
-                  {individualPages.map((page) => (
-                    <Link
-                      key={page.href}
-                      href={page.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground",
-                        pathname === page.href && "text-foreground"
-                      )}
-                    >
-                      {page.title}
-                    </Link>
-                  ))}
-                </div>
-                <div className="flex flex-col space-y-3 pt-6">
-                  <h4 className="font-medium">Medicare</h4>
-                  {medicarePages.map((page) => (
-                    <Link
-                      key={page.href}
-                      href={page.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground",
-                        pathname === page.href && "text-foreground"
-                      )}
-                    >
-                      {page.title}
-                    </Link>
-                  ))}
-                </div>
-                <div className="flex flex-col space-y-3 pt-6">
-                  <h4 className="font-medium">Resources</h4>
-                  {resources.map((resource) => (
-                    <Link
-                      key={resource.href}
-                      href={resource.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground",
-                        pathname === resource.href && "text-foreground"
-                      )}
-                    >
-                      {resource.title}
-                    </Link>
-                  ))}
-                </div>
+    <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-7xl">
+      <nav className="relative backdrop-blur-md bg-white/60 dark:bg-gray-900/80 border border-gray-200/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
+        <div className="relative z-10 px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <Link href="/" className="flex items-center space-x-3">
+                <Logo className="h-10 w-auto" />
+              </Link>
+              
+              <div className="hidden lg:flex items-center space-x-8">
+                <DropdownMenu
+                  title="Business"
+                  pages={businessPages}
+                  hubPage={{
+                    title: "Business Hub",
+                    href: "/business/",
+                    description: "Comprehensive insurance solutions for businesses of all sizes, from startups to corporations."
+                  }}
+                />
+                <DropdownMenu
+                  title="Individual"
+                  pages={individualPages}
+                  hubPage={{
+                    title: "Individual Hub",
+                    href: "/individual/",
+                    description: "Personal insurance solutions including health, life, and supplemental coverage options."
+                  }}
+                />
+                <DropdownMenu
+                  title="Medicare"
+                  pages={medicarePages}
+                  hubPage={{
+                    title: "Medicare Hub",
+                    href: "/Medicare/",
+                    description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
+                  }}
+                />
+                <DropdownMenu
+                  title="Resources"
+                  pages={resources}
+                />
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-        
-        {/* Mobile Logo */}
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            <Link href="/" className="md:hidden">
-              <Logo />
-            </Link>
+
+            <div className="hidden lg:flex items-center space-x-4">
+              <Link href="/about" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                About
+              </Link>
+              <Link href="/ecosystem" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                Ecosystem
+              </Link>
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Get Started
+              </Button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="lg:hidden">
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-muted/50"
+                  >
+                    <HamburgerMenuIcon className="h-5 w-5" />
+                    <span className="sr-only">Toggle Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="glass w-[300px] pr-0">
+                  <Link
+                    href="/"
+                    className="flex items-center mb-6"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Logo />
+                  </Link>
+                  <div className="flex flex-col space-y-6">
+                    <div className="flex flex-col space-y-3">
+                      <h4 className="font-medium text-foreground">Business</h4>
+                      {businessPages.map((page) => (
+                        <Link
+                          key={page.href}
+                          href={page.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground transition-colors",
+                            pathname === page.href && "text-foreground"
+                          )}
+                        >
+                          {page.title}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                      <h4 className="font-medium text-foreground">Individual</h4>
+                      {individualPages.map((page) => (
+                        <Link
+                          key={page.href}
+                          href={page.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground transition-colors",
+                            pathname === page.href && "text-foreground"
+                          )}
+                        >
+                          {page.title}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                      <h4 className="font-medium text-foreground">Medicare</h4>
+                      {medicarePages.map((page) => (
+                        <Link
+                          key={page.href}
+                          href={page.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground transition-colors",
+                            pathname === page.href && "text-foreground"
+                          )}
+                        >
+                          {page.title}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                      <h4 className="font-medium text-foreground">Resources</h4>
+                      {resources.map((resource) => (
+                        <Link
+                          key={resource.href}
+                          href={resource.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground transition-colors",
+                            pathname === resource.href && "text-foreground"
+                          )}
+                        >
+                          {resource.title}
+                        </Link>
+                      ))}
+                    </div>
+                    
+                    <div className="pt-6 border-t border-border space-y-3">
+                      <Link href="/about" onClick={() => setIsOpen(false)} className="block text-muted-foreground hover:text-foreground">
+                        About
+                      </Link>
+                      <Link href="/ecosystem" onClick={() => setIsOpen(false)} className="block text-muted-foreground hover:text-foreground">
+                        Ecosystem
+                      </Link>
+                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        Get Started
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

@@ -4,7 +4,11 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion"
 import { featuredCarriers } from "@/lib/carriers"
+import AnimatedButton from "@/components/animated-button"
+import GlossyIcon from "@/components/glossy-icon"
+import { fadeInUp, staggerContainer, staggerItem } from "@/components/motion-wrapper"
 import {
   HeartIcon,
   ComponentInstanceIcon,
@@ -91,12 +95,18 @@ const testimonialHighlights = [
 
 export default function HomePage() {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+        <div className="min-h-screen">
             {/* Page Container - Full width, no padding */}
             <div className="w-full">
                 
                 {/* Hero Section - Video Background - No padding, touches nav */}
-                <section className="relative overflow-hidden h-screen min-h-[600px] flex items-center justify-center" aria-labelledby="hero-title">
+                <motion.section 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1 }}
+                  className="relative overflow-hidden h-screen min-h-[600px] flex items-center justify-center" 
+                  aria-labelledby="hero-title"
+                >
                     {/* Video Background */}
                     <div className="absolute inset-0 w-full h-full">
                         <video
@@ -119,106 +129,166 @@ export default function HomePage() {
                             Your browser does not support the video tag.
                         </video>
                         
-                        {/* Dark overlay for better text readability */}
-                        <div className="absolute inset-0 bg-black/40"></div>
+                        {/* Enhanced gradient overlay for better text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/30 to-black/20"></div>
                     </div>
                     
-                    {/* Hero Content - Reduced padding */}
-                    <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+                    {/* Hero Content - Enhanced with motion and glass effects */}
+                    <motion.div 
+                      variants={staggerContainer}
+                      initial="initial"
+                      animate="animate"
+                      className="relative z-10 w-full px-4 sm:px-6 lg:px-8"
+                    >
                         <div className="max-w-4xl mx-auto text-center space-y-8">
-                            <div className="space-y-4">
-                                <h1 id="hero-title" className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white drop-shadow-lg">
+                            <motion.div variants={staggerItem} className="space-y-4">
+                                <motion.h1 
+                                  id="hero-title" 
+                                  className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white drop-shadow-lg"
+                                  style={{
+                                    textShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
+                                  }}
+                                >
                                     The Insurance Hawk
-                                </h1>
-                                <div className="text-xl lg:text-3xl text-white font-medium drop-shadow-md">
+                                </motion.h1>
+                                <motion.div 
+                                  variants={staggerItem}
+                                  className="text-xl lg:text-3xl text-white font-medium drop-shadow-md bg-gradient-to-r from-blue-200 via-white to-purple-200 bg-clip-text text-transparent"
+                                >
                                    Save Your Money - Keep Your Freedom
-                                </div>
-                            </div>
-                            <p className="text-white text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto drop-shadow-md">
+                                </motion.div>
+                            </motion.div>
+                            <motion.p 
+                              variants={staggerItem}
+                              className="text-white text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto drop-shadow-md"
+                            >
                                 We help families and businesses find the best insurance coverage at the lowest prices. No sales pressure, no hidden fees - just honest advice that puts your needs first.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-                                <Button size="lg" variant="secondary" className="bg-white text-blue-900 hover:bg-gray-50 shadow-lg backdrop-blur-sm">
+                            </motion.p>
+                            <motion.div 
+                              variants={staggerItem}
+                              className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6"
+                            >
+                                <AnimatedButton variant="glow" size="lg" className="shadow-xl">
                                     Get Free Quote
                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
-                                </Button>
-                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 hover:text-white shadow-lg backdrop-blur-sm">
+                                </AnimatedButton>
+                                <AnimatedButton 
+                                  variant="outline" 
+                                  size="lg" 
+                                  className="glass border-white text-white hover:bg-white/20 hover:text-white shadow-lg"
+                                >
                                     Call (555) 123-4567
-                                </Button>
-                            </div>
+                                </AnimatedButton>
+                            </motion.div>
                         </div>
-                    </div>
-                </section>
+                    </motion.div>
+                </motion.section>
 
                 {/* Main Content Container */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     {/* Main Services Section */}
-                    <section className="py-16 lg:py-24" aria-labelledby="services-title">
-                        <div className="text-center space-y-6 mb-16">
-                            <h2 id="services-title" className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+                    <motion.section 
+                      initial={{ opacity: 0, y: 50 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8 }}
+                      viewport={{ once: true }}
+                      className="py-16 lg:py-24" 
+                      aria-labelledby="services-title"
+                    >
+                        <motion.div 
+                          variants={staggerContainer}
+                          initial="initial"
+                          whileInView="animate"
+                          viewport={{ once: true }}
+                          className="text-center space-y-6 mb-16"
+                        >
+                            <motion.h2 
+                              variants={staggerItem}
+                              id="services-title" 
+                              className="text-3xl lg:text-4xl font-bold text-foreground"
+                            >
                                 Insurance Solutions for Every Need
-                            </h2>
-                            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            </motion.h2>
+                            <motion.p 
+                              variants={staggerItem}
+                              className="text-lg text-muted-foreground max-w-3xl mx-auto"
+                            >
                                 Whether you&apos;re protecting your family or your business, we have the expertise and options to help you save money.
-                            </p>
-                        </div>
+                            </motion.p>
+                        </motion.div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+                        <motion.div 
+                          variants={staggerContainer}
+                          initial="initial"
+                          whileInView="animate"
+                          viewport={{ once: true }}
+                          className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10"
+                        >
                             {mainServices.map((service, index) => {
                                 const IconComponent = service.icon
+                                const colors = ["blue", "purple", "green"] as const
                                 return (
-                                    <Card key={index} className="group hover:shadow-xl transition-all duration-500 border-0 shadow-lg hover:scale-105 bg-white dark:bg-neutral-800">
-                                        <CardHeader className="space-y-6 pb-6">
-                                            <div className="flex items-start justify-between">
-                                                <div className={`p-4 rounded-xl bg-gradient-to-r ${service.color} text-white shadow-lg`}>
-                                                    <IconComponent className="h-7 w-7" />
+                                    <motion.div
+                                      key={index}
+                                      variants={staggerItem}
+                                      whileHover={{ scale: 1.05, y: -8 }}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                        <Card className="group glass rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 bg-white/80 dark:bg-white/10 border-white/20 hover:border-white/30 glow-primary h-full">
+                                            <CardHeader className="space-y-6 pb-6">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="transform group-hover:scale-110 transition-transform duration-200">
+                                                        <GlossyIcon color={colors[index]} size="lg">
+                                                            <IconComponent className="h-7 w-7" />
+                                                        </GlossyIcon>
+                                                    </div>
+                                                    <Badge variant="secondary" className="bg-secondary/80 text-secondary-foreground font-medium px-3 py-1 backdrop-blur-sm">
+                                                        {service.savings}
+                                                    </Badge>
                                                 </div>
-                                                <Badge variant="secondary" className="bg-green-100 text-green-700 font-medium px-3 py-1">
-                                                    {service.savings}
-                                                </Badge>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <CardTitle className="text-xl lg:text-2xl group-hover:text-blue-900 transition-colors">
-                                                    {service.title}
-                                                </CardTitle>
-                                                <CardDescription className="text-base leading-relaxed">
-                                                    {service.description}
-                                                </CardDescription>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-6">
-                                            <div className="space-y-3">
-                                                <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">Popular Options:</h4>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                    {service.features.map((feature, idx) => (
-                                                        <div key={idx} className="flex items-center space-x-3">
-                                                            <CheckIcon className="h-4 w-4 text-blue-800 flex-shrink-0" />
-                                                            <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
+                                                <div className="space-y-3">
+                                                    <CardTitle className="text-xl lg:text-2xl group-hover:text-primary transition-colors">
+                                                        {service.title}
+                                                    </CardTitle>
+                                                    <CardDescription className="text-base leading-relaxed">
+                                                        {service.description}
+                                                    </CardDescription>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="space-y-6">
+                                                <div className="space-y-3">
+                                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Popular Options:</h4>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {service.features.map((feature, idx) => (
+                                                            <div key={idx} className="flex items-center space-x-3">
+                                                            <CheckIcon className="h-4 w-4 text-primary flex-shrink-0" />
+                                                            <span className="text-sm text-muted-foreground">{feature}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                             <Link href={service.href} className="block">
-                                                <Button className="w-full group-hover:bg-blue-900 transition-all duration-300 shadow-md hover:shadow-lg bg-blue-800">
+                                                <AnimatedButton variant="primary" className="w-full transition-all duration-300 shadow-md hover:shadow-lg">
                                                     Explore Options
                                                     <ArrowRightIcon className="ml-2 h-4 w-4" />
-                                                </Button>
+                                                </AnimatedButton>
                                             </Link>
                                         </CardContent>
                                     </Card>
+                                </motion.div>
                                 )
                             })}
-                        </div>
-                    </section>
+                        </motion.div>
+                    </motion.section>
 
                     {/* Trusted Carriers Section */}
                     <section className="py-12" aria-labelledby="carriers-title">
                         <div className="text-center space-y-6 mb-8">
-                            <h2 id="carriers-title" className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                            <h2 id="carriers-title" className="text-2xl lg:text-3xl font-bold text-foreground">
                                 Trusted by Leading Insurance Carriers
                             </h2>
-                            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                            <p className="text-muted-foreground max-w-2xl mx-auto">
                                 We partner with top-rated insurance companies to bring you the best coverage options and competitive rates.
                             </p>
                         </div>
@@ -226,10 +296,10 @@ export default function HomePage() {
                         {/* Carousel Container with Fade Effects */}
                         <div className="relative overflow-hidden">
                             {/* Left Fade Gradient */}
-                            <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-gray-50 via-gray-50/80 to-transparent dark:from-neutral-900 dark:via-neutral-900/80 pointer-events-none"></div>
+                            <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none"></div>
                             
                             {/* Right Fade Gradient */}
-                            <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-gray-50 via-gray-50/80 to-transparent dark:from-neutral-900 dark:via-neutral-900/80 pointer-events-none"></div>
+                            <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none"></div>
                             
                             {/* Carousel Track */}
                             <div className="flex animate-scroll gap-8 py-4">
@@ -261,12 +331,12 @@ export default function HomePage() {
 
                     {/* Why Choose Us Section */}
                     <section className="py-16" aria-labelledby="why-choose-title">
-                        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 lg:p-12 shadow-lg">
+                        <div className="glass rounded-2xl p-8 lg:p-12 shadow-lg bg-card/80 border border-border/20">
                             <div className="text-center space-y-6 mb-12">
-                                <h2 id="why-choose-title" className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+                                <h2 id="why-choose-title" className="text-3xl lg:text-4xl font-bold text-foreground">
                                     Why Choose The Insurance Hawk?
                                 </h2>
-                                <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                                <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
                                     We&apos;re not just another insurance broker. We&apos;re your advocate in a complicated industry.
                                 </p>
                             </div>
@@ -276,11 +346,11 @@ export default function HomePage() {
                                     const IconComponent = item.icon
                                     return (
                                         <div key={index} className="text-center space-y-4 group">
-                                            <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                                <IconComponent className="h-8 w-8 text-blue-900 dark:text-blue-300" />
+                                            <div className="mx-auto w-16 h-16 bg-secondary/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <IconComponent className="h-8 w-8 text-primary" />
                                             </div>
-                                            <h3 className="font-bold text-lg text-gray-900 dark:text-white">{item.title}</h3>
-                                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
+                                            <h3 className="font-bold text-lg text-foreground">{item.title}</h3>
+                                            <p className="text-muted-foreground leading-relaxed">{item.description}</p>
                                         </div>
                                     )
                                 })}
@@ -292,45 +362,45 @@ export default function HomePage() {
                     <section className="py-16" aria-labelledby="social-proof">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                             {/* Stats */}
-                            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 shadow-lg">
+                            <Card className="glass bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 shadow-lg">
                                 <CardHeader className="pb-6">
-                                    <CardTitle className="text-center text-2xl">Our Track Record</CardTitle>
+                                    <CardTitle className="text-center text-2xl text-foreground">Our Track Record</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-2 gap-8 text-center">
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-blue-900">$2M+</div>
-                                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Saved for Clients</div>
+                                            <div className="text-4xl font-bold text-primary">$2M+</div>
+                                            <div className="text-sm font-medium text-muted-foreground">Saved for Clients</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-gray-700">5,000+</div>
-                                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Families Protected</div>
+                                            <div className="text-4xl font-bold text-foreground">5,000+</div>
+                                            <div className="text-sm font-medium text-muted-foreground">Families Protected</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-blue-800">20+</div>
-                                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Years Experience</div>
+                                            <div className="text-4xl font-bold text-primary">20+</div>
+                                            <div className="text-sm font-medium text-muted-foreground">Years Experience</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="text-4xl font-bold text-gray-800">98%</div>
-                                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Satisfaction Rate</div>
+                                            <div className="text-4xl font-bold text-foreground">98%</div>
+                                            <div className="text-sm font-medium text-muted-foreground">Satisfaction Rate</div>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
 
                             {/* Quick Testimonials */}
-                            <Card className="shadow-lg">
+                            <Card className="glass shadow-lg">
                                 <CardHeader className="pb-6">
-                                    <CardTitle className="flex items-center space-x-3 text-xl">
-                                        <ChatBubbleIcon className="h-6 w-6 text-blue-900" />
+                                    <CardTitle className="flex items-center space-x-3 text-xl text-foreground">
+                                        <ChatBubbleIcon className="h-6 w-6 text-primary" />
                                         <span>What Clients Say</span>
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     {testimonialHighlights.map((testimonial, index) => (
-                                        <div key={index} className="border-l-4 border-gray-300 pl-6 py-2">
-                                            <p className="text-gray-600 dark:text-gray-300 italic text-lg leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
-                                            <p className="text-sm font-medium text-gray-500 mt-3">
+                                        <div key={index} className="border-l-4 border-border pl-6 py-2">
+                                            <p className="text-muted-foreground italic text-lg leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
+                                            <p className="text-sm font-medium text-muted-foreground/70 mt-3">
                                                 - {testimonial.author}, {testimonial.location}
                                             </p>
                                         </div>
@@ -348,36 +418,36 @@ export default function HomePage() {
                     {/* Quick Access Navigation */}
                     <section className="py-16" aria-labelledby="quick-access">
                         <div className="text-center mb-12">
-                            <h2 id="quick-access" className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h2 id="quick-access" className="text-3xl font-bold text-foreground mb-4">
                                 Explore More
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                             <Link href="/resources" className="block group">
-                                <Card className="hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
+                                <Card className="glass hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
                                     <CardHeader className="text-center pb-6">
-                                        <ArchiveIcon className="h-12 w-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                                        <CardTitle className="group-hover:text-blue-600 transition-colors text-xl">Resources Library</CardTitle>
+                                        <ArchiveIcon className="h-12 w-12 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                                        <CardTitle className="group-hover:text-primary transition-colors text-xl">Resources Library</CardTitle>
                                         <CardDescription className="text-base">Articles, guides, and educational content</CardDescription>
                                     </CardHeader>
                                 </Card>
                             </Link>
 
                             <Link href="/about" className="block group">
-                                <Card className="hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
+                                <Card className="glass hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
                                     <CardHeader className="text-center pb-6">
-                                        <HeartIcon className="h-12 w-12 text-green-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                                        <CardTitle className="group-hover:text-green-600 transition-colors text-xl">About Us</CardTitle>
+                                        <HeartIcon className="h-12 w-12 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                                        <CardTitle className="group-hover:text-primary transition-colors text-xl">About Us</CardTitle>
                                         <CardDescription className="text-base">Our story, mission, and testimonials</CardDescription>
                                     </CardHeader>
                                 </Card>
                             </Link>
 
                             <Link href="/ecosystem" className="block group">
-                                <Card className="hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
+                                <Card className="glass hover:shadow-xl transition-all duration-300 group-hover:scale-105 h-full">
                                     <CardHeader className="text-center pb-6">
-                                        <ComponentInstanceIcon className="h-12 w-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                                        <CardTitle className="group-hover:text-blue-900 transition-colors text-xl">Ecosystem</CardTitle>
+                                        <ComponentInstanceIcon className="h-12 w-12 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                                        <CardTitle className="group-hover:text-primary transition-colors text-xl">Ecosystem</CardTitle>
                                         <CardDescription className="text-base">Connect with us across all platforms</CardDescription>
                                     </CardHeader>
                                 </Card>
@@ -387,18 +457,18 @@ export default function HomePage() {
 
                     {/* Final CTA Section */}
                     <section className="py-16" aria-labelledby="final-cta">
-                        <div className="bg-gradient-to-r from-blue-900 to-gray-800 rounded-2xl p-8 lg:p-12 text-center text-white shadow-xl">
-                            <h2 id="final-cta" className="text-3xl lg:text-4xl font-bold mb-6">Ready to Save Money on Insurance?</h2>
-                            <p className="text-gray-200 mb-8 max-w-3xl mx-auto text-lg leading-relaxed">
+                        <div className="glass bg-gradient-to-r from-primary/20 to-primary/10 rounded-2xl p-8 lg:p-12 text-center border border-primary/20 shadow-xl">
+                            <h2 id="final-cta" className="text-3xl lg:text-4xl font-bold mb-6 text-foreground">Ready to Save Money on Insurance?</h2>
+                            <p className="text-muted-foreground mb-8 max-w-3xl mx-auto text-lg leading-relaxed">
                                 Get personalized quotes from top-rated carriers in minutes. No obligation, no pressure, no hidden fees.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Button size="lg" variant="secondary" className="shadow-lg">
+                                <AnimatedButton variant="glow" size="lg" className="shadow-lg">
                                     Get Free Quotes Now
-                                </Button>
-                                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900 shadow-lg">
+                                </AnimatedButton>
+                                <AnimatedButton variant="outline" size="lg" className="glass border-border hover:bg-accent hover:text-accent-foreground shadow-lg">
                                     Schedule Consultation
-                                </Button>
+                                </AnimatedButton>
                             </div>
                         </div>
                     </section>
@@ -407,6 +477,3 @@ export default function HomePage() {
         </div>    
     );
 }
-    
-
-    

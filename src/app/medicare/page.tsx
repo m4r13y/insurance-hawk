@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { 
   TokensIcon,
   HeartIcon,
@@ -302,6 +303,11 @@ export default function Medicare() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Medicare Compliance Disclaimer */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <MedicareDisclaimer page="medicare" />
+      </div>
+
       {/* Header */}
       <div className="border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-full">
