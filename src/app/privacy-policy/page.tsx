@@ -4,7 +4,7 @@ import MedicareDisclaimer from "@/components/medicare-disclaimer"
 
 export default function PrivacyPolicy() {
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 max-w-4xl mt-16">
       <MedicareDisclaimer page="general" />
       
       <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>

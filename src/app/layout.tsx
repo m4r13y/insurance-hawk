@@ -37,7 +37,7 @@ export default function RootLayout({
         {/* Add padding top to account for fixed header */}
         <main className={cn(
           "flex-1",
-          isHomePage ? "pt-0" : "pt-24 p-4 sm:p-6 md:p-8"
+          isHomePage ? "pt-0" : "pt-44 p-4 sm:p-6 md:p-8"
         )}>
           {children}
         </main>

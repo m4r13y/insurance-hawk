@@ -210,7 +210,7 @@ export default function BusinessHub() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex overflow-hidden bg-gray-50 dark:bg-neutral-900">
+      <div className="flex overflow-hidden bg-gray-50 dark:bg-neutral-900 mt-16">
         {/* Custom Sidebar for Business - Matching Main Sidebar Style */}
         <Sidebar className="w-100">
             <SidebarRail />

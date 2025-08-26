@@ -330,9 +330,9 @@ export default function IndividualHub() {
   ];
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="bg-background overflow-x-hidden">
       {/* Header */}
-      <div className="border-b">
+      <div className="border-b mt-16">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-wrap items-center gap-2">

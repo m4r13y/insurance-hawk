@@ -136,7 +136,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
 
   if (ArticleComponent) {
     return (
-      <div className="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
+      <div className="mt-16 max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
         <ArticleComponent />
       </div>
     );
@@ -146,7 +146,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
   if (resource) {
     if (resource.type === 'Video' && resource.url) {
       return (
-        <div className="max-w-2xl mx-auto py-12 text-center">
+        <div className="mt-16 max-w-2xl mx-auto py-12 text-center">
           <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
           <p className="mb-6 text-gray-600">{resource.description}</p>
           <div className="aspect-video mb-6">
@@ -158,7 +158,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
     }
     // Fallback for guides or other types
     return (
-      <div className="max-w-2xl mx-auto py-12 text-center">
+      <div className="mt-16 max-w-2xl mx-auto py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
         <p className="mb-6 text-gray-600">{resource.description}</p>
         <p className="italic text-gray-400">No detailed article is available for this resource.</p>

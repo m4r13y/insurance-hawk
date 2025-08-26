@@ -211,7 +211,7 @@ export default function IndividualHub() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex overflow-hidden">
+      <div className="bg-gray-50 dark:bg-neutral-900 flex overflow-hidden mt-16">
         {/* Custom Sidebar for Individual - Matching Main Sidebar Style */}
         <Sidebar className="w-80">
           <SidebarRail />
