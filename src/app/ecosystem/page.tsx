@@ -10,7 +10,7 @@ import {
   NewsletterSignup,
   CTASection
 } from "@/components/ecosystem"
-import { ecosystemData } from "./ecosystemData"
+import { ecosystemData } from "@/components/ecosystem/ecosystemData"
 
 export default function EcosystemPage() {
   return (
@@ -48,22 +48,6 @@ export default function EcosystemPage() {
           description={ecosystemData.communityResources.description}
           resources={ecosystemData.communityResources.resources}
         />
-
-        {/* Newsletter Signup */}
-        <NewsletterSignup 
-          title={ecosystemData.newsletter.title}
-          description={ecosystemData.newsletter.description}
-          placeholder={ecosystemData.newsletter.placeholder}
-          buttonText={ecosystemData.newsletter.buttonText}
-        />
-
-        {/* CTA Section */}
-        <CTASection 
-          title={ecosystemData.cta.title}
-          description={ecosystemData.cta.description}
-          buttons={ecosystemData.cta.buttons}
-        />
-
       </motion.div>
     </div>
   )

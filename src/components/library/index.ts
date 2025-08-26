@@ -14,6 +14,13 @@ export { EnhancedBadge, StatusBadge, CountBadge, CategoryBadge, PriorityBadge } 
 // Layout Components
 export { SimpleHeader } from './layout/simple-header';
 
+// Library Page Components
+export { HeroSection } from './HeroSection';
+export { FeaturedResourcesSection } from './FeaturedResourcesSection';
+export { SearchAndFilterSection } from './SearchAndFilterSection';
+export { ResourcesGrid } from './ResourcesGrid';
+export { libraryData } from './libraryData';
+
 // Content Components (for Medicare-specific content)
 export { ActionButtons } from '../ActionButtons';
 // TODO: Add Medicare content components like:

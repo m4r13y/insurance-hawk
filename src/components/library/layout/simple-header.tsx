@@ -225,9 +225,11 @@ export function SimpleHeader() {
               <Link href="/ecosystem" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                 Ecosystem
               </Link>
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Get Started
-              </Button>
+              <Link href="/get-started">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Get Started
+                </Button>
+              </Link>
             </div>
 
             {/* Mobile Navigation */}
@@ -324,9 +326,11 @@ export function SimpleHeader() {
                       <Link href="/ecosystem" onClick={() => setIsOpen(false)} className="block text-muted-foreground hover:text-foreground">
                         Ecosystem
                       </Link>
-                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                        Get Started
-                      </Button>
+                      <Link href="/get-started" onClick={() => setIsOpen(false)}>
+                        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                          Get Started
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </SheetContent>
