@@ -42,7 +42,6 @@ interface ProductCategory {
   id: string;
   name: string;
   description: string;
-  icon: React.ElementType;
   isPopular?: boolean;
   plans: Plan[];
 }
@@ -68,7 +67,6 @@ const productCategories: ProductCategory[] = [
     id: "original",
     name: "Original Medicare",
     description: "Traditional Medicare Parts A & B",
-    icon: CrossCircledIcon, // Medical cross icon for Original Medicare
     plans: [
       {
         id: "part-a",
@@ -98,7 +96,6 @@ const productCategories: ProductCategory[] = [
     id: "medigap",
     name: "Medigap (Supplement)",
     description: "Fill the gaps in Original Medicare",
-    icon: HeartFilledIcon, // Blue heart for Medigap
     isPopular: true,
     plans: [
       {
@@ -129,7 +126,6 @@ const productCategories: ProductCategory[] = [
     id: "advantage",
     name: "Medicare Advantage",
     description: "All-in-one Medicare alternative",
-    icon: HeartIcon, // Red heart for Medicare Advantage
     plans: [
       {
         id: "ppo",
@@ -152,7 +148,6 @@ const productCategories: ProductCategory[] = [
     id: "part-d",
     name: "Part D (Drug Plans)",
     description: "Prescription drug coverage",
-    icon: DotFilledIcon, // Pill icon for drug plans
     plans: [
       {
         id: "pdp",
@@ -167,7 +162,6 @@ const productCategories: ProductCategory[] = [
     id: "supplemental",
     name: "Supplemental Insurance",
     description: "Extra protection beyond Medicare",
-    icon: ActivityLogIcon, // Keep activity icon for supplemental
     plans: [
       {
         id: "cancer",
@@ -338,7 +332,6 @@ export default function Medicare() {
           <div className="relative -mx-4 px-4">
             <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide snap-x snap-mandatory">
               {productCategories.map((category) => {
-                const Icon = category.icon;
                 return (
                   <button
                     key={category.id}
@@ -352,9 +345,6 @@ export default function Medicare() {
                         : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${
-                      selectedCategory === category.id ? 'text-white' : 'text-blue-600'
-                    }`} />
                     <span className="text-sm font-medium whitespace-nowrap">
                       {category.name}
                     </span>
@@ -384,16 +374,16 @@ export default function Medicare() {
         <div className="lg:hidden mb-6 overflow-x-hidden">
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📞 Call Expert
+              Call Expert
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📄 Get Quote
+              Get Quote
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📊 Compare Plans
+              Compare Plans
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              🎥 Watch Video
+              Watch Video
             </Button>
           </div>
         </div>
@@ -408,7 +398,6 @@ export default function Medicare() {
               </h2>
               <div className="space-y-1">
                 {productCategories.map((category) => {
-                  const Icon = category.icon;
                   return (
                     <button
                       key={category.id}
@@ -422,15 +411,6 @@ export default function Medicare() {
                           : "hover:bg-accent/50 border border-transparent"
                       }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${
-                        selectedCategory === category.id 
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : category.id === 'original' ? 'text-green-600' :
-                            category.id === 'medigap' ? 'text-blue-600' :
-                            category.id === 'advantage' ? 'text-red-600' :
-                            category.id === 'part-d' ? 'text-purple-600' :
-                            'text-muted-foreground'
-                      }`} />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm">
                           {category.name}
@@ -563,17 +543,17 @@ export default function Medicare() {
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-700 shadow-sm text-blue-600 min-w-0"
                     >
-                      <span className="truncate">📹 Overview</span>
+                      <span className="truncate">Overview</span>
                     </button>
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
                     >
-                      <span className="truncate">📊 Compare</span>
+                      <span className="truncate">Compare</span>
                     </button>
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
                     >
-                      <span className="truncate">📖 Learn</span>
+                      <span className="truncate">Learn</span>
                     </button>
                   </div>
                 </div>
@@ -597,7 +577,7 @@ export default function Medicare() {
                           <p className="text-xs opacity-90">5:30 min • Expert explanation</p>
                         </div>
                         <Button size="sm" variant="secondary" className="text-xs">
-                          📱 Fullscreen
+                          Fullscreen
                         </Button>
                       </div>
                     </div>
@@ -1106,14 +1086,14 @@ export default function Medicare() {
               variant="outline"
               className="bg-white shadow-lg border-gray-200 hover:bg-blue-50 rounded-full w-12 h-12 p-0"
             >
-              📊
+              Compare
             </Button>
             <Button
               size="sm"
               variant="outline"
               className="bg-white shadow-lg border-gray-200 hover:bg-green-50 rounded-full w-12 h-12 p-0"
             >
-              📞
+              Call
             </Button>
           </div>
           
@@ -1122,7 +1102,7 @@ export default function Medicare() {
             size="lg"
             className="bg-blue-600 hover:bg-blue-700 shadow-xl rounded-full w-16 h-16 p-0 text-lg"
           >
-            📄
+            Quote
           </Button>
         </div>
       </div>
@@ -1131,19 +1111,19 @@ export default function Medicare() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 safe-area-pb">
         <div className="grid grid-cols-4 gap-1 px-2 py-2">
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">🏠</div>
+            <div className="text-blue-600 text-lg mb-1">Home</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Home</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-blue-50 dark:bg-blue-950/20 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">📋</div>
+            <div className="text-blue-600 text-lg mb-1">Compare</div>
             <span className="text-xs text-blue-600 font-medium">Compare</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">💬</div>
+            <div className="text-gray-500 text-lg mb-1">Help</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Help</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">📱</div>
+            <div className="text-gray-500 text-lg mb-1">Tools</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Tools</span>
           </button>
         </div>

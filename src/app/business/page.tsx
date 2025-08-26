@@ -45,7 +45,6 @@ interface ProductCategory {
   id: string;
   name: string;
   description: string;
-  icon: React.ElementType;
   isPopular?: boolean;
   plans: Plan[];
 }
@@ -71,7 +70,6 @@ const productCategories: ProductCategory[] = [
     id: "general-liability",
     name: "General Liability",
     description: "Protect your business from lawsuits and claims",
-    icon: LockClosedIcon,
     isPopular: true,
     plans: [
       {
@@ -102,7 +100,6 @@ const productCategories: ProductCategory[] = [
     id: "workers-comp",
     name: "Workers' Compensation",
     description: "Required coverage for employee injuries",
-    icon: PersonIcon,
     plans: [
       {
         id: "standard-wc",
@@ -125,7 +122,6 @@ const productCategories: ProductCategory[] = [
     id: "commercial-auto",
     name: "Commercial Auto",
     description: "Vehicle coverage for business use",
-    icon: BackpackIcon,
     plans: [
       {
         id: "fleet-basic",
@@ -148,7 +144,6 @@ const productCategories: ProductCategory[] = [
     id: "property",
     name: "Commercial Property",
     description: "Protect your business property and equipment",
-    icon: GearIcon,
     plans: [
       {
         id: "basic-property",
@@ -171,7 +166,6 @@ const productCategories: ProductCategory[] = [
     id: "cyber-liability",
     name: "Cyber Liability",
     description: "Protection against data breaches and cyber attacks",
-    icon: LightningBoltIcon,
     plans: [
       {
         id: "basic-cyber",
@@ -367,7 +361,6 @@ export default function BusinessHub() {
           <div className="relative -mx-4 px-4">
             <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide snap-x snap-mandatory">
               {productCategories.map((category) => {
-                const Icon = category.icon;
                 return (
                   <button
                     key={category.id}
@@ -381,9 +374,6 @@ export default function BusinessHub() {
                         : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${
-                      selectedCategory === category.id ? 'text-white' : 'text-blue-600'
-                    }`} />
                     <span className="text-sm font-medium whitespace-nowrap">
                       {category.name}
                     </span>
@@ -413,16 +403,16 @@ export default function BusinessHub() {
         <div className="lg:hidden mb-6 overflow-x-hidden">
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📞 Call Expert
+              Call Expert
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📄 Get Quote
+              Get Quote
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              📊 Compare Coverage
+              Compare Coverage
             </Button>
             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs whitespace-nowrap">
-              🎥 Watch Video
+              Watch Video
             </Button>
           </div>
         </div>
@@ -437,7 +427,6 @@ export default function BusinessHub() {
               </h2>
               <div className="space-y-1">
                 {productCategories.map((category) => {
-                  const Icon = category.icon;
                   return (
                     <button
                       key={category.id}
@@ -451,16 +440,6 @@ export default function BusinessHub() {
                           : "hover:bg-accent/50 border border-transparent"
                       }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${
-                        selectedCategory === category.id 
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : category.id === 'general-liability' ? 'text-green-600' :
-                            category.id === 'workers-comp' ? 'text-blue-600' :
-                            category.id === 'commercial-auto' ? 'text-orange-600' :
-                            category.id === 'property' ? 'text-purple-600' :
-                            category.id === 'cyber-liability' ? 'text-red-600' :
-                            'text-muted-foreground'
-                      }`} />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm">
                           {category.name}
@@ -593,17 +572,17 @@ export default function BusinessHub() {
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-700 shadow-sm text-blue-600 min-w-0"
                     >
-                      <span className="truncate">📹 Overview</span>
+                      <span className="truncate">Overview</span>
                     </button>
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
                     >
-                      <span className="truncate">📊 Compare</span>
+                      <span className="truncate">Compare</span>
                     </button>
                     <button 
                       className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
                     >
-                      <span className="truncate">📖 Learn</span>
+                      <span className="truncate">Learn</span>
                     </button>
                   </div>
                 </div>
@@ -627,7 +606,7 @@ export default function BusinessHub() {
                           <p className="text-xs opacity-90">8:15 min • Business expert explanation</p>
                         </div>
                         <Button size="sm" variant="secondary" className="text-xs">
-                          📱 Fullscreen
+                          Fullscreen
                         </Button>
                       </div>
                     </div>
@@ -1006,14 +985,14 @@ export default function BusinessHub() {
               variant="outline"
               className="bg-white shadow-lg border-gray-200 hover:bg-blue-50 rounded-full w-12 h-12 p-0"
             >
-              📊
+              Compare
             </Button>
             <Button
               size="sm"
               variant="outline"
               className="bg-white shadow-lg border-gray-200 hover:bg-green-50 rounded-full w-12 h-12 p-0"
             >
-              📞
+              Call
             </Button>
           </div>
           
@@ -1022,7 +1001,7 @@ export default function BusinessHub() {
             size="lg"
             className="bg-blue-600 hover:bg-blue-700 shadow-xl rounded-full w-16 h-16 p-0 text-lg"
           >
-            📄
+            Quote
           </Button>
         </div>
       </div>
@@ -1031,19 +1010,19 @@ export default function BusinessHub() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 safe-area-pb">
         <div className="grid grid-cols-4 gap-1 px-2 py-2">
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">🏠</div>
+            <div className="text-blue-600 text-lg mb-1">Home</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Home</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-blue-50 dark:bg-blue-950/20 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">📋</div>
+            <div className="text-blue-600 text-lg mb-1">Compare</div>
             <span className="text-xs text-blue-600 font-medium">Compare</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">💬</div>
+            <div className="text-gray-500 text-lg mb-1">Help</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Help</span>
           </button>
           <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">📱</div>
+            <div className="text-gray-500 text-lg mb-1">Tools</div>
             <span className="text-xs text-gray-600 dark:text-gray-400">Tools</span>
           </button>
         </div>
