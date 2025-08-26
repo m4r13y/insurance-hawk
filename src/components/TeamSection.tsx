@@ -53,7 +53,7 @@ const teamMembers = [
     ],
     image: "/Kasey-Weadon.jpg",
     phone: "(972) 978-5037",
-    email: "info@hawkinsig.com",
+    email: "kasey@hawkinsig.com",
     facebook: "",
     languages: ["English", "Spanish"],
     servingAreas: ["Dallas-Fort Worth", "Houston", "East Texas"]

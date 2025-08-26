@@ -6,7 +6,7 @@
   :root {
     --background: 220 6% 98%; /* Cool but very light off-white */
     --foreground: 222.2 84% 4.9%;
-    --card: 220 6% 99%;
+    --card: 220 14% 98%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 220 6% 99%;
     --popover-foreground: 222.2 84% 4.9%;
@@ -20,8 +20,8 @@
     --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 4% 93%;
-    --input: 220 4% 93%;
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
@@ -34,7 +34,7 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 0 0% 100% / 0.05;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -91,6 +91,6 @@
   }
   
   .gradient-bg {
-    @apply bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
+    @apply bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
   }
 }

@@ -33,7 +33,7 @@ export default function LibraryPage() {
   }, [searchTerm, selectedType]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen gradient-bg">
       <HeroSection />
       
       {/* <FeaturedResourcesSection /> */}

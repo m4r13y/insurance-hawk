@@ -52,29 +52,29 @@ export function ResourcesGrid({ resources }: ResourcesGridProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {resources.map((resource, index) => (
-        <Card key={index} className="group hover:shadow-lg transition-all duration-200">
+        <Card key={index} className="group hover:shadow-lg dark:hover:shadow-xl transition-all duration-200 !bg-card border !border-border">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
-              <Badge variant="outline" className="border">
+              <Badge variant="outline" className="border border-border">
                 <div className="flex items-center space-x-1">
                   {getTypeIcon(resource.type)}
                   <span className="text-xs font-medium">{resource.type}</span>
                 </div>
               </Badge>
-              <div className="flex items-center text-xs text-gray-500">
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3 mr-1" />
                 {resource.duration} {resource.durationUnit}
               </div>
             </div>
-            <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+            <CardTitle className="text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-gray-900 dark:text-white">
               {resource.title}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 text-sm mb-4">{resource.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{resource.description}</p>
             <Link 
               href={resource.slug ? `/resources/${resource.slug}` : resource.url || '#'} 
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm group"
+              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm group"
             >
               {resource.linkLabel || 'Learn More'}
               <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
