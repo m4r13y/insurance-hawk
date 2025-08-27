@@ -18,7 +18,7 @@ export default function NewsletterSignup({
   return (
     <motion.div 
       variants={staggerItem}
-      className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg"
+      className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-8 text-center text-primary-foreground shadow-lg"
     >
       <motion.h2 
         variants={staggerItem}
@@ -39,7 +39,7 @@ export default function NewsletterSignup({
         <input
           type="email"
           placeholder={placeholder}
-          className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+          className="flex-1 px-4 py-3 rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
         />
         <AnimatedButton variant="secondary" className="px-6">
           {buttonText}

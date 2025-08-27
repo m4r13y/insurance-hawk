@@ -196,9 +196,9 @@ export default function BusinessHub() {
   const currentData = businessData[selectedPlan] || businessData["small-group-health"];
 
   const themeColors = {
-    primary: isCorporate ? "text-purple-400" : "text-blue-400",
-    accent: isCorporate ? "text-purple-400" : "text-blue-400",
-    bg: isCorporate ? "bg-purple-900/20" : "bg-blue-900/20",
+    primary: isCorporate ? "text-destructive" : "text-primary",
+    accent: isCorporate ? "text-destructive" : "text-primary",
+    bg: isCorporate ? "bg-destructive/20" : "bg-primary/20",
   };
 
   const handlePlanSelect = (planId: string) => {
@@ -230,8 +230,8 @@ export default function BusinessHub() {
 
                 {/* Business Type Toggle */}
                 <div className="px-3 pb-2">
-                  <div className="flex items-center justify-center space-x-4 p-3 bg-gray-800 rounded-lg shadow-sm">
-                    <span className={`font-semibold text-sm ${!isCorporate ? themeColors.accent : 'text-gray-500'}`}>
+                  <div className="flex items-center justify-center space-x-4 p-3 bg-card rounded-lg shadow-sm">
+                    <span className={`font-semibold text-sm ${!isCorporate ? themeColors.accent : 'text-muted-foreground'}`}>
                       Small Business
                     </span>
                     <Switch
@@ -240,9 +240,9 @@ export default function BusinessHub() {
                         setIsCorporate(checked);
                         setSelectedPlan(checked ? "employee-benefits" : "small-group-health");
                       }}
-                      className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-blue-600"
+                      className="data-[state=checked]:bg-destructive data-[state=unchecked]:bg-primary"
                     />
-                    <span className={`font-semibold text-sm ${isCorporate ? themeColors.accent : 'text-gray-500'}`}>
+                    <span className={`font-semibold text-sm ${isCorporate ? themeColors.accent : 'text-muted-foreground'}`}>
                       Corporate
                     </span>
                   </div>
@@ -327,7 +327,7 @@ export default function BusinessHub() {
                           </CardDescription>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-gray-300 leading-relaxed">
+                          <p className="text-muted-foreground leading-relaxed">
                               {currentData.description}
                           </p>
                       </CardContent>
@@ -341,7 +341,7 @@ export default function BusinessHub() {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <HeartIcon className="w-5 h-5 text-green-400" />
+                          <HeartIcon className="w-5 h-5 text-success" />
                           Key Benefits
                         </CardTitle>
                       </CardHeader>
@@ -391,7 +391,7 @@ export default function BusinessHub() {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <ActivityLogIcon className="w-5 h-5 text-orange-400" />
+                          <ActivityLogIcon className="w-5 h-5 text-warning" />
                           Cost Information
                         </CardTitle>
                       </CardHeader>

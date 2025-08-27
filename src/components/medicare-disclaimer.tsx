@@ -111,33 +111,33 @@ export default function MedicareDisclaimer({ page = 'general', className = '' }:
         animate={{ opacity: 1, height: 'auto' }}
         exit={{ opacity: 0, height: 0 }}
         transition={{ duration: 0.3 }}
-        className={`relative bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4 my-4 ${className}`}
+        className={`relative bg-primary/10 dark:bg-primary/10 border border-primary/20 dark:border-primary/20 rounded-lg p-4 my-4 ${className}`}
       >
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute top-2 right-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          className="absolute top-2 right-2 text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80"
           aria-label="Close disclaimer"
         >
           <Cross1Icon className="h-4 w-4" />
         </button>
 
         <div className="flex items-start gap-3 pr-6">
-          <InfoCircledIcon className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+          <InfoCircledIcon className="h-5 w-5 text-primary dark:text-primary mt-0.5 flex-shrink-0" />
           <div className="space-y-2">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">
+            <h4 className="font-medium text-primary dark:text-primary text-sm">
               {title}
             </h4>
-            <div className="text-xs text-blue-800 dark:text-blue-200 space-y-2">
+            <div className="text-xs text-primary dark:text-primary/80 space-y-2">
               {content}
             </div>
             
             {/* CMS Required Links */}
-            <div className="flex flex-wrap gap-4 text-xs pt-2 border-t border-blue-200 dark:border-blue-700">
+            <div className="flex flex-wrap gap-4 text-xs pt-2 border-t border-primary/20 dark:border-primary/20">
               <a 
                 href="https://www.medicare.gov" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-700 dark:text-blue-300 hover:underline"
+                className="text-primary dark:text-primary/80 hover:underline"
               >
                 Official Medicare Site
               </a>
@@ -145,7 +145,7 @@ export default function MedicareDisclaimer({ page = 'general', className = '' }:
                 href="https://www.cms.gov" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-700 dark:text-blue-300 hover:underline"
+                className="text-primary dark:text-primary/80 hover:underline"
               >
                 CMS.gov
               </a>
@@ -154,7 +154,7 @@ export default function MedicareDisclaimer({ page = 'general', className = '' }:
                   href="https://www.medicare.gov/plan-compare" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-700 dark:text-blue-300 hover:underline"
+                  className="text-primary dark:text-primary/80 hover:underline"
                 >
                   Plan Finder
                 </a>
@@ -162,7 +162,7 @@ export default function MedicareDisclaimer({ page = 'general', className = '' }:
             </div>
 
             {/* Compliance footnote */}
-            <p className="text-xs text-blue-600 dark:text-blue-400 italic pt-1">
+            <p className="text-xs text-primary dark:text-primary italic pt-1">
               Last updated: {new Date().toLocaleDateString()} | 
               Licensed in all 50 states | 
               CMS Compliant

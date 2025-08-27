@@ -68,7 +68,7 @@ export function WorkingPast65Content() {
             <h2 className="text-xl font-bold">Medicare Enrollment Rules at a Glance</h2>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse my-6">
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Situation</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Need to Enroll?</th>
@@ -117,7 +117,7 @@ export function WorkingPast65Content() {
                 height={400}
                 data-ai-hint="planning desk"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 Coordinating employer coverage with Medicare is key to avoiding penalties.
               </figcaption>
             </figure>

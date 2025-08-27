@@ -47,7 +47,7 @@ export default function ActionButtons({
         {badges.map((badge, index) => (
           <span
             key={index}
-            className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-neutral-800 dark:text-neutral-200"
+            className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-secondary text-foreground dark:bg-neutral-800 dark:text-neutral-200"
           >
             {badge.tag}
           </span>
@@ -60,7 +60,7 @@ export default function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-x-2 text-sm text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="flex items-center gap-x-2 text-sm text-muted-foreground hover:text-foreground dark:text-neutral-400 dark:hover:text-neutral-200"
             >
               <HeartIcon className="h-4 w-4" />
               {likes}
@@ -72,7 +72,7 @@ export default function ActionButtons({
         </Tooltip>
 
         {/* Divider */}
-        <div className="block h-3 border-e border-gray-300 mx-3 dark:border-neutral-600"></div>
+        <div className="block h-3 border-e border-border mx-3 dark:border-neutral-600"></div>
 
         {/* Comment Button */}
         <Tooltip>
@@ -80,7 +80,7 @@ export default function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-x-2 text-sm text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="flex items-center gap-x-2 text-sm text-muted-foreground hover:text-foreground dark:text-neutral-400 dark:hover:text-neutral-200"
             >
               <ChatBubbleIcon className="h-4 w-4" />
               {comments}
@@ -92,7 +92,7 @@ export default function ActionButtons({
         </Tooltip>
 
         {/* Divider */}
-        <div className="block h-3 border-e border-gray-300 mx-3 dark:border-neutral-600"></div>
+        <div className="block h-3 border-e border-border mx-3 dark:border-neutral-600"></div>
 
         {/* Share Button Dropdown */}
         <DropdownMenu>
@@ -100,7 +100,7 @@ export default function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-x-2 text-sm text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="flex items-center gap-x-2 text-sm text-muted-foreground hover:text-foreground dark:text-neutral-400 dark:hover:text-neutral-200"
             >
               <Share1Icon className="h-4 w-4" />
               Share

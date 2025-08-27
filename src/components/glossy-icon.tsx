@@ -73,7 +73,7 @@ export default function GlossyIcon({ children, color, size = "md", className = "
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-white/20 to-white/40 opacity-60" />
       
       {/* Icon */}
-      <div className={cn("relative z-10 text-white", iconSizeClasses[size])}>
+      <div className={cn("relative z-10 text-primary-foreground", iconSizeClasses[size])}>
         {children}
       </div>
     </div>

@@ -88,10 +88,10 @@ export function EnhancedBadge({
 
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
   const statusConfig = {
-    active: { variant: 'default' as const, label: 'Active', bgClass: 'bg-green-100 text-green-800 border-green-200' },
+    active: { variant: 'default' as const, label: 'Active', bgClass: 'bg-success text-success-foreground border-success' },
     inactive: { variant: 'secondary' as const, label: 'Inactive', bgClass: '' },
-    pending: { variant: 'outline' as const, label: 'Pending', bgClass: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    approved: { variant: 'default' as const, label: 'Approved', bgClass: 'bg-green-100 text-green-800 border-green-200' },
+    pending: { variant: 'outline' as const, label: 'Pending', bgClass: 'bg-warning text-warning-foreground border-warning' },
+    approved: { variant: 'default' as const, label: 'Approved', bgClass: 'bg-success text-success-foreground border-success' },
     rejected: { variant: 'destructive' as const, label: 'Rejected', bgClass: '' },
     draft: { variant: 'outline' as const, label: 'Draft', bgClass: '' }
   };
@@ -163,7 +163,7 @@ export function PriorityBadge({
   const priorityConfig = {
     low: { variant: 'secondary' as const, label: 'Low' },
     medium: { variant: 'default' as const, label: 'Medium' },
-    high: { variant: 'outline' as const, label: 'High', bgClass: 'bg-orange-100 text-orange-800 border-orange-200' },
+    high: { variant: 'outline' as const, label: 'High', bgClass: 'bg-warning text-warning-foreground border-warning' },
     urgent: { variant: 'destructive' as const, label: 'Urgent' }
   };
 
@@ -173,7 +173,7 @@ export function PriorityBadge({
     <EnhancedBadge 
       variant={config.variant} 
       className={cn(
-        config.variant === 'outline' && priority === 'high' ? 'bg-orange-100 text-orange-800 border-orange-200' : '',
+        config.variant === 'outline' && priority === 'high' ? 'bg-warning text-warning-foreground border-warning' : '',
         className
       )}
     >

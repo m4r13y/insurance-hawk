@@ -249,10 +249,10 @@ const resources = [
 
 // Chart data for plan popularity
 const planPopularityData = [
-  { plan: "General Liability", enrollment: 45, fill: "#3b82f6" }, // blue-500
-  { plan: "Workers' Comp", enrollment: 25, fill: "#60a5fa" }, // blue-400
-  { plan: "Commercial Auto", enrollment: 20, fill: "#93c5fd" }, // blue-300
-  { plan: "Property", enrollment: 10, fill: "#bfdbfe" }, // blue-200
+  { plan: "General Liability", enrollment: 45, fill: "hsl(var(--chart-1))" },
+  { plan: "Workers' Comp", enrollment: 25, fill: "hsl(var(--chart-2))" },
+  { plan: "Commercial Auto", enrollment: 20, fill: "hsl(var(--chart-3))" },
+  { plan: "Property", enrollment: 10, fill: "hsl(var(--chart-4))" },
 ];
 
 const planPopularityConfig = {
@@ -261,19 +261,19 @@ const planPopularityConfig = {
   },
   generalLiability: {
     label: "General Liability",
-    color: "#3b82f6",
+    color: "hsl(var(--chart-1))",
   },
   workersComp: {
     label: "Workers' Comp",
-    color: "#60a5fa",
+    color: "hsl(var(--chart-2))",
   },
   commercialAuto: {
     label: "Commercial Auto",
-    color: "#93c5fd",
+    color: "hsl(var(--chart-3))",
   },
   property: {
     label: "Property",
-    color: "#bfdbfe",
+    color: "hsl(var(--chart-4))",
   },
 } satisfies ChartConfig;
 
@@ -290,7 +290,7 @@ const satisfactionData = [
 const satisfactionConfig = {
   satisfaction: {
     label: "Rating",
-    color: "#3b82f6",
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig;
 
@@ -370,15 +370,15 @@ export default function BusinessHub() {
                     }}
                     className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-200 border-2 snap-start min-w-max ${
                       selectedCategory === category.id
-                        ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200"
-                        : "bg-card text-gray-700 border-border hover:border-blue-300 hover:bg-blue-50"
+                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                        : "bg-card text-card-foreground border-border hover:border-primary/30 hover:bg-primary/5"
                     }`}
                   >
                     <span className="text-sm font-medium whitespace-nowrap">
                       {category.name}
                     </span>
                     {category.isPopular && selectedCategory !== category.id && (
-                      <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-warning rounded-full flex-shrink-0"></div>
                     )}
                   </button>
                 );
@@ -391,8 +391,8 @@ export default function BusinessHub() {
           
           {/* Mobile Category Description */}
           {currentCategory && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-sm text-primary">
                 {currentCategory.description}
               </p>
             </div>
@@ -436,7 +436,7 @@ export default function BusinessHub() {
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-md transition-colors ${
                         selectedCategory === category.id
-                          ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800"
+                          ? "bg-primary/5 text-primary border border-primary/20"
                           : "hover:bg-accent/50 border border-transparent"
                       }`}
                     >
@@ -568,19 +568,19 @@ export default function BusinessHub() {
 
                 {/* Mobile Content Tabs */}
                 <div className="lg:hidden overflow-x-hidden">
-                  <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-4 -mx-1">
+                  <div className="flex gap-1 bg-muted p-1 rounded-lg mb-4 -mx-1">
                     <button 
-                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-card dark:bg-gray-700 shadow-sm text-blue-600 min-w-0"
+                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-card shadow-sm text-primary min-w-0"
                     >
                       <span className="truncate">Overview</span>
                     </button>
                     <button 
-                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
+                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground min-w-0"
                     >
                       <span className="truncate">Compare</span>
                     </button>
                     <button 
-                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 min-w-0"
+                      className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground min-w-0"
                     >
                       <span className="truncate">Learn</span>
                     </button>
@@ -634,13 +634,13 @@ export default function BusinessHub() {
                               {currentCategory.plans.map((plan) => (
                                 <th key={plan.id} className={`text-center py-3 px-2 sm:px-3 font-semibold relative ${
                                   plan.isPopular 
-                                    ? 'bg-blue-50 dark:bg-blue-950/20 border-l-2 border-r-2 border-blue-200 dark:border-blue-800' 
+                                    ? 'bg-primary/5 border-l-2 border-r-2 border-primary/20' 
                                     : 'bg-muted/10'
                                 }`}>
                                   <div className="space-y-1">
                                     <div className="font-bold text-xs sm:text-sm">{plan.name}</div>
                                     {plan.isPopular && (
-                                      <Badge variant="default" className="text-xs bg-blue-200">
+                                      <Badge variant="default" className="text-xs bg-primary/20">
                                         Popular
                                       </Badge>
                                     )}
@@ -656,7 +656,7 @@ export default function BusinessHub() {
                             </td>
                             {currentCategory.plans.map((plan) => (
                               <td key={plan.id} className={`py-3 px-2 sm:px-3 text-center ${
-                                plan.isPopular ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''
+                                plan.isPopular ? 'bg-primary/5' : ''
                               }`}>
                                 <div className="text-xs sm:text-sm font-bold text-primary">
                                   {plan.premiumRange}
@@ -670,7 +670,7 @@ export default function BusinessHub() {
                             </td>
                             {currentCategory.plans.map((plan) => (
                               <td key={plan.id} className={`py-3 px-2 sm:px-3 text-center ${
-                                plan.isPopular ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''
+                                plan.isPopular ? 'bg-primary/5' : ''
                               }`}>
                                 <div className="text-xs leading-relaxed">
                                   {plan.description}
@@ -684,12 +684,12 @@ export default function BusinessHub() {
                             </td>
                             {currentCategory.plans.map((plan) => (
                               <td key={plan.id} className={`py-3 px-2 sm:px-3 ${
-                                plan.isPopular ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''
+                                plan.isPopular ? 'bg-primary/5' : ''
                               }`}>
                                 <ul className="space-y-1">
                                   {plan.features.slice(0, 3).map((feature, index) => (
                                     <li key={index} className="flex items-start gap-1 text-xs">
-                                      <span className="text-green-600 flex-shrink-0">✓</span>
+                                      <span className="text-success flex-shrink-0">✓</span>
                                       <span className="leading-relaxed">{feature}</span>
                                     </li>
                                   ))}
@@ -703,7 +703,7 @@ export default function BusinessHub() {
                             </td>
                             {currentCategory.plans.map((plan, planIndex) => (
                               <td key={plan.id} className={`py-3 px-2 sm:px-3 text-center ${
-                                plan.isPopular ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''
+                                plan.isPopular ? 'bg-primary/5' : ''
                               }`}>
                                 <div className="text-xs font-medium text-muted-foreground">
                                   {planIndex === 0 && currentCategory.id === 'general-liability' && "Small businesses"}
@@ -772,8 +772,8 @@ export default function BusinessHub() {
                               <button 
                                 className={`p-2 rounded-md transition-colors ${
                                   selectedPlan === plan.id 
-                                    ? "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400" 
-                                    : "hover:bg-blue-50 text-blue-500 dark:hover:bg-blue-950/20"
+                                    ? "bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary"
+                                    : "hover:bg-primary/5 text-primary dark:hover:bg-primary/5"
                                 }`}
                                 onClick={() => setSelectedPlan(selectedPlan === plan.id ? null : plan.id)}
                               >
@@ -781,12 +781,12 @@ export default function BusinessHub() {
                             </button>
                             
                             {/* Quote Button */}
-                            <button className="p-2 rounded-md hover:bg-green-50 text-green-500 dark:hover:bg-green-950/20 transition-colors">
+                            <button className="p-2 rounded-md hover:bg-success/10 text-success transition-colors">
                               <ArchiveIcon className="h-4 w-4" />
                             </button>
                             
                             {/* Video Button */}
-                            <button className="p-2 rounded-md hover:bg-purple-50 text-purple-500 dark:hover:bg-purple-950/20 transition-colors">
+                            <button className="p-2 rounded-md hover:bg-accent/10 text-accent-foreground transition-colors">
                               <VideoIcon className="h-4 w-4" />
                             </button>
                           </div>
@@ -794,13 +794,13 @@ export default function BusinessHub() {
                         
                         {/* Expanded Info Content */}
                         {selectedPlan === plan.id && (
-                          <div className="mx-1 mt-2 p-3 border border-blue-200/60 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-800/60 rounded-lg">
+                          <div className="mx-1 mt-2 p-3 border border-primary/20 bg-primary/5 dark:border-primary/20 rounded-lg">
                             <div className="space-y-2">
-                              <h5 className="font-medium text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide">Key Features</h5>
+                              <h5 className="font-medium text-xs text-primary dark:text-primary uppercase tracking-wide">Key Features</h5>
                               <ul className="space-y-1">
                                 {plan.features.slice(0, 4).map((feature, index) => (
                                   <li key={index} className="flex items-start gap-2 text-xs">
-                                    <CheckIcon className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
+                                    <CheckIcon className="h-3 w-3 text-success flex-shrink-0 mt-0.5" />
                                     <span className="leading-relaxed">{feature}</span>
                                   </li>
                                 ))}
@@ -983,14 +983,14 @@ export default function BusinessHub() {
             <Button
               size="sm"
               variant="outline"
-              className="bg-card shadow-lg border-border hover:bg-blue-50 rounded-full w-12 h-12 p-0"
+              className="bg-card shadow-lg border-border hover:bg-primary/5 rounded-full w-12 h-12 p-0"
             >
               Compare
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="bg-card shadow-lg border-border hover:bg-green-50 rounded-full w-12 h-12 p-0"
+              className="bg-card shadow-lg border-border hover:bg-success/5 rounded-full w-12 h-12 p-0"
             >
               Call
             </Button>
@@ -999,7 +999,7 @@ export default function BusinessHub() {
           {/* Main CTA */}
           <Button
             size="lg"
-            className="bg-blue-600 hover:bg-blue-700 shadow-xl rounded-full w-16 h-16 p-0 text-lg"
+            className="bg-primary hover:bg-primary/90 shadow-xl rounded-full w-16 h-16 p-0 text-lg"
           >
             Quote
           </Button>
@@ -1007,23 +1007,23 @@ export default function BusinessHub() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card dark:bg-gray-900 border-t border-border dark:border-gray-800 safe-area-pb">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">
         <div className="grid grid-cols-4 gap-1 px-2 py-2">
-          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">Home</div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Home</span>
+          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="text-primary text-lg mb-1">Home</div>
+            <span className="text-xs text-muted-foreground">Home</span>
           </button>
-          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-blue-50 dark:bg-blue-950/20 transition-colors">
-            <div className="text-blue-600 text-lg mb-1">Compare</div>
-            <span className="text-xs text-blue-600 font-medium">Compare</span>
+          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-primary/5 transition-colors">
+            <div className="text-primary text-lg mb-1">Compare</div>
+            <span className="text-xs text-primary font-medium">Compare</span>
           </button>
-          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">Help</div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Help</span>
+          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="text-muted-foreground text-lg mb-1">Help</div>
+            <span className="text-xs text-muted-foreground">Help</span>
           </button>
-          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="text-gray-500 text-lg mb-1">Tools</div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Tools</span>
+          <button className="flex flex-col items-center justify-center py-2 px-1 rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="text-muted-foreground text-lg mb-1">Tools</div>
+            <span className="text-xs text-muted-foreground">Tools</span>
           </button>
         </div>
       </div>
@@ -1051,7 +1051,7 @@ export default function BusinessHub() {
                 <div className="space-y-1">
                   {plan.features.map((feature, index) => (
                     <div key={index} className="flex items-start gap-2 text-sm">
-                      <CheckIcon className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
+                      <CheckIcon className="h-3 w-3 text-success mt-1 flex-shrink-0" />
                       <span>{feature}</span>
                     </div>
                   ))}
@@ -1084,7 +1084,7 @@ export default function BusinessHub() {
                   <div className="flex-1">
                     <h3 className="font-medium mb-1">{resource.title}</h3>
                     <p className="text-sm text-muted-foreground mb-2">{resource.description}</p>
-                    <div className="text-xs text-blue-600">{resource.readTime}</div>
+                    <div className="text-xs text-primary">{resource.readTime}</div>
                   </div>
                 </div>
               </Link>

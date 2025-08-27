@@ -54,7 +54,7 @@ export function PdpProsConsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Part D vs Medicare Advantage Drug Coverage</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Feature</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Standalone Part D</th>
@@ -137,7 +137,7 @@ export function PdpProsConsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Annual Cost Comparison</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Option</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Premiums</th>

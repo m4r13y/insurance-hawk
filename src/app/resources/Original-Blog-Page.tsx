@@ -109,7 +109,7 @@ export default function BlogArticlePage() {
               <li>Consider enrolling in a $0 premium Part D plan: Even if you’re not taking medications, this keeps you penalty-free and protects against future costs.</li>
             </ul>
             <p className="mb-2">Need Help Timing Your Enrollment?<br />If you’re unsure when you should enroll or whether your current coverage qualifies, don’t guess. We’ll walk you through the exact deadlines and make sure you’re protected from unnecessary penalties.<br />We’ve helped hundreds of people avoid costly mistakes, and we’d be happy to do the same for you.</p>
-            <button className="my-8 px-6 py-3 bg-blue-700 text-white rounded-lg font-semibold">Schedule Your Medicare Review</button>
+            <button className="my-8 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold">Schedule Your Medicare Review</button>
           </section>
 
           {/* Badges/Tags/Buttons */}

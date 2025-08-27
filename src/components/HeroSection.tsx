@@ -52,7 +52,7 @@ export default function HeroSection() {
           <motion.div variants={staggerItem} className="space-y-4">
             <motion.h1 
               id="hero-title" 
-              className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-white drop-shadow-lg"
+              className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-primary-foreground drop-shadow-lg"
               style={{
                 textShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
               }}
@@ -61,14 +61,14 @@ export default function HeroSection() {
             </motion.h1>
             <motion.div 
               variants={staggerItem}
-              className="text-xl lg:text-3xl text-white font-medium drop-shadow-md bg-gradient-to-r from-blue-200 via-white to-purple-200 bg-clip-text text-transparent"
+              className="text-xl lg:text-3xl text-primary-foreground font-medium drop-shadow-md bg-gradient-to-r from-blue-200 via-white to-purple-200 bg-clip-text text-transparent"
             >
                Save Your Money - Keep Your Freedom
             </motion.div>
           </motion.div>
           <motion.p 
             variants={staggerItem}
-            className="text-white text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto drop-shadow-md"
+            className="text-primary-foreground text-lg lg:text-xl leading-relaxed opacity-90 max-w-3xl mx-auto drop-shadow-md"
           >
             We help families and businesses find the best insurance coverage at the lowest prices. No sales pressure, no hidden fees - just honest advice that puts your needs first.
           </motion.p>
@@ -85,7 +85,7 @@ export default function HeroSection() {
             <AnimatedButton 
               variant="outline" 
               size="lg" 
-              className="glass border-white text-white hover:bg-card/20 hover:text-white shadow-lg"
+              className="glass border-white text-primary-foreground hover:bg-card/20 hover:text-primary-foreground shadow-lg"
             >
               Call (817) 800-4253
             </AnimatedButton>

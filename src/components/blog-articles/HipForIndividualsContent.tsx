@@ -55,7 +55,7 @@ export function HipForIndividualsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Real Hospital Stay Costs (5 Days)</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Expense</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Medicare Covers</th>
@@ -116,7 +116,7 @@ export function HipForIndividualsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Sample Monthly Premiums by Age</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Age</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">$200/day</th>

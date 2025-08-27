@@ -9,16 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 shadow-sm hover:shadow-md dark:focus:bg-blue-500",
-        destructive: "bg-red-500 text-white hover:bg-red-600 focus:bg-red-600 shadow-sm hover:shadow-md dark:focus:bg-red-500",
-        outline: "border border-border bg-card text-gray-800 shadow-sm hover:bg-gray-50 focus:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700",
-        secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200 focus:bg-gray-200 dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600",
-        success: "bg-teal-500 text-white hover:bg-teal-600 focus:bg-teal-600 shadow-sm hover:shadow-md dark:focus:bg-teal-500",
-        warning: "bg-yellow-500 text-white hover:bg-yellow-600 focus:bg-yellow-600 shadow-sm hover:shadow-md dark:focus:bg-yellow-500",
-        info: "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600 shadow-sm hover:shadow-md dark:focus:bg-blue-500",
-        google: "bg-card text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md",
-        ghost: "text-gray-800 hover:bg-gray-50 focus:bg-gray-50 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800",
-        link: "text-blue-600 underline-offset-4 hover:underline dark:text-blue-400",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90 shadow-sm hover:shadow-md",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90 shadow-sm hover:shadow-md",
+        outline: "border border-border bg-card text-card-foreground shadow-sm hover:bg-accent focus:bg-accent hover:text-accent-foreground focus:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 focus:bg-secondary/80",
+        success: "bg-success text-primary-foreground hover:bg-success/90 focus:bg-success/90 shadow-sm hover:shadow-md",
+        warning: "bg-warning text-warning-foreground hover:bg-warning/90 focus:bg-warning/90 shadow-sm hover:shadow-md",
+        info: "bg-info text-info-foreground hover:bg-info/90 focus:bg-info/90 shadow-sm hover:shadow-md",
+        google: "bg-card text-muted-foreground border border-border hover:bg-accent shadow-sm hover:shadow-md",
+        ghost: "text-foreground hover:bg-accent focus:bg-accent hover:text-accent-foreground focus:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         sm: "px-3 py-2 text-xs",

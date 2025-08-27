@@ -79,7 +79,7 @@ export function DrugPlansExplainedContent() {
                 height={400}
                 data-ai-hint="financial chart"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 Understanding Part D costs helps you budget for your healthcare expenses in retirement.
               </figcaption>
             </figure>

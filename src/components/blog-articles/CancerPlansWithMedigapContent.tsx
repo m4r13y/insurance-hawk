@@ -77,7 +77,7 @@ export function CancerPlansWithMedigapContent() {
                 height={400}
                 data-ai-hint="financial security planning"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 A cancer policy provides cash for costs that Medigap doesn't cover.
               </figcaption>
             </figure>

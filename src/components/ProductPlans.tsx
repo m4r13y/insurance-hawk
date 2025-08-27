@@ -52,7 +52,7 @@ export default function ProductPlans({
                 key={plan.id}
                 className={`flex-shrink-0 w-72 lg:w-full cursor-pointer transition-all duration-200 ${
                   selectedPlan === plan.id
-                    ? "ring-2 ring-blue-600 border-blue-600"
+                    ? "ring-2 ring-blue-600 border-primary"
                     : "hover:border-blue-300"
                 }`}
                 onClick={() => onPlanSelect(plan.id)}
@@ -63,13 +63,13 @@ export default function ProductPlans({
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-base">{plan.name}</CardTitle>
                         {plan.isPopular && (
-                          <Badge className="bg-orange-100 text-orange-600 text-xs border-orange-200">
+                          <Badge className="bg-warning/20 text-warning text-xs border-warning/30">
                             Popular
                           </Badge>
                         )}
                       </div>
                       {plan.premiumRange && (
-                        <div className="text-sm font-semibold text-blue-600">
+                        <div className="text-sm font-semibold text-primary">
                           {plan.premiumRange}
                         </div>
                       )}
@@ -96,19 +96,19 @@ export default function ProductPlans({
                             </SheetDescription>
                           </SheetHeader>
                           <div className="mt-6 space-y-4">
-                            <p className="text-sm text-gray-600">{plan.description}</p>
+                            <p className="text-sm text-muted-foreground">{plan.description}</p>
                             {plan.premiumRange && (
                               <div>
                                 <h4 className="font-semibold mb-2">Premium Range</h4>
-                                <p className="text-sm text-blue-600 font-medium">{plan.premiumRange}</p>
+                                <p className="text-sm text-primary font-medium">{plan.premiumRange}</p>
                               </div>
                             )}
                             <div>
                               <h4 className="font-semibold mb-2">Key Features</h4>
                               <ul className="space-y-1">
                                 {plan.features.map((feature, idx) => (
-                                  <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
-                                    <span className="text-green-500 mt-0.5">•</span>
+                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <span className="text-success mt-0.5">•</span>
                                     {feature}
                                   </li>
                                 ))}
@@ -142,12 +142,12 @@ export default function ProductPlans({
                   </CardDescription>
                   
                   <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-700">Key Features:</div>
+                    <div className="text-xs font-medium text-card-foreground">Key Features:</div>
                     <div className="space-y-1">
                       {plan.features.slice(0, 3).map((feature, idx) => (
                         <div key={idx} className="flex items-start gap-2">
-                          <span className="text-green-500 text-xs mt-0.5">✓</span>
-                          <span className="text-xs text-gray-600">{feature}</span>
+                          <span className="text-success text-xs mt-0.5">✓</span>
+                          <span className="text-xs text-muted-foreground">{feature}</span>
                         </div>
                       ))}
                       {plan.features.length > 3 && (
@@ -156,7 +156,7 @@ export default function ProductPlans({
                             e.stopPropagation()
                             setExpandedPlan(expandedPlan === plan.id ? null : plan.id)
                           }}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          className="text-xs text-primary hover:text-primary/80 font-medium"
                         >
                           {expandedPlan === plan.id ? 'Show Less' : `+${plan.features.length - 3} More`}
                         </button>
@@ -166,11 +166,11 @@ export default function ProductPlans({
 
                   {/* Expanded Info Content */}
                   {expandedPlan === plan.id && plan.features.length > 3 && (
-                    <div className="space-y-1 pt-2 border-t border-gray-100">
+                    <div className="space-y-1 pt-2 border-t border-border">
                       {plan.features.slice(3).map((feature, idx) => (
                         <div key={idx} className="flex items-start gap-2">
-                          <span className="text-green-500 text-xs mt-0.5">✓</span>
-                          <span className="text-xs text-gray-600">{feature}</span>
+                          <span className="text-success text-xs mt-0.5">✓</span>
+                          <span className="text-xs text-muted-foreground">{feature}</span>
                         </div>
                       ))}
                     </div>

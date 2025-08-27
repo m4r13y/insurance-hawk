@@ -39,7 +39,7 @@ export default function MissionValues({ title, description, values }: MissionVal
                     whileHover={{ scale: 1.1 }}
                     className={`mx-auto w-16 h-16 bg-gradient-to-r ${value.color} rounded-full flex items-center justify-center`}
                   >
-                    <IconComponent className="h-8 w-8 text-white" />
+                    <IconComponent className="h-8 w-8 text-primary-foreground" />
                   </motion.div>
                   <CardTitle className="text-lg group-hover:text-primary transition-colors">{value.title}</CardTitle>
                 </CardHeader>

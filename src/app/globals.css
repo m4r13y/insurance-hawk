@@ -29,6 +29,19 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* Additional semantic colors */
+    --success: 142 76% 36%;
+    --success-foreground: 355 7% 97%;
+    --warning: 32 95% 44%;
+    --warning-foreground: 48 96% 89%;
+    --info: 217 91% 60%;
+    --info-foreground: 213 31% 91%;
+    --blue-primary: 217 91% 60%;
+    --blue-secondary: 213 97% 87%;
+    --overlay: 0 0% 0% / 0.8;
+    --error: 0 84% 60%;
+    --error-foreground: 355 7% 97%;
   }
 
   .dark {
@@ -56,6 +69,17 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Dark mode semantic colors */
+    --success: 142 84% 47%;
+    --success-foreground: 138 62% 47%;
+    --warning: 48 96% 89%;
+    --warning-foreground: 20 14.3% 4.1%;
+    --info: 217 91% 60%;
+    --info-foreground: 213 31% 91%;
+    --blue-primary: 217 91% 60%;
+    --blue-secondary: 217 32% 17%;
+    --overlay: 0 0% 0% / 0.8;
   }
 }
 
@@ -79,18 +103,83 @@
   }
   
   .glow-primary {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
   }
   
   .glow-secondary {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.15);
   }
   
   .text-gradient {
-    @apply bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary/80 via-accent to-primary bg-clip-text text-transparent;
   }
   
   .gradient-bg {
-    @apply bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
+    @apply bg-gradient-to-br from-primary/10 via-primary/5 to-primary/15 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
+  }
+  
+  /* Semantic color utilities */
+  .text-info {
+    color: hsl(var(--info));
+  }
+  
+  .bg-info {
+    background-color: hsl(var(--info));
+  }
+  
+  .text-info-foreground {
+    color: hsl(var(--info-foreground));
+  }
+  
+  .bg-info-foreground {
+    background-color: hsl(var(--info-foreground));
+  }
+  
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .text-blue-primary {
+    color: hsl(var(--blue-primary));
+  }
+  
+  .bg-blue-primary {
+    background-color: hsl(var(--blue-primary));
+  }
+  
+  .hover\:bg-blue-primary:hover {
+    background-color: hsl(var(--blue-primary));
+  }
+  
+  .bg-overlay {
+    background-color: hsl(var(--overlay));
+  }
+  
+  .text-error {
+    color: hsl(var(--error));
+  }
+  
+  .bg-error {
+    background-color: hsl(var(--error));
+  }
+  
+  .text-error-foreground {
+    color: hsl(var(--error-foreground));
+  }
+  
+  .bg-error-foreground {
+    background-color: hsl(var(--error-foreground));
   }
 }

@@ -23,14 +23,14 @@ export default function CookiePolicy() {
           <h2 className="text-2xl font-semibold mb-4">Types of Cookies We Use</h2>
           
           <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+            <div className="bg-success/10 dark:bg-success/10 border border-success/20 dark:border-success/20 rounded-lg p-4">
+              <h3 className="font-semibold text-success dark:text-success mb-2">
                 Necessary Cookies (Always Active)
               </h3>
-              <p className="text-sm text-green-700 dark:text-green-300 mb-2">
+              <p className="text-sm text-success/80 dark:text-success/80 mb-2">
                 These cookies are essential for the website to function properly and cannot be disabled.
               </p>
-              <ul className="text-xs text-green-600 dark:text-green-400 space-y-1">
+              <ul className="text-xs text-success/70 dark:text-success/70 space-y-1">
                 <li>• Session management and authentication</li>
                 <li>• Security and fraud prevention</li>
                 <li>• HIPAA compliance and data protection</li>
@@ -38,14 +38,14 @@ export default function CookiePolicy() {
               </ul>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+            <div className="bg-primary/10 dark:bg-primary/10 border border-primary/20 dark:border-primary/20 rounded-lg p-4">
+              <h3 className="font-semibold text-primary dark:text-primary mb-2">
                 Functional Cookies
               </h3>
-              <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+              <p className="text-sm text-primary/80 dark:text-primary/80 mb-2">
                 These cookies enable enhanced features and personalization.
               </p>
-              <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+              <ul className="text-xs text-primary/70 dark:text-primary/70 space-y-1">
                 <li>• Saved insurance quotes and comparisons</li>
                 <li>• User preferences and settings</li>
                 <li>• Accessibility options (font size, contrast)</li>
@@ -53,14 +53,14 @@ export default function CookiePolicy() {
               </ul>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+            <div className="bg-warning/10 dark:bg-warning/10 border border-warning/20 dark:border-warning/20 rounded-lg p-4">
+              <h3 className="font-semibold text-warning dark:text-warning mb-2">
                 Analytics Cookies
               </h3>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-2">
+              <p className="text-sm text-warning/80 dark:text-warning/80 mb-2">
                 These cookies help us understand how you use our website (data is anonymized).
               </p>
-              <ul className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1">
+              <ul className="text-xs text-warning/70 dark:text-warning/70 space-y-1">
                 <li>• Google Analytics (anonymized)</li>
                 <li>• Page views and user journeys</li>
                 <li>• Error tracking and performance monitoring</li>
@@ -68,14 +68,14 @@ export default function CookiePolicy() {
               </ul>
             </div>
 
-            <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
+            <div className="bg-destructive/10 dark:bg-destructive/10 border border-destructive/20 dark:border-destructive/20 rounded-lg p-4">
+              <h3 className="font-semibold text-destructive dark:text-destructive mb-2">
                 Marketing Cookies
               </h3>
-              <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">
+              <p className="text-sm text-destructive/80 dark:text-destructive/80 mb-2">
                 These cookies enable personalized content and relevant insurance offers.
               </p>
-              <ul className="text-xs text-purple-600 dark:text-purple-400 space-y-1">
+              <ul className="text-xs text-destructive/70 dark:text-destructive/70 space-y-1">
                 <li>• Personalized insurance recommendations</li>
                 <li>• Targeted advertising and retargeting</li>
                 <li>• Social media integration</li>

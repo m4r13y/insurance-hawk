@@ -39,7 +39,7 @@ export function AnnualChangesContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">2025 Part B Premiums by Income</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Single Income</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Married Filing Jointly</th>

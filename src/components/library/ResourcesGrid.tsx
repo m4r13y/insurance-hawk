@@ -61,20 +61,20 @@ export function ResourcesGrid({ resources }: ResourcesGridProps) {
                   <span className="text-xs font-medium">{resource.type}</span>
                 </div>
               </Badge>
-              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center text-xs text-muted-foreground">
                 <ClockIcon className="w-3 h-3 mr-1" />
                 {resource.duration} {resource.durationUnit}
               </div>
             </div>
-            <CardTitle className="text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-gray-900 dark:text-white">
+            <CardTitle className="text-lg group-hover:text-primary transition-colors text-card-foreground">
               {resource.title}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{resource.description}</p>
+            <p className="text-muted-foreground text-sm mb-4">{resource.description}</p>
             <Link 
               href={resource.slug ? `/resources/${resource.slug}` : resource.url || '#'} 
-              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm group"
+              className="inline-flex items-center text-primary hover:text-primary/80 font-medium text-sm group"
             >
               {resource.linkLabel || 'Learn More'}
               <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />

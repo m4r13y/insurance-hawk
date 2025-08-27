@@ -59,7 +59,7 @@ export function CancerStatisticsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Cancer Diagnoses by Age Group (2025 est.)</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Age Group</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Percent of New Cases</th>
@@ -101,7 +101,7 @@ export function CancerStatisticsContent() {
                 height={400}
                 data-ai-hint="financial security safety"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 A lump-sum cancer policy provides cash when you need it most.
               </figcaption>
             </figure>

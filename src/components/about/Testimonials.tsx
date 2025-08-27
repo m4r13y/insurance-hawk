@@ -49,7 +49,7 @@ export default function Testimonials({ title, description, testimonials }: Testi
                   </div>
                   <div className="flex space-x-1">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <StarIcon key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      <StarIcon key={i} className="h-4 w-4 text-warning fill-current" />
                     ))}
                   </div>
                 </div>

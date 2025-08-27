@@ -65,7 +65,7 @@ export function TopPlanGAddonsContent() {
             <div className="overflow-x-auto my-8">
               <table className="w-full border-collapse">
                 <caption className="text-lg font-semibold mb-2 text-left">Plan G Add-on Priority Ranking</caption>
-                <thead className="bg-gray-50 dark:bg-neutral-800">
+                <thead className="bg-accent dark:bg-neutral-800">
                   <tr>
                     <th className="border border-border dark:border-neutral-700 p-3 text-left font-semibold">Add-on Type</th>
                     <th className="border border-border dark:border-neutral-700 p-3 text-center font-semibold">Priority</th>

@@ -47,7 +47,7 @@ export default function PlatformEcosystem({ title, description, platforms }: Pla
                       whileHover={{ scale: 1.1 }}
                       className={`p-3 rounded-lg bg-gradient-to-r ${platform.color}`}
                     >
-                      <IconComponent className="h-6 w-6 text-white" />
+                      <IconComponent className="h-6 w-6 text-primary-foreground" />
                     </motion.div>
                     <Badge variant="secondary">
                       {platform.badge}

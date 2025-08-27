@@ -117,7 +117,7 @@ export default function InsuranceServices() {
                 {service.features.map((feature, featureIndex) => (
                   <div key={featureIndex} className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{feature}</span>
-                    <span className="text-green-500">✓</span>
+                    <span className="text-success">✓</span>
                   </div>
                 ))}
               </div>

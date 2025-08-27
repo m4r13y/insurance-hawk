@@ -43,10 +43,10 @@ function LockedInput({ label, autofilledValue, onConfirmEdit, onUpdateValue, for
                         <Input
                             value={autofilledValue}
                             readOnly
-                            className="bg-gray-50 text-gray-600 cursor-pointer pr-10"
+                            className="bg-accent text-muted-foreground cursor-pointer pr-10"
                             onClick={() => setShowConfirmDialog(true)}
                         />
-                        <LockClosedIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <LockClosedIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -141,7 +141,7 @@ function RegularInput({ form, name, label, type, placeholder, autofilledValue, c
                     type={type}
                     placeholder={placeholder}
                     defaultValue={autofilledValue}
-                    className={cn(autofilledValue ? "bg-blue-50 border-blue-200" : "", className)}
+                    className={cn(autofilledValue ? "bg-accent border-primary" : "", className)}
                     autoComplete={
                         type === "tel" ? "tel" :
                         label.toLowerCase().includes("address") || label.toLowerCase().includes("street") ? "street-address" :
@@ -157,7 +157,7 @@ function RegularInput({ form, name, label, type, placeholder, autofilledValue, c
                 />
             </FormControl>
             {autofilledValue && (
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-primary mt-1">
                     Auto-filled from your account
                 </p>
             )}

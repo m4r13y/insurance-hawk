@@ -148,11 +148,11 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
       return (
         <div className="mt-16 max-w-2xl mx-auto py-12 text-center">
           <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
-          <p className="mb-6 text-gray-600">{resource.description}</p>
+          <p className="mb-6 text-muted-foreground">{resource.description}</p>
           <div className="aspect-video mb-6">
             <iframe src={resource.url} title={resource.title} allowFullScreen className="w-full h-full rounded-lg border" />
           </div>
-          <a href={resource.url} target="_blank" rel="noopener" className="text-blue-600 underline">Watch on YouTube</a>
+          <a href={resource.url} target="_blank" rel="noopener" className="text-primary underline">Watch on YouTube</a>
         </div>
       );
     }
@@ -160,8 +160,8 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
     return (
       <div className="mt-16 max-w-2xl mx-auto py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">{resource.title}</h1>
-        <p className="mb-6 text-gray-600">{resource.description}</p>
-        <p className="italic text-gray-400">No detailed article is available for this resource.</p>
+        <p className="mb-6 text-muted-foreground">{resource.description}</p>
+        <p className="italic text-muted-foreground/60">No detailed article is available for this resource.</p>
       </div>
     );
   }

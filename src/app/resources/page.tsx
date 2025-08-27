@@ -65,15 +65,15 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="bg-gray-50 mt-16">
+    <div className="bg-muted mt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white">
+      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl font-bold sm:text-5xl lg:text-6xl mb-4">
               Resource Library
             </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
+            <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto mb-8">
               Comprehensive guides, articles, and tools to help you navigate insurance decisions with confidence.
             </p>
           </div>
@@ -86,8 +86,8 @@ export default function ResourcesPage() {
           <div className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Featured Resources</h2>
-                <p className="text-gray-600 mt-2">Top picks to get you started</p>
+                <h2 className="text-3xl font-bold text-foreground">Featured Resources</h2>
+                <p className="text-muted-foreground mt-2">Top picks to get you started</p>
               </div>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -101,20 +101,20 @@ export default function ResourcesPage() {
                           <span className="text-xs font-medium">{resource.type}</span>
                         </div>
                       </Badge>
-                      <div className="flex items-center text-xs text-gray-500">
+                      <div className="flex items-center text-xs text-muted-foreground">
                         <ClockIcon className="w-3 h-3 mr-1" />
                         {resource.duration} {resource.durationUnit}
                       </div>
                     </div>
-                    <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
                       {resource.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 text-sm mb-4">{resource.description}</p>
+                    <p className="text-muted-foreground text-sm mb-4">{resource.description}</p>
                     <Link 
                       href={resource.slug ? `/resources/${resource.slug}` : resource.url || '#'} 
-                      className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm group"
+                      className="inline-flex items-center text-primary hover:text-primary/80 font-medium text-sm group"
                     >
                       {resource.linkLabel || 'Learn More'}
                       <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -131,7 +131,7 @@ export default function ResourcesPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
             <div className="flex-1">
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
                   placeholder="Search resources..."
                   value={searchTerm}
@@ -170,20 +170,20 @@ export default function ResourcesPage() {
                       <span className="text-xs font-medium">{resource.type}</span>
                     </div>
                   </Badge>
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-xs text-muted-foreground">
                     <ClockIcon className="w-3 h-3 mr-1" />
                     {resource.duration} {resource.durationUnit}
                   </div>
                 </div>
-                <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">
                   {resource.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-sm mb-4">{resource.description}</p>
+                <p className="text-muted-foreground text-sm mb-4">{resource.description}</p>
                 <Link 
                   href={resource.slug ? `/resources/${resource.slug}` : resource.url || '#'} 
-                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm group"
+                  className="inline-flex items-center text-primary hover:text-primary/80 font-medium text-sm group"
                 >
                   {resource.linkLabel || 'Learn More'}
                   <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />

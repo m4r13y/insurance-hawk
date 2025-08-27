@@ -143,7 +143,7 @@ export default function CookieConsentBanner() {
             {/* Main content */}
             <div className="flex-1 space-y-3">
               <div className="flex items-start gap-3">
-                <ShieldIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                <ShieldIcon className="h-6 w-6 text-primary dark:text-primary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">
                     Privacy & Cookie Preferences
@@ -196,7 +196,7 @@ export default function CookieConsentBanner() {
               <Button
                 onClick={() => handleConsent(true)}
                 size="sm"
-                className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white"
+                className="whitespace-nowrap bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Accept All
               </Button>
@@ -225,7 +225,7 @@ export default function CookieConsentBanner() {
                             {category.name}
                           </h4>
                           {category.required && (
-                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                            <span className="text-xs bg-primary/10 dark:bg-primary/10 text-primary dark:text-primary px-2 py-1 rounded-full">
                               Required
                             </span>
                           )}
@@ -240,8 +240,8 @@ export default function CookieConsentBanner() {
                           />
                           <div className={`relative w-10 h-6 rounded-full transition-colors ${
                             preferences[category.key] 
-                              ? 'bg-blue-600' 
-                              : 'bg-gray-300 dark:bg-gray-600'
+                              ? 'bg-primary' 
+                              : 'bg-secondary dark:bg-secondary'
                           } ${category.required ? 'opacity-50' : ''}`}>
                             <div className={`absolute top-1 left-1 w-4 h-4 bg-card rounded-full transition-transform ${
                               preferences[category.key] ? 'translate-x-4' : 'translate-x-0'
@@ -266,7 +266,7 @@ export default function CookieConsentBanner() {
                 <div className="mt-4 flex justify-center">
                   <Button
                     onClick={() => handleConsent(false)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-success hover:bg-success/90 text-primary-foreground"
                   >
                     Save My Preferences
                   </Button>

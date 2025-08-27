@@ -73,7 +73,7 @@ export function CancerPlansWithAdvantageContent() {
                 height={400}
                 data-ai-hint="financial planning security"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 A cancer insurance policy can provide a financial safety net for costs your MA plan doesn&apos;t cover.
               </figcaption>
             </figure>

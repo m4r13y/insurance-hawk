@@ -137,7 +137,7 @@ export default function AnimatedFooter() {
                     aria-label={name}
                   >
                     <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all duration-300">
-                      <Icon className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
+                      <Icon className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors" />
                     </div>
                   </Link>
                 </motion.div>

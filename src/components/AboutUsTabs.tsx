@@ -235,7 +235,7 @@ export default function AboutUsTabs() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-white text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg">
+                      <p className="text-primary-foreground text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg">
                         Your trusted insurance partner
                       </p>
                       <div className="flex space-x-1">

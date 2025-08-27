@@ -94,7 +94,7 @@ export function MedicareBeginnersGuideContent() {
                 height={400}
                 data-ai-hint="planning guide"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 Navigating your Medicare options is a key step in financial planning for retirement.
               </figcaption>
             </figure>
@@ -113,51 +113,51 @@ export function MedicareBeginnersGuideContent() {
                 <TableBody>
                     <TableRow>
                         <TableCell>Part A coinsurance (hospital)</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Part B coinsurance</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓*</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓*</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Blood (first 3 pints)</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Part A hospice coinsurance</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Skilled nursing facility coinsurance</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Part A deductible</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Part B deductible</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Excess charges</TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-green-600">✓</span></TableCell>
-                        <TableCell className="text-center"><span className="font-bold text-red-600">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-success">✓</span></TableCell>
+                        <TableCell className="text-center"><span className="font-bold text-destructive">✗</span></TableCell>
                     </TableRow>
                 </TableBody>
               </Table>

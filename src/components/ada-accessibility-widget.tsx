@@ -173,7 +173,7 @@ export default function AdaAccessibilityWidget() {
           // Collapsed state - just a small caret
           <button
             onClick={() => setIsCollapsed(false)}
-            className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 p-2 rounded-l-lg shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-secondary hover:bg-secondary/80 dark:bg-secondary dark:hover:bg-secondary/80 text-card-foreground dark:text-card-foreground p-2 rounded-l-lg shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Expand accessibility options"
             title="Accessibility & Settings"
           >
@@ -184,7 +184,7 @@ export default function AdaAccessibilityWidget() {
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 p-3 rounded-l-lg shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-secondary hover:bg-secondary/80 dark:bg-secondary dark:hover:bg-secondary/80 text-card-foreground dark:text-card-foreground p-3 rounded-l-lg shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Open accessibility options"
               title="Accessibility & Settings"
             >
@@ -196,7 +196,7 @@ export default function AdaAccessibilityWidget() {
                   setIsCollapsed(true)
                   setIsOpen(false)
                 }}
-                className="absolute -top-1 -left-1 bg-gray-400 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none"
+                className="absolute -top-1 -left-1 bg-secondary hover:bg-secondary/80 dark:bg-secondary dark:hover:bg-secondary/80 text-muted-foreground dark:text-muted-foreground rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none"
                 aria-label="Collapse tab"
               >
                 ×
@@ -248,7 +248,7 @@ export default function AdaAccessibilityWidget() {
                         onClick={() => adjustFontSize(size)}
                         className={`p-2 text-xs rounded border transition-colors ${
                           settings.fontSize === size
-                            ? 'bg-blue-100 border-blue-500 text-blue-700'
+                            ? 'bg-primary/10 border-primary text-primary'
                             : 'bg-secondary border-border text-foreground hover:bg-muted'
                         }`}
                       >
@@ -275,7 +275,7 @@ export default function AdaAccessibilityWidget() {
                         onClick={() => adjustContrast(value)}
                         className={`w-full p-2 text-xs rounded border text-left transition-colors ${
                           settings.contrast === value
-                            ? 'bg-blue-100 border-blue-500 text-blue-700'
+                            ? 'bg-primary/10 border-primary text-primary'
                             : 'bg-secondary border-border text-foreground hover:bg-muted'
                         }`}
                       >

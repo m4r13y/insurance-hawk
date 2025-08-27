@@ -119,11 +119,11 @@ export function MedicareQuestionsContent() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow><TableCell>Part A coinsurance</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell></TableRow>
-                    <TableRow><TableCell>Part B coinsurance</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes*</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell></TableRow>
-                    <TableRow><TableCell>Part A deductible</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-red-600 font-bold">No</TableCell></TableRow>
-                    <TableRow><TableCell>Skilled nursing coinsurance</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-red-600 font-bold">No</TableCell></TableRow>
-                    <TableRow><TableCell>Foreign travel emergency</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-green-600 font-bold">Yes</TableCell><TableCell className="text-red-600 font-bold">No</TableCell></TableRow>
+                    <TableRow><TableCell>Part A coinsurance</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes</TableCell></TableRow>
+                    <TableRow><TableCell>Part B coinsurance</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes*</TableCell><TableCell className="text-success font-bold">Yes</TableCell></TableRow>
+                    <TableRow><TableCell>Part A deductible</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-destructive font-bold">No</TableCell></TableRow>
+                    <TableRow><TableCell>Skilled nursing coinsurance</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-destructive font-bold">No</TableCell></TableRow>
+                    <TableRow><TableCell>Foreign travel emergency</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-success font-bold">Yes</TableCell><TableCell className="text-destructive font-bold">No</TableCell></TableRow>
                 </TableBody>
             </Table>
             <p className="text-sm italic">*Plan N may require a copay for some office or ER visits.</p>

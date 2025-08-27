@@ -126,7 +126,7 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
             onMouseLeave={() => setIsOpen(false)}
           />
           <div
-            className="absolute top-full left-0 pt-2 w-[500px] bg-background/95 dark:bg-gray-900/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
+            className="absolute top-full left-0 pt-2 w-[500px] bg-background/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
           >

@@ -101,7 +101,7 @@ export function EnrollmentPeriodsContent() {
                 height={400}
                 data-ai-hint="calendar planning"
               />
-              <figcaption className="mt-2 text-sm text-center text-gray-500">
+              <figcaption className="mt-2 text-sm text-center text-muted-foreground">
                 Marking your calendar for these key periods is essential to avoid penalties.
               </figcaption>
             </figure>

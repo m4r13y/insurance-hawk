@@ -128,28 +128,28 @@ export const ecosystemData = {
         description: "Weekly articles on insurance trends, tips, and industry insights",
         icon: ArchiveIcon,
         url: "/resources",
-        color: "bg-blue-100 text-blue-700"
+        color: "bg-primary/10 text-primary"
       },
       {
         title: "Webinar Series",
         description: "Monthly educational webinars on various insurance topics",
         icon: VideoIcon,
         url: "/webinars",
-        color: "bg-purple-100 text-purple-700"
+        color: "bg-accent/10 text-accent-foreground"
       },
       {
         title: "Community Forum",
         description: "Connect with other clients and share experiences",
         icon: ChatBubbleIcon,
         url: "/forum",
-        color: "bg-green-100 text-green-700"
+        color: "bg-success/10 text-success"
       },
       {
         title: "Insurance Calculator",
         description: "Tools to help calculate your insurance needs",
         icon: ComponentInstanceIcon,
         url: "/calculators",
-        color: "bg-orange-100 text-orange-700"
+        color: "bg-warning/10 text-warning"
       }
     ]
   },

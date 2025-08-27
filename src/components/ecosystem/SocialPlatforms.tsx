@@ -47,7 +47,7 @@ export default function SocialPlatforms({ title, description, platforms }: Socia
                       whileHover={{ scale: 1.1 }}
                       className={`p-3 rounded-lg bg-gradient-to-r ${platform.color}`}
                     >
-                      <IconComponent className="h-6 w-6 text-white" />
+                      <IconComponent className="h-6 w-6 text-primary-foreground" />
                     </motion.div>
                     <Badge variant="secondary" className="text-xs">
                       {platform.badge}

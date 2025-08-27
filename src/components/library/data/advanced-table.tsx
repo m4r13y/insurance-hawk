@@ -108,8 +108,8 @@ export function AdvancedTable({
               className={cn(
                 "size-3",
                 i < Math.floor(value) 
-                  ? "text-blue-600 fill-current dark:text-blue-500" 
-                  : "text-gray-300 dark:text-neutral-700"
+                  ? "text-primary fill-current dark:text-primary" 
+                  : "text-muted-foreground dark:text-neutral-700"
               )}
             />
           ))}
@@ -119,15 +119,15 @@ export function AdvancedTable({
     
     if (column.key.includes('status')) {
       const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-        'active': { bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400', text: '', label: 'Active' },
-        'inactive': { bg: 'bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-400', text: '', label: 'Inactive' },
-        'pending': { bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-400', text: '', label: 'Pending' },
-        'verified': { bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400', text: '', label: 'Verified' },
-        'paid': { bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400', text: '', label: 'Paid' },
-        'declined': { bg: 'bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-400', text: '', label: 'Declined' }
+        'active': { bg: 'bg-success/10 text-success', text: '', label: 'Active' },
+        'inactive': { bg: 'bg-destructive/10 text-destructive', text: '', label: 'Inactive' },
+        'pending': { bg: 'bg-warning/10 text-warning', text: '', label: 'Pending' },
+        'verified': { bg: 'bg-success/10 text-success', text: '', label: 'Verified' },
+        'paid': { bg: 'bg-success/10 text-success', text: '', label: 'Paid' },
+        'declined': { bg: 'bg-destructive/10 text-destructive', text: '', label: 'Declined' }
       };
       
-      const config = statusConfig[value?.toLowerCase()] || { bg: 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200', text: '', label: value };
+      const config = statusConfig[value?.toLowerCase()] || { bg: 'bg-secondary text-foreground dark:bg-neutral-700 dark:text-neutral-200', text: '', label: value };
       
       return (
         <Badge variant="outline" className={config.bg}>
