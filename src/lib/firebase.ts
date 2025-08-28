@@ -3,10 +3,12 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 // import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-// import { getFunctions } from "firebase/functions"; // Functions removed - not used in this app
+import { getFunctions } from "firebase/functions"; // Re-enabled for quote functionality
+import { getAuth, type Auth } from "firebase/auth"; // Add Auth for Firebase Functions
 import { getAnalytics } from "firebase/analytics";
+import { getDataConnect, type DataConnect } from "firebase/data-connect"; // Add DataConnect
 import type { FirebaseStorage } from 'firebase/storage';
-// import type { Functions } from 'firebase/functions'; // Functions removed - not used in this app
+import type { Functions } from 'firebase/functions'; // Re-enabled for quote functionality
 
 const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAlxFZmc9fxLgwMuguAviHo36m0bwigvbQ",
@@ -14,15 +16,16 @@ const firebaseConfig = {
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "medicareally",
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "medicareally.firebasestorage.app",
         messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "168459812655",
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:168459812655:web:f9eeaeaecbd92275672bda",
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-HQKP8C1XX2"
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:168459812655:web:1d13f10e514b33f7672bda",
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-4EY6NJQ5L5"
       };
 
 let app: FirebaseApp | null = null;
-// let auth: Auth | null = null;
+let auth: Auth | null = null;
 // let db: Firestore | null = null; // Firestore removed for this app
 let storage: FirebaseStorage | null = null;
-// let functions: Functions | null = null; // Functions removed - not used in this app
+let functions: Functions | null = null; // Re-enabled for quote functionality
+let dataConnect: DataConnect | null = null; // Add DataConnect
 let analytics: any = null; // Analytics for this app - using any due to Firebase types
 let isFirebaseConfigured = false;
 
@@ -39,8 +42,18 @@ if (hasEssentialConfig) {
     // auth = getAuth(app);
     // Firestore removed for this app
     storage = getStorage(app);
-    // functions = getFunctions(app); // Functions removed - not used in this app
-    analytics = getAnalytics(app);
+    functions = getFunctions(app, 'us-central1'); // Re-enabled for quote functionality with region
+    auth = getAuth(app); // Add auth for Firebase Functions
+    // Initialize DataConnect pointing to hawknest-admin service
+    dataConnect = getDataConnect(app, {
+      connector: 'default',
+      service: 'hawknest-admin',
+      location: 'us-central1'
+    });
+    // Only initialize analytics on the client side
+    if (typeof window !== 'undefined') {
+      analytics = getAnalytics(app);
+    }
     isFirebaseConfigured = true;
   } catch (e) {
     console.error("Firebase initialization error:", e);
@@ -48,7 +61,8 @@ if (hasEssentialConfig) {
     // auth = null;
     // db = null; // Firestore removed for this app
     storage = null;
-    // functions = null; // Functions removed - not used in this app
+    functions = null;
+    auth = null; // Reset auth on error
     isFirebaseConfigured = false;
   }
 }
@@ -57,4 +71,13 @@ if (!isFirebaseConfigured) {
     console.warn("Firebase is not configured or failed to initialize. Please check your Firebase project setup. Database and storage features will be disabled.");
 }
 
-export { app, storage, analytics, isFirebaseConfigured };
+export { 
+  app as default,
+  auth,
+  // db, // Firestore removed for this app
+  storage,
+  functions, // Re-enabled for quote functionality
+  dataConnect, // Add DataConnect export
+  analytics,
+  isFirebaseConfigured
+};

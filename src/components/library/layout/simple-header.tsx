@@ -11,23 +11,23 @@ import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 
 const medicarePages = [
   {
-    title: 'Medicare Basics',
-    href: '/Medicare/',
+    title: 'Shop Plans',
+    href: '/medicare/',
+    description: 'Compare and shop Medicare supplement plans'
+  },
+  {
+    title: 'Learn Medicare',
+    href: '/medicare/learn',
     description: 'Understanding Medicare fundamentals and enrollment'
   },
   {
-    title: 'Part B Penalty Calculator', 
-    href: '/Medicare/part-b-penalty',
-    description: 'Calculate potential late enrollment penalties'
-  },
-  {
-    title: 'Part D Penalty Calculator',
-    href: '/Medicare/part-d-penalty', 
-    description: 'Estimate prescription drug plan penalties'
+    title: 'Medicare Resources',
+    href: '/medicare/resources',
+    description: 'Tools, calculators, and helpful resources'
   },
   {
     title: 'Enrollment Periods',
-    href: '/Medicare/enrollment-periods',
+    href: '/medicare/enrollment-periods',
     description: 'When you can enroll or make changes'
   }
 ];
@@ -190,7 +190,7 @@ export function SimpleHeader() {
                   hubPage={{
                     title: "Medicare Hub",
                     href: "/medicare/",
-                    description: "Your complete guide to understanding Medicare options, enrollment periods, and making informed decisions."
+                    description: "Shop Medicare plans, learn about coverage options, and access helpful tools and resources."
                   }}
                 />
                 <DropdownMenu

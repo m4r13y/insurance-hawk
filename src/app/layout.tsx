@@ -22,6 +22,7 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
+  const isMedicarePage = pathname.startsWith('/medicare');
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -37,7 +38,9 @@ export default function RootLayout({
         {/* Add padding top to account for fixed header */}
         <main className={cn(
           "flex-1",
-          isHomePage ? "pt-0" : "pt-44 p-4 sm:p-6 md:p-8"
+          isHomePage ? "pt-0" : 
+          isMedicarePage ? "pt-0" : 
+          "pt-44 p-4 sm:p-6 md:p-8"
         )}>
           {children}
         </main>
