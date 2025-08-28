@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -451,28 +451,90 @@ const popularityData = [
 ];
 
 export default function MedicareShopContent() {
-  // Session storage keys
+  // Initialize hooks
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  // Extract URL parameters immediately after hook initialization
+  const stepParam = searchParams.get('step');
+  const categoryParam = searchParams.get('category');
+
+  // Storage keys - using localStorage for quotes since it persists better during navigation
   const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
   const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
+  const REAL_QUOTES_KEY = 'medicare_real_quotes'; // Now using localStorage instead of sessionStorage
 
-  // Session storage helper functions
-  const loadFromSession = (key: string, defaultValue: any) => {
+  // Storage helper functions - using localStorage for better persistence
+  const loadFromStorage = (key: string, defaultValue: any) => {
     if (typeof window === 'undefined') return defaultValue;
     try {
-      const saved = sessionStorage.getItem(key);
+      const saved = localStorage.getItem(key);
       return saved ? JSON.parse(saved) : defaultValue;
     } catch (error) {
-      console.error('Error loading from session storage:', error);
+      console.error('Error loading from localStorage:', error);
       return defaultValue;
     }
   };
 
-  const saveToSession = (key: string, value: any) => {
+  const saveToStorage = (key: string, value: any) => {
     if (typeof window === 'undefined') return;
     try {
-      sessionStorage.setItem(key, JSON.stringify(value));
+      const dataString = JSON.stringify(value);
+      
+      // Check size and clean up if necessary
+      if (dataString.length > 1000000) { // ~1MB limit
+        console.warn('Data too large for localStorage, attempting cleanup');
+        cleanupOldStorage();
+      }
+      
+      localStorage.setItem(key, dataString);
     } catch (error) {
-      console.error('Error saving to session storage:', error);
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.warn('LocalStorage quota exceeded, cleaning up old data');
+        cleanupOldStorage();
+        // Retry after cleanup
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (retryError) {
+          console.error('Failed to save even after cleanup:', retryError);
+        }
+      } else {
+        console.error('Error saving to localStorage:', error);
+      }
+    }
+  };
+
+  // Clean up old localStorage data
+  const cleanupOldStorage = () => {
+    try {
+      // Remove old plan details data (older than 1 hour)
+      const planDetailsStr = localStorage.getItem('planDetailsData');
+      if (planDetailsStr) {
+        const planDetails = JSON.parse(planDetailsStr);
+        if (planDetails.timestamp && Date.now() - planDetails.timestamp > 3600000) {
+          localStorage.removeItem('planDetailsData');
+          console.log('🧹 Cleaned up old plan details data');
+        }
+      }
+      
+      // Remove backup if main quotes exist
+      const mainQuotes = localStorage.getItem(REAL_QUOTES_KEY);
+      const backupQuotes = localStorage.getItem('medicare_quotes_backup');
+      if (mainQuotes && backupQuotes) {
+        localStorage.removeItem('medicare_quotes_backup');
+        console.log('🧹 Removed redundant backup quotes');
+      }
+      
+      // Clean up any other old Medicare-related data
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('medicare_') && !key.includes('real_quotes') && !key.includes('form_data') && !key.includes('form_completed')) {
+          localStorage.removeItem(key);
+          console.log('🧹 Cleaned up old Medicare data:', key);
+        }
+      });
+    } catch (error) {
+      console.error('Error during cleanup:', error);
     }
   };
 
@@ -503,6 +565,7 @@ export default function MedicareShopContent() {
   
   // Quote form state with session storage - initialize with saved values
   const [quoteFormCompleted, setQuoteFormCompleted] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   const [quoteFormData, setQuoteFormData] = useState<QuoteFormData>({
     age: '',
@@ -516,46 +579,85 @@ export default function MedicareShopContent() {
   const [realQuotes, setRealQuotes] = useState<MedigapQuote[]>([]);
   const [quotesError, setQuotesError] = useState<string | null>(null);
   
-  // Save form data to session storage whenever it changes
+  // Save form data to localStorage whenever it changes
   useEffect(() => {
-    saveToSession(QUOTE_FORM_DATA_KEY, quoteFormData);
+    saveToStorage(QUOTE_FORM_DATA_KEY, quoteFormData);
   }, [quoteFormData]);
 
-  // Save completion status to session storage whenever it changes
+  // Save completion status to localStorage whenever it changes
   useEffect(() => {
-    saveToSession(QUOTE_FORM_COMPLETED_KEY, quoteFormCompleted);
+    saveToStorage(QUOTE_FORM_COMPLETED_KEY, quoteFormCompleted);
   }, [quoteFormCompleted]);
 
-  // Initialize form completion status from sessionStorage on client
+  // Save real quotes to localStorage whenever they change
+  useEffect(() => {
+    console.log('💾 Saving realQuotes to localStorage:', realQuotes.length, 'quotes');
+    saveToStorage(REAL_QUOTES_KEY, realQuotes);
+  }, [realQuotes]);
+
+  // Initialize all localStorage data on component mount
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem(QUOTE_FORM_COMPLETED_KEY);
-      if (saved) {
-        const parsedValue = JSON.parse(saved);
-        if (parsedValue !== quoteFormCompleted) {
-          setQuoteFormCompleted(parsedValue);
+      // Clean up old data first
+      cleanupOldStorage();
+      
+      // Check URL parameters first using Next.js hook
+      console.log('🔍 URL step parameter:', stepParam);
+      console.log('🔍 All search params:', searchParams.toString());
+      
+      // Initialize form completion status
+      const savedCompleted = localStorage.getItem(QUOTE_FORM_COMPLETED_KEY);
+      if (savedCompleted) {
+        const parsedValue = JSON.parse(savedCompleted);
+        console.log('🔄 Restoring quoteFormCompleted:', parsedValue);
+        setQuoteFormCompleted(parsedValue);
+      } else if (stepParam === 'results') {
+        // If URL indicates results but no localStorage data, something went wrong
+        console.log('🔄 URL indicates results but no localStorage data found - redirecting to form');
+        setQuoteFormCompleted(false);
+      } else {
+        console.log('🔄 No saved quoteFormCompleted found');
+      }
+
+      // Initialize form data
+      const savedFormData = localStorage.getItem(QUOTE_FORM_DATA_KEY);
+      if (savedFormData) {
+        const parsedData = JSON.parse(savedFormData);
+        console.log('🔄 Restoring quoteFormData:', parsedData);
+        setQuoteFormData(parsedData);
+      } else {
+        console.log('🔄 No saved quoteFormData found');
+      }
+
+      // Initialize real quotes
+      const savedQuotes = localStorage.getItem(REAL_QUOTES_KEY);
+      if (savedQuotes) {
+        const parsedQuotes = JSON.parse(savedQuotes);
+        console.log('🔄 Restoring realQuotes:', parsedQuotes.length, 'quotes');
+        setRealQuotes(parsedQuotes);
+      } else {
+        console.log('🔄 No saved realQuotes found in localStorage');
+        
+        // Fallback: check if we have quotes stored in localStorage from plan details navigation
+        try {
+          const planDetailsDataStr = localStorage.getItem('planDetailsData');
+          if (planDetailsDataStr) {
+            const planDetailsData = JSON.parse(planDetailsDataStr);
+            // Since we removed allQuotes from planDetailsData, we need another approach
+            console.log('🔄 Plan details found but no allQuotes stored there anymore');
+          }
+        } catch (fallbackError) {
+          console.error('Error loading quotes from localStorage fallback:', fallbackError);
         }
       }
     } catch (error) {
-      console.error('Error loading quote form completion status:', error);
+      console.error('Error loading localStorage data:', error);
+    } finally {
+      // Mark initialization as complete
+      console.log('✅ Initialization complete');
+      setIsInitializing(false);
     }
-  }, []);
-
-  // Initialize form data from sessionStorage on client
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(QUOTE_FORM_DATA_KEY);
-      if (saved) {
-        const parsedData = JSON.parse(saved);
-        setQuoteFormData(parsedData);
-      }
-    } catch (error) {
-      console.error('Error loading quote form data:', error);
-    }
-  }, []);
-  
-  const router = useRouter();
-  const pathname = usePathname();
+  }, [stepParam]);
   
   const currentCategory = productCategories.find(cat => cat.id === selectedCategory);
 
@@ -572,17 +674,46 @@ export default function MedicareShopContent() {
 
   // Navigate to plan details page
   const openPlanModal = (carrierGroup: any) => {
-    // Store the carrier data and form data in localStorage for the details page
-    const planDetailsData = {
-      carrierGroup: carrierGroup,
-      quoteFormData: quoteFormData,
-      timestamp: Date.now()
-    };
-    
-    localStorage.setItem('planDetailsData', JSON.stringify(planDetailsData));
+    try {
+      // Store only essential data to avoid quota issues
+      const planDetailsData = {
+        carrierGroup: {
+          carrierId: carrierGroup.carrierId,
+          carrierName: carrierGroup.carrierName,
+          quotes: carrierGroup.quotes.slice(0, 3), // Only store first 3 quotes to save space
+          averagePremium: carrierGroup.averagePremium
+        },
+        quoteFormData: quoteFormData,
+        // Don't store allQuotes here to save space - they're already in localStorage
+        timestamp: Date.now()
+      };
+      
+      // Check if we have space before storing
+      const dataString = JSON.stringify(planDetailsData);
+      if (dataString.length > 500000) { // ~500KB limit
+        console.warn('Plan details data too large, storing minimal data only');
+        // Store minimal data if too large
+        localStorage.setItem('planDetailsData', JSON.stringify({
+          carrierId: carrierGroup.carrierId,
+          carrierName: carrierGroup.carrierName,
+          timestamp: Date.now()
+        }));
+      } else {
+        localStorage.setItem('planDetailsData', dataString);
+      }
+      
+      console.log('✅ Stored plan details data for navigation');
+    } catch (error) {
+      console.error('Error storing plan details data:', error);
+      // Continue navigation even if storage fails
+    }
     
     // Store the current URL for back navigation
-    localStorage.setItem('planDetailsReturnUrl', window.location.pathname + window.location.search);
+    try {
+      localStorage.setItem('planDetailsReturnUrl', window.location.pathname + window.location.search);
+    } catch (error) {
+      console.error('Error storing return URL:', error);
+    }
     
     // Navigate to the plan details page
     router.push(`/plan-details?carrier=${encodeURIComponent(carrierGroup.carrierName)}&plan=${carrierGroup.quotes[0]?.plan || 'G'}`);
@@ -725,6 +856,10 @@ export default function MedicareShopContent() {
       // Mark form as completed
       setQuoteFormCompleted(true);
       
+      // Update URL to indicate results are shown
+      const newUrl = `${pathname}?step=results${selectedCategory ? `&category=${selectedCategory}` : ''}`;
+      window.history.replaceState(null, '', newUrl);
+      
     } catch (error) {
       console.error('Quote generation failed:', error);
       setQuotesError(error instanceof Error ? error.message : 'Failed to generate quotes. Please try again.');
@@ -733,11 +868,14 @@ export default function MedicareShopContent() {
     }
   };
 
-  // Clear session storage and reset form
-  const clearSessionAndReset = () => {
+  // Clear localStorage and reset form
+  const clearStorageAndReset = () => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(QUOTE_FORM_DATA_KEY);
-      sessionStorage.removeItem(QUOTE_FORM_COMPLETED_KEY);
+      localStorage.removeItem(QUOTE_FORM_DATA_KEY);
+      localStorage.removeItem(QUOTE_FORM_COMPLETED_KEY);
+      localStorage.removeItem(REAL_QUOTES_KEY);
+      // Clean up any other Medicare-related data
+      cleanupOldStorage();
     }
     setQuoteFormData({
       age: '',
@@ -749,7 +887,31 @@ export default function MedicareShopContent() {
     });
     setQuoteFormCompleted(false);
     setRealQuotes([]);
+    
+    // Update URL to remove step parameter
+    const newUrl = pathname;
+    window.history.replaceState(null, '', newUrl);
   };
+
+  // Debug function to check storage state
+  const debugStorageState = () => {
+    console.log('🐛 Debug Storage State:');
+    console.log('LocalStorage - Form Data:', localStorage.getItem(QUOTE_FORM_DATA_KEY));
+    console.log('LocalStorage - Form Completed:', localStorage.getItem(QUOTE_FORM_COMPLETED_KEY));
+    console.log('LocalStorage - Real Quotes:', localStorage.getItem(REAL_QUOTES_KEY));
+    console.log('LocalStorage - Plan Details:', localStorage.getItem('planDetailsData'));
+    console.log('LocalStorage - Quotes Backup:', localStorage.getItem('medicare_quotes_backup'));
+    console.log('State - quoteFormCompleted:', quoteFormCompleted);
+    console.log('State - realQuotes length:', realQuotes.length);
+    console.log('State - isInitializing:', isInitializing);
+  };
+
+  // Make debug function available globally for testing
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).debugMedicareStorage = debugStorageState;
+    }
+  }, []);
 
   const isQuoteFormValid = () => {
     return quoteFormData.age && 
@@ -1084,24 +1246,33 @@ export default function MedicareShopContent() {
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    const newUrl = `/medicare/shop?category=${categoryId}`;
+    const stepParam = searchParams.get('step');
+    const newUrl = `/medicare/shop?category=${categoryId}${stepParam ? `&step=${stepParam}` : ''}`;
     window.history.replaceState(null, '', newUrl);
   };
 
   // Initialize category from URL params
   React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const categoryParam = urlParams.get('category');
     if (categoryParam && productCategories.find(cat => cat.id === categoryParam)) {
       setSelectedCategory(categoryParam);
     }
-  }, []);
+  }, [searchParams, categoryParam]);
 
   const displayData = getPaginatedDisplay();
   const paginationInfo = getPaginationInfo();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Show loading spinner while initializing */}
+      {isInitializing ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading your Medicare plans...</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Show Shopping Header Only When Form is Completed */}
       {quoteFormCompleted && (
         <div className="mb-8">
@@ -1141,8 +1312,8 @@ export default function MedicareShopContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    // Reset form to allow editing and clear session
-                    clearSessionAndReset();
+                    // Reset form to allow editing and clear localStorage
+                    clearStorageAndReset();
                   }}
                   className="p-1 h-auto"
                 >
@@ -2078,6 +2249,8 @@ export default function MedicareShopContent() {
       )}
 
       <MedicareDisclaimer />
+      </>
+      )}
     </div>
   );
 }
