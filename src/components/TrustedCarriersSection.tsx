@@ -15,31 +15,31 @@ export default function TrustedCarriersSection() {
       </div>
       
       {/* Carousel Container with Fade Effects */}
-      <div className="relative overflow-hidden">
-        {/* Left Fade Gradient */}
-        <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none"></div>
-        
-        {/* Right Fade Gradient */}
-        <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none"></div>
-        
+      <div 
+        className="relative overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent 0px, black 80px, black calc(100% - 80px), transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 80px, black calc(100% - 80px), transparent 100%)'
+        }}
+      >
         {/* Carousel Track */}
-        <div className="flex animate-scroll gap-8 py-4">
+        <div className="flex animate-ticker gap-4 md:gap-8 py-4 will-change-transform w-max">
           {/* First Set of Logos */}
           {featuredCarriers.map((carrier, index) => (
-            <div key={`first-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-48">
+            <div key={`first-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-32 md:w-48">
               <img 
-                className="h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
+                className="h-16 md:h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
                 alt={carrier.name}
                 src={carrier.logoUrl}
                 title={carrier.name}
               />
             </div>
           ))}
-          {/* Duplicate Set for Seamless Loop */}
+          {/* Second Set for Seamless Loop */}
           {featuredCarriers.map((carrier, index) => (
-            <div key={`second-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-48">
+            <div key={`second-${carrier.id}`} className="flex-shrink-0 min-w-fit flex items-center justify-center w-32 md:w-48">
               <img 
-                className="h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
+                className="h-16 md:h-20 w-auto opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0 filter" 
                 alt={carrier.name}
                 src={carrier.logoUrl}
                 title={carrier.name}

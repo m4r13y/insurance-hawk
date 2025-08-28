@@ -104,9 +104,9 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
-        'scroll': {
+        'ticker': {
           '0%': {
-            transform: 'translateX(0)',
+            transform: 'translateX(0%)',
           },
           '100%': {
             transform: 'translateX(-50%)',
@@ -175,7 +175,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'scroll': 'scroll 40s linear infinite',
+        'ticker': 'ticker 30s linear infinite',
         'mask-shift': 'mask-shift 2s ease-in-out infinite',
         'collapsible-down': 'collapsible-down 0.2s ease-out',
         'collapsible-up': 'collapsible-up 0.2s ease-out',
