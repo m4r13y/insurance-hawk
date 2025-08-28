@@ -581,6 +581,9 @@ export default function MedicareShopContent() {
     
     localStorage.setItem('planDetailsData', JSON.stringify(planDetailsData));
     
+    // Store the current URL for back navigation
+    localStorage.setItem('planDetailsReturnUrl', window.location.pathname + window.location.search);
+    
     // Navigate to the plan details page
     router.push(`/plan-details?carrier=${encodeURIComponent(carrierGroup.carrierName)}&plan=${carrierGroup.quotes[0]?.plan || 'G'}`);
   };
@@ -1186,10 +1189,28 @@ export default function MedicareShopContent() {
                   <div className="space-y-1">
                     {productCategories.map((category) => {
                       const isActive = selectedCategory === category.id;
+                      
                       // For Medigap, show count of real quotes when available, otherwise show default plan count
-                      const planCount = category.id === 'medigap' && realQuotes.length > 0 
-                        ? getGroupedPlansByCarrier()?.length || category.plans.length
-                        : category.plans.length;
+                      let planCount = category.plans.length;
+                      
+                      if (category.id === 'medigap' && realQuotes.length > 0) {
+                        // Filter quotes based on current filters (same logic as the main display)
+                        const filteredQuotes = realQuotes.filter(quote => {
+                          const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
+                          
+                          if (searchQuery && matchesPlan) {
+                            const carrierName = quote.carrier?.name || 
+                                               quote.company_base?.name ||
+                                               quote.company ||
+                                               'Unknown Carrier';
+                            return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
+                          }
+                          
+                          return matchesPlan;
+                        });
+                        
+                        planCount = filteredQuotes.length;
+                      }
                       return (
                         <button
                           key={category.id}
@@ -2056,8 +2077,6 @@ export default function MedicareShopContent() {
         </div>
       )}
 
-      <MedicareDisclaimer />
-      
       <MedicareDisclaimer />
     </div>
   );

@@ -49,7 +49,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "72052",
     phone: "800-872-3862",
     website: "https://aetnaseniorproducts.com",
-    shortName: "Aetna Health",
+    shortName: "Aetna",
     logoUrl: "https://logo.clearbit.com/aetna.com"
   },
   {
@@ -112,7 +112,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "60380",
     phone: "800-992-3522",
     website: "https://aflac.com",
-    shortName: "American Family of Columbus",
+    shortName: "Aflac",
     logoUrl: "https://logo.clearbit.com/aflac.com"
   },
   {
@@ -229,7 +229,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "70670",
     phone: "312-653-6000",
     website: "https://www.hcsc.com",
-    shortName: "Health Care Service, a Legal Reserve",
+    shortName: "Healthspring",
     logoUrl: "https://logo.clearbit.com/hcsc.com"
   },
   {
@@ -238,7 +238,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "60219",
     phone: "502-580-1000",
     website: "https://www.humana.com",
-    shortName: "Humana of Kentucky",
+    shortName: "Humana",
     logoUrl: "https://logo.clearbit.com/humana.com"
   },
   {
@@ -247,7 +247,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "65269",
     phone: "512-451-2224",
     website: "https://www.hcsc.com",
-    shortName: "Healthspring, Formerly Cigna",
+    shortName: "Healthspring",
     logoUrl: "https://logo.clearbit.com/hcsc.com"
   },
   {
@@ -319,7 +319,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "84549",
     phone: "224-231-1451",
     website: "https://www.uhc.com",
-    shortName: "UnitedHealthcare of America",
+    shortName: "United Healthcare",
     logoUrl: "https://logo.clearbit.com/uhc.com"
   },
   {
@@ -328,7 +328,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "11141",
     phone: "832-500-6437",
     website: "https://uhccommunityplan.com",
-    shortName: "UnitedHealthcare Community Plan of Texas",
+    shortName: "United Healthcare",
     logoUrl: "https://logo.clearbit.com/uhc.com"
   },
   {
@@ -346,7 +346,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "79413",
     phone: "877-832-7734",
     website: "https://www.unitedhealthgroup.com",
-    shortName: "UnitedHealthcare",
+    shortName: "United Healthcare",
     logoUrl: "https://logo.clearbit.com/uhc.com"
   },
   {
@@ -355,7 +355,7 @@ export const naicCarriers: NAICCarrier[] = [
     naicCode: "95765",
     phone: "469-633-8512",
     website: "https://www.uhc.com",
-    shortName: "UnitedHealthCare of Texas",
+    shortName: "United HealthCare of Texas",
     logoUrl: "https://logo.clearbit.com/uhc.com"
   },
   {
