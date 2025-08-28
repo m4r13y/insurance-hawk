@@ -14,6 +14,7 @@ import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
+import { getCarrierByNaicCode } from "@/lib/naic-carriers";
 import Image from "next/image";
 import { 
   TokensIcon,
@@ -632,6 +633,14 @@ export default function MedicareShopContent() {
       return carrierLogos[carrierKey];
     }
     
+    // Use our NAIC system if we have a NAIC code
+    if (naicCode) {
+      const naicCarrier = getCarrierByNaicCode(naicCode);
+      if (naicCarrier && naicCarrier.logoUrl) {
+        return naicCarrier.logoUrl;
+      }
+    }
+    
     // Return fallback logo while loading
     const cleanName = carrierName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
     return `https://logo.clearbit.com/${cleanName}.com`;
@@ -678,18 +687,19 @@ export default function MedicareShopContent() {
     try {
       // Only get quotes for Medigap category
       if (selectedCategory === 'medigap') {
-        // Convert form data to API format for quote service
+        // Convert form data to API format for our enhanced getMedigapQuotes action
         const quoteParams = {
           zipCode: quoteFormData.zipCode,
-          age: parseInt(quoteFormData.age.toString()),
-          gender: quoteFormData.gender === 'male' ? 'Male' as const : 'Female' as const,
-          tobaccoUse: quoteFormData.tobaccoUse || false,
-          effectiveDate: new Date().toISOString().split('T')[0] // Today's date
+          age: quoteFormData.age.toString(),
+          gender: quoteFormData.gender === 'male' ? 'M' as const : 'F' as const,
+          tobacco: quoteFormData.tobaccoUse ? "1" as const : "0" as const,
+          plans: ['F', 'G', 'N'], // Default to most common Medigap plans
+          // appointedNaicCodes: [] // Optional: Add specific NAIC codes if needed
         };
 
         console.log('Fetching Medigap quotes with params:', quoteParams);
         
-        const response = await quoteService.getMedigapQuotes(quoteParams);
+        const response = await getMedigapQuotes(quoteParams);
         
         if (response.error) {
           setQuotesError(response.error);

@@ -27,3 +27,13 @@ export interface ProviderService {
   phone?: string;
   website?: string;
 }
+
+export interface NAICCarrier {
+  carrierId: string;
+  carrierName: string;
+  naicCode: string;
+  phone: string;
+  website: string;
+  shortName: string;
+  logoUrl?: string;
+}

@@ -1,8 +1,8 @@
 "use server"
 
 import { httpsCallable, getFunctions } from 'firebase/functions'
-import { app } from '@/lib/firebase'
-import { ensureAuthenticated } from './auth-helper'
+import app from '@/lib/firebase'
+import { getCarrierByNaicCode } from '@/lib/naic-carriers'
 
 interface MedigapQuoteParams {
   zipCode: string
@@ -29,6 +29,11 @@ interface MedigapQuote {
   plan_type?: string
   am_best_rating?: string
   rate_type?: string
+  naicCarrierInfo?: {
+    carrierId: string
+    phone: string
+    website: string
+  }
 }
 
 export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ quotes?: MedigapQuote[]; error?: string }> {
@@ -44,15 +49,7 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       }
     }
     
-    // Ensure user is authenticated (required for Firebase callable functions)
-    console.log('🔐 Ensuring authentication for Firebase functions...')
-    const isAuthenticated = await ensureAuthenticated()
-    if (!isAuthenticated) {
-      console.error('❌ Authentication failed')
-      return { 
-        error: 'Authentication required for quote service. Please try again.' 
-      }
-    }
+    // Note: Authentication is handled by Firebase Functions automatically
     
     // Initialize Firebase Functions with correct region
     const functions = getFunctions(app, 'us-central1') // Specify region explicitly
@@ -121,13 +118,17 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           // Extract monthly premium (handle both rate.month format and direct monthly_premium)
           let monthly_premium = 0
           if (quoteData.monthly_premium && typeof quoteData.monthly_premium === 'number') {
+            // If it's already in dollars, use as-is
             monthly_premium = quoteData.monthly_premium
           } else if (quoteData.rate && typeof quoteData.rate === 'object' && quoteData.rate !== null) {
             const rate = quoteData.rate as Record<string, unknown>
             if (rate.month && typeof rate.month === 'number') {
-              monthly_premium = rate.month
+              // Convert from cents to dollars
+              monthly_premium = rate.month / 100
             }
           }
+          
+          console.log(`Premium conversion: rate.month=${(quoteData.rate as any)?.month}, converted=${monthly_premium}`)
           
           // Extract carrier information (prioritize company_base, fall back to carrier)
           const carrier = {
@@ -139,13 +140,23 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           // Generate stable ID - include plan type for uniqueness across multiple plans
           const id = (quoteData.id as string) || `${(quoteData.plan_name as string) || 'plan'}-${carrier.name}-${plan}-${idx}`
           
+          // Extract NAIC code from various possible locations
+          let naicCode = (companyBase.naic as string) ||
+                        quoteData.naic as string || 
+                        quoteData.NAIC as string ||
+                        (companyBase.NAIC as string) ||
+                        ((quoteData.carrier as Record<string, unknown>)?.naic as string) ||
+                        ((quoteData.carrier as Record<string, unknown>)?.NAIC as string)
+          
+          console.log(`Quote NAIC extraction: company_base.naic=${companyBase.naic}, direct=${quoteData.naic}, final=${naicCode}`)
+          
           const quote: MedigapQuote = {
             id,
             monthly_premium,
             carrier,
             plan_name: (quoteData.plan_name as string) || `Medicare Supplement Plan ${plan}`,
             plan: (quoteData.plan as string) || plan,
-            naic: quoteData.naic as string,
+            naic: naicCode,
             company: (quoteData.company as string) || carrier.name,
             company_base: companyBase as { name?: string; full_name?: string; logo_url?: string | null },
             effective_date: quoteData.effective_date as string,
@@ -170,12 +181,49 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
     
     console.log(`Total quotes found across all plans:`, allQuotes.length)
     
+    // First, enhance all quotes with NAIC carrier information (but don't filter yet)
+    const enhancedQuotes = allQuotes.map(quote => {
+      if (quote.naic) {
+        const naicCarrier = getCarrierByNaicCode(quote.naic)
+        if (naicCarrier) {
+          // Enhance the carrier information with NAIC data
+          return {
+            ...quote,
+            carrier: {
+              ...quote.carrier,
+              name: quote.carrier?.name || naicCarrier.shortName || naicCarrier.carrierName,
+              full_name: quote.carrier?.full_name || naicCarrier.carrierName,
+              logo_url: quote.carrier?.logo_url || naicCarrier.logoUrl
+            },
+            // Add additional NAIC carrier info for reference
+            naicCarrierInfo: {
+              carrierId: naicCarrier.carrierId,
+              phone: naicCarrier.phone,
+              website: naicCarrier.website
+            }
+          }
+        } else {
+          console.log(`Quote has NAIC code ${quote.naic} not in our database`)
+        }
+      } else {
+        console.log(`Quote has no NAIC code`)
+      }
+      return quote
+    })
+    
+    console.log(`Enhanced quotes with NAIC data: ${enhancedQuotes.length}`)
+    
+    // Sort all quotes by monthly premium (lowest first) like in client portal
+    enhancedQuotes.sort((a, b) => a.monthly_premium - b.monthly_premium)
+    
+    // Apply NAIC filtering AFTER all processing is complete
+    let finalQuotes = enhancedQuotes
+    
     // Filter by appointed carriers if specified
-    let filteredQuotes = allQuotes
     if (params.appointedNaicCodes && params.appointedNaicCodes.length > 0) {
-      console.log(`Filtering quotes for appointed NAIC codes:`, params.appointedNaicCodes)
-      console.log(`Available quote NAIC codes:`, allQuotes.map(q => q.naic).filter(Boolean))
-      filteredQuotes = allQuotes.filter(quote => {
+      console.log(`Applying NAIC filter for appointed codes:`, params.appointedNaicCodes)
+      console.log(`Available quote NAIC codes:`, enhancedQuotes.map(q => q.naic).filter(Boolean))
+      finalQuotes = enhancedQuotes.filter(quote => {
         console.log(`Checking quote with NAIC: ${quote.naic} against appointed codes`)
         if (!quote.naic) {
           console.log(`Quote has no NAIC code, excluding`)
@@ -185,13 +233,12 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
         console.log(`NAIC ${quote.naic} included: ${isIncluded}`)
         return isIncluded
       })
-      console.log(`Filtered quotes count: ${filteredQuotes.length} out of ${allQuotes.length}`)
+      console.log(`Filtered quotes count: ${finalQuotes.length} out of ${enhancedQuotes.length}`)
+    } else {
+      console.log(`No NAIC filter specified, returning all quotes`)
     }
     
-    // Sort all quotes by monthly premium (lowest first) like in client portal
-    filteredQuotes.sort((a, b) => a.monthly_premium - b.monthly_premium)
-    
-    return { quotes: filteredQuotes }
+    return { quotes: finalQuotes }
     
   } catch (error: unknown) {
     console.error('Error fetching Medigap quotes:', error)

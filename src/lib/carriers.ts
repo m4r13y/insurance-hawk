@@ -1,4 +1,5 @@
 import type { Plan, Document } from '@/types';
+import { naicCarriers, getCarrierByNaicCode, getCarrierLogoUrl } from './naic-carriers';
 
 // Featured carriers for homepage display - using local logos
 export const featuredCarriers = [
@@ -13,6 +14,11 @@ export const featuredCarriers = [
   { "id": "oscar", "name": "Oscar Health", "logoUrl": "/carrier-logos/9.png", "website": "https://oscar.com" },
   { "id": "aflac", "name": "Aflac", "logoUrl": "/carrier-logos/10.png", "website": "https://aflac.com" }
 ];
+
+/**
+ * Legacy carriers list - now enhanced with NAIC data when available
+ * This maintains backward compatibility while leveraging NAIC carrier information
+ */
 
 export const carriers = [
   { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "https://logo.clearbit.com/uhc.com", "website": "https://uhc.com" },
@@ -132,4 +138,62 @@ function isProblematicLogo(logoUrl: string): boolean {
   ];
   
   return problematicDomains.some(domain => logoUrl.includes(domain));
+}
+
+/**
+ * Enhanced carrier utilities that work with NAIC data
+ */
+
+/**
+ * Get carrier information from quote data using NAIC code
+ * This function bridges quote results with NAIC carrier data
+ */
+export function getCarrierFromQuote(quote: { naicCode?: string; carrierName?: string }): {
+  name: string;
+  logoUrl?: string;
+  website?: string;
+  phone?: string;
+  naicCode?: string;
+} | null {
+  if (!quote.naicCode) {
+    return quote.carrierName ? { name: quote.carrierName } : null;
+  }
+  
+  const naicCarrier = getCarrierByNaicCode(quote.naicCode);
+  if (naicCarrier) {
+    return {
+      name: naicCarrier.shortName || naicCarrier.carrierName,
+      logoUrl: naicCarrier.logoUrl,
+      website: naicCarrier.website,
+      phone: naicCarrier.phone,
+      naicCode: naicCarrier.naicCode
+    };
+  }
+  
+  // Fallback to quote data if NAIC lookup fails
+  return quote.carrierName ? { name: quote.carrierName, naicCode: quote.naicCode } : null;
+}
+
+/**
+ * Filter and enhance quote results with carrier information
+ */
+export function enhanceQuotesWithCarrierData<T extends { naicCode?: string; carrierName?: string }>(
+  quotes: T[]
+): (T & { carrierInfo?: ReturnType<typeof getCarrierFromQuote> })[] {
+  return quotes.map(quote => ({
+    ...quote,
+    carrierInfo: getCarrierFromQuote(quote)
+  }));
+}
+
+/**
+ * Get all available NAIC carriers for filtering UI
+ */
+export function getAvailableNaicCarriers() {
+  return naicCarriers.map(carrier => ({
+    naicCode: carrier.naicCode,
+    name: carrier.shortName || carrier.carrierName,
+    fullName: carrier.carrierName,
+    logoUrl: carrier.logoUrl
+  }));
 }
