@@ -497,6 +497,44 @@ export function getCarrierLogoUrl(naicCode: string): string | undefined {
 }
 
 /**
+ * Get proper logo URL for a carrier, handling fallbacks gracefully
+ * This function should be used instead of constructing logo URLs manually
+ */
+export function getProperLogoUrl(naicCode?: string, carrierName?: string): string {
+  // First try to get logo from NAIC database
+  if (naicCode) {
+    const carrier = getCarrierByNaicCode(naicCode);
+    if (carrier?.logoUrl) {
+      return carrier.logoUrl;
+    }
+  }
+  
+  // If no NAIC carrier found, try to generate from carrier name
+  if (carrierName) {
+    // Don't try to generate URLs from NAIC codes that were passed as carrier names
+    const isNaicCode = /^\d{5}$/.test(carrierName.trim());
+    if (isNaicCode) {
+      console.warn(`NAIC code ${carrierName} not found in database, using placeholder`);
+      return '/images/carrier-placeholder.svg';
+    }
+    
+    // Clean up carrier name for URL generation
+    const cleanName = carrierName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .replace(/insurance|company|inc|corp|llc|ltd/g, '')
+      .trim();
+    
+    if (cleanName && cleanName.length > 2) {
+      return `https://logo.clearbit.com/${cleanName}.com`;
+    }
+  }
+  
+  // Final fallback - return a placeholder or default logo
+  return '/images/carrier-placeholder.svg';
+}
+
+/**
  * Get all unique NAIC codes for filtering purposes
  */
 export function getAllNaicCodes(): string[] {

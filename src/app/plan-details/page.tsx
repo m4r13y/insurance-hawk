@@ -17,7 +17,7 @@ import {
   ExclamationTriangleIcon
 } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { carrierService } from "@/lib/services/carrier-service-simple";
+import { getProperLogoUrl, getCarrierByNaicCode } from "@/lib/naic-carriers";
 
 interface QuoteData {
   key: string;
@@ -250,7 +250,7 @@ const PlanDetailsPage: React.FC<PlanDetailsPageProps> = () => {
     );
   }
 
-  const logoUrl = carrierService.getLogoUrlForCarrier(quoteData.company_base.naic || quoteData.company_base.name);
+  const logoUrl = getProperLogoUrl(quoteData.company_base.naic, quoteData.company_base.name);
 
   return (
     <div className="min-h-screen">
@@ -542,7 +542,7 @@ const PlanDetailsPage: React.FC<PlanDetailsPageProps> = () => {
                     <CardTitle className="text-base flex items-center space-x-2">
                       <div className="w-6 h-6 relative">
                         <Image
-                          src={`/carrier-logos/${quoteData.company_base.naic}.png`}
+                          src={getProperLogoUrl(quoteData.company_base.naic, quoteData.company_base.name)}
                           alt={quoteData.company_base.name}
                           fill
                           className="object-contain"

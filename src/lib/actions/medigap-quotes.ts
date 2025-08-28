@@ -219,7 +219,7 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
     // Apply NAIC filtering AFTER all processing is complete
     let finalQuotes = enhancedQuotes
     
-    // Filter by appointed carriers if specified
+    // Filter by appointed carriers if specified, otherwise filter by valid NAIC codes
     if (params.appointedNaicCodes && params.appointedNaicCodes.length > 0) {
       console.log(`Applying NAIC filter for appointed codes:`, params.appointedNaicCodes)
       console.log(`Available quote NAIC codes:`, enhancedQuotes.map(q => q.naic).filter(Boolean))
@@ -235,7 +235,20 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       })
       console.log(`Filtered quotes count: ${finalQuotes.length} out of ${enhancedQuotes.length}`)
     } else {
-      console.log(`No NAIC filter specified, returning all quotes`)
+      // Default filtering: only show quotes from carriers in our NAIC database
+      console.log(`Applying default NAIC filtering to show only known carriers`)
+      console.log(`Available quote NAIC codes:`, enhancedQuotes.map(q => q.naic).filter(Boolean))
+      finalQuotes = enhancedQuotes.filter(quote => {
+        if (!quote.naic) {
+          console.log(`Quote has no NAIC code, excluding`)
+          return false
+        }
+        const carrier = getCarrierByNaicCode(quote.naic)
+        const isKnownCarrier = !!carrier
+        console.log(`NAIC ${quote.naic} is known carrier: ${isKnownCarrier}`)
+        return isKnownCarrier
+      })
+      console.log(`Filtered quotes count: ${finalQuotes.length} out of ${enhancedQuotes.length} (showing only known carriers)`)
     }
     
     return { quotes: finalQuotes }

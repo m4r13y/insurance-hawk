@@ -14,7 +14,7 @@ import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
-import { getCarrierByNaicCode } from "@/lib/naic-carriers";
+import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import Image from "next/image";
 import { 
   TokensIcon,
@@ -629,21 +629,28 @@ export default function MedicareShopContent() {
   const getCachedLogoUrl = (carrierName: string, naicCode?: string): string => {
     const carrierKey = naicCode || carrierName;
     
+    // Check if we have a cached logo URL
     if (carrierLogos[carrierKey]) {
-      return carrierLogos[carrierKey];
-    }
-    
-    // Use our NAIC system if we have a NAIC code
-    if (naicCode) {
-      const naicCarrier = getCarrierByNaicCode(naicCode);
-      if (naicCarrier && naicCarrier.logoUrl) {
-        return naicCarrier.logoUrl;
+      const cachedUrl = carrierLogos[carrierKey];
+      
+      // Check if the cached URL is a bad NAIC-based URL (like https://logo.clearbit.com/60219.com)
+      // If the URL ends with a 5-digit number followed by .com, it's likely a NAIC code URL
+      const isBadNaicUrl = /https:\/\/logo\.clearbit\.com\/\d{5}\.com$/i.test(cachedUrl);
+      
+      if (!isBadNaicUrl) {
+        console.log(`Using cached logo for ${carrierKey}:`, cachedUrl);
+        return cachedUrl;
+      } else {
+        console.log(`Ignoring bad cached NAIC-based logo URL for ${carrierKey}:`, cachedUrl);
+        // Remove the bad cached URL
+        delete carrierLogos[carrierKey];
       }
     }
     
-    // Return fallback logo while loading
-    const cleanName = carrierName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
-    return `https://logo.clearbit.com/${cleanName}.com`;
+    // Use the proper logo URL function from NAIC carriers
+    const logoUrl = getProperLogoUrl(naicCode, carrierName);
+    console.log(`Generated logo URL for NAIC ${naicCode}, carrier "${carrierName}":`, logoUrl);
+    return logoUrl;
   };
 
   // Handle plan selection from modal
