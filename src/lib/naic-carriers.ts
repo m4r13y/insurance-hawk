@@ -1,6 +1,37 @@
 import type { NAICCarrier } from '@/types';
 
 /**
+ * Convert text to proper title case, handling special cases for insurance names
+ */
+function toTitleCase(str: string): string {
+  // List of words that should remain lowercase (except when at the beginning)
+  const lowercaseWords = ['of', 'and', 'the', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'a', 'an'];
+  // List of words that should remain uppercase
+  const uppercaseWords = ['LLC', 'L.L.C', 'INC', 'CORP', 'HMO', 'USA', 'TX', 'CO', 'NY', 'CA', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI', 'VA', 'WA', 'AZ', 'MA', 'IN', 'TN', 'MO', 'MD', 'WI', 'MN', 'CO', 'SC', 'AL', 'LA', 'KY', 'OR', 'OK', 'CT', 'IA', 'MS', 'AR', 'KS', 'UT', 'NV', 'NM', 'WV', 'NE', 'ID', 'HI', 'NH', 'ME', 'RI', 'MT', 'DE', 'SD', 'ND', 'AK', 'VT', 'WY', 'DC'];
+  
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      const cleanWord = word.replace(/[^\w]/g, '');
+      
+      // Keep uppercase words uppercase
+      if (uppercaseWords.includes(cleanWord.toUpperCase())) {
+        return word.toUpperCase();
+      }
+      
+      // Keep lowercase words lowercase (except at the beginning)
+      if (index > 0 && lowercaseWords.includes(cleanWord.toLowerCase())) {
+        return word.toLowerCase();
+      }
+      
+      // Capitalize first letter
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+/**
  * NAIC Carrier Reference Data
  * 
  * This data structure contains carrier information with NAIC codes that can be used to:
@@ -14,11 +45,11 @@ import type { NAICCarrier } from '@/types';
 export const naicCarriers: NAICCarrier[] = [
   {
     carrierId: "fd6c1c35dbbd4787ab5b54268a71a1a7",
-    carrierName: "AETNA HEALTH INSURANCE COMPANY",
+    carrierName: "Aetna Health Insurance Company",
     naicCode: "72052",
     phone: "800-872-3862",
     website: "https://aetnaseniorproducts.com",
-    shortName: "AETNA HEALTH",
+    shortName: "Aetna Health",
     logoUrl: "https://logo.clearbit.com/aetna.com"
   },
   {
@@ -32,16 +63,16 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "5c0f3c1172c54d9fb7d438cb9ea27a56",
-    carrierName: "ACE PROPERTY AND CASUALTY INSURANCE COMPANY",
+    carrierName: "Ace Property and Casualty Insurance Company",
     naicCode: "20699",
     phone: "215-640-1000",
     website: "https://www.chubb.com",
-    shortName: "ACE PROPERTY",
+    shortName: "Ace Property",
     logoUrl: "https://logo.clearbit.com/chubb.com"
   },
   {
     carrierId: "f9bd5b6fe3a2409cbe2a759a5a1bdd90",
-    carrierName: "Aetna Dental Inc. (a Texas corporation)",
+    carrierName: "Aetna Dental INC (a Texas Corporation)",
     naicCode: "95910",
     phone: "800-872-3862",
     website: "https://www.aetna.com",
@@ -50,7 +81,7 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "8d67a4e42ef746c280aaa73254313376",
-    carrierName: "Aetna Health Inc. (a Texas corporation)",
+    carrierName: "Aetna Health INC (a Texas Corporation)",
     naicCode: "95490",
     phone: "800-872-3862",
     website: "https://www.aetna.com",
@@ -59,11 +90,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "0620397b647845ba9e36754541feaac5",
-    carrierName: "AETNA LIFE INSURANCE COMPANY",
+    carrierName: "Aetna Life Insurance Company",
     naicCode: "60054",
     phone: "800-872-3862",
     website: "https://www.aetna.com",
-    shortName: "AETNA",
+    shortName: "Aetna",
     logoUrl: "https://logo.clearbit.com/aetna.com"
   },
   {
@@ -95,7 +126,7 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "7d6379ef0bf14f1e8fc6c406d377b936",
-    carrierName: "Ameritas Life Insurance Corp",
+    carrierName: "Ameritas Life Insurance CORP",
     naicCode: "61301",
     phone: "402-467-1122",
     website: "https://www.ameritas.com",
@@ -104,20 +135,20 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "4a99159f57cf4d1296f334f62e1a4283",
-    carrierName: "BAYLOR SCOTT & WHITE INSURANCE COMPANY",
+    carrierName: "Baylor Scott & White Insurance Company",
     naicCode: "11670",
     phone: "254-298-3000",
     website: "https://www.swhp.org",
-    shortName: "BAYLOR SCOTT & WHITE",
+    shortName: "Baylor Scott & White",
     logoUrl: "https://logo.clearbit.com/swhp.org"
   },
   {
     carrierId: "8fc7f96ed3d148b0a89221fe16e8fbe8",
-    carrierName: "BANKERS FIDELITY LIFE INSURANCE COMPANY",
+    carrierName: "Bankers Fidelity Life Insurance Company",
     naicCode: "61239",
     phone: "800-241-1439",
     website: "https://www.bankersfidelitylife.com",
-    shortName: "BANKERS FIDELITY",
+    shortName: "Bankers Fidelity",
     logoUrl: "https://logo.clearbit.com/bankersfidelitylife.com"
   },
   {
@@ -167,11 +198,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "1353b0707b43427eab128443f626582c",
-    carrierName: "HARTFORD LIFE AND ACCIDENT INSURANCE COMPANY",
+    carrierName: "Hartford Life and Accident Insurance Company",
     naicCode: "70815",
     phone: "860-547-5000",
     website: "https://www.thehartford.com",
-    shortName: "HARTFORD AND ACCIDENT",
+    shortName: "Hartford and Accident",
     logoUrl: "https://logo.clearbit.com/thehartford.com"
   },
   {
@@ -212,20 +243,20 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "da771dcace664d548a84b185a11f4568",
-    carrierName: "HEALTHSPRING INSURANCE COMPANY, FORMERLY CIGNA INSURANCE COMPANY",
+    carrierName: "Healthspring Insurance Company, Formerly Cigna Insurance Company",
     naicCode: "65269",
     phone: "512-451-2224",
     website: "https://www.hcsc.com",
-    shortName: "HEALTHSPRING, FORMERLY CIGNA",
+    shortName: "Healthspring, Formerly Cigna",
     logoUrl: "https://logo.clearbit.com/hcsc.com"
   },
   {
     carrierId: "b1fda7f4884f4f81a237eaab4d0262fc",
-    carrierName: "HEALTHSPRING NATIONAL HEALTH INSURANCE COMPANY, FORMERLY CIGNA NATIONAL HEALTH INSURANCE COMPANY",
+    carrierName: "Healthspring National Health Insurance Company, Formerly Cigna National Health Insurance Company",
     naicCode: "61727",
     phone: "512-451-2224",
     website: "https://www.hcsc.com",
-    shortName: "HEALTHSPRING NATIONAL HEALTH, FORMERLY CIGNA NATIO",
+    shortName: "Healthspring National Health",
     logoUrl: "https://logo.clearbit.com/hcsc.com"
   },
   {
@@ -266,11 +297,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "78ca988726a64e429f9a9956c90db290",
-    carrierName: "MUTUAL OF OMAHA INSURANCE COMPANY",
+    carrierName: "Mutual of Omaha Insurance Company",
     naicCode: "71412",
     phone: "402-342-7600",
     website: "https://www.mutualofomaha.com",
-    shortName: "MUTUAL OF OMAHA",
+    shortName: "Mutual of Omaha",
     logoUrl: "https://logo.clearbit.com/mutualofomaha.com"
   },
   {
@@ -293,11 +324,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "1c817afa73344599a4bd28d265d10a34",
-    carrierName: "UNITEDHEALTHCARE COMMUNITY PLAN OF TEXAS, L.L.C",
+    carrierName: "UnitedHealthcare Community Plan of Texas, L.L.C",
     naicCode: "11141",
     phone: "832-500-6437",
     website: "https://uhccommunityplan.com",
-    shortName: "UNITEDHEALTHCARE COMMUNITY PLAN OF TEXAS, L.L.C",
+    shortName: "UnitedHealthcare Community Plan of Texas",
     logoUrl: "https://logo.clearbit.com/uhc.com"
   },
   {
@@ -347,11 +378,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "5f001e8c4bb74cca91b5d08cc373df7b",
-    carrierName: "PEKIN LIFE INSURANCE COMPANY",
+    carrierName: "Pekin Life Insurance Company",
     naicCode: "67628",
     phone: "309-346-1161",
     website: "https://www.pekininsurance.com",
-    shortName: "PEKIN",
+    shortName: "Pekin",
     logoUrl: "https://logo.clearbit.com/pekininsurance.com"
   },
   {
@@ -374,29 +405,29 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "b53d37c96cb745a9a40db1398b43d779",
-    carrierName: "RESERVE NATIONAL INSURANCE COMPANY",
+    carrierName: "Reserve National Insurance Company",
     naicCode: "68462",
     phone: "800-654-9106",
     website: "https://www.medmutualprotect.com",
-    shortName: "RESERVE NATIONAL",
+    shortName: "Reserve National",
     logoUrl: "https://logo.clearbit.com/medmutualprotect.com"
   },
   {
     carrierId: "2aa01b95934a423fa0fea90520375767",
-    carrierName: "SCOTT & WHITE CARE PLANS",
+    carrierName: "Scott & White Care Plans",
     naicCode: "16426",
     phone: "254-298-3000",
     website: "https://www.swhp.org",
-    shortName: "SCOTT & WHITE CARE PLANS",
+    shortName: "Scott & White Care Plans",
     logoUrl: "https://logo.clearbit.com/swhp.org"
   },
   {
     carrierId: "bf3d6fa12d1f48a78df4d8f9a3c54aa7",
-    carrierName: "SCOTT & WHITE HEALTH PLAN",
+    carrierName: "Scott & White Health Plan",
     naicCode: "95099",
     phone: "254-298-3000",
     website: "https://www.swhp.org",
-    shortName: "SCOTT & WHITE HEALTH PLAN",
+    shortName: "Scott & White Health Plan",
     logoUrl: "https://logo.clearbit.com/swhp.org"
   },
   {
@@ -410,11 +441,11 @@ export const naicCarriers: NAICCarrier[] = [
   },
   {
     carrierId: "fab1d0667f38435087f793cb701edc2f",
-    carrierName: "TRANSAMERICA LIFE INSURANCE COMPANY",
+    carrierName: "Transamerica Life Insurance Company",
     naicCode: "86231",
     phone: "319-355-8511",
     website: "https://www.transamerica.com",
-    shortName: "TRANSAMERICA",
+    shortName: "Transamerica",
     logoUrl: "https://logo.clearbit.com/transamerica.com"
   },
   {
@@ -435,6 +466,7 @@ export const naicCarriers: NAICCarrier[] = [
     shortName: "United National of America",
     logoUrl: "https://logo.clearbit.com/unlinsurance.com"
   },
+/*
   {
     carrierId: "409c1570dd844afd8615047536c80417",
     carrierName: "Woodmen Of The World Life Insurance Society",
@@ -444,6 +476,7 @@ export const naicCarriers: NAICCarrier[] = [
     shortName: "Woodmen Of The World Society",
     logoUrl: "https://logo.clearbit.com/woodmenlife.org"
   }
+*/
 ];
 
 /**

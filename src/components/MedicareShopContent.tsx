@@ -990,12 +990,23 @@ export default function MedicareShopContent() {
                        quote.company ||
                        'Unknown';
                        
-      const carrierName = quote.carrier?.name || 
-                         quote.carrier?.full_name || 
-                         quote.company_base?.name ||
-                         quote.company_base?.full_name ||
-                         quote.company ||
-                         `Carrier ${carrierId}`;
+      // Get carrier name from NAIC data if available, otherwise fallback to quote data
+      let carrierName = quote.carrier?.name;
+      if (quote.naic) {
+        const naicCarrier = getCarrierByNaicCode(quote.naic);
+        if (naicCarrier) {
+          carrierName = naicCarrier.shortName || naicCarrier.carrierName;
+        }
+      }
+      
+      // Fallback if no carrier name found
+      if (!carrierName) {
+        carrierName = quote.carrier?.full_name || 
+                     quote.company_base?.name ||
+                     quote.company_base?.full_name ||
+                     quote.company ||
+                     `Carrier ${carrierId}`;
+      }
 
       if (!groups[carrierId]) {
         groups[carrierId] = {
@@ -1582,7 +1593,7 @@ export default function MedicareShopContent() {
                               <div>
                                 <h3 className="text-xl font-bold text-primary">{carrierGroup.carrierName}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  NAIC: {carrierGroup.carrierId} • {carrierGroup.quotes.length} plan{carrierGroup.quotes.length !== 1 ? 's' : ''} available
+                                  {carrierGroup.quotes.length} plan{carrierGroup.quotes.length !== 1 ? 's' : ''} available
                                 </p>
                               </div>
                             </div>

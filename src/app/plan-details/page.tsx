@@ -255,9 +255,9 @@ const PlanDetailsPage: React.FC<PlanDetailsPageProps> = () => {
   return (
     <div className="min-h-screen">
       {/* Simplified Header */}
-      <div className="border-b sticky top-20 z-40 bg-white/95 backdrop-blur-sm">
+      <div className="sticky top-20 z-40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+          <div className="pt-10 flex items-center justify-between h-14">
             {/* Left side - Back button and company info */}
             <div className="flex items-center space-x-3">
               <Button 
@@ -297,11 +297,6 @@ const PlanDetailsPage: React.FC<PlanDetailsPageProps> = () => {
                   {formatCurrency(calculateDiscountedRate(quoteData.rate.month, quoteData.discounts))}/mo
                 </div>
               </div>
-              <Button size="sm" onClick={() => {
-                alert(`You've selected ${quoteData.company_base.name} Plan ${quoteData.plan} for ${formatCurrency(calculateDiscountedRate(quoteData.rate.month, quoteData.discounts))}/month`);
-              }}>
-                Select
-              </Button>
             </div>
           </div>
         </div>
