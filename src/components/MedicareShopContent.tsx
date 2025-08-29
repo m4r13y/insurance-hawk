@@ -1114,7 +1114,20 @@ export default function MedicareShopContent() {
   // Group quotes by carrier when multiple plans are selected
   // Helper function to calculate price with discounts
   const calculateDiscountedPrice = (quote: any) => {
-    const basePremium = quote.monthly_premium || (quote.rate?.month ? quote.rate.month / 100 : 0);
+    // Try different possible paths for monthly premium
+    let basePremium = 0;
+    
+    if (quote.monthly_premium) {
+      basePremium = quote.monthly_premium;
+    } else if (quote.rate?.month) {
+      basePremium = quote.rate.month / 100; // Convert cents to dollars
+    } else if (quote.monthlyPremium) {
+      basePremium = quote.monthlyPremium;
+    } else if (quote.premium) {
+      basePremium = quote.premium;
+    } else if (quote.rate?.annual) {
+      basePremium = quote.rate.annual / 100 / 12; // Convert annual cents to monthly dollars
+    }
     
     if (!applyDiscounts || !quote.discounts || quote.discounts.length === 0) {
       return basePremium;
@@ -1159,14 +1172,12 @@ export default function MedicareShopContent() {
 
   const getGroupedPlansByCarrier = () => {
     if (selectedCategory !== 'medigap' || realQuotes.length === 0) {
-      return null; // Use regular display for mock data or single plan
+      return null; // Use regular display for mock data
     }
 
-    // Check if multiple plans are selected
+    // Always use grouped display regardless of plan count
     const selectedPlanCount = selectedQuotePlans.length;
-    if (selectedPlanCount <= 1) {
-      return null; // Use regular display for single plan
-    }
+    console.log(`Grouping plans for ${selectedPlanCount} selected plan types:`, selectedQuotePlans);
 
     // Filter quotes by selected plan types
     const filteredQuotes = realQuotes.filter(quote => {
@@ -1505,105 +1516,55 @@ export default function MedicareShopContent() {
                   </div>
 
                   {/* Medigap Plan Selection - Only show for Medigap category */}
-                  {selectedCategory === 'medigap' && (
+                  {selectedCategory === 'medigap' && realQuotes.length === 0 && (
                     <div>
                       <label className="text-sm font-medium mb-2 block">
-                        {realQuotes.length > 0 ? 'Filter Plans' : 'Medigap Plans'}
+                        Medigap Plans
                       </label>
                       <div className="space-y-2">
-                        {realQuotes.length > 0 ? (
-                          // Real quotes: use selectedQuotePlans state
-                          <>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="quote-plan-f"
-                                checked={selectedQuotePlans.includes('F')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedQuotePlans([...selectedQuotePlans, 'F']);
-                                  } else {
-                                    setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="quote-plan-f" className="text-sm">Plan F</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="quote-plan-g"
-                                checked={selectedQuotePlans.includes('G')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedQuotePlans([...selectedQuotePlans, 'G']);
-                                  } else {
-                                    setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="quote-plan-g" className="text-sm">Plan G</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="quote-plan-n"
-                                checked={selectedQuotePlans.includes('N')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedQuotePlans([...selectedQuotePlans, 'N']);
-                                  } else {
-                                    setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="quote-plan-n" className="text-sm">Plan N</label>
-                            </div>
-                          </>
-                        ) : (
-                          // Mock data: use selectedMedigapPlans state
-                          <>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="plan-f"
-                                checked={selectedMedigapPlans.includes('plan-f')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-f']);
-                                  } else {
-                                    setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-f'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="plan-f" className="text-sm">Plan F</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="plan-g"
-                                checked={selectedMedigapPlans.includes('plan-g')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-g']);
-                                  } else {
-                                    setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-g'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="plan-g" className="text-sm">Plan G</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                id="plan-n"
-                                checked={selectedMedigapPlans.includes('plan-n')}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-n']);
-                                  } else {
-                                    setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-n'));
-                                  }
-                                }}
-                              />
-                              <label htmlFor="plan-n" className="text-sm">Plan N</label>
-                            </div>
-                          </>
-                        )}
+                        {/* Mock data: use selectedMedigapPlans state */}
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="plan-f"
+                            checked={selectedMedigapPlans.includes('plan-f')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-f']);
+                              } else {
+                                setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-f'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="plan-f" className="text-sm">Plan F</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="plan-g"
+                            checked={selectedMedigapPlans.includes('plan-g')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-g']);
+                              } else {
+                                setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-g'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="plan-g" className="text-sm">Plan G</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="plan-n"
+                            checked={selectedMedigapPlans.includes('plan-n')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-n']);
+                              } else {
+                                setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-n'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="plan-n" className="text-sm">Plan N</label>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1779,292 +1740,267 @@ export default function MedicareShopContent() {
                     )}
                   </p>
                 </div>
-                {currentCategory.isPopular && (
+                
+                {/* Plan Type Checkboxes for Medigap */}
+                {selectedCategory === 'medigap' && realQuotes.length > 0 ? (
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-f"
+                          checked={selectedQuotePlans.includes('F')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedQuotePlans([...selectedQuotePlans, 'F']);
+                            } else {
+                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-g"
+                          checked={selectedQuotePlans.includes('G')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedQuotePlans([...selectedQuotePlans, 'G']);
+                            } else {
+                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-n"
+                          checked={selectedQuotePlans.includes('N')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedQuotePlans([...selectedQuotePlans, 'N']);
+                            } else {
+                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
+                      </div>
+                    </div>
+                  </div>
+                ) : currentCategory.isPopular ? (
                   <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                     <StarFilledIcon className="w-3 h-3" />
                     Popular Category
                   </Badge>
-                )}
+                ) : null}
               </div>
 
-              {/* Product Grid - Handles both individual plans and grouped carriers */}
-              <div className="grid gap-6">
+              {/* Product Grid - Always use grouped display, adjust grid based on selected plan types */}
+              <div className={`grid gap-6 ${
+                selectedQuotePlans.length === 1 
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                  : 'grid-cols-1'
+              }`}>
                 {displayData.type === 'grouped' ? (
-                  // Grouped by carrier display
-                  displayData.data.map((carrierGroup: any) => (
-                    <Card key={carrierGroup.carrierId} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
-                      <CardContent className="p-6">
-                        {/* Carrier Header */}
-                        <div className="mb-6 pb-4 border-b">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {/* Carrier Logo */}
-                              <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                                <Image
-                                  src={getCachedLogoUrl(carrierGroup.carrierName, carrierGroup.carrierId)}
-                                  alt={`${carrierGroup.carrierName} logo`}
-                                  width={48}
-                                  height={48}
-                                  className="w-full h-full object-contain"
-                                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                                    const target = e.currentTarget;
-                                    const parent = target.parentElement;
-                                    if (parent) {
-                                      target.style.display = 'none';
-                                      const initials = carrierGroup.carrierName
-                                        .split(' ')
-                                        .map((word: string) => word[0])
-                                        .join('')
-                                        .substring(0, 2)
-                                        .toUpperCase();
-                                      parent.innerHTML = `<span class="text-sm font-semibold text-gray-600">${initials}</span>`;
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <h3 className="text-xl font-bold text-primary">{carrierGroup.carrierName}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {carrierGroup.quotes.length} plan{carrierGroup.quotes.length !== 1 ? 's' : ''} available
-                                </p>
-                              </div>
-                            </div>
-                            {(() => {
-                              // Check if any quote in this carrier has discounts
-                              const hasDiscounts = carrierGroup.quotes.some((quote: any) => quote.discounts && quote.discounts.length > 0);
-                              
-                              if (hasDiscounts) {
-                                return (
-                                  <Badge variant="default" className="bg-blue-500 text-white text-xs">
-                                    <TokensIcon className="w-3 h-3 mr-1" />
-                                    Discounts Available
-                                  </Badge>
-                                );
-                              } else {
-                                return (
-                                  <Badge variant="outline" className="text-xs">
-                                    From ${Math.round(convertPriceByPaymentMode(calculateDiscountedPrice(carrierGroup.quotes[0])))}{getPaymentLabel()}
-                                  </Badge>
-                                );
-                              }
-                            })()}
-                          </div>
-                        </div>
-
-                        {/* Plans from this carrier */}
-                        <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 md:gap-6">
-                          {(() => {
-                            // Group quotes by plan type within this carrier
-                            const planGroups = carrierGroup.quotes.reduce((groups: Record<string, any[]>, quote: any) => {
-                              const planType = quote.plan || 'Unknown';
-                              if (!groups[planType]) {
-                                groups[planType] = [];
-                              }
-                              groups[planType].push(quote);
-                              return groups;
-                            }, {} as Record<string, any[]>);
-
-                            return Object.entries(planGroups).map(([planType, quotes], index: number) => {
-                              const quotesArray = quotes as any[];
-                              // Calculate price range for this plan type
-                              const premiums = quotesArray.map((q: any) => calculateDiscountedPrice(q));
-                              const minPremium = Math.min(...premiums);
-                              const maxPremium = Math.max(...premiums);
-                              const hasMultipleVersions = quotesArray.length > 1;
-                              
-                              // Get the best quote for this plan type (lowest premium)
-                              const bestQuote = quotesArray.find((q: any) => {
-                                const premium = calculateDiscountedPrice(q);
-                                return premium === minPremium;
-                              }) || quotesArray[0];
-
-                              return (
-                                <div key={planType} className="flex flex-col p-6 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors h-full">
-                                  {/* Plan Header - Price only */}
-                                  <div className="flex items-baseline gap-1 mb-4">
-                                    <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">
-                                      {hasMultipleVersions ? 
-                                        `$${Math.round(convertPriceByPaymentMode(minPremium))}-$${Math.round(convertPriceByPaymentMode(maxPremium))}` : 
-                                        `$${Math.round(convertPriceByPaymentMode(minPremium))}`
-                                      }
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
-                                  </div>
-                                  
-                                  {/* Plan Details */}
-                                  <div className="flex-1 space-y-2">
-                                    <h4 className="font-semibold text-lg">
-                                      {bestQuote.plan_name || `Plan ${planType}`}
-                                    </h4>
-                                    {hasMultipleVersions && (
-                                      <p className="text-sm text-muted-foreground">
-                                        Multiple versions available
-                                      </p>
-                                    )}
-                                    {bestQuote.discounts && bestQuote.discounts.length > 0 && (
-                                      <p className="text-xs text-blue-600">
-                                        Available discounts: {bestQuote.discounts.map((d: any) => {
-                                          const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);
-                                          const value = d.type === 'percent' ? `${Math.round(d.value * 100)}%` : `$${d.value}`;
-                                          return `${name} (${value})`;
-                                        }).join(', ')}
-                                      </p>
-                                    )}
-                                    {bestQuote.effective_date && (
-                                      <p className="text-xs text-muted-foreground">
-                                        Effective: {new Date(bestQuote.effective_date).toLocaleDateString()}
-                                      </p>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Action Button */}
-                                  <div className="mt-4">
-                                    <Button size="default" className="w-full" onClick={() => openPlanModal(carrierGroup)}>
-                                      Select Plan
-                                    </Button>
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  // Individual plan display (original format)
-                  displayData.data.map((plan: any) => (
-                    <Card key={plan.id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-                          {/* Plan Info */}
-                          <div className="flex-1 space-y-4">
-                            <div className="flex items-start justify-between">
+                  // Grouped by carrier display (with plan type filtering)
+                  displayData.data.map((carrierGroup: any) => {
+                    // Filter plans based on selected plan types
+                    const filteredQuotes = carrierGroup.quotes.filter((quote: any) => 
+                      selectedQuotePlans.includes(quote.plan)
+                    );
+                    
+                    // Skip carrier if no plans match selected types
+                    if (filteredQuotes.length === 0) return null;
+                    
+                    // Create filtered carrier group
+                    const filteredCarrierGroup = {
+                      ...carrierGroup,
+                      quotes: filteredQuotes
+                    };
+                    
+                    return (
+                      <Card key={carrierGroup.carrierId} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
+                        <CardContent className="p-6">
+                          {/* Carrier Header */}
+                          <div className="mb-6 pb-4 border-b">
+                            <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 {/* Carrier Logo */}
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                                   <Image
-                                    src={getCachedLogoUrl(plan.name, plan.naic)}
-                                    alt={`${plan.name} logo`}
-                                    width={40}
-                                    height={40}
+                                    src={getCachedLogoUrl(carrierGroup.carrierName, carrierGroup.carrierId)}
+                                    alt={`${carrierGroup.carrierName} logo`}
+                                    width={48}
+                                    height={48}
                                     className="w-full h-full object-contain"
                                     onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                                       const target = e.currentTarget;
                                       const parent = target.parentElement;
                                       if (parent) {
                                         target.style.display = 'none';
-                                        const initials = plan.name
+                                        const initials = carrierGroup.carrierName
                                           .split(' ')
                                           .map((word: string) => word[0])
                                           .join('')
                                           .substring(0, 2)
                                           .toUpperCase();
-                                        parent.innerHTML = `<span class="text-xs font-semibold text-gray-600">${initials}</span>`;
+                                        parent.innerHTML = `<span class="text-sm font-semibold text-gray-600">${initials}</span>`;
                                       }
                                     }}
                                   />
                                 </div>
                                 <div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <h3 className="text-lg font-bold">{plan.name}</h3>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => toggleSavedPlan(plan.id)}
-                                      className="shrink-0"
-                                    >
-                                    {savedPlans.includes(plan.id) ? (
-                                      <BookmarkFilledIcon className="w-4 h-4 text-blue-500" />
-                                    ) : (
-                                      <BookmarkIcon className="w-4 h-4" />
-                                    )}
-                                  </Button>
+                                  <h3 className="text-xl font-bold text-primary">{carrierGroup.carrierName}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {filteredQuotes.length} plan{filteredQuotes.length !== 1 ? 's' : ''} available
+                                  </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                  {plan.isPopular && (
-                                    <Badge className="bg-blue-500 text-white text-xs">
-                                      <StarFilledIcon className="w-3 h-3 mr-1" />
-                                      Popular
-                                    </Badge>
-                                  )}
-                                  {plan.isBestValue && (
-                                    <Badge className="bg-green-500 text-white text-xs">
-                                      <LightningBoltIcon className="w-3 h-3 mr-1" />
-                                      Best Value
-                                    </Badge>
-                                  )}
-                                  {plan.isNew && (
-                                    <Badge className="bg-purple-500 text-white text-xs">
-                                      <RocketIcon className="w-3 h-3 mr-1" />
-                                      New
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-muted-foreground text-sm mb-3">{plan.description}</p>
-                                
-                                {/* Rating - only show for mock plans with rating data */}
-                                {plan.rating !== null && plan.reviewCount !== null && (
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="flex items-center gap-1">
-                                      {[...Array(5)].map((_, i) => (
-                                        <StarFilledIcon
-                                          key={i}
-                                          className={`w-4 h-4 ${
-                                            i < Math.floor(plan.rating!) 
-                                              ? 'text-yellow-500' 
-                                              : 'text-gray-300'
-                                          }`}
-                                        />
-                                      ))}
-                                    </div>
-                                    <span className="text-sm font-medium">{plan.rating}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      ({plan.reviewCount.toLocaleString()} reviews)
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Pricing */}
-                              <div className="text-right">
-                                <div className="text-xl font-bold text-primary">
-                                  ${Math.round(convertPriceByPaymentMode(calculateDiscountedPrice(plan)))}{getPaymentLabel()}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Age {plan.age || 65}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Features */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {plan.features && plan.features.slice(0, 4).map((feature: string, index: number) => (
-                                <div key={index} className="flex items-center gap-2 text-sm">
-                                  <CheckIcon className="w-4 h-4 text-green-600 shrink-0" />
-                                  <span className="text-muted-foreground">{feature}</span>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2 pt-4 border-t">
-                              <Button
-                                variant="default"
-                                onClick={() => addToCart(plan, currentCategory.id)}
-                                className="flex-1 min-w-[120px]"
-                              >
-                                Add to Cart
-                              </Button>
-                              <Button variant="outline" className="flex-1 min-w-[120px]">
-                                View Details
-                              </Button>
-                              <Button variant="outline" className="flex-1 min-w-[120px]">
-                                Compare
-                              </Button>
+                              {selectedQuotePlans.length > 1 && (
+                                <Badge variant="outline" className="text-xs">
+                                  From ${Math.round(convertPriceByPaymentMode(calculateDiscountedPrice(filteredQuotes[0])))}{getPaymentLabel()}
+                                </Badge>
+                              )}
                             </div>
                           </div>
+
+                          {/* Plans from this carrier - flexible layout that adjusts to content */}
+                          <div className={`space-y-6 md:space-y-0 ${
+                            filteredQuotes.length === 1 
+                              ? 'md:grid md:grid-cols-1'
+                              : filteredQuotes.length === 2
+                              ? 'md:grid md:grid-cols-2 md:gap-6' 
+                              : 'md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
+                          } md:gap-4`}>
+                            {(() => {
+                              // Group quotes by plan type within this carrier (only for selected plan types)
+                              const planGroups = filteredQuotes.reduce((groups: Record<string, any[]>, quote: any) => {
+                                const planType = quote.plan || 'Unknown';
+                                if (!groups[planType]) {
+                                  groups[planType] = [];
+                                }
+                                groups[planType].push(quote);
+                                return groups;
+                              }, {} as Record<string, any[]>);
+
+                              return Object.entries(planGroups).map(([planType, quotes], index: number) => {
+                                const quotesArray = quotes as any[];
+                                // Calculate price range for this plan type
+                                const premiums = quotesArray.map((q: any) => calculateDiscountedPrice(q));
+                                const minPremium = Math.min(...premiums);
+                                const maxPremium = Math.max(...premiums);
+                                const hasMultipleVersions = quotesArray.length > 1;
+                                
+                                // Get the best quote for this plan type (lowest premium)
+                                const bestQuote = quotesArray.find((q: any) => {
+                                  const premium = calculateDiscountedPrice(q);
+                                  return premium === minPremium;
+                                }) || quotesArray[0];
+
+                                return (
+                                  <div key={planType} className="flex flex-col p-6 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors h-full">
+                                    {/* Plan Header - Price only */}
+                                    <div className="flex items-baseline gap-1 mb-4">
+                                      <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">
+                                        {hasMultipleVersions ? 
+                                          `$${Math.round(convertPriceByPaymentMode(minPremium))}-$${Math.round(convertPriceByPaymentMode(maxPremium))}` : 
+                                          `$${Math.round(convertPriceByPaymentMode(minPremium))}`
+                                        }
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
+                                    </div>
+                                    
+                                    {/* Plan Details */}
+                                    <div className="flex-1 space-y-2">
+                                      <h4 className="font-semibold text-lg">
+                                        {bestQuote.plan_name || `Plan ${planType}`}
+                                      </h4>
+                                      {hasMultipleVersions && (
+                                        <p className="text-sm text-muted-foreground">
+                                          Multiple versions available
+                                        </p>
+                                      )}
+                                      {bestQuote.discounts && bestQuote.discounts.length > 0 && (
+                                        <p className="text-xs text-blue-600">
+                                          Available discounts: {bestQuote.discounts.map((d: any) => {
+                                            const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);
+                                            const value = d.type === 'percent' ? `${Math.round(d.value * 100)}%` : `$${d.value}`;
+                                            return `${name} (${value})`;
+                                          }).join(', ')}
+                                        </p>
+                                      )}
+                                      {bestQuote.effective_date && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Effective: {new Date(bestQuote.effective_date).toLocaleDateString()}
+                                        </p>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Action Button */}
+                                    <div className="mt-4">
+                                      <Button size="default" className="w-full" onClick={() => openPlanModal(filteredCarrierGroup)}>
+                                        Select Plan
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  }).filter(Boolean)
+                ) : (
+                  // Use mock data display for individual plans (simplified)
+                  displayData.data.map((plan: any) => (
+                    <Card key={plan.id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                              <Image
+                                src={getCachedLogoUrl(plan.name, plan.naic)}
+                                alt={`${plan.name} logo`}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-contain"
+                                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                  const target = e.currentTarget;
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    target.style.display = 'none';
+                                    const initials = plan.name
+                                      .split(' ')
+                                      .map((word: string) => word[0])
+                                      .join('')
+                                      .substring(0, 2)
+                                      .toUpperCase();
+                                    parent.innerHTML = `<span class="text-xs font-semibold text-gray-600">${initials}</span>`;
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-primary">{plan.name}</h3>
+                              <div className="text-sm text-muted-foreground">
+                                Plan {plan.plan} • {plan.category}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xl font-bold text-primary">
+                            ${Math.round(convertPriceByPaymentMode(calculateDiscountedPrice(plan)))}{getPaymentLabel()}
+                          </div>
+                          <Button
+                            variant="default"
+                            onClick={() => addToCart(plan, currentCategory.id)}
+                            className="w-full"
+                          >
+                            Add to Cart
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -2152,7 +2088,7 @@ export default function MedicareShopContent() {
             </div>
           )}
         </main>
-      </div>
+        </div>
       ) : (
         /* Simplified Landing Page with Instant Form */
         <div className="min-h-screen -mt-6 -mx-4 sm:-mx-6 lg:-mx-8">
