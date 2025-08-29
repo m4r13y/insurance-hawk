@@ -464,6 +464,7 @@ export default function MedicareShopContent() {
   const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
   const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
   const REAL_QUOTES_KEY = 'medicare_real_quotes'; // Now using localStorage instead of sessionStorage
+  const FILTER_STATE_KEY = 'medicare_filter_state';
 
   // Storage helper functions - using localStorage for better persistence
   const loadFromStorage = (key: string, defaultValue: any) => {
@@ -543,22 +544,40 @@ export default function MedicareShopContent() {
   const [selectedCategory, setSelectedCategory] = useState("medigap");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [savedPlans, setSavedPlans] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'popularity'>('popularity');
-  const [priceRange, setPriceRange] = useState([0, 500]);
-  const [selectedCoverageLevel, setSelectedCoverageLevel] = useState<string>('all');
+  
+  // Filter states - initialize with localStorage if available
+  const [searchQuery, setSearchQuery] = useState(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.searchQuery || ""
+  );
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'popularity'>(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.sortBy || 'popularity'
+  );
+  const [priceRange, setPriceRange] = useState(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.priceRange || [0, 500]
+  );
+  const [selectedCoverageLevel, setSelectedCoverageLevel] = useState<string>(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.selectedCoverageLevel || 'all'
+  );
   
   // Medigap plan filters for mock plans
-  const [selectedMedigapPlans, setSelectedMedigapPlans] = useState<string[]>(['plan-f', 'plan-g', 'plan-n']);
+  const [selectedMedigapPlans, setSelectedMedigapPlans] = useState<string[]>(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.selectedMedigapPlans || ['plan-f', 'plan-g', 'plan-n']
+  );
   
   // Real quote plan filters for results page
-  const [selectedQuotePlans, setSelectedQuotePlans] = useState<string[]>(['F', 'G', 'N']);
+  const [selectedQuotePlans, setSelectedQuotePlans] = useState<string[]>(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.selectedQuotePlans || ['F', 'G', 'N']
+  );
 
   // Discount toggle state
-  const [applyDiscounts, setApplyDiscounts] = useState(false);
+  const [applyDiscounts, setApplyDiscounts] = useState(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.applyDiscounts || false
+  );
 
   // Payment mode state
-  const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
+  const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>(() => 
+    loadFromStorage(FILTER_STATE_KEY, {})?.paymentMode || 'monthly'
+  );
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -601,6 +620,23 @@ export default function MedicareShopContent() {
       saveToStorage(REAL_QUOTES_KEY, realQuotes);
     }
   }, [realQuotes, isInitializing]);
+
+  // Save filter state to localStorage whenever filters change (but not during initialization)
+  useEffect(() => {
+    if (!isInitializing) {
+      const filterState = {
+        searchQuery,
+        sortBy,
+        priceRange,
+        selectedCoverageLevel,
+        selectedMedigapPlans,
+        selectedQuotePlans,
+        applyDiscounts,
+        paymentMode
+      };
+      saveToStorage(FILTER_STATE_KEY, filterState);
+    }
+  }, [searchQuery, sortBy, priceRange, selectedCoverageLevel, selectedMedigapPlans, selectedQuotePlans, applyDiscounts, paymentMode, isInitializing]);
 
   // Initialize all localStorage data on component mount
   useEffect(() => {
@@ -914,6 +950,7 @@ export default function MedicareShopContent() {
       localStorage.removeItem(QUOTE_FORM_DATA_KEY);
       localStorage.removeItem(QUOTE_FORM_COMPLETED_KEY);
       localStorage.removeItem(REAL_QUOTES_KEY);
+      localStorage.removeItem(FILTER_STATE_KEY);
       // Clean up any other Medicare-related data
       cleanupOldStorage();
     }
@@ -928,6 +965,16 @@ export default function MedicareShopContent() {
     setQuoteFormCompleted(false);
     setRealQuotes([]);
     
+    // Reset filter states to defaults
+    setSearchQuery('');
+    setSortBy('popularity');
+    setPriceRange([0, 500]);
+    setSelectedCoverageLevel('all');
+    setSelectedMedigapPlans(['plan-f', 'plan-g', 'plan-n']);
+    setSelectedQuotePlans(['F', 'G', 'N']);
+    setApplyDiscounts(false);
+    setPaymentMode('monthly');
+    
     // Update URL to remove step parameter
     const newUrl = pathname;
     window.history.replaceState(null, '', newUrl);
@@ -939,11 +986,13 @@ export default function MedicareShopContent() {
     console.log('LocalStorage - Form Data:', localStorage.getItem(QUOTE_FORM_DATA_KEY));
     console.log('LocalStorage - Form Completed:', localStorage.getItem(QUOTE_FORM_COMPLETED_KEY));
     console.log('LocalStorage - Real Quotes:', localStorage.getItem(REAL_QUOTES_KEY));
+    console.log('LocalStorage - Filter State:', localStorage.getItem(FILTER_STATE_KEY));
     console.log('LocalStorage - Plan Details:', localStorage.getItem('planDetailsData'));
     console.log('LocalStorage - Quotes Backup:', localStorage.getItem('medicare_quotes_backup'));
     console.log('State - quoteFormCompleted:', quoteFormCompleted);
     console.log('State - realQuotes length:', realQuotes.length);
     console.log('State - isInitializing:', isInitializing);
+    console.log('State - selectedQuotePlans:', selectedQuotePlans);
   };
 
   // Make debug function available globally for testing
@@ -1345,32 +1394,6 @@ export default function MedicareShopContent() {
                 </Badge>
               )}
               
-              {/* User Info Display */}
-              <div className="flex items-center gap-3 px-3 py-2 bg-muted/50 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <PersonIcon className="w-4 h-4 text-muted-foreground" />
-                  <div className="text-sm">
-                    <div className="font-medium">
-                      {quoteFormData.firstName || 'Member'}, {quoteFormData.age}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {quoteFormData.zipCode} • {quoteFormData.gender === 'male' ? 'Male' : 'Female'}
-                      {quoteFormData.tobaccoUse && ' • Tobacco'}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    // Reset form to allow editing and clear localStorage
-                    clearStorageAndReset();
-                  }}
-                  className="p-1 h-auto"
-                >
-                  <ActivityLogIcon className="w-3 h-3" />
-                </Button>
-              </div>
             </div>
           </div>
         </div>
@@ -1405,64 +1428,53 @@ export default function MedicareShopContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Categories */}
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground mb-3">Plan Categories</h4>
-                  <div className="space-y-1">
-                    {productCategories.map((category) => {
-                      const isActive = selectedCategory === category.id;
-                      
-                      // For Medigap, show count of real quotes when available, otherwise show default plan count
-                      let planCount = category.plans.length;
-                      
-                      if (category.id === 'medigap' && realQuotes.length > 0) {
-                        // Filter quotes based on current filters (same logic as the main display)
-                        const filteredQuotes = realQuotes.filter(quote => {
-                          const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
-                          
-                          if (searchQuery && matchesPlan) {
-                            const carrierName = quote.carrier?.name || 
-                                               quote.company_base?.name ||
-                                               quote.company ||
-                                               'Unknown Carrier';
-                            return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
-                          }
-                          
-                          return matchesPlan;
-                        });
-                        
-                        planCount = filteredQuotes.length;
-                      }
-                      return (
-                        <button
-                          key={category.id}
-                          onClick={() => handleCategorySelect(category.id)}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                            isActive
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{category.name}</span>
-                              {category.isPopular && (
-                                <StarFilledIcon className="w-3 h-3 text-yellow-500" />
-                              )}
-                            </div>
-                            <span className="text-xs opacity-70">{planCount}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                {/* User Details - moved from top right */}
+                {quoteFormData && (quoteFormData.age || quoteFormData.zipCode || quoteFormData.gender) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Your Information</h4>
+                    <div className="space-y-2 text-sm">
+                      {quoteFormData.age && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Age:</span>
+                          <span className="font-medium">{quoteFormData.age}</span>
+                        </div>
+                      )}
+                      {quoteFormData.gender && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Gender:</span>
+                          <span className="font-medium">{quoteFormData.gender === 'male' ? 'Male' : 'Female'}</span>
+                        </div>
+                      )}
+                      {quoteFormData.zipCode && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Zip Code:</span>
+                          <span className="font-medium">{quoteFormData.zipCode}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Separator />
 
                 {/* Filter Controls */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-foreground">Refine Results</h4>
+                  
+                  {/* Apply Discounts Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Discounts</label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="apply-discounts"
+                        checked={applyDiscounts}
+                        onCheckedChange={(checked) => setApplyDiscounts(checked as boolean)}
+                      />
+                      <label htmlFor="apply-discounts" className="text-sm">
+                        Apply Discounts
+                      </label>
+                    </div>
+                  </div>
                   
                   {/* Sort By */}
                   <div>
@@ -1606,21 +1618,6 @@ export default function MedicareShopContent() {
                     </div>
                   </div>
 
-                  {/* Apply Discounts Toggle */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Discounts</label>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="apply-discounts"
-                        checked={applyDiscounts}
-                        onCheckedChange={(checked) => setApplyDiscounts(checked as boolean)}
-                      />
-                      <label htmlFor="apply-discounts" className="text-sm">
-                        Apply Discounts
-                      </label>
-                    </div>
-                  </div>
-
                   {/* Payment Mode */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Payment Mode</label>
@@ -1741,67 +1738,108 @@ export default function MedicareShopContent() {
                   </p>
                 </div>
                 
-                {/* Plan Type Checkboxes for Medigap */}
-                {selectedCategory === 'medigap' && realQuotes.length > 0 ? (
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
+                {/* Plan Categories Dropdown and Plan Types */}
+                <div className="space-y-3">
+                  {/* Plan Categories Dropdown */}
+                  <div>
+                    <Select value={selectedCategory} onValueChange={(value) => handleCategorySelect(value)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select plan category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productCategories.map((category) => {
+                          // For Medigap, show count of real quotes when available
+                          let planCount = category.plans.length;
+                          if (category.id === 'medigap' && realQuotes.length > 0) {
+                            const filteredQuotes = realQuotes.filter(quote => {
+                              const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
+                              if (searchQuery && matchesPlan) {
+                                const carrierName = quote.carrier?.name || 
+                                                   quote.company_base?.name ||
+                                                   quote.company ||
+                                                   'Unknown Carrier';
+                                return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
+                              }
+                              return matchesPlan;
+                            });
+                            planCount = filteredQuotes.length;
+                          }
+                          
+                          return (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                  <span>{category.name}</span>
+                                  {category.isPopular && (
+                                    <StarFilledIcon className="w-3 h-3 text-yellow-500" />
+                                  )}
+                                </div>
+                                <span className="text-xs text-muted-foreground ml-2">({planCount})</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Plan Types Checkboxes for Medigap */}
+                  {selectedCategory === 'medigap' && realQuotes.length > 0 && (
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-f"
-                          checked={selectedQuotePlans.includes('F')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedQuotePlans([...selectedQuotePlans, 'F']);
-                            } else {
-                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-g"
-                          checked={selectedQuotePlans.includes('G')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedQuotePlans([...selectedQuotePlans, 'G']);
-                            } else {
-                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-n"
-                          checked={selectedQuotePlans.includes('N')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedQuotePlans([...selectedQuotePlans, 'N']);
-                            } else {
-                              setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
+                      <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="header-plan-f"
+                            checked={selectedQuotePlans.includes('F')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedQuotePlans([...selectedQuotePlans, 'F']);
+                              } else {
+                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="header-plan-g"
+                            checked={selectedQuotePlans.includes('G')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedQuotePlans([...selectedQuotePlans, 'G']);
+                              } else {
+                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="header-plan-n"
+                            checked={selectedQuotePlans.includes('N')}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedQuotePlans([...selectedQuotePlans, 'N']);
+                              } else {
+                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
+                              }
+                            }}
+                          />
+                          <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : currentCategory.isPopular ? (
-                  <Badge variant="secondary" className="flex items-center gap-1 w-fit">
-                    <StarFilledIcon className="w-3 h-3" />
-                    Popular Category
-                  </Badge>
-                ) : null}
+                  )}
+                </div>
               </div>
 
               {/* Product Grid - Always use grouped display, adjust grid based on selected plan types */}
               <div className={`grid gap-6 ${
                 selectedQuotePlans.length === 1 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                  ? 'grid-cols-1 sm:grid-cols-2' 
                   : 'grid-cols-1'
               }`}>
                 {displayData.type === 'grouped' ? (
@@ -1822,7 +1860,7 @@ export default function MedicareShopContent() {
                     };
                     
                     return (
-                      <Card key={carrierGroup.carrierId} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
+                      <Card key={`${carrierGroup.carrierId}-${selectedQuotePlans.join('-')}`} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
                         <CardContent className="p-6">
                           {/* Carrier Header */}
                           <div className="mb-6 pb-4 border-b">
@@ -1869,9 +1907,9 @@ export default function MedicareShopContent() {
 
                           {/* Plans from this carrier - flexible layout that adjusts to content */}
                           <div className={`space-y-6 md:space-y-0 ${
-                            filteredQuotes.length === 1 
+                            selectedQuotePlans.length === 1 
                               ? 'md:grid md:grid-cols-1'
-                              : filteredQuotes.length === 2
+                              : selectedQuotePlans.length === 2
                               ? 'md:grid md:grid-cols-2 md:gap-6' 
                               : 'md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
                           } md:gap-4`}>
@@ -1901,10 +1939,14 @@ export default function MedicareShopContent() {
                                 }) || quotesArray[0];
 
                                 return (
-                                  <div key={planType} className="flex flex-col p-6 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors h-full">
+                                  <div key={planType} className="flex flex-col p-6 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors h-full min-h-[300px]">
                                     {/* Plan Header - Price only */}
                                     <div className="flex items-baseline gap-1 mb-4">
-                                      <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">
+                                      <div className={`font-bold text-primary ${
+                                        selectedQuotePlans.length === 2 
+                                          ? 'text-2xl md:text-3xl' 
+                                          : 'text-2xl md:text-2xl lg:text-3xl'
+                                      }`}>
                                         {hasMultipleVersions ? 
                                           `$${Math.round(convertPriceByPaymentMode(minPremium))}-$${Math.round(convertPriceByPaymentMode(maxPremium))}` : 
                                           `$${Math.round(convertPriceByPaymentMode(minPremium))}`
@@ -1913,10 +1955,10 @@ export default function MedicareShopContent() {
                                       <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
                                     </div>
                                     
-                                    {/* Plan Details */}
-                                    <div className="flex-1 space-y-2">
+                                    {/* Plan Details - flex-grow to push button to bottom */}
+                                    <div className="flex-grow space-y-2 mb-4">
                                       <h4 className="font-semibold text-lg">
-                                        {bestQuote.plan_name || `Plan ${planType}`}
+                                        Plan {planType}
                                       </h4>
                                       {hasMultipleVersions && (
                                         <p className="text-sm text-muted-foreground">
@@ -1939,8 +1981,8 @@ export default function MedicareShopContent() {
                                       )}
                                     </div>
                                     
-                                    {/* Action Button */}
-                                    <div className="mt-4">
+                                    {/* Action Button - always at bottom */}
+                                    <div className="mt-auto">
                                       <Button size="default" className="w-full" onClick={() => openPlanModal(filteredCarrierGroup)}>
                                         Select Plan
                                       </Button>
