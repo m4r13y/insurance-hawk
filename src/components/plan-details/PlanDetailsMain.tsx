@@ -43,10 +43,20 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     if (returnUrl) {
       // Clear the stored return URL
       localStorage.removeItem('planDetailsReturnUrl');
-      router.push(returnUrl);
+      
+      // Ensure the return URL includes step=results to show quotes
+      let finalReturnUrl = returnUrl;
+      if (!returnUrl.includes('step=results')) {
+        const separator = returnUrl.includes('?') ? '&' : '?';
+        finalReturnUrl = `${returnUrl}${separator}step=results`;
+      }
+      
+      router.push(finalReturnUrl);
     } else {
-      // Fallback to Medicare shop page if no return URL stored
-      router.push('/medicare/shop');
+      // Fallback to Medicare shop page with results step if quotes exist
+      const hasQuotes = localStorage.getItem('medicare_real_quotes');
+      const fallbackUrl = hasQuotes ? '/medicare/shop?step=results' : '/medicare/shop';
+      router.push(fallbackUrl);
     }
   };
 

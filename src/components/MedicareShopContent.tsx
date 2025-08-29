@@ -479,6 +479,7 @@ export default function MedicareShopContent() {
 
   const saveToStorage = (key: string, value: any) => {
     if (typeof window === 'undefined') return;
+    console.log('💾 SAVING to localStorage:', key, '=', typeof value === 'object' ? `[${Array.isArray(value) ? value.length : 'object'}]` : value);
     try {
       const dataString = JSON.stringify(value);
       
@@ -579,27 +580,38 @@ export default function MedicareShopContent() {
   const [realQuotes, setRealQuotes] = useState<MedigapQuote[]>([]);
   const [quotesError, setQuotesError] = useState<string | null>(null);
   
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage whenever it changes (but not during initialization)
   useEffect(() => {
-    saveToStorage(QUOTE_FORM_DATA_KEY, quoteFormData);
-  }, [quoteFormData]);
+    if (!isInitializing) {
+      saveToStorage(QUOTE_FORM_DATA_KEY, quoteFormData);
+    }
+  }, [quoteFormData, isInitializing]);
 
-  // Save completion status to localStorage whenever it changes
+  // Save completion status to localStorage whenever it changes (but not during initialization)
   useEffect(() => {
-    saveToStorage(QUOTE_FORM_COMPLETED_KEY, quoteFormCompleted);
-  }, [quoteFormCompleted]);
+    if (!isInitializing) {
+      saveToStorage(QUOTE_FORM_COMPLETED_KEY, quoteFormCompleted);
+    }
+  }, [quoteFormCompleted, isInitializing]);
 
-  // Save real quotes to localStorage whenever they change
+  // Save real quotes to localStorage whenever they change (but not during initialization)
   useEffect(() => {
-    console.log('💾 Saving realQuotes to localStorage:', realQuotes.length, 'quotes');
-    saveToStorage(REAL_QUOTES_KEY, realQuotes);
-  }, [realQuotes]);
+    if (!isInitializing) {
+      console.log('💾 Saving realQuotes to localStorage:', realQuotes.length, 'quotes');
+      saveToStorage(REAL_QUOTES_KEY, realQuotes);
+    }
+  }, [realQuotes, isInitializing]);
 
   // Initialize all localStorage data on component mount
   useEffect(() => {
     try {
-      // Clean up old data first
-      cleanupOldStorage();
+      // Clean up old data first - BUT NOT during navigation back from plan details
+      const isNavigatingBackFromPlanDetails = localStorage.getItem('planDetailsData');
+      if (!isNavigatingBackFromPlanDetails) {
+        cleanupOldStorage();
+      } else {
+        console.log('🔄 Skipping cleanup - detected navigation back from plan details');
+      }
       
       // Check URL parameters first using Next.js hook
       console.log('🔍 URL step parameter:', stepParam);
@@ -607,10 +619,18 @@ export default function MedicareShopContent() {
       
       // Initialize form completion status
       const savedCompleted = localStorage.getItem(QUOTE_FORM_COMPLETED_KEY);
+      const savedQuotes = localStorage.getItem(REAL_QUOTES_KEY);
+      
+      console.log('� Initialization - savedCompleted:', savedCompleted, 'savedQuotes:', !!savedQuotes);
+      
       if (savedCompleted) {
         const parsedValue = JSON.parse(savedCompleted);
         console.log('🔄 Restoring quoteFormCompleted:', parsedValue);
         setQuoteFormCompleted(parsedValue);
+      } else if (stepParam === 'results' && savedQuotes) {
+        // If URL indicates results and we have quotes, set form as completed
+        console.log('🔄 URL indicates results and quotes exist - setting form as completed');
+        setQuoteFormCompleted(true);
       } else if (stepParam === 'results') {
         // If URL indicates results but no localStorage data, something went wrong
         console.log('🔄 URL indicates results but no localStorage data found - redirecting to form');
@@ -630,7 +650,6 @@ export default function MedicareShopContent() {
       }
 
       // Initialize real quotes
-      const savedQuotes = localStorage.getItem(REAL_QUOTES_KEY);
       if (savedQuotes) {
         const parsedQuotes = JSON.parse(savedQuotes);
         console.log('🔄 Restoring realQuotes:', parsedQuotes.length, 'quotes');
@@ -658,6 +677,24 @@ export default function MedicareShopContent() {
       setIsInitializing(false);
     }
   }, [stepParam]);
+  
+  // Additional safeguard: if we have quotes but form isn't marked as completed, fix the state
+  useEffect(() => {
+    if (!isInitializing && realQuotes.length > 0 && !quoteFormCompleted) {
+      console.log('🔧 Found quotes but form not marked as completed - fixing state');
+      setQuoteFormCompleted(true);
+      saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
+    }
+  }, [isInitializing, realQuotes.length, quoteFormCompleted]);
+  
+  // Ensure URL shows step=results when we have completed quotes
+  useEffect(() => {
+    if (!isInitializing && quoteFormCompleted && realQuotes.length > 0 && stepParam !== 'results') {
+      console.log('🔧 Form completed with quotes but URL missing step=results - updating URL');
+      const newUrl = `${pathname}?step=results${selectedCategory ? `&category=${selectedCategory}` : ''}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [isInitializing, quoteFormCompleted, realQuotes.length, stepParam, pathname, selectedCategory]);
   
   const currentCategory = productCategories.find(cat => cat.id === selectedCategory);
 
@@ -855,6 +892,9 @@ export default function MedicareShopContent() {
       
       // Mark form as completed
       setQuoteFormCompleted(true);
+      
+      // Immediately save the completion status to localStorage to ensure persistence
+      saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
       
       // Update URL to indicate results are shown
       const newUrl = `${pathname}?step=results${selectedCategory ? `&category=${selectedCategory}` : ''}`;
