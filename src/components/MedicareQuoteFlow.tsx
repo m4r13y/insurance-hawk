@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowRight, ArrowLeft, Check, User, Users, Building, UserCheck, Heart, Shield, Phone, DollarSign, Calendar, MapPin, Stethoscope, Pill } from "lucide-react"
+import { ArrowRight, ArrowLeft, Check, User, Users, Building, UserCheck, Heart, Shield, Phone, DollarSign, Calendar, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 
 // Medicare status options
 const medicareStatus = [
@@ -35,11 +35,9 @@ const medicareStatus = [
 // Plan categories for browsing/selection
 const planCategories = [
   { id: "medigap", name: "Medicare Supplement (Medigap)", description: "Fill gaps in Original Medicare" },
-  { id: "advantage", name: "Medicare Advantage", description: "All-in-one alternative to Original Medicare" },
+  { id: "advantage", name: "Medicare Advantage", description: "Alternative to Original Medicare" },
   { id: "partd", name: "Part D (Prescription Drugs)", description: "Prescription drug coverage" },
-  { id: "dental", name: "Dental Insurance", description: "Dental coverage options" },
-  { id: "vision", name: "Cancer Insurance", description: "Critical illness coverage" },
-  { id: "hospital", name: "Hospital Indemnity", description: "Cash benefits for hospital stays" },
+  { id: "additional", name: "Additional Options", description: "Dental, cancer, and hospital indemnity coverage" },
 ]
 
 // Medigap plan types for selection
@@ -64,6 +62,28 @@ const medigapPlanTypes = [
     description: "Budget-friendly option",
     features: ["Good coverage", "Small copays", "Lower premiums"],
     popular: false
+  }
+]
+
+// Additional options for selection
+const additionalOptions = [
+  {
+    id: "dental",
+    name: "Dental Insurance",
+    description: "Routine cleanings, fillings, and major dental work",
+    features: ["Preventive care", "Basic procedures", "Major services"]
+  },
+  {
+    id: "cancer",
+    name: "Cancer Insurance", 
+    description: "Critical illness coverage for cancer, heart attack, and stroke",
+    features: ["Lump sum benefits", "Treatment support", "Recovery assistance"]
+  },
+  {
+    id: "hospital",
+    name: "Hospital Indemnity",
+    description: "Cash benefits for hospital stays and medical events",
+    features: ["Daily hospital benefits", "Emergency room coverage", "Outpatient surgery"]
   }
 ]
 
@@ -150,19 +170,22 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     medicareStatus: "",
     planCategories: [] as string[],
     selectedMedigapPlans: [] as string[],
+    selectedAdditionalOptions: [] as string[],
     newMedicareChoice: "",
     currentMedicareType: "",
     supplementAction: "",
     advantageAction: "",
-    needsDoctorCheck: false,
-    needsMedicationCheck: false,
+    doctorsSkipped: false,
+    medicationsSkipped: false,
     doctors: [] as string[],
     medications: [] as string[],
     currentPlan: "",
     age: "",
     gender: "",
     zipCode: "",
+    state: "",
     tobaccoUse: null as boolean | null,
+    benefitAmount: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -174,11 +197,22 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
   const getSteps = () => {
     // Quick mode: skip Medicare status and go directly to plan selection
     if (mode === 'quick') {
-      // For quick mode, if medigap is selected, add plan selection step
+      let steps = ["Plan Categories"];
+      // Add Medigap plan selection if medigap is selected
       if (formData.planCategories.includes('medigap')) {
-        return ["Plan Categories", "Medigap Plans", "Personal Information"];
+        steps.push("Medigap Plans");
       }
-      return ["Plan Categories", "Personal Information"];
+      // Add doctor/medication steps if advantage is selected
+      if (formData.planCategories.includes('advantage')) {
+        steps.push("Doctors");
+        steps.push("Medications");
+      }
+      // Add Additional Options selection if additional is selected
+      if (formData.planCategories.includes('additional')) {
+        steps.push("Additional Options");
+      }
+      steps.push("Personal Information");
+      return steps;
     }
     
     let steps = ["Medicare Status"]
@@ -189,6 +223,15 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
       if (formData.planCategories.includes('medigap')) {
         steps.push("Medigap Plans")
       }
+      // Add doctor/medication steps if advantage is selected
+      if (formData.planCategories.includes('advantage')) {
+        steps.push("Doctors")
+        steps.push("Medications")
+      }
+      // Add Additional Options selection if additional is selected
+      if (formData.planCategories.includes('additional')) {
+        steps.push("Additional Options")
+      }
       steps.push("Personal Information")
     } else if (formData.medicareStatus === "new") {
       if (formData.newMedicareChoice === "know-what-want") {
@@ -196,6 +239,15 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         // Add Medigap plan selection if medigap is selected
         if (formData.planCategories.includes('medigap')) {
           steps.push("Medigap Plans")
+        }
+        // Add doctor/medication steps if advantage is selected
+        if (formData.planCategories.includes('advantage')) {
+          steps.push("Doctors")
+          steps.push("Medications")
+        }
+        // Add Additional Options selection if additional is selected
+        if (formData.planCategories.includes('additional')) {
+          steps.push("Additional Options")
         }
         steps.push("Personal Information")
       } else if (formData.newMedicareChoice === "unsure") {
@@ -207,6 +259,13 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
           steps.push("Plan Selection")
           if (formData.planCategories.includes('medigap')) {
             steps.push("Medigap Plans")
+          }
+          if (formData.planCategories.includes('advantage')) {
+            steps.push("Doctors")
+            steps.push("Medications")
+          }
+          if (formData.planCategories.includes('additional')) {
+            steps.push("Additional Options")
           }
           steps.push("Personal Information")
         } else if (formData.newMedicareChoice === "unsure") {
@@ -222,8 +281,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         }
       } else if (formData.currentMedicareType === "advantage") {
         if (formData.advantageAction === "new-advantage") {
-          if (formData.needsDoctorCheck) steps.push("Doctors")
-          if (formData.needsMedicationCheck) steps.push("Medications")
+          steps.push("Doctors")
+          steps.push("Medications")
           steps.push("Personal Information")
         } else if (formData.advantageAction === "fill-gaps") {
           steps.push("Current Plan", "Personal Information")
@@ -274,6 +333,16 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
+      const nextStepIndex = currentStep + 1;
+      const nextStepName = steps[nextStepIndex];
+      
+      // Initialize arrays when entering Doctors or Medications steps
+      if (nextStepName === "Doctors" && formData.doctors.length === 0) {
+        setFormData(prev => ({ ...prev, doctors: [""], doctorsSkipped: false }));
+      } else if (nextStepName === "Medications" && formData.medications.length === 0) {
+        setFormData(prev => ({ ...prev, medications: [""], medicationsSkipped: false }));
+      }
+      
       setCurrentStep(currentStep + 1)
     } else {
       // Complete the flow
@@ -310,17 +379,28 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     }))
   }
 
+  const toggleAdditionalOption = (optionId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedAdditionalOptions: prev.selectedAdditionalOptions.includes(optionId)
+        ? prev.selectedAdditionalOptions.filter(id => id !== optionId)
+        : [...prev.selectedAdditionalOptions, optionId]
+    }))
+  }
+
   const addDoctor = () => {
     setFormData(prev => ({
       ...prev,
-      doctors: [...prev.doctors, ""]
+      doctors: [...prev.doctors, ""],
+      doctorsSkipped: false // Reset skip state when adding doctors
     }))
   }
 
   const updateDoctor = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      doctors: prev.doctors.map((doc, i) => i === index ? value : doc)
+      doctors: prev.doctors.map((doc, i) => i === index ? value : doc),
+      doctorsSkipped: false // Reset skip state when user starts entering doctors
     }))
   }
 
@@ -334,14 +414,16 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
   const addMedication = () => {
     setFormData(prev => ({
       ...prev,
-      medications: [...prev.medications, ""]
+      medications: [...prev.medications, ""],
+      medicationsSkipped: false // Reset skip state when adding medications
     }))
   }
 
   const updateMedication = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      medications: prev.medications.map((med, i) => i === index ? value : med)
+      medications: prev.medications.map((med, i) => i === index ? value : med),
+      medicationsSkipped: false // Reset skip state when user starts entering medications
     }))
   }
 
@@ -349,6 +431,77 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     setFormData(prev => ({
       ...prev,
       medications: prev.medications.filter((_, i) => i !== index)
+    }))
+  }
+
+  const skipMedications = () => {
+    setFormData(prev => ({
+      ...prev,
+      medicationsSkipped: true,
+      medications: []
+    }))
+  }
+
+  // Helper function to determine required fields based on selected plans
+  const getRequiredFields = () => {
+    const fields = {
+      zipCode: false,
+      state: false,
+      gender: false,
+      age: false,
+      tobaccoUse: false,
+      benefitAmount: false
+    }
+
+    // Check selected plan categories
+    const hasAdvantage = formData.planCategories.includes('advantage')
+    const hasMedigap = formData.planCategories.includes('medigap')
+    const hasPartD = formData.planCategories.includes('partd')
+    
+    // Check selected additional options
+    const hasDental = formData.selectedAdditionalOptions.includes('dental')
+    const hasCancer = formData.selectedAdditionalOptions.includes('cancer')
+    const hasHospital = formData.selectedAdditionalOptions.includes('hospital')
+
+    // Apply requirements based on the breakdown:
+    // Zip Code: All (Except Cancer)
+    if (hasAdvantage || hasMedigap || hasPartD || hasDental || hasHospital) {
+      fields.zipCode = true
+    }
+    
+    // State: Cancer
+    if (hasCancer) {
+      fields.state = true
+    }
+    
+    // Gender: Med Supp, Dental, Final Expense, Cancer
+    if (hasMedigap || hasDental || hasCancer) {
+      fields.gender = true
+    }
+    
+    // Age: Med Supp, Dental, Final Expense, Cancer  
+    if (hasMedigap || hasDental || hasCancer) {
+      fields.age = true
+    }
+    
+    // Tobacco Use: Med Supp, Dental, Final Expense, Cancer
+    if (hasMedigap || hasDental || hasCancer) {
+      fields.tobaccoUse = true
+    }
+    
+    // Benefit Amount: Final Expense, Hospital Indemnity
+    if (hasHospital) {
+      fields.benefitAmount = true
+    }
+
+    return fields
+  }
+
+  const skipDoctors = () => {
+    setFormData(prev => ({
+      ...prev,
+      doctorsSkipped: true,
+      doctors: []
     }))
   }
 
@@ -364,6 +517,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         return formData.planCategories.length > 0
       case "Medigap Plans":
         return formData.selectedMedigapPlans.length > 0
+      case "Doctors":
+        return formData.doctorsSkipped || (formData.doctors.length > 0 && formData.doctors.some(doctor => doctor.trim() !== ""))
+      case "Medications":
+        return formData.medicationsSkipped || (formData.medications.length > 0 && formData.medications.some(med => med.trim() !== ""))
+      case "Additional Options":
+        return formData.selectedAdditionalOptions.length > 0
       case "Experience Level":
         return formData.newMedicareChoice !== ""
       case "Plan Selection":
@@ -375,7 +534,17 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
       case "Advantage Action":
         return formData.advantageAction !== ""
       case "Personal Information":
-        return formData.age && formData.gender && formData.zipCode && formData.tobaccoUse !== null
+        const requiredFields = getRequiredFields()
+        const validations = []
+        
+        if (requiredFields.zipCode && !formData.zipCode) validations.push(false)
+        if (requiredFields.state && !formData.state) validations.push(false)
+        if (requiredFields.gender && !formData.gender) validations.push(false)
+        if (requiredFields.age && !formData.age) validations.push(false)
+        if (requiredFields.tobaccoUse && formData.tobaccoUse === null) validations.push(false)
+        if (requiredFields.benefitAmount && !formData.benefitAmount) validations.push(false)
+        
+        return validations.length === 0
       default:
         return true
     }
@@ -530,6 +699,54 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
               </motion.div>
             )}
 
+            {/* Additional Options Step */}
+            {steps[currentStep] === "Additional Options" && (
+              <motion.div
+                key="additional-options"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex-1"
+              >
+                <h2 className="text-3xl font-bold text-foreground mb-4">Which additional options interest you?</h2>
+                <p className="text-muted-foreground mb-8">Select the supplemental coverage options you'd like to explore. Each provides different benefits to complement your Medicare coverage.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {additionalOptions.map((option) => (
+                    <motion.button
+                      key={option.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => toggleAdditionalOption(option.id)}
+                      className={`p-6 rounded-xl border transition-all duration-200 text-left ${
+                        formData.selectedAdditionalOptions.includes(option.id)
+                          ? "bg-primary/20 border-primary/50 text-foreground"
+                          : "bg-background/50 border-border text-foreground/80 hover:border-border/80"
+                      }`}
+                    >
+                      <div className="flex flex-col space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold text-lg">{option.name}</div>
+                          {formData.selectedAdditionalOptions.includes(option.id) && (
+                            <Check className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="text-sm opacity-70">{option.description}</div>
+                        <div className="space-y-1">
+                          {option.features.map((feature, index) => (
+                            <div key={index} className="text-xs opacity-60 flex items-center gap-1">
+                              <span className="w-1 h-1 bg-current rounded-full"></span>
+                              {feature}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* Experience Level for New Medicare Users */}
             {steps[currentStep] === "Experience Level" && (
               <motion.div
@@ -563,6 +780,146 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
               </motion.div>
             )}
 
+            {/* Doctors Step */}
+            {steps[currentStep] === "Doctors" && (
+              <motion.div
+                key="doctors"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex-1"
+              >
+                <h2 className="text-3xl font-bold text-foreground mb-4">Tell us about your doctors</h2>
+                <p className="text-muted-foreground mb-8">Add your current healthcare providers so we can check if they're in-network with Medicare Advantage plans.</p>
+
+                {formData.doctorsSkipped ? (
+                  <div className="text-center py-8">
+                    <div className="bg-muted/50 rounded-lg p-6 mb-4">
+                      <p className="text-foreground font-medium mb-2">Doctor check skipped</p>
+                      <p className="text-muted-foreground text-sm">You can add doctors later or check network coverage after enrollment.</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setFormData(prev => ({ ...prev, doctorsSkipped: false, doctors: [""] }))}
+                    >
+                      Add Doctors Instead
+                    </Button>
+                  </div>
+                ) : (
+                <div className="space-y-4 mb-8">
+                  {formData.doctors.map((doctor, index) => (
+                    <div key={index} className="flex gap-3">
+                      <Input
+                        placeholder="e.g., Dr. Smith Cardiology, Main Street Family Practice"
+                        value={doctor}
+                        onChange={(e) => updateDoctor(index, e.target.value)}
+                        className="flex-1"
+                      />
+                      {formData.doctors.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeDoctor(index)}
+                          className="shrink-0"
+                        >
+                          ×
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    onClick={addDoctor}
+                    className="w-full"
+                  >
+                    + Add Another Doctor
+                  </Button>
+                  
+                  <div className="text-center pt-4">
+                    <Button
+                      variant="ghost"
+                      onClick={skipDoctors}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      Skip - I'll check this later
+                    </Button>
+                  </div>
+                </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Medications Step */}
+            {steps[currentStep] === "Medications" && (
+              <motion.div
+                key="medications"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex-1"
+              >
+                <h2 className="text-3xl font-bold text-foreground mb-4">Tell us about your medications</h2>
+                <p className="text-muted-foreground mb-8">Add your current prescriptions so we can check drug coverage and costs across different Medicare Advantage plans.</p>
+
+                {formData.medicationsSkipped ? (
+                  <div className="text-center py-8">
+                    <div className="bg-muted/50 rounded-lg p-6 mb-4">
+                      <p className="text-foreground font-medium mb-2">Medication check skipped</p>
+                      <p className="text-muted-foreground text-sm">You can add medications later or check drug coverage after enrollment.</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setFormData(prev => ({ ...prev, medicationsSkipped: false, medications: [""] }))}
+                    >
+                      Add Medications Instead
+                    </Button>
+                  </div>
+                ) : (
+                <div className="space-y-4 mb-8">
+                  {formData.medications.map((medication, index) => (
+                    <div key={index} className="flex gap-3">
+                      <Input
+                        placeholder="e.g., Metformin, Lisinopril, Atorvastatin"
+                        value={medication}
+                        onChange={(e) => updateMedication(index, e.target.value)}
+                        className="flex-1"
+                      />
+                      {formData.medications.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeMedication(index)}
+                          className="shrink-0"
+                        >
+                          ×
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    onClick={addMedication}
+                    className="w-full"
+                  >
+                    + Add Another Medication
+                  </Button>
+                  
+                  <div className="text-center pt-4">
+                    <Button
+                      variant="ghost"
+                      onClick={skipMedications}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      Skip - I'll check this later
+                    </Button>
+                  </div>
+                </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Personal Information Step */}
             {steps[currentStep] === "Personal Information" && (
               <motion.div
@@ -572,118 +929,218 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                 exit={{ opacity: 0, x: -20 }}
                 className="flex-1"
               >
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-foreground mb-4">Almost there!</h2>
-                  <p className="text-muted-foreground text-lg">
-                    We need some basic information to provide accurate quotes.
-                  </p>
-                </div>
+                <h2 className="text-3xl font-bold text-foreground mb-4">Almost there!</h2>
+                <p className="text-muted-foreground mb-8">
+                  We need some basic information to provide accurate quotes.
+                </p>
 
-                <Card className="bg-card backdrop-blur-sm shadow-xl border border-border max-w-2xl mx-auto">
-                  <CardContent className="p-8">
+                <div className="max-w-2xl mx-auto">
+                  <div className="p-8">
                     <div className="space-y-6">
-                      {/* Form Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Age */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">Your Age *</Label>
-                          <Input
-                            type="number"
-                            placeholder="65"
-                            min="60"
-                            max="100"
-                            className="text-lg py-3"
-                            value={formData.age}
-                            onChange={(e) => setFormData(prev => ({ 
-                              ...prev, 
-                              age: e.target.value 
-                            }))}
-                          />
-                        </div>
+                      {(() => {
+                        const requiredFields = getRequiredFields()
+                        return (
+                          <>
+                            {/* Form Grid */}
+                            <div className={`grid grid-cols-1 gap-6 ${
+                              Object.values(requiredFields).filter(Boolean).length === 1 && requiredFields.zipCode 
+                                ? 'max-w-sm mx-auto' 
+                                : 'md:grid-cols-2'
+                            }`}>
+                              {/* Age */}
+                              {requiredFields.age && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">Your Age *</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="65"
+                                    min="60"
+                                    max="100"
+                                    className="text-lg py-3"
+                                    value={formData.age}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      age: e.target.value 
+                                    }))}
+                                  />
+                                </div>
+                              )}
 
-                        {/* ZIP Code */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">ZIP Code *</Label>
-                          <Input
-                            type="text"
-                            placeholder="12345"
-                            maxLength={5}
-                            className="text-lg py-3"
-                            value={formData.zipCode}
-                            onChange={(e) => setFormData(prev => ({ 
-                              ...prev, 
-                              zipCode: e.target.value.replace(/\D/g, '')
-                            }))}
-                          />
-                        </div>
+                              {/* ZIP Code */}
+                              {requiredFields.zipCode && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">ZIP Code *</Label>
+                                  <Input
+                                    type="text"
+                                    placeholder="12345"
+                                    maxLength={5}
+                                    className="text-lg py-3"
+                                    value={formData.zipCode}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      zipCode: e.target.value.replace(/\D/g, '')
+                                    }))}
+                                  />
+                                </div>
+                              )}
 
-                        {/* Gender */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">Gender *</Label>
-                          <Select 
-                            value={formData.gender} 
-                            onValueChange={(value) => setFormData(prev => ({ 
-                              ...prev, 
-                              gender: value 
-                            }))}
-                          >
-                            <SelectTrigger className="text-lg py-3">
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                              {/* State */}
+                              {requiredFields.state && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">State *</Label>
+                                  <Select 
+                                    value={formData.state} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      state: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="text-lg py-3">
+                                      <SelectValue placeholder="Select state" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="AL">Alabama</SelectItem>
+                                      <SelectItem value="AK">Alaska</SelectItem>
+                                      <SelectItem value="AZ">Arizona</SelectItem>
+                                      <SelectItem value="AR">Arkansas</SelectItem>
+                                      <SelectItem value="CA">California</SelectItem>
+                                      <SelectItem value="CO">Colorado</SelectItem>
+                                      <SelectItem value="CT">Connecticut</SelectItem>
+                                      <SelectItem value="DE">Delaware</SelectItem>
+                                      <SelectItem value="FL">Florida</SelectItem>
+                                      <SelectItem value="GA">Georgia</SelectItem>
+                                      <SelectItem value="HI">Hawaii</SelectItem>
+                                      <SelectItem value="ID">Idaho</SelectItem>
+                                      <SelectItem value="IL">Illinois</SelectItem>
+                                      <SelectItem value="IN">Indiana</SelectItem>
+                                      <SelectItem value="IA">Iowa</SelectItem>
+                                      <SelectItem value="KS">Kansas</SelectItem>
+                                      <SelectItem value="KY">Kentucky</SelectItem>
+                                      <SelectItem value="LA">Louisiana</SelectItem>
+                                      <SelectItem value="ME">Maine</SelectItem>
+                                      <SelectItem value="MD">Maryland</SelectItem>
+                                      <SelectItem value="MA">Massachusetts</SelectItem>
+                                      <SelectItem value="MI">Michigan</SelectItem>
+                                      <SelectItem value="MN">Minnesota</SelectItem>
+                                      <SelectItem value="MS">Mississippi</SelectItem>
+                                      <SelectItem value="MO">Missouri</SelectItem>
+                                      <SelectItem value="MT">Montana</SelectItem>
+                                      <SelectItem value="NE">Nebraska</SelectItem>
+                                      <SelectItem value="NV">Nevada</SelectItem>
+                                      <SelectItem value="NH">New Hampshire</SelectItem>
+                                      <SelectItem value="NJ">New Jersey</SelectItem>
+                                      <SelectItem value="NM">New Mexico</SelectItem>
+                                      <SelectItem value="NY">New York</SelectItem>
+                                      <SelectItem value="NC">North Carolina</SelectItem>
+                                      <SelectItem value="ND">North Dakota</SelectItem>
+                                      <SelectItem value="OH">Ohio</SelectItem>
+                                      <SelectItem value="OK">Oklahoma</SelectItem>
+                                      <SelectItem value="OR">Oregon</SelectItem>
+                                      <SelectItem value="PA">Pennsylvania</SelectItem>
+                                      <SelectItem value="RI">Rhode Island</SelectItem>
+                                      <SelectItem value="SC">South Carolina</SelectItem>
+                                      <SelectItem value="SD">South Dakota</SelectItem>
+                                      <SelectItem value="TN">Tennessee</SelectItem>
+                                      <SelectItem value="TX">Texas</SelectItem>
+                                      <SelectItem value="UT">Utah</SelectItem>
+                                      <SelectItem value="VT">Vermont</SelectItem>
+                                      <SelectItem value="VA">Virginia</SelectItem>
+                                      <SelectItem value="WA">Washington</SelectItem>
+                                      <SelectItem value="WV">West Virginia</SelectItem>
+                                      <SelectItem value="WI">Wisconsin</SelectItem>
+                                      <SelectItem value="WY">Wyoming</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
 
-                        {/* Effective Date */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">When do you need coverage?</Label>
-                          <Input
-                            type="date"
-                            className="text-lg py-3"
-                            value={formData.effectiveDate}
-                            onChange={(e) => setFormData(prev => ({ 
-                              ...prev, 
-                              effectiveDate: e.target.value 
-                            }))}
-                          />
-                        </div>
-                      </div>
+                              {/* Gender */}
+                              {requiredFields.gender && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">Gender *</Label>
+                                  <Select 
+                                    value={formData.gender} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      gender: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="text-lg py-3">
+                                      <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="male">Male</SelectItem>
+                                      <SelectItem value="female">Female</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
 
-                      {/* Tobacco Use */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant={formData.tobaccoUse === false ? "default" : "outline"}
-                            size="default"
-                            onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: false }))}
-                            className="flex-1"
-                          >
-                            No
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={formData.tobaccoUse === true ? "default" : "outline"}
-                            size="default"
-                            onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: true }))}
-                            className="flex-1"
-                          >
-                            Yes
-                          </Button>
-                        </div>
-                      </div>
+                              {/* Benefit Amount */}
+                              {requiredFields.benefitAmount && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">Benefit Amount *</Label>
+                                  <Select 
+                                    value={formData.benefitAmount} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      benefitAmount: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="text-lg py-3">
+                                      <SelectValue placeholder="Select benefit amount" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="5000">$5,000</SelectItem>
+                                      <SelectItem value="10000">$10,000</SelectItem>
+                                      <SelectItem value="15000">$15,000</SelectItem>
+                                      <SelectItem value="20000">$20,000</SelectItem>
+                                      <SelectItem value="25000">$25,000</SelectItem>
+                                      <SelectItem value="30000">$30,000</SelectItem>
+                                      <SelectItem value="50000">$50,000</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            </div>
 
-                      {/* Trust Line */}
-                      <p className="text-center text-sm text-muted-foreground pt-4">
-                        100% Free • No Obligation • Instant Results
-                      </p>
+                            {/* Tobacco Use */}
+                            {requiredFields.tobaccoUse && (
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    variant={formData.tobaccoUse === false ? "default" : "outline"}
+                                    size="default"
+                                    onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: false }))}
+                                    className="flex-1"
+                                  >
+                                    No
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant={formData.tobaccoUse === true ? "default" : "outline"}
+                                    size="default"
+                                    onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: true }))}
+                                    className="flex-1"
+                                  >
+                                    Yes
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Trust Line */}
+                            <p className="text-center text-sm text-muted-foreground pt-4">
+                              100% Free • No Obligation • Instant Results
+                            </p>
+                          </>
+                        )
+                      })()}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
