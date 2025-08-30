@@ -2055,7 +2055,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('F')}
                             disabled={loadingPlanButton === 'F'}
-                            className="text-xs px-3 py-1 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
+                            className="text-xs px-3 py-1 border-blue-300 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-400"
                           >
                             {loadingPlanButton === 'F' ? (
                               <>
@@ -2093,7 +2093,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('G')}
                             disabled={loadingPlanButton === 'G'}
-                            className="text-xs px-3 py-1 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
+                            className="text-xs px-3 py-1 border-green-300 text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400"
                           >
                             {loadingPlanButton === 'G' ? (
                               <>
@@ -2131,7 +2131,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('N')}
                             disabled={loadingPlanButton === 'N'}
-                            className="text-xs px-3 py-1 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+                            className="text-xs px-3 py-1 border-purple-300 text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:border-purple-400"
                           >
                             {loadingPlanButton === 'N' ? (
                               <>
@@ -2296,13 +2296,13 @@ export default function MedicareShopContent() {
                                 }) || quotesArray[0];
 
                                 return (
-                                  <div key={planType} className={`flex flex-col p-6 rounded-lg hover:bg-muted/70 transition-colors h-full min-h-[300px] ${
+                                  <div key={planType} className={`flex flex-col p-6 rounded-lg bg-card/50 transition-colors h-full min-h-[300px] ${
                                     selectedQuotePlans.length > 1 ? (
-                                      planType === 'F' ? 'bg-blue-50/80 border border-blue-200' :
-                                      planType === 'G' ? 'bg-green-50/80 border border-green-200' :
-                                      planType === 'N' ? 'bg-purple-50/80 border border-purple-200' :
-                                      'bg-muted/50'
-                                    ) : 'bg-muted/50'
+                                      planType === 'F' ? 'bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' :
+                                      planType === 'G' ? 'bg-green-50/80 dark:bg-green-950/30 border border-green-200 dark:border-green-800' :
+                                      planType === 'N' ? 'bg-purple-50/80 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' :
+                                      'bg-card'
+                                    ) : 'bg-card'
                                   }`}>
                                     {/* Plan Header - Price with type indicator */}
                                     <div className="flex items-baseline gap-1 mb-4">
@@ -2330,11 +2330,11 @@ export default function MedicareShopContent() {
                                             variant="outline" 
                                             className={`text-xs font-semibold ${
                                               selectedQuotePlans.length > 1 ? (
-                                                planType === 'F' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                planType === 'G' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                planType === 'N' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                'bg-gray-50 text-gray-700 border-gray-200'
-                                              ) : 'bg-gray-50 text-gray-700 border-gray-200'
+                                                planType === 'F' ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                                planType === 'G' ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' :
+                                                planType === 'N' ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' :
+                                                'bg-muted text-muted-foreground border-border'
+                                              ) : 'bg-muted text-muted-foreground border-border'
                                             }`}
                                           >
                                             {planType === 'F' ? 'Eligible Before 2020' :
@@ -2618,57 +2618,57 @@ export default function MedicareShopContent() {
           <div className="space-y-6">
             {/* Plan Comparison Table */}
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200">
+              <table className="w-full border-collapse border border-border">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-200 p-3 text-left font-semibold">Benefit</th>
+                  <tr className="bg-muted/50">
+                    <th className="border border-border p-3 text-left font-semibold">Benefit</th>
                     {selectedQuotePlans.includes('F') && (
-                      <th className="border border-gray-200 p-3 text-center font-semibold bg-blue-50 text-blue-700">Plan F</th>
+                      <th className="border border-border p-3 text-center font-semibold bg-blue-50/80 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300">Plan F</th>
                     )}
                     {selectedQuotePlans.includes('G') && (
-                      <th className="border border-gray-200 p-3 text-center font-semibold bg-green-50 text-green-700">Plan G</th>
+                      <th className="border border-border p-3 text-center font-semibold bg-green-50/80 dark:bg-green-950/30 text-green-700 dark:text-green-300">Plan G</th>
                     )}
                     {selectedQuotePlans.includes('N') && (
-                      <th className="border border-gray-200 p-3 text-center font-semibold bg-purple-50 text-purple-700">Plan N</th>
+                      <th className="border border-border p-3 text-center font-semibold bg-purple-50/80 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300">Plan N</th>
                     )}
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Part A Deductible</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✓ Covered</td>}
+                    <td className="border border-border p-3 font-medium">Part A Deductible</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✓ Covered</td>}
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Part B Deductible ($240/yr)</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✗ You Pay</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✗ You Pay</td>}
+                    <td className="border border-border p-3 font-medium">Part B Deductible ($240/yr)</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✗ You Pay</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✗ You Pay</td>}
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Part B Coinsurance</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✓ Covered</td>}
+                    <td className="border border-border p-3 font-medium">Part B Coinsurance</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✓ Covered</td>}
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Doctor Office Visits</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">$20 copay</td>}
+                    <td className="border border-border p-3 font-medium">Doctor Office Visits</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">$20 copay</td>}
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Emergency Room</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">$50 copay</td>}
+                    <td className="border border-border p-3 font-medium">Emergency Room</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">$50 copay</td>}
                   </tr>
                   <tr>
-                    <td className="border border-gray-200 p-3 font-medium">Part B Excess Charges</td>
-                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
-                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✗ You Pay</td>}
+                    <td className="border border-border p-3 font-medium">Part B Excess Charges</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✗ You Pay</td>}
                   </tr>
                 </tbody>
               </table>
@@ -2681,30 +2681,30 @@ export default function MedicareShopContent() {
               </h3>
               <div className="grid gap-4 md:grid-cols-1">
                 {selectedQuotePlans.includes('F') && (
-                  <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-                    <h4 className="font-semibold text-blue-800 mb-2">Plan F - Most Comprehensive</h4>
-                    <p className="text-sm text-blue-700 mb-2">
+                  <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Plan F - Most Comprehensive</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
                       <strong>Eligibility:</strong> Only available if you were eligible for Medicare before January 1, 2020.
                     </p>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
                       Covers all Medicare gaps including the Part B deductible. You'll have minimal out-of-pocket costs, 
                       but typically higher monthly premiums.
                     </p>
                   </div>
                 )}
                 {selectedQuotePlans.includes('G') && (
-                  <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                    <h4 className="font-semibold text-green-800 mb-2">Plan G - Popular Choice</h4>
-                    <p className="text-sm text-green-700">
+                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Plan G - Popular Choice</h4>
+                    <p className="text-sm text-green-700 dark:text-green-300">
                       Similar to Plan F but you pay the annual Part B deductible ($240). 
                       Often the best value with lower premiums than Plan F while still providing excellent coverage.
                     </p>
                   </div>
                 )}
                 {selectedQuotePlans.includes('N') && (
-                  <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
-                    <h4 className="font-semibold text-purple-800 mb-2">Plan N - Lower Premium Option</h4>
-                    <p className="text-sm text-purple-700">
+                  <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Plan N - Lower Premium Option</h4>
+                    <p className="text-sm text-purple-700 dark:text-purple-300">
                       Lower monthly premiums but includes small copays: $20 for doctor visits, $50 for ER visits. 
                       You also pay the Part B deductible and any excess charges. Good for those who don't visit doctors frequently.
                     </p>
@@ -2722,21 +2722,21 @@ export default function MedicareShopContent() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-3">
                   {selectedQuotePlans.includes('F') && (
-                    <div className="p-3 rounded border border-blue-200 bg-blue-50">
-                      <div className="font-semibold text-blue-800">Plan F</div>
-                      <div className="text-sm text-blue-700">Premium + minimal out-of-pocket costs</div>
+                    <div className="p-3 rounded border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
+                      <div className="font-semibold text-blue-800 dark:text-blue-200">Plan F</div>
+                      <div className="text-sm text-blue-700 dark:text-blue-300">Premium + minimal out-of-pocket costs</div>
                     </div>
                   )}
                   {selectedQuotePlans.includes('G') && (
-                    <div className="p-3 rounded border border-green-200 bg-green-50">
-                      <div className="font-semibold text-green-800">Plan G</div>
-                      <div className="text-sm text-green-700">Premium + $240 Part B deductible</div>
+                    <div className="p-3 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
+                      <div className="font-semibold text-green-800 dark:text-green-200">Plan G</div>
+                      <div className="text-sm text-green-700 dark:text-green-300">Premium + $240 Part B deductible</div>
                     </div>
                   )}
                   {selectedQuotePlans.includes('N') && (
-                    <div className="p-3 rounded border border-purple-200 bg-purple-50">
-                      <div className="font-semibold text-purple-800">Plan N</div>
-                      <div className="text-sm text-purple-700">Premium + $240 deductible + $130 copays</div>
+                    <div className="p-3 rounded border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/30">
+                      <div className="font-semibold text-purple-800 dark:text-purple-200">Plan N</div>
+                      <div className="text-sm text-purple-700 dark:text-purple-300">Premium + $240 deductible + $130 copays</div>
                     </div>
                   )}
                 </div>
