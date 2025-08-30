@@ -24,11 +24,6 @@ const medicarePages = [
     title: 'Medicare Resources',
     href: '/medicare/resources',
     description: 'Tools, calculators, and helpful resources'
-  },
-  {
-    title: 'Enrollment Periods',
-    href: '/medicare/enrollment-periods',
-    description: 'When you can enroll or make changes'
   }
 ];
 
@@ -126,27 +121,12 @@ function DropdownMenu({ title, pages, hubPage }: DropdownMenuProps) {
             onMouseLeave={() => setIsOpen(false)}
           />
           <div
-            className="absolute top-full left-0 pt-2 w-[500px] bg-background/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
+            className="absolute top-full left-0 pt-2 w-[300px] bg-background/95 border border-border rounded-xl shadow-xl z-[60] backdrop-blur-sm"
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
           >
             <div className="p-6">
-              <div className="grid grid-cols-[0.75fr_1fr] gap-3 ">
-                {hubPage && (
-                  <div className="row-span-3">
-                    <Link
-                      href={hubPage.href}
-                      className="flex h-full w-full select-none flex-col justify-start rounded-xl bg-secondary/80 border border-border/30 p-6 no-underline outline-none focus:shadow-md hover:bg-secondary/90 transition-all duration-300"
-                    >
-                      <div className="mb-2 mt-4 text-lg font-medium text-foreground">
-                        {hubPage.title}
-                      </div>
-                      <p className="text-sm leading-tight text-muted-foreground">
-                        {hubPage.description}
-                      </p>
-                    </Link>
-                  </div>
-                )}
+              <div className="grid grid-cols-1 gap-2">
                 {pages.map((page) => (
                   <div key={page.href}>
                     <Link
@@ -187,29 +167,14 @@ export function SimpleHeader() {
                 <DropdownMenu
                   title="Medicare"
                   pages={medicarePages}
-                  hubPage={{
-                    title: "Medicare Hub",
-                    href: "/medicare/",
-                    description: "Shop Medicare plans, learn about coverage options, and access helpful tools and resources."
-                  }}
                 />
                 <DropdownMenu
                   title="Business"
                   pages={businessPages}
-                  hubPage={{
-                    title: "Business Hub",
-                    href: "/business/",
-                    description: "Comprehensive insurance solutions for businesses of all sizes, from startups to corporations."
-                  }}
                 />
                 <DropdownMenu
                   title="Individual"
                   pages={individualPages}
-                  hubPage={{
-                    title: "Individual Hub",
-                    href: "/individual/",
-                    description: "Personal insurance solutions including health, life, and supplemental coverage options."
-                  }}
                 />
                 <DropdownMenu
                   title="Resources"

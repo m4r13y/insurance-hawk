@@ -38,8 +38,8 @@ const planCategories = [
   { id: "advantage", name: "Medicare Advantage", description: "All-in-one alternative to Original Medicare" },
   { id: "partd", name: "Part D (Prescription Drugs)", description: "Prescription drug coverage" },
   { id: "dental", name: "Dental Insurance", description: "Dental coverage options" },
-  { id: "vision", name: "Vision Insurance", description: "Vision care coverage" },
-  { id: "life", name: "Life Insurance", description: "Life insurance protection" },
+  { id: "vision", name: "Cancer Insurance", description: "Critical illness coverage" },
+  { id: "hospital", name: "Hospital Indemnity", description: "Cash benefits for hospital stays" },
 ]
 
 // Medigap plan types for selection
