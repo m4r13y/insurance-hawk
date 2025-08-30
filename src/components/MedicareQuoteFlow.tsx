@@ -681,14 +681,14 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => toggleMedigapPlan(plan.id)}
-                      className={`p-4 rounded-xl border transition-all duration-200 text-center ${
+                      className={`p-4 rounded-xl border transition-all duration-200 text-left ${
                         formData.selectedMedigapPlans.includes(plan.id)
                           ? "bg-primary/20 border-primary/50 text-foreground"
                           : "bg-background/50 border-border text-foreground/80 hover:border-border/80"
                       }`}
                     >
-                      <div className="flex flex-col items-center">
-                        <div className="font-semibold text-lg mb-2">Plan {plan.id}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold text-lg">Plan {plan.id}</div>
                         {formData.selectedMedigapPlans.includes(plan.id) && (
                           <Check className="w-5 h-5 text-primary" />
                         )}
@@ -956,7 +956,6 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                     placeholder="65"
                                     min="60"
                                     max="100"
-                                    className="text-lg py-3"
                                     value={formData.age}
                                     onChange={(e) => setFormData(prev => ({ 
                                       ...prev, 
@@ -974,7 +973,6 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                     type="text"
                                     placeholder="12345"
                                     maxLength={5}
-                                    className="text-lg py-3"
                                     value={formData.zipCode}
                                     onChange={(e) => setFormData(prev => ({ 
                                       ...prev, 
@@ -995,7 +993,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                       state: value 
                                     }))}
                                   >
-                                    <SelectTrigger className="text-lg py-3">
+                                    <SelectTrigger>
                                       <SelectValue placeholder="Select state" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1058,21 +1056,49 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {requiredFields.gender && (
                                 <div className="space-y-2">
                                   <Label className="text-sm font-medium text-foreground">Gender *</Label>
-                                  <Select 
-                                    value={formData.gender} 
-                                    onValueChange={(value) => setFormData(prev => ({ 
-                                      ...prev, 
-                                      gender: value 
-                                    }))}
-                                  >
-                                    <SelectTrigger className="text-lg py-3">
-                                      <SelectValue placeholder="Select gender" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="male">Male</SelectItem>
-                                      <SelectItem value="female">Female</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={formData.gender === "male" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, gender: "male" }))}
+                                      className="flex-1"
+                                    >
+                                      Male
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant={formData.gender === "female" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, gender: "female" }))}
+                                      className="flex-1"
+                                    >
+                                      Female
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Tobacco Use */}
+                              {requiredFields.tobaccoUse && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={formData.tobaccoUse === false ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: false }))}
+                                      className="flex-1"
+                                    >
+                                      No
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant={formData.tobaccoUse === true ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: true }))}
+                                      className="flex-1"
+                                    >
+                                      Yes
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
 
@@ -1087,7 +1113,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                       benefitAmount: value 
                                     }))}
                                   >
-                                    <SelectTrigger className="text-lg py-3">
+                                    <SelectTrigger>
                                       <SelectValue placeholder="Select benefit amount" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1104,37 +1130,6 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               )}
                             </div>
 
-                            {/* Tobacco Use */}
-                            {requiredFields.tobaccoUse && (
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
-                                <div className="flex gap-2">
-                                  <Button
-                                    type="button"
-                                    variant={formData.tobaccoUse === false ? "default" : "outline"}
-                                    size="default"
-                                    onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: false }))}
-                                    className="flex-1"
-                                  >
-                                    No
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant={formData.tobaccoUse === true ? "default" : "outline"}
-                                    size="default"
-                                    onClick={() => setFormData(prev => ({ ...prev, tobaccoUse: true }))}
-                                    className="flex-1"
-                                  >
-                                    Yes
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Trust Line */}
-                            <p className="text-center text-sm text-muted-foreground pt-4">
-                              100% Free • No Obligation • Instant Results
-                            </p>
                           </>
                         )
                       })()}
