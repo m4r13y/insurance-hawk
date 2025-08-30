@@ -11,11 +11,13 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
+import MedicareQuoteFlow from "@/components/MedicareQuoteFlow";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import Image from "next/image";
+import { UserCheck, Loader2 } from "lucide-react";
 import { 
   TokensIcon,
   HeartIcon,
@@ -95,6 +97,7 @@ interface QuoteFormData {
   tobaccoUse: boolean | null;
   email?: string;
   firstName?: string;
+  effectiveDate?: string;
 }
 
 interface MedigapQuote {
@@ -585,6 +588,8 @@ export default function MedicareShopContent() {
   
   // Quote form state with session storage - initialize with saved values
   const [quoteFormCompleted, setQuoteFormCompleted] = useState(false);
+  const [showMedicareFlow, setShowMedicareFlow] = useState(false);
+  const [medicareFlowMode, setMedicareFlowMode] = useState<'guided' | 'quick'>('guided');
   const [isInitializing, setIsInitializing] = useState(true);
   
   const [quoteFormData, setQuoteFormData] = useState<QuoteFormData>({
@@ -593,11 +598,13 @@ export default function MedicareShopContent() {
     gender: '',
     tobaccoUse: null,
     email: '',
-    firstName: ''
+    firstName: '',
+    effectiveDate: ''
   });
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [realQuotes, setRealQuotes] = useState<MedigapQuote[]>([]);
   const [quotesError, setQuotesError] = useState<string | null>(null);
+  const [loadingPlanButton, setLoadingPlanButton] = useState<string | null>(null); // Track which plan button is loading
   
   // Save form data to localStorage whenever it changes (but not during initialization)
   useEffect(() => {
@@ -690,6 +697,13 @@ export default function MedicareShopContent() {
         const parsedQuotes = JSON.parse(savedQuotes);
         console.log('🔄 Restoring realQuotes:', parsedQuotes.length, 'quotes');
         setRealQuotes(parsedQuotes);
+        
+        // Update selectedQuotePlans based on available quote plan types
+        const availablePlans = [...new Set(parsedQuotes.map((quote: any) => quote.plan).filter(Boolean))];
+        if (availablePlans.length > 0) {
+          setSelectedQuotePlans(availablePlans as string[]);
+          console.log('🎯 Restored selectedQuotePlans from quotes:', availablePlans);
+        }
       } else {
         console.log('🔄 No saved realQuotes found in localStorage');
         
@@ -887,13 +901,214 @@ export default function MedicareShopContent() {
     }
   };
 
+  const handleMedicareFlowComplete = (flowData: any) => {
+    console.log('Medicare flow completed with data:', flowData);
+    console.log('Selected Medigap plans from flow:', flowData.selectedMedigapPlans);
+    
+    // Map flow data to our form data structure
+    const mappedFormData: QuoteFormData = {
+      age:
+        flowData.age === undefined || flowData.age === null || flowData.age === ""
+          ? ""
+          : typeof flowData.age === "number"
+          ? flowData.age
+          : isNaN(Number(flowData.age))
+          ? ""
+          : Number(flowData.age),
+      zipCode: flowData.zipCode || "",
+      gender: flowData.gender || "",
+      tobaccoUse: flowData.tobaccoUse,
+      email: flowData.email || "",
+      firstName: flowData.firstName || "",
+      effectiveDate: flowData.effectiveDate || "",
+    };
+    
+    setQuoteFormData(mappedFormData);
+
+    // Determine the category to use for quotes
+    let categoryToUse = 'medigap'; // default
+    let plansToUse = ['F', 'G', 'N']; // default
+    
+    // Set selected categories based on flow choices
+    if (flowData.planCategories && flowData.planCategories.length > 0) {
+      const firstCategory = flowData.planCategories[0];
+      if (firstCategory === 'medigap') {
+        categoryToUse = 'medigap';
+        setSelectedCategory('medigap');
+        // Use the selected Medigap plans from the flow, or default to all if none selected
+        const selectedPlans = flowData.selectedMedigapPlans && flowData.selectedMedigapPlans.length > 0 
+          ? flowData.selectedMedigapPlans 
+          : ['F', 'G', 'N'];
+        plansToUse = selectedPlans;
+        setSelectedQuotePlans(selectedPlans);
+      } else if (firstCategory === 'advantage') {
+        categoryToUse = 'medicare-advantage';
+        setSelectedCategory('medicare-advantage');
+      } else {
+        categoryToUse = firstCategory;
+        setSelectedCategory(firstCategory);
+      }
+    } else {
+      // Default to medigap for general flows
+      setSelectedCategory('medigap');
+      setSelectedQuotePlans(['F', 'G', 'N']);
+    }
+
+    // Hide the flow and proceed with quote fetching
+    setShowMedicareFlow(false);
+    setQuoteFormCompleted(true);
+    
+    // Call quote submission directly with the data and category
+    console.log('🎯 Passing plans to quote function:', plansToUse);
+    setTimeout(() => {
+      handleQuoteFormSubmitWithData(mappedFormData, categoryToUse, plansToUse);
+    }, 100);
+  };
+
+  // New function that accepts data directly to avoid async state issues
+  const handleQuoteFormSubmitWithData = async (formData: any, category: string, plansList?: string[]) => {
+    console.log('🔥 handleQuoteFormSubmitWithData called with:', { formData, category, plansList });
+    
+    // Validate required fields
+    const requiredFields = ['age', 'zipCode', 'gender', 'tobaccoUse'];
+    const missingFields = requiredFields.filter(field => {
+      const value = formData[field];
+      return value === '' || value === null || value === undefined;
+    });
+
+    console.log('Missing fields:', missingFields);
+
+    if (missingFields.length > 0) {
+      alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    console.log('Validation passed, checking category:', category);
+
+    if (category === 'medigap') {
+      console.log('📊 Calling getMedigapQuotes with data:', formData);
+      const plansToFetch = plansList || selectedQuotePlans;
+      console.log('🎯 Selected quote plans to fetch:', plansToFetch);
+      setIsLoadingQuotes(true);
+      setQuotesError(null);
+      setRealQuotes([]);
+      
+      try {
+        // Convert form data to API format for our enhanced getMedigapQuotes action
+        const quoteParams = {
+          zipCode: formData.zipCode,
+          age: formData.age.toString(),
+          gender: formData.gender === 'male' ? 'M' as const : 'F' as const,
+          tobacco: formData.tobaccoUse ? "1" as const : "0" as const,
+          plans: plansToFetch.length > 0 ? plansToFetch : ['F', 'G', 'N'], // Use selected plans from parameter or state
+        };
+
+        console.log('Fetching Medigap quotes with params:', quoteParams);
+        
+        const response = await getMedigapQuotes(quoteParams);
+        
+        console.log('📈 Medigap quotes response:', response);
+        
+        if (response.error) {
+          console.log('🔥 API Error:', response.error);
+          setQuotesError(response.error);
+        } else if (response.quotes && Array.isArray(response.quotes)) {
+          console.log('✅ Success! Received quotes:', response.quotes.length);
+          setRealQuotes(response.quotes);
+          console.log(`Received ${response.quotes.length} Medigap quotes`);
+          
+          // Preload carrier logos for better user experience
+          preloadCarrierLogos(response.quotes);
+        } else {
+          console.error('❌ Invalid response format:', response);
+          setQuotesError('Invalid response from quotes API');
+        }
+      } catch (error) {
+        console.error('❌ Error getting medigap quotes:', error);
+        setQuotesError(error instanceof Error ? error.message : 'Failed to fetch quotes');
+      } finally {
+        setIsLoadingQuotes(false);
+      }
+    } else {
+      console.log('⚠️ Category not medigap, showing placeholder for:', category);
+      // For other categories, show placeholder for now
+      setIsLoadingQuotes(false);
+    }
+  };
+
+  // Function to fetch quotes for a specific Medigap plan
+  const fetchIndividualPlanQuotes = async (planType: string) => {
+    console.log(`🎯 Fetching quotes for Plan ${planType}`);
+    
+    if (!quoteFormData.age || !quoteFormData.zipCode || !quoteFormData.gender || quoteFormData.tobaccoUse === null) {
+      console.log('⚠️ Form data incomplete for individual plan fetch');
+      return;
+    }
+
+    // Set loading state for this specific plan button
+    setLoadingPlanButton(planType);
+
+    try {
+      // Small delay for better UX (optional - can be removed)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const quoteParams = {
+        zipCode: quoteFormData.zipCode,
+        age: quoteFormData.age.toString(),
+        gender: quoteFormData.gender === 'male' ? 'M' as const : 'F' as const,
+        tobacco: quoteFormData.tobaccoUse ? "1" as const : "0" as const,
+        plans: [planType], // Only fetch for this specific plan
+      };
+
+      console.log(`Fetching Plan ${planType} quotes with params:`, quoteParams);
+      
+      const response = await getMedigapQuotes(quoteParams);
+      
+      if (response.error) {
+        console.log(`🔥 API Error for Plan ${planType}:`, response.error);
+      } else if (response.quotes && Array.isArray(response.quotes)) {
+        console.log(`✅ Success! Received ${response.quotes.length} quotes for Plan ${planType}`);
+        
+        // Add the new quotes to existing quotes
+        setRealQuotes(prev => [...prev, ...response.quotes || []]);
+        
+        // Add the plan to selected plans
+        setSelectedQuotePlans(prev => [...prev, planType]);
+        
+        // Update localStorage with the new quotes
+        const allQuotes = [...realQuotes, ...(response.quotes || [])];
+        localStorage.setItem(REAL_QUOTES_KEY, JSON.stringify(allQuotes));
+        
+        console.log(`Plan ${planType} quotes added to storage`);
+      } else {
+        console.error(`❌ Invalid response format for Plan ${planType}:`, response);
+      }
+    } catch (error) {
+      console.error(`❌ Error getting Plan ${planType} quotes:`, error);
+    } finally {
+      // Clear loading state for this plan button
+      setLoadingPlanButton(null);
+    }
+  };
+
+  // Helper function to check if quotes exist for a specific plan
+  const hasQuotesForPlan = (planType: string) => {
+    return realQuotes.some(quote => quote.plan === planType);
+  };
+
   const handleQuoteFormSubmit = async () => {
+    console.log('🔥 handleQuoteFormSubmit called');
+    console.log('🔥 quoteFormData:', quoteFormData);
+    console.log('🔥 selectedCategory:', selectedCategory);
+    
     // Validate form
     if (!quoteFormData.age || !quoteFormData.zipCode || !quoteFormData.gender || quoteFormData.tobaccoUse === null) {
+      console.log('🔥 Validation failed');
       alert('Please fill in all required fields');
       return;
     }
 
+    console.log('🔥 Validation passed, starting quote fetch...');
     setIsLoadingQuotes(true);
     setQuotesError(null);
     setRealQuotes([]);
@@ -901,6 +1116,7 @@ export default function MedicareShopContent() {
     try {
       // Only get quotes for Medigap category
       if (selectedCategory === 'medigap') {
+        console.log('🔥 Category is medigap, proceeding with API call...');
         // Convert form data to API format for our enhanced getMedigapQuotes action
         const quoteParams = {
           zipCode: quoteFormData.zipCode,
@@ -915,15 +1131,21 @@ export default function MedicareShopContent() {
         
         const response = await getMedigapQuotes(quoteParams);
         
+        console.log('🔥 API Response:', response);
+        
         if (response.error) {
+          console.log('🔥 API Error:', response.error);
           setQuotesError(response.error);
         } else if (response.quotes && Array.isArray(response.quotes)) {
+          console.log('🔥 Success! Received quotes:', response.quotes.length);
           setRealQuotes(response.quotes);
           console.log(`Received ${response.quotes.length} Medigap quotes`);
           
           // Preload carrier logos for better user experience
           preloadCarrierLogos(response.quotes);
         }
+      } else {
+        console.log('🔥 Category is not medigap, selectedCategory:', selectedCategory);
       }
       
       // Mark form as completed
@@ -1061,14 +1283,32 @@ export default function MedicareShopContent() {
 
   // Function to get display plans - uses real quotes when available for Medigap
   const getDisplayPlans = () => {
-    if (selectedCategory === 'medigap' && realQuotes.length > 0) {
-      // Filter quotes by selected plan types first
-      const filteredQuotes = realQuotes.filter(quote => {
-        // Plan type filter
-        const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
+    if (selectedCategory === 'medigap') {
+      // For Medigap, only show real quotes or loading - no mock plans
+      if (realQuotes.length > 0) {
+        // Filter quotes by selected plan types first
+        const filteredQuotes = realQuotes.filter(quote => {
+          // Plan type filter
+          const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
+          
+          // Search filter for carrier names
+          if (searchQuery && matchesPlan) {
+            const carrierName = quote.carrier?.name || 
+                               quote.carrier?.full_name || 
+                               quote.company_base?.name ||
+                               quote.company_base?.full_name ||
+                               quote.company ||
+                               'Unknown Carrier';
+            
+            return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          
+          return matchesPlan;
+        });
         
-        // Search filter for carrier names
-        if (searchQuery && matchesPlan) {
+        // Convert filtered real quotes to display format
+        return filteredQuotes.map((quote, index) => {
+          // Get carrier name from available sources
           const carrierName = quote.carrier?.name || 
                              quote.carrier?.full_name || 
                              quote.company_base?.name ||
@@ -1076,55 +1316,43 @@ export default function MedicareShopContent() {
                              quote.company ||
                              'Unknown Carrier';
           
-          return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        
-        return matchesPlan;
-      });
-      
-      // Convert filtered real quotes to display format
-      return filteredQuotes.map((quote, index) => {
-        // Get carrier name from available sources
-        const carrierName = quote.carrier?.name || 
-                           quote.carrier?.full_name || 
-                           quote.company_base?.name ||
-                           quote.company_base?.full_name ||
-                           quote.company ||
-                           'Unknown Carrier';
-        
-        // Get monthly premium from available sources
-        const monthlyPremium = quote.monthly_premium || 
-                              (quote.rate?.month ? quote.rate.month / 100 : 0);
-        
-        return {
-          id: quote.id || `quote-${quote.plan}-${carrierName.replace(/\s+/g, '-')}-${index}`,
-          name: carrierName,
-          description: `Plan ${quote.plan} - Medicare Supplement`,
-          premiumRange: `$${Math.round(convertPriceByPaymentMode(monthlyPremium))}${getPaymentLabel()}`,
-          monthlyPremium: monthlyPremium,
-          deductible: quote.plan === 'F' ? 'None after Original Medicare' : 'Varies by plan',
-          features: [`Plan ${quote.plan}`, 'Medicare Supplement', carrierName],
-          pros: ['Real-time pricing', 'Licensed carrier', 'Medicare approved'],
-          cons: ['Subject to underwriting', 'Premium may increase'],
-          rating: null, // No rating for real quotes
-          reviewCount: null, // No review count for real quotes
-          coverageLevel: 'Standard' as const,
-          suitableFor: ['Medicare beneficiaries', `Plan ${quote.plan} coverage`],
-          isPopular: false,
-          isBestValue: false, // Will be set based on lowest price
-          isNew: false,
-          plan: quote.plan,
-          carrier: quote.carrier,
-          naic: quote.naic,
-          effective_date: quote.effective_date
-        };
-      }).map((plan, index, array) => ({
-        ...plan,
-        isBestValue: index === 0 && array.length > 1 // Mark first (lowest price) as best value
-      }));
+          // Get monthly premium from available sources
+          const monthlyPremium = quote.monthly_premium || 
+                                (quote.rate?.month ? quote.rate.month / 100 : 0);
+          
+          return {
+            id: quote.id || `quote-${quote.plan}-${carrierName.replace(/\s+/g, '-')}-${index}`,
+            name: carrierName,
+            description: `Plan ${quote.plan} - Medicare Supplement`,
+            premiumRange: `$${Math.round(convertPriceByPaymentMode(monthlyPremium))}${getPaymentLabel()}`,
+            monthlyPremium: monthlyPremium,
+            deductible: quote.plan === 'F' ? 'None after Original Medicare' : 'Varies by plan',
+            features: [`Plan ${quote.plan}`, 'Medicare Supplement', carrierName],
+            pros: ['Real-time pricing', 'Licensed carrier', 'Medicare approved'],
+            cons: ['Subject to underwriting', 'Premium may increase'],
+            rating: null, // No rating for real quotes
+            reviewCount: null, // No review count for real quotes
+            coverageLevel: 'Standard' as const,
+            suitableFor: ['Medicare beneficiaries', `Plan ${quote.plan} coverage`],
+            isPopular: false,
+            isBestValue: false, // Will be set based on lowest price
+            isNew: false,
+            plan: quote.plan,
+            carrier: quote.carrier,
+            naic: quote.naic,
+            effective_date: quote.effective_date
+          };
+        }).map((plan, index, array) => ({
+          ...plan,
+          isBestValue: index === 0 && array.length > 1 // Mark first (lowest price) as best value
+        }));
+      } else {
+        // For Medigap with no quotes, return empty array (will show loading or empty state)
+        return [];
+      }
     }
     
-    // Fallback to filtered mock plans
+    // For other categories, use filtered mock plans
     return getFilteredPlans();
   };
 
@@ -1340,7 +1568,9 @@ export default function MedicareShopContent() {
         totalItems: allPlans.length
       };
     }
-  };  const handlePlanClick = (categoryId: string, planId: string) => {
+  };
+
+  const handlePlanClick = (categoryId: string, planId: string) => {
     router.push(`/medicare/shop/${categoryId}/${planId}`);
   };
 
@@ -1362,7 +1592,7 @@ export default function MedicareShopContent() {
   const paginationInfo = getPaginationInfo();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Show loading spinner while initializing */}
       {isInitializing ? (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -1399,8 +1629,15 @@ export default function MedicareShopContent() {
         </div>
       )}
 
-      {/* Show content based on quote form completion */}
-      {quoteFormCompleted ? (
+      {/* Show content based on form completion and flow state */}
+      {showMedicareFlow ? (
+        /* Show New Medicare Flow */
+        <MedicareQuoteFlow
+          mode={medicareFlowMode}
+          onComplete={handleMedicareFlowComplete}
+          onCancel={() => setShowMedicareFlow(false)}
+        />
+      ) : quoteFormCompleted ? (
         /* Show Plans When Form is Completed */
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Enhanced Sidebar with Combined Filters */}
@@ -1783,65 +2020,168 @@ export default function MedicareShopContent() {
                     </Select>
                   </div>
                   
-                  {/* Plan Types Checkboxes for Medigap */}
+                  {/* Plan Types Checkboxes/Buttons for Medigap */}
                   {selectedCategory === 'medigap' && realQuotes.length > 0 && (
                     <div className="flex items-center gap-4">
                       <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="header-plan-f"
-                            checked={selectedQuotePlans.includes('F')}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedQuotePlans([...selectedQuotePlans, 'F']);
-                              } else {
-                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
-                              }
-                            }}
-                          />
-                          <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="header-plan-g"
-                            checked={selectedQuotePlans.includes('G')}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedQuotePlans([...selectedQuotePlans, 'G']);
-                              } else {
-                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
-                              }
-                            }}
-                          />
-                          <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="header-plan-n"
-                            checked={selectedQuotePlans.includes('N')}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedQuotePlans([...selectedQuotePlans, 'N']);
-                              } else {
-                                setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
-                              }
-                            }}
-                          />
-                          <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
-                        </div>
+                        {/* Plan F */}
+                        {hasQuotesForPlan('F') ? (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="header-plan-f"
+                              checked={selectedQuotePlans.includes('F')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedQuotePlans([...selectedQuotePlans, 'F']);
+                                } else {
+                                  setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
+                                }
+                              }}
+                            />
+                            <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => fetchIndividualPlanQuotes('F')}
+                            disabled={loadingPlanButton === 'F'}
+                            className="text-xs px-3 py-1"
+                          >
+                            {loadingPlanButton === 'F' ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                Loading...
+                              </>
+                            ) : (
+                              '+ Plan F'
+                            )}
+                          </Button>
+                        )}
+                        
+                        {/* Plan G */}
+                        {hasQuotesForPlan('G') ? (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="header-plan-g"
+                              checked={selectedQuotePlans.includes('G')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedQuotePlans([...selectedQuotePlans, 'G']);
+                                } else {
+                                  setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
+                                }
+                              }}
+                            />
+                            <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => fetchIndividualPlanQuotes('G')}
+                            disabled={loadingPlanButton === 'G'}
+                            className="text-xs px-3 py-1"
+                          >
+                            {loadingPlanButton === 'G' ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                Loading...
+                              </>
+                            ) : (
+                              '+ Plan G'
+                            )}
+                          </Button>
+                        )}
+                        
+                        {/* Plan N */}
+                        {hasQuotesForPlan('N') ? (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="header-plan-n"
+                              checked={selectedQuotePlans.includes('N')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedQuotePlans([...selectedQuotePlans, 'N']);
+                                } else {
+                                  setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
+                                }
+                              }}
+                            />
+                            <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => fetchIndividualPlanQuotes('N')}
+                            disabled={loadingPlanButton === 'N'}
+                            className="text-xs px-3 py-1"
+                          >
+                            {loadingPlanButton === 'N' ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                Loading...
+                              </>
+                            ) : (
+                              '+ Plan N'
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Product Grid - Always use grouped display, adjust grid based on selected plan types */}
-              <div className={`grid gap-6 ${
-                selectedQuotePlans.length === 1 
-                  ? 'grid-cols-1 sm:grid-cols-2' 
-                  : 'grid-cols-1'
-              }`}>
+              {/* Product Grid - Show loading for Medigap or display plans */}
+              {selectedCategory === 'medigap' && isLoadingQuotes ? (
+                /* Loading Screen for Medigap Quotes */
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6"></div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Finding Your Medicare Supplement Plans
+                  </h3>
+                  <p className="text-muted-foreground mb-4 max-w-md">
+                    We're searching through our network of licensed carriers to find the best Medigap plans for your area and needs.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <span className="ml-2">Loading real-time quotes...</span>
+                  </div>
+                </div>
+              ) : selectedCategory === 'medigap' && realQuotes.length === 0 && !isLoadingQuotes ? (
+                /* Empty State for Medigap (when no quotes available) */
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
+                    <MagnifyingGlassIcon className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Medicare Supplement Plans Found
+                  </h3>
+                  <p className="text-muted-foreground mb-4 max-w-md">
+                    We couldn't find any Medigap plans for your area and criteria. Try adjusting your search or contact us for assistance.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedQuotePlans(['F', 'G', 'N']);
+                    }}
+                    variant="outline"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              ) : (
+                /* Regular Product Grid */
+                <div className={`grid gap-6 ${
+                  selectedQuotePlans.length === 1 
+                    ? 'grid-cols-1 sm:grid-cols-2' 
+                    : 'grid-cols-1'
+                }`}>
                 {displayData.type === 'grouped' ? (
                   // Grouped by carrier display (with plan type filtering)
                   displayData.data.map((carrierGroup: any) => {
@@ -2049,8 +2389,10 @@ export default function MedicareShopContent() {
                   ))
                 )}
               </div>
+              )}
 
-              {displayData.data.length === 0 && (
+              {/* Show empty state for other categories or when no data */}
+              {(!isLoadingQuotes && displayData.data.length === 0 && selectedCategory !== 'medigap') && (
                 <Card className="text-center py-12">
                   <CardContent>
                     <div className="space-y-4">
@@ -2132,7 +2474,7 @@ export default function MedicareShopContent() {
         </main>
         </div>
       ) : (
-        /* Simplified Landing Page with Instant Form */
+        /* Landing Page with Flow Options */
         <div className="min-h-screen -mt-6 -mx-4 sm:-mx-6 lg:-mx-8">
           <div className="px-4 sm:px-6 lg:px-8 py-12">
             <div className="max-w-4xl mx-auto">
@@ -2143,132 +2485,67 @@ export default function MedicareShopContent() {
                   Find Your Medicare Plan
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  Enter your details to see personalized plans and pricing
+                  Choose how you'd like to get started
                 </p>
               </div>
 
-              {/* Centered Form Card */}
-              <Card className="bg-card backdrop-blur-sm shadow-xl border border-border max-w-2xl mx-auto">
-                <CardContent className="p-8">
-                  <div className="space-y-6">
-                    {/* Form Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Age */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Your Age</label>
-                        <Input
-                          type="number"
-                          placeholder="65"
-                          min="60"
-                          max="100"
-                          className="text-lg py-3"
-                          value={quoteFormData.age}
-                          onChange={(e) => setQuoteFormData(prev => ({ 
-                            ...prev, 
-                            age: e.target.value ? parseInt(e.target.value) : '' 
-                          }))}
-                        />
-                      </div>
-
-                      {/* ZIP Code */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">ZIP Code</label>
-                        <Input
-                          type="text"
-                          placeholder="12345"
-                          maxLength={5}
-                          className="text-lg py-3"
-                          value={quoteFormData.zipCode}
-                          onChange={(e) => setQuoteFormData(prev => ({ 
-                            ...prev, 
-                            zipCode: e.target.value.replace(/\D/g, '') 
-                          }))}
-                        />
-                      </div>
-
-                      {/* Gender */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Gender</label>
-                        <Select 
-                          value={quoteFormData.gender} 
-                          onValueChange={(value) => setQuoteFormData(prev => ({ 
-                            ...prev, 
-                            gender: value as 'male' | 'female' 
-                          }))}
-                        >
-                          <SelectTrigger className="text-lg py-3">
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Tobacco Use */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Tobacco Use</label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant={quoteFormData.tobaccoUse === false ? "default" : "outline"}
-                            size="default"
-                            onClick={() => setQuoteFormData(prev => ({ ...prev, tobaccoUse: false }))}
-                            className="flex-1"
-                          >
-                            No
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={quoteFormData.tobaccoUse === true ? "default" : "outline"}
-                            size="default"
-                            onClick={() => setQuoteFormData(prev => ({ ...prev, tobaccoUse: true }))}
-                            className="flex-1"
-                          >
-                            Yes
-                          </Button>
-                        </div>
-                      </div>
+              {/* Flow Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                {/* Guided Flow Option */}
+                <Card className="bg-card backdrop-blur-sm shadow-xl border border-border cursor-pointer hover:shadow-2xl transition-all duration-300">
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <UserCheck className="w-8 h-8 text-primary" />
                     </div>
-
-                    {/* Submit Button */}
-                    <div className="pt-4">
-                      <Button
-                        onClick={handleQuoteFormSubmit}
-                        className="w-full gap-2 text-lg font-semibold py-4"
-                        disabled={!isQuoteFormValid() || isLoadingQuotes}
-                        size="lg"
-                      >
-                        {isLoadingQuotes ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            <RocketIcon className="w-5 h-5" />
-                            Show My Plans
-                          </>
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* Simple Trust Line */}
-                    <p className="text-center text-sm text-muted-foreground">
-                      100% Free • No Obligation • Instant Results
+                    <h3 className="text-2xl font-bold mb-4">Guided Experience</h3>
+                    <p className="text-muted-foreground mb-6">
+                     We'll recommend the best plan types for you.
                     </p>
-                  </div>
-                </CardContent>
-              </Card>
+                    <Button 
+                      onClick={() => {
+                        setMedicareFlowMode('guided');
+                        setShowMedicareFlow(true);
+                      }}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Get Personalized Recommendations
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Form Option */}
+                <Card className="bg-card backdrop-blur-sm shadow-xl border border-border">
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <RocketIcon className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4">Quick Quote</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Skip the questions and go straight to quotes.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setMedicareFlowMode('quick');
+                        setShowMedicareFlow(true);
+                      }}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Get Quick Quotes
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
       )}
+        </>
+      )}
 
       <MedicareDisclaimer />
-      </>
-      )}
     </div>
   );
 }

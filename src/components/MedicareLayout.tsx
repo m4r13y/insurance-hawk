@@ -108,9 +108,9 @@ export default function MedicareLayout({ children }: MedicareLayoutProps) {
       )}
 
       {/* Sticky Navigation */}
-      <div className="sticky top-20 z-40 bg-background/98 pb-2 backdrop-blur-md border-b border-border/50 shadow-sm">
+      <div className="sticky top-20 z-40 bg-background/98 pb-2 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex items-center justify-center py-3">
+          <div className="flex items-center justify-end py-3">
             {/* Main Navigation Tabs */}
             <nav className="flex items-center gap-2">
               {navigationTabs.map((tab) => {
