@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
 import { 
   TokensIcon,
   CalendarIcon,
@@ -68,14 +69,25 @@ export default function MedicareResourcesContent() {
       {/* Section Header */}
       <section className="py-8 bg-muted/30">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">
-              Medicare Resources & Tools
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Helpful tools, calculators, and support resources to guide you through 
-              your Medicare journey. Get personalized assistance when you need it.
-            </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">
+                Medicare Resources & Tools
+              </h2>
+              <p className="text-muted-foreground max-w-2xl">
+                Helpful tools, calculators, and support resources to guide you through 
+                your Medicare journey. Get personalized assistance when you need it.
+              </p>
+            </div>
+            {/* Navigation Tabs - Right side */}
+            <div className="hidden lg:block">
+              <MedicareNavigationTabs />
+            </div>
+          </div>
+          
+          {/* Navigation Tabs for mobile - centered */}
+          <div className="lg:hidden flex justify-center mb-6">
+            <MedicareNavigationTabs />
           </div>
         </div>
       </section>

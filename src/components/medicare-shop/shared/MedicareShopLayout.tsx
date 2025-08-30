@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Plus } from "lucide-react";
+import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
 
 interface MedicareShopLayoutProps {
   children: React.ReactNode;
@@ -32,6 +34,16 @@ export default function MedicareShopLayout({
   onCategorySelect,
   onReset
 }: MedicareShopLayoutProps) {
+  const [showMoreCategories, setShowMoreCategories] = useState(false);
+
+  // Determine button text based on number of quote types generated
+  const getMoreQuotesButtonText = () => {
+    if (selectedFlowCategories.length === 1) {
+      return "More Quotes";
+    }
+    return "+";
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Show Shopping Header Only When There Are Quotes */}
@@ -51,12 +63,13 @@ export default function MedicareShopLayout({
         </div>
       )}
 
-      {/* Plan Type Controls - Under Shop/Learn/Resources Navigation */}
+      {/* Plan Type Controls - Single Row Layout */}
       {hasQuotes && (
         <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              {/* Reset Button - Moved to left */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Left Side - Reset Button and Plan Toggle */}
+            <div className="flex items-center gap-3">
+              {/* Reset Button */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -85,7 +98,7 @@ export default function MedicareShopLayout({
                 </AlertDialogContent>
               </AlertDialog>
 
-              {/* Category Toggle for when both Medigap and Advantage are selected */}
+              {/* Plan Type Toggle - Moved from center */}
               {selectedFlowCategories.includes('medigap') && selectedFlowCategories.includes('advantage') && (
                 <div className="flex items-center gap-2 p-1 bg-background rounded-lg border">
                   <Button
@@ -106,22 +119,65 @@ export default function MedicareShopLayout({
                   </Button>
                 </div>
               )}
+
+              {/* More Quotes Button */}
+              <Popover open={showMoreCategories} onOpenChange={setShowMoreCategories}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    title="View more plan options"
+                  >
+                    {selectedFlowCategories.length === 1 ? (
+                      "More Quotes"
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="start">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Additional Plan Options</h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Select additional plan types to compare more options
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {productCategories?.map((category) => (
+                        <Button
+                          key={category.id}
+                          variant="ghost"
+                          className="w-full justify-start text-left h-auto p-3"
+                          onClick={() => {
+                            onCategorySelect(category.id);
+                            setShowMoreCategories(false);
+                          }}
+                        >
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium text-sm">{category.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {category.plans?.length || 0} plans available
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-            
-            {/* Plan Categories Dropdown - Moved to right */}
-            <div className="min-w-[200px]">
-              <Select value={selectedCategory} onValueChange={onCategorySelect}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="More Plan Options" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productCategories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name} ({category.plans?.length || 0})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            {/* Center - Empty space for balanced layout */}
+            <div className="flex-1"></div>
+
+            {/* Right Side - Navigation Tabs */}
+            <div className="flex items-center">
+              <MedicareNavigationTabs />
             </div>
           </div>
         </div>

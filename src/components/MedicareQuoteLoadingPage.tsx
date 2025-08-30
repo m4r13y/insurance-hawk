@@ -20,6 +20,11 @@ interface MedicareQuoteLoadingPageProps {
   age?: string;
   selectedCategories?: string[];
   onComplete?: () => void;
+  // New props for dynamic progress
+  externalProgress?: number; // Progress from 0-100
+  currentLoadingStep?: string; // Current step being processed
+  useExternalProgress?: boolean; // Whether to use external progress or internal timer
+  onStepComplete?: (stepId: string) => void; // Callback when a step completes
 }
 
 const loadingSteps = [
@@ -42,11 +47,16 @@ export default function MedicareQuoteLoadingPage({
   zipCode, 
   age, 
   selectedCategories,
-  onComplete 
+  onComplete,
+  externalProgress,
+  currentLoadingStep,
+  useExternalProgress = false,
+  onStepComplete
 }: MedicareQuoteLoadingPageProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentTip, setCurrentTip] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
 
   // Generate dynamic steps based on loadingItems if provided
   const getDynamicSteps = () => {
@@ -86,10 +96,50 @@ export default function MedicareQuoteLoadingPage({
     }));
   };
 
-    const steps = useMemo(() => getDynamicSteps(), [loadingItems]);
+  const steps = useMemo(() => getDynamicSteps(), [loadingItems]);
   const currentTips = tips;
 
+  // Effect for external progress control
   useEffect(() => {
+    if (useExternalProgress && typeof externalProgress === 'number') {
+      setProgress(Math.min(Math.max(externalProgress, 0), 100));
+      
+      // Calculate current step based on progress
+      const stepIndex = Math.floor((externalProgress / 100) * steps.length);
+      setCurrentStep(Math.min(stepIndex, steps.length - 1));
+      
+      // Check if we've completed the loading
+      if (externalProgress >= 100 && onComplete) {
+        setTimeout(() => onComplete(), 500);
+      }
+    }
+  }, [externalProgress, useExternalProgress, steps.length, onComplete]);
+
+  // Effect for external step control
+  useEffect(() => {
+    if (useExternalProgress && currentLoadingStep) {
+      const stepIndex = steps.findIndex(step => 
+        step.text.toLowerCase().includes(currentLoadingStep.toLowerCase()) ||
+        step.id.toString() === currentLoadingStep
+      );
+      
+      if (stepIndex !== -1) {
+        setCurrentStep(stepIndex);
+        
+        // Mark previous steps as completed
+        const newCompletedSteps = new Set<string>();
+        for (let i = 0; i < stepIndex; i++) {
+          newCompletedSteps.add(steps[i].id.toString());
+        }
+        setCompletedSteps(newCompletedSteps);
+      }
+    }
+  }, [currentLoadingStep, useExternalProgress, steps]);
+
+  // Original timer-based effect (only runs when not using external progress)
+  useEffect(() => {
+    if (useExternalProgress) return; // Skip timer-based progress when using external
+    
     let stepTimeout: ReturnType<typeof setTimeout>;
     let progressInterval: ReturnType<typeof setInterval>;
 
@@ -103,6 +153,18 @@ export default function MedicareQuoteLoadingPage({
       }
 
       setCurrentStep(stepIndex);
+      
+      // Mark previous steps as completed
+      const newCompletedSteps = new Set<string>();
+      for (let i = 0; i < stepIndex; i++) {
+        newCompletedSteps.add(steps[i].id.toString());
+      }
+      setCompletedSteps(newCompletedSteps);
+      
+      // Notify parent component about step change
+      if (onStepComplete) {
+        onStepComplete(steps[stepIndex].id.toString());
+      }
       
       // Animate progress for this step
       const stepDuration = steps[stepIndex].duration;
@@ -121,6 +183,8 @@ export default function MedicareQuoteLoadingPage({
 
       stepTimeout = setTimeout(() => {
         clearInterval(progressInterval);
+        // Mark current step as completed
+        setCompletedSteps(prev => new Set([...prev, steps[stepIndex].id.toString()]));
         runStep(stepIndex + 1);
       }, stepDuration);
     };
@@ -131,7 +195,7 @@ export default function MedicareQuoteLoadingPage({
       clearTimeout(stepTimeout);
       clearInterval(progressInterval);
     };
-  }, [steps, onComplete]);
+  }, [steps, onComplete, useExternalProgress, onStepComplete]);
 
   // Rotate tips every 3 seconds
   useEffect(() => {
@@ -211,7 +275,9 @@ export default function MedicareQuoteLoadingPage({
             <div className="space-y-4">
               {steps.map((step, index) => {
                 const isActive = index === currentStep;
-                const isCompleted = index < currentStep;
+                const isCompleted = useExternalProgress ? 
+                  completedSteps.has(step.id.toString()) : 
+                  index < currentStep;
                 const Icon = step.icon;
 
                 return (

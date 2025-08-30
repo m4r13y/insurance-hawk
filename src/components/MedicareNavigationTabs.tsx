@@ -7,11 +7,7 @@ import { Button } from "@/components/ui/button";
 import { 
   TargetIcon,
   ReaderIcon,
-  FileTextIcon,
-  HeartIcon,
-  ActivityLogIcon,
-  TokensIcon,
-  StarIcon
+  FileTextIcon
 } from '@radix-ui/react-icons';
 
 interface NavigationTab {
@@ -52,18 +48,15 @@ const navigationTabs: NavigationTab[] = [
   }
 ];
 
-const quickStats = [
-  { label: "Available Plans", value: "500+", icon: TokensIcon },
-  { label: "States Covered", value: "50", icon: ActivityLogIcon },
-  { label: "Customer Rating", value: "4.9", icon: StarIcon },
-  { label: "Years Experience", value: "15+", icon: HeartIcon }
-];
-
-interface MedicareLayoutProps {
-  children: React.ReactNode;
+interface MedicareNavigationTabsProps {
+  className?: string;
+  size?: "sm" | "default";
 }
 
-export default function MedicareLayout({ children }: MedicareLayoutProps) {
+export default function MedicareNavigationTabs({ 
+  className = "",
+  size = "sm"
+}: MedicareNavigationTabsProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,32 +89,31 @@ export default function MedicareLayout({ children }: MedicareLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - Show on main medicare page and sub-sections */}
-      {(pathname === '/medicare' || pathname.startsWith('/medicare/')) && (
-        <section className="relative pt-12 pb-8 sm:pt-6 sm:pb-12 lg:pt-8 lg:pb-16">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Sticky Navigation - Navigation moved to individual pages */}
-      {!pathname.startsWith('/medicare/shop') && (
-        <div className="sticky top-20 z-40 bg-background/98 pb-2 backdrop-blur-md">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="flex items-center justify-end py-3">
-              {/* Navigation moved to individual Learn and Resources pages */}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="relative">
-        {children}
-      </main>
-    </div>
+    <nav className={`flex items-center gap-2 ${className}`}>
+      {navigationTabs.map((tab) => {
+        const isActive = currentSection === tab.id;
+        return (
+          <Button
+            key={tab.id}
+            variant={isActive ? "default" : "ghost"}
+            size={size}
+            onClick={() => handleTabClick(tab.id)}
+            className={`relative flex items-center gap-2 px-3 py-2 transition-all duration-200 ${
+              isActive 
+                ? 'bg-primary text-primary-foreground shadow-sm' 
+                : 'hover:bg-muted/60'
+            }`}
+          >
+            <div className={`w-2 h-2 rounded-full ${tab.color} ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+            <span className="font-medium text-sm">{tab.name}</span>
+            {tab.badge && isActive && (
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 ml-1">
+                {tab.badge}
+              </Badge>
+            )}
+          </Button>
+        );
+      })}
+    </nav>
   );
 }

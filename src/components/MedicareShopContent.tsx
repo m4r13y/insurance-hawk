@@ -36,7 +36,8 @@ import {
   MedigapPlanTypeControls,
   MedigapEmptyState,
   MedigapCarrierGroup,
-  MedigapResultsHeader
+  MedigapResultsHeader,
+  PlanComparisonModal
 } from "@/components/medicare-shop/medigap";
 
 export default function MedicareShopContent() {
@@ -992,29 +993,11 @@ export default function MedicareShopContent() {
       )}
 
       {/* Plan Differences Modal */}
-      <Dialog open={showPlanDifferencesModal} onOpenChange={setShowPlanDifferencesModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedQuotePlans.length === 1 
-                ? `Plan ${selectedQuotePlans[0]} Coverage Details`
-                : `Plan Comparison: ${selectedQuotePlans.join(', ')}`
-              }
-            </DialogTitle>
-            <DialogDescription>
-              {selectedQuotePlans.length === 1
-                ? `Understanding what's included in your selected Medigap Plan ${selectedQuotePlans[0]}`
-                : "Understanding the key differences between your selected Medigap plan types"
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <p className="text-sm text-muted-foreground">
-              Plan comparison details would go here...
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PlanComparisonModal
+        isOpen={showPlanDifferencesModal}
+        onClose={setShowPlanDifferencesModal}
+        selectedPlans={selectedQuotePlans}
+      />
 
       {/* Medicare Disclaimer */}
       <MedicareDisclaimer />

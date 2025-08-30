@@ -2069,9 +2069,9 @@ export default function MedicareShopContent() {
                                 return (
                                   <div key={planType} className={`flex flex-col p-6 rounded-lg bg-card/50 transition-colors h-full min-h-[300px] ${
                                     selectedQuotePlans.length > 1 ? (
-                                      planType === 'F' ? 'bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' :
-                                      planType === 'G' ? 'bg-green-50/80 dark:bg-green-950/30 border border-green-200 dark:border-green-800' :
-                                      planType === 'N' ? 'bg-purple-50/80 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' :
+                                      planType === 'F' ? 'border border-blue-200 dark:border-blue-800' :
+                                      planType === 'G' ? 'border border-green-200 dark:border-green-800' :
+                                      planType === 'N' ? 'border border-purple-200 dark:border-purple-800' :
                                       'bg-card'
                                     ) : 'bg-card'
                                   }`}>
