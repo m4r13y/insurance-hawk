@@ -294,33 +294,32 @@ export default function MedicareAdvantageSidebar({
           <Separator />
 
           {/* Plan Type */}
-          {uniquePlanTypes.length > 0 && (
-            <>
-              <div className="space-y-3">
-                <Label>Plan Type</Label>
-                <div className="space-y-2">
-                  {uniquePlanTypes.map(type => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`type-${type}`}
-                        checked={filters.planTypes.includes(type)}
-                        onCheckedChange={(checked) => {
-                          const newTypes = checked
-                            ? [...filters.planTypes, type]
-                            : filters.planTypes.filter(t => t !== type);
-                          updateFilters({ planTypes: newTypes });
-                        }}
-                      />
-                      <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">
-                        {type}
-                      </label>
-                    </div>
-                  ))}
+          <div className="space-y-3">
+            <Label>Plan Type</Label>
+            <div className="space-y-2">
+              {['HMO', 'HMOPOS', 'LOCAL PPO', 'REGIONAL PPO', 'PFFS', 'MSA'].map(type => (
+                <div key={type} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`type-${type}`}
+                    checked={filters.planTypes.includes(type)}
+                    onCheckedChange={(checked) => {
+                      const newTypes = checked
+                        ? [...filters.planTypes, type]
+                        : filters.planTypes.filter(t => t !== type);
+                      updateFilters({ planTypes: newTypes });
+                    }}
+                  />
+                  <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">
+                    {type === 'HMOPOS' ? 'HMOPOS' : 
+                     type === 'LOCAL PPO' ? 'Local PPO' : 
+                     type === 'REGIONAL PPO' ? 'Regional PPO' : type}
+                  </label>
                 </div>
-              </div>
-              <Separator />
-            </>
-          )}
+              ))}
+            </div>
+          </div>
+
+          <Separator />
 
           {/* Special Benefits */}
           <div className="space-y-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -15,64 +15,30 @@ import {
 } from "@radix-ui/react-icons";
 
 interface MedicareQuoteLoadingPageProps {
-  quoteType: 'medigap' | 'advantage' | 'both';
+  loadingItems?: string[]; // Specific items being loaded
   zipCode?: string;
   age?: string;
   selectedCategories?: string[];
   onComplete?: () => void;
 }
 
-const loadingSteps = {
-  medigap: [
-    { id: 1, text: "Analyzing your location and age", icon: MagnifyingGlassIcon, duration: 2000 },
-    { id: 2, text: "Searching licensed carriers in your area", icon: LockClosedIcon, duration: 3000 },
-    { id: 3, text: "Calculating real-time Medigap premiums", icon: TokensIcon, duration: 2500 },
-    { id: 4, text: "Comparing plan benefits and coverage", icon: FileTextIcon, duration: 2000 },
-    { id: 5, text: "Finalizing your personalized quotes", icon: CheckCircledIcon, duration: 1500 }
-  ],
-  advantage: [
-    { id: 1, text: "Locating Medicare Advantage plans in your area", icon: MagnifyingGlassIcon, duration: 2500 },
-    { id: 2, text: "Verifying plan availability for 2025", icon: LockClosedIcon, duration: 2000 },
-    { id: 3, text: "Analyzing costs and benefits", icon: TokensIcon, duration: 3000 },
-    { id: 4, text: "Checking doctor and hospital networks", icon: FileTextIcon, duration: 2500 },
-    { id: 5, text: "Preparing your comparison results", icon: CheckCircledIcon, duration: 2000 }
-  ],
-  both: [
-    { id: 1, text: "Analyzing your Medicare needs", icon: MagnifyingGlassIcon, duration: 2000 },
-    { id: 2, text: "Searching Medicare Supplement plans", icon: LockClosedIcon, duration: 2500 },
-    { id: 3, text: "Finding Medicare Advantage options", icon: TokensIcon, duration: 2500 },
-    { id: 4, text: "Calculating premiums and benefits", icon: FileTextIcon, duration: 2500 },
-    { id: 5, text: "Comparing all your options", icon: CheckCircledIcon, duration: 2000 },
-    { id: 6, text: "Preparing your personalized results", icon: CheckCircledIcon, duration: 1500 }
-  ]
-};
+const loadingSteps = [
+  { id: 1, text: "Finding Plan F Quotes", icon: MagnifyingGlassIcon, duration: 2000 },
+  { id: 2, text: "Finding Plan G Quotes", icon: LockClosedIcon, duration: 2000 },
+  { id: 3, text: "Finding Plan N Quotes", icon: TokensIcon, duration: 2000 },
+  { id: 4, text: "Finding Medicare Advantage Quotes", icon: FileTextIcon, duration: 2000 },
+  { id: 5, text: "Finalizing your personalized quotes", icon: CheckCircledIcon, duration: 1500 }
+];
 
-const quoteTypeLabels = {
-  medigap: "Medicare Supplement",
-  advantage: "Medicare Advantage", 
-  both: "Medicare Plans"
-};
-
-const tips = {
-  medigap: [
-    "Medigap plans are standardized - Plan F covers the same benefits regardless of the carrier",
-    "You have a guaranteed issue period when you first become eligible for Medicare",
-    "Compare premiums carefully as benefits are standardized but costs vary by carrier"
-  ],
-  advantage: [
-    "Medicare Advantage plans often include prescription drug coverage",
-    "Check if your doctors are in the plan's network before enrolling", 
-    "Many plans offer extra benefits like dental, vision, or wellness programs"
-  ],
-  both: [
-    "Medicare Supplement and Medicare Advantage are two different ways to get Medicare coverage",
-    "You can only have one or the other - not both at the same time",
-    "Compare costs, networks, and benefits to find what works best for you"
-  ]
-};
+const tips = [
+  "Compare plans carefully as benefits and costs vary by carrier",
+  "Check if your doctors are in the plan's network before enrolling", 
+  "Many plans offer extra benefits like dental, vision, or wellness programs",
+  "You have a guaranteed issue period when you first become eligible for Medicare"
+];
 
 export default function MedicareQuoteLoadingPage({ 
-  quoteType, 
+  loadingItems = [],
   zipCode, 
   age, 
   selectedCategories,
@@ -82,8 +48,46 @@ export default function MedicareQuoteLoadingPage({
   const [progress, setProgress] = useState(0);
   const [currentTip, setCurrentTip] = useState(0);
 
-  const steps = loadingSteps[quoteType];
-  const currentTips = tips[quoteType];
+  // Generate dynamic steps based on loadingItems if provided
+  const getDynamicSteps = () => {
+    if (loadingItems.length === 0) {
+      // If no specific items, return all steps
+      return loadingSteps;
+    }
+
+    // Filter steps based on loadingItems
+    const filteredSteps = [];
+    
+    // Add steps that match the loading items
+    loadingItems.forEach((item) => {
+      if (item === 'Plan F') {
+        const step = loadingSteps.find(s => s.text.includes('Plan F'));
+        if (step) filteredSteps.push(step);
+      } else if (item === 'Plan G') {
+        const step = loadingSteps.find(s => s.text.includes('Plan G'));
+        if (step) filteredSteps.push(step);
+      } else if (item === 'Plan N') {
+        const step = loadingSteps.find(s => s.text.includes('Plan N'));
+        if (step) filteredSteps.push(step);
+      } else if (item === 'Medicare Advantage Plans') {
+        const step = loadingSteps.find(s => s.text.includes('Medicare Advantage'));
+        if (step) filteredSteps.push(step);
+      }
+    });
+
+    // Always add the final step
+    const finalStep = loadingSteps.find(s => s.text.includes('Finalizing'));
+    if (finalStep) filteredSteps.push(finalStep);
+
+    // Re-assign IDs to maintain proper sequence
+    return filteredSteps.map((step, index) => ({
+      ...step,
+      id: index + 1
+    }));
+  };
+
+    const steps = useMemo(() => getDynamicSteps(), [loadingItems]);
+  const currentTips = tips;
 
   useEffect(() => {
     let stepTimeout: ReturnType<typeof setTimeout>;
@@ -145,7 +149,7 @@ export default function MedicareQuoteLoadingPage({
         <div className="inline-flex items-center gap-2 mb-4">
           <ReloadIcon className="w-8 h-8 text-primary animate-spin" />
           <Badge variant="secondary" className="text-sm">
-            {quoteTypeLabels[quoteType]} Quotes
+            Medicare Plan Quotes
           </Badge>
         </div>
         
@@ -172,6 +176,20 @@ export default function MedicareQuoteLoadingPage({
                  category === 'advantage' ? 'Medicare Advantage' : category}
               </Badge>
             ))}
+          </div>
+        )}
+
+        {/* Show specific items being loaded */}
+        {loadingItems.length > 0 && (
+          <div className="mt-4">
+            <p className="text-sm text-muted-foreground mb-2">Loading quotes for:</p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {loadingItems.map((item, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {item}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
       </div>

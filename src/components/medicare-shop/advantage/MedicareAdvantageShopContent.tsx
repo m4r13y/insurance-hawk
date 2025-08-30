@@ -5,8 +5,9 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import GenericQuoteLoading from "@/components/GenericQuoteLoading";
-import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "@/components/MedicareAdvantageSidebar";
+import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "./MedicareAdvantageSidebar";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { 
@@ -368,6 +369,12 @@ export default function MedicareAdvantageShopContent() {
   const [selectedPlan, setSelectedPlan] = useState<MedicareAdvantageQuote | null>(null);
   const [showCompareDialog, setShowCompareDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedAdvantageTypes, setSelectedAdvantageTypes] = useState<string[]>(['HMO', 'HMOPOS', 'LOCAL PPO', 'REGIONAL PPO', 'PFFS', 'MSA']);
+
+  // Helper functions
+  const hasQuotes = () => {
+    return plans?.length > 0;
+  };
 
   // Load saved data on component mount
   useEffect(() => {
@@ -611,62 +618,21 @@ export default function MedicareAdvantageShopContent() {
     setShowDetailsDialog(true);
   };
 
-  const displayPlans = filteredPlans.length > 0 ? filteredPlans : plans;
+  const displayPlans = React.useMemo(() => {
+    const basePlans = filteredPlans.length > 0 ? filteredPlans : plans;
+    
+    // Filter by selected advantage types
+    if (selectedAdvantageTypes.length > 0) {
+      return basePlans.filter(plan => 
+        selectedAdvantageTypes.includes(plan.plan_type)
+      );
+    }
+    
+    return basePlans;
+  }, [filteredPlans, plans, selectedAdvantageTypes]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Shop Medicare Advantage Plans
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Compare Medicare Advantage plans, read benefits details, and find comprehensive coverage
-            </p>
-          </div>
-          
-          {/* Results Count & Actions */}
-          <div className="flex items-center gap-4">
-            {displayPlans.length > 0 && (
-              <Badge variant="outline" className="px-3 py-1">
-                {displayPlans.length} plan{displayPlans.length !== 1 ? 's' : ''} available
-              </Badge>
-            )}
-            
-            {/* Reset Button */}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-muted-foreground hover:text-foreground"
-                  title="Clear all data and start over"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Reset All Data?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will clear all your Medicare Advantage quotes, filters, and search data. You'll need to search again. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={clearAllData} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Reset Everything
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <aside className="lg:col-span-1">
@@ -736,16 +702,141 @@ export default function MedicareAdvantageShopContent() {
           {/* Plans List */}
           {!loading && displayPlans.length > 0 && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Available Plans ({displayPlans.length} found)
-                </h2>
-                {zipCode && (
-                  <div className="text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    {displayPlans[0]?.county}, {displayPlans[0]?.state}
+              {/* Results Header with Plan Type Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-bold">Medicare Advantage</h2>
+                    {zipCode && (
+                      <div className="text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 inline mr-1" />
+                        {displayPlans[0]?.county}, {displayPlans[0]?.state}
+                      </div>
+                    )}
                   </div>
-                )}
+                  <p className="text-sm text-muted-foreground">
+                    Showing 1-{displayPlans.length} of {displayPlans.length} plan{displayPlans.length !== 1 ? 's' : ''}
+                    <span className="ml-2 text-xs">
+                      ({plans.length} plan{plans.length !== 1 ? 's' : ''} loaded)
+                    </span>
+                  </p>
+                </div>
+
+                {/* Plan Type Controls */}
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-3">
+                    <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {/* HMO */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-hmo"
+                          checked={selectedAdvantageTypes.includes('HMO')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'HMO']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMO'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-hmo" className="text-sm font-medium">
+                          HMO
+                        </label>
+                      </div>
+                      
+                      {/* HMOPOS */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-hmopos"
+                          checked={selectedAdvantageTypes.includes('HMOPOS')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'HMOPOS']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMOPOS'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-hmopos" className="text-sm font-medium">
+                          HMOPOS
+                        </label>
+                      </div>
+                      
+                      {/* Local PPO */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-local-ppo"
+                          checked={selectedAdvantageTypes.includes('LOCAL PPO')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'LOCAL PPO']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'LOCAL PPO'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-local-ppo" className="text-sm font-medium">
+                          Local PPO
+                        </label>
+                      </div>
+                      
+                      {/* Regional PPO */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-regional-ppo"
+                          checked={selectedAdvantageTypes.includes('REGIONAL PPO')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'REGIONAL PPO']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'REGIONAL PPO'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-regional-ppo" className="text-sm font-medium">
+                          Regional PPO
+                        </label>
+                      </div>
+                      
+                      {/* PFFS */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-pffs"
+                          checked={selectedAdvantageTypes.includes('PFFS')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'PFFS']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'PFFS'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-pffs" className="text-sm font-medium">
+                          PFFS
+                        </label>
+                      </div>
+                      
+                      {/* MSA */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="header-plan-msa"
+                          checked={selectedAdvantageTypes.includes('MSA')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'MSA']);
+                            } else {
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'MSA'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="header-plan-msa" className="text-sm font-medium">
+                          MSA
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="grid gap-6">

@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import GenericQuoteLoading from "@/components/GenericQuoteLoading";
-import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "@/components/MedicareAdvantageSidebar";
+import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "@/components/medicare-shop/advantage/MedicareAdvantageSidebar";
 import { 
   Star, 
   DollarSign, 

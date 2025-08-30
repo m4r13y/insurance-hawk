@@ -1,15 +1,10 @@
-// Main entry point for Medicare shop components
+// Medicare Shop Components - Organized by functionality
 
-// Medigap components
-export * from './medigap';
+// Advantage Components
+export * from './advantage';
 
-// Shared components  
+// Shared Components
 export * from './shared';
 
-// Future product types can be added here:
-// export * from './advantage';
-// export * from './partd';
-// export * from './dental';
-// export * from './hospital-indemnity';
-// export * from './cancer';
-// export * from './final-expense';
+// Medigap Components
+export * from './medigap';
