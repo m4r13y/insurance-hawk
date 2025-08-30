@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import MedicareQuoteFlow from "@/components/MedicareQuoteFlow";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
@@ -605,6 +606,7 @@ export default function MedicareShopContent() {
   const [realQuotes, setRealQuotes] = useState<MedigapQuote[]>([]);
   const [quotesError, setQuotesError] = useState<string | null>(null);
   const [loadingPlanButton, setLoadingPlanButton] = useState<string | null>(null); // Track which plan button is loading
+  const [showPlanDifferencesModal, setShowPlanDifferencesModal] = useState(false); // Track plan differences modal
   
   // Save form data to localStorage whenever it changes (but not during initialization)
   useEffect(() => {
@@ -1783,6 +1785,7 @@ export default function MedicareShopContent() {
                                 setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-f'));
                               }
                             }}
+                            className="border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           />
                           <label htmlFor="plan-f" className="text-sm">Plan F</label>
                         </div>
@@ -1797,6 +1800,7 @@ export default function MedicareShopContent() {
                                 setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-g'));
                               }
                             }}
+                            className="border-green-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                           />
                           <label htmlFor="plan-g" className="text-sm">Plan G</label>
                         </div>
@@ -1811,6 +1815,7 @@ export default function MedicareShopContent() {
                                 setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-n'));
                               }
                             }}
+                            className="border-purple-400 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
                           />
                           <label htmlFor="plan-n" className="text-sm">Plan N</label>
                         </div>
@@ -2038,8 +2043,11 @@ export default function MedicareShopContent() {
                                   setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'F'));
                                 }
                               }}
+                              className="border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
-                            <label htmlFor="header-plan-f" className="text-sm font-medium">Plan F</label>
+                            <label htmlFor="header-plan-f" className="text-sm font-medium">
+                              Plan F
+                            </label>
                           </div>
                         ) : (
                           <Button 
@@ -2047,7 +2055,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('F')}
                             disabled={loadingPlanButton === 'F'}
-                            className="text-xs px-3 py-1"
+                            className="text-xs px-3 py-1 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                           >
                             {loadingPlanButton === 'F' ? (
                               <>
@@ -2073,8 +2081,11 @@ export default function MedicareShopContent() {
                                   setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'G'));
                                 }
                               }}
+                              className="border-green-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                             />
-                            <label htmlFor="header-plan-g" className="text-sm font-medium">Plan G</label>
+                            <label htmlFor="header-plan-g" className="text-sm font-medium">
+                              Plan G
+                            </label>
                           </div>
                         ) : (
                           <Button 
@@ -2082,7 +2093,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('G')}
                             disabled={loadingPlanButton === 'G'}
-                            className="text-xs px-3 py-1"
+                            className="text-xs px-3 py-1 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
                           >
                             {loadingPlanButton === 'G' ? (
                               <>
@@ -2108,8 +2119,11 @@ export default function MedicareShopContent() {
                                   setSelectedQuotePlans(selectedQuotePlans.filter(plan => plan !== 'N'));
                                 }
                               }}
+                              className="border-purple-400 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
                             />
-                            <label htmlFor="header-plan-n" className="text-sm font-medium">Plan N</label>
+                            <label htmlFor="header-plan-n" className="text-sm font-medium">
+                              Plan N
+                            </label>
                           </div>
                         ) : (
                           <Button 
@@ -2117,7 +2131,7 @@ export default function MedicareShopContent() {
                             size="sm"
                             onClick={() => fetchIndividualPlanQuotes('N')}
                             disabled={loadingPlanButton === 'N'}
-                            className="text-xs px-3 py-1"
+                            className="text-xs px-3 py-1 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
                           >
                             {loadingPlanButton === 'N' ? (
                               <>
@@ -2200,7 +2214,7 @@ export default function MedicareShopContent() {
                     };
                     
                     return (
-                      <Card key={`${carrierGroup.carrierId}-${selectedQuotePlans.join('-')}`} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20">
+                      <Card key={`${carrierGroup.carrierId}-${selectedQuotePlans.join('-')}`} className="group hover:shadow-xl transition-all duration-300 hover:border-primary/20">
                         <CardContent className="p-6">
                           {/* Carrier Header */}
                           <div className="mb-6 pb-4 border-b">
@@ -2237,11 +2251,14 @@ export default function MedicareShopContent() {
                                   </p>
                                 </div>
                               </div>
-                              {selectedQuotePlans.length > 1 && (
-                                <Badge variant="outline" className="text-xs">
-                                  From ${Math.round(convertPriceByPaymentMode(calculateDiscountedPrice(filteredQuotes[0])))}{getPaymentLabel()}
-                                </Badge>
-                              )}
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowPlanDifferencesModal(true)}
+                                className="text-xs px-3 py-1"
+                              >
+                                {selectedQuotePlans.length === 1 ? "What's covered?" : "What's the difference?"}
+                              </Button>
                             </div>
                           </div>
 
@@ -2279,8 +2296,15 @@ export default function MedicareShopContent() {
                                 }) || quotesArray[0];
 
                                 return (
-                                  <div key={planType} className="flex flex-col p-6 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors h-full min-h-[300px]">
-                                    {/* Plan Header - Price only */}
+                                  <div key={planType} className={`flex flex-col p-6 rounded-lg hover:bg-muted/70 transition-colors h-full min-h-[300px] ${
+                                    selectedQuotePlans.length > 1 ? (
+                                      planType === 'F' ? 'bg-blue-50/80 border border-blue-200' :
+                                      planType === 'G' ? 'bg-green-50/80 border border-green-200' :
+                                      planType === 'N' ? 'bg-purple-50/80 border border-purple-200' :
+                                      'bg-muted/50'
+                                    ) : 'bg-muted/50'
+                                  }`}>
+                                    {/* Plan Header - Price with type indicator */}
                                     <div className="flex items-baseline gap-1 mb-4">
                                       <div className={`font-bold text-primary ${
                                         selectedQuotePlans.length === 2 
@@ -2297,9 +2321,38 @@ export default function MedicareShopContent() {
                                     
                                     {/* Plan Details - flex-grow to push button to bottom */}
                                     <div className="flex-grow space-y-2 mb-4">
-                                      <h4 className="font-semibold text-lg">
-                                        Plan {planType}
-                                      </h4>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h4 className="font-semibold text-lg">
+                                          Plan {planType}
+                                        </h4>
+                                        {selectedQuotePlans.length > 1 && (
+                                          <Badge 
+                                            variant="outline" 
+                                            className={`text-xs font-semibold ${
+                                              selectedQuotePlans.length > 1 ? (
+                                                planType === 'F' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                planType === 'G' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                planType === 'N' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                'bg-gray-50 text-gray-700 border-gray-200'
+                                              ) : 'bg-gray-50 text-gray-700 border-gray-200'
+                                            }`}
+                                          >
+                                            {planType === 'F' ? 'Eligible Before 2020' :
+                                             planType === 'G' ? 'Popular Choice' :
+                                             planType === 'N' ? 'Lower Premium' :
+                                             'Medicare Supplement'}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      
+                                      {/* Plan type description */}
+                                      <div className="text-sm text-muted-foreground mb-2">
+                                        {planType === 'F' ? 'Only available if eligible for Medicare before Jan 1, 2020. Covers all gaps.' :
+                                         planType === 'G' ? 'Covers all gaps except Part B deductible ($240/yr)' :
+                                         planType === 'N' ? 'Lower cost with small copays for office visits & ER' :
+                                         'Medicare Supplement coverage'}
+                                      </div>
+                                      
                                       {hasMultipleVersions && (
                                         <p className="text-sm text-muted-foreground">
                                           Multiple versions available
@@ -2544,6 +2597,154 @@ export default function MedicareShopContent() {
       )}
         </>
       )}
+
+      {/* Plan Differences Modal */}
+      <Dialog open={showPlanDifferencesModal} onOpenChange={setShowPlanDifferencesModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedQuotePlans.length === 1 
+                ? `Plan ${selectedQuotePlans[0]} Coverage Details`
+                : `Plan Comparison: ${selectedQuotePlans.join(', ')}`
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {selectedQuotePlans.length === 1
+                ? `Understanding what's included in your selected Medigap Plan ${selectedQuotePlans[0]}`
+                : "Understanding the key differences between your selected Medigap plan types"
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Plan Comparison Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 p-3 text-left font-semibold">Benefit</th>
+                    {selectedQuotePlans.includes('F') && (
+                      <th className="border border-gray-200 p-3 text-center font-semibold bg-blue-50 text-blue-700">Plan F</th>
+                    )}
+                    {selectedQuotePlans.includes('G') && (
+                      <th className="border border-gray-200 p-3 text-center font-semibold bg-green-50 text-green-700">Plan G</th>
+                    )}
+                    {selectedQuotePlans.includes('N') && (
+                      <th className="border border-gray-200 p-3 text-center font-semibold bg-purple-50 text-purple-700">Plan N</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Part A Deductible</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✓ Covered</td>}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Part B Deductible ($240/yr)</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✗ You Pay</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✗ You Pay</td>}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Part B Coinsurance</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✓ Covered</td>}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Doctor Office Visits</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">$20 copay</td>}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Emergency Room</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">$50 copay</td>}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 p-3 font-medium">Part B Excess Charges</td>
+                    {selectedQuotePlans.includes('F') && <td className="border border-gray-200 p-3 text-center bg-blue-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('G') && <td className="border border-gray-200 p-3 text-center bg-green-50">✓ Covered</td>}
+                    {selectedQuotePlans.includes('N') && <td className="border border-gray-200 p-3 text-center bg-purple-50">✗ You Pay</td>}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Key Differences Summary */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                {selectedQuotePlans.length === 1 ? "Plan Details" : "Key Differences"}
+              </h3>
+              <div className="grid gap-4 md:grid-cols-1">
+                {selectedQuotePlans.includes('F') && (
+                  <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-2">Plan F - Most Comprehensive</h4>
+                    <p className="text-sm text-blue-700 mb-2">
+                      <strong>Eligibility:</strong> Only available if you were eligible for Medicare before January 1, 2020.
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      Covers all Medicare gaps including the Part B deductible. You'll have minimal out-of-pocket costs, 
+                      but typically higher monthly premiums.
+                    </p>
+                  </div>
+                )}
+                {selectedQuotePlans.includes('G') && (
+                  <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">Plan G - Popular Choice</h4>
+                    <p className="text-sm text-green-700">
+                      Similar to Plan F but you pay the annual Part B deductible ($240). 
+                      Often the best value with lower premiums than Plan F while still providing excellent coverage.
+                    </p>
+                  </div>
+                )}
+                {selectedQuotePlans.includes('N') && (
+                  <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
+                    <h4 className="font-semibold text-purple-800 mb-2">Plan N - Lower Premium Option</h4>
+                    <p className="text-sm text-purple-700">
+                      Lower monthly premiums but includes small copays: $20 for doctor visits, $50 for ER visits. 
+                      You also pay the Part B deductible and any excess charges. Good for those who don't visit doctors frequently.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cost Comparison */}
+            {selectedQuotePlans.length > 1 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Annual Cost Comparison Example</h3>
+                <div className="text-sm text-muted-foreground mb-3">
+                  This example assumes 4 doctor visits and 1 ER visit per year, based on average premiums shown.
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {selectedQuotePlans.includes('F') && (
+                    <div className="p-3 rounded border border-blue-200 bg-blue-50">
+                      <div className="font-semibold text-blue-800">Plan F</div>
+                      <div className="text-sm text-blue-700">Premium + minimal out-of-pocket costs</div>
+                    </div>
+                  )}
+                  {selectedQuotePlans.includes('G') && (
+                    <div className="p-3 rounded border border-green-200 bg-green-50">
+                      <div className="font-semibold text-green-800">Plan G</div>
+                      <div className="text-sm text-green-700">Premium + $240 Part B deductible</div>
+                    </div>
+                  )}
+                  {selectedQuotePlans.includes('N') && (
+                    <div className="p-3 rounded border border-purple-200 bg-purple-50">
+                      <div className="font-semibold text-purple-800">Plan N</div>
+                      <div className="text-sm text-purple-700">Premium + $240 deductible + $130 copays</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <MedicareDisclaimer />
     </div>

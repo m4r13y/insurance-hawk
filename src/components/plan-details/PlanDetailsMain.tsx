@@ -19,7 +19,6 @@ import type { QuoteData } from './types';
 import { PlanDetailsHeader } from './PlanDetailsHeader';
 import { PlanBuilderTab } from './PlanBuilderTab';
 import { AllPlansTab } from './AllPlansTab';
-import { CompanyTab } from './CompanyTab';
 import { PlanDetailsTab } from './PlanDetailsTab';
 import { UnderwritingTab } from './UnderwritingTab';
 import { LoadingState } from './LoadingState';
@@ -172,25 +171,6 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     }).format(amount / 100); // Assuming amounts are in cents
   };
 
-  const getRatingColor = (rating: string) => {
-    switch (rating.toUpperCase()) {
-      case 'A++':
-      case 'A+':
-        return 'text-green-600';
-      case 'A':
-      case 'A-':
-        return 'text-green-500';
-      case 'B++':
-      case 'B+':
-        return 'text-yellow-600';
-      case 'B':
-      case 'B-':
-        return 'text-yellow-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
   if (loading) {
     return <LoadingState />;
   }
@@ -212,10 +192,9 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <Tabs defaultValue="overview" className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-5 min-w-[500px] sm:min-w-0">
+            <TabsList className="grid w-full grid-cols-4 min-w-[400px] sm:min-w-0">
               <TabsTrigger value="overview" className="text-xs sm:text-sm">Plan Builder</TabsTrigger>
               <TabsTrigger value="quotes" className="text-xs sm:text-sm">All Plans</TabsTrigger>
-              <TabsTrigger value="company" className="text-xs sm:text-sm">Company</TabsTrigger>
               <TabsTrigger value="plan" className="text-xs sm:text-sm">Plan Details</TabsTrigger>
               <TabsTrigger value="underwriting" className="text-xs sm:text-sm">Underwriting</TabsTrigger>
             </TabsList>
@@ -232,11 +211,6 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
             carrierQuotes={carrierQuotes}
             formatCurrency={formatCurrency}
             calculateDiscountedRate={calculateDiscountedRate}
-          />
-
-          <CompanyTab 
-            quoteData={quoteData}
-            getRatingColor={getRatingColor}
           />
 
           <PlanDetailsTab 
