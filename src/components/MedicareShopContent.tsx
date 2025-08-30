@@ -11,14 +11,18 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import MedicareQuoteFlow from "@/components/MedicareQuoteFlow";
+import MedicareAdvantageShopContent from "@/components/MedicareAdvantageShopContent";
+import MedicareQuoteLoadingPage from "@/components/MedicareQuoteLoadingPage";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
+import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import Image from "next/image";
-import { UserCheck, Loader2 } from "lucide-react";
+import GenericQuoteLoading from "@/components/GenericQuoteLoading";
 import { 
   TokensIcon,
   HeartIcon,
@@ -49,6 +53,7 @@ import {
   LightningBoltIcon,
   SizeIcon
 } from '@radix-ui/react-icons';
+import { Loader2, UserCheck, RotateCcw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart } from "recharts";
 import {
   ChartConfig,
@@ -468,6 +473,7 @@ export default function MedicareShopContent() {
   const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
   const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
   const REAL_QUOTES_KEY = 'medicare_real_quotes'; // Now using localStorage instead of sessionStorage
+  const ADVANTAGE_QUOTES_KEY = 'medicare_advantage_quotes';
   const FILTER_STATE_KEY = 'medicare_filter_state';
 
   // Storage helper functions - using localStorage for better persistence
@@ -534,7 +540,7 @@ export default function MedicareShopContent() {
       
       // Clean up any other old Medicare-related data
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('medicare_') && !key.includes('real_quotes') && !key.includes('form_data') && !key.includes('form_completed')) {
+        if (key.startsWith('medicare_') && !key.includes('real_quotes') && !key.includes('advantage_quotes') && !key.includes('form_data') && !key.includes('form_completed')) {
           localStorage.removeItem(key);
           console.log('🧹 Cleaned up old Medicare data:', key);
         }
@@ -592,6 +598,7 @@ export default function MedicareShopContent() {
   const [showMedicareFlow, setShowMedicareFlow] = useState(false);
   const [medicareFlowMode, setMedicareFlowMode] = useState<'guided' | 'quick'>('guided');
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showQuoteLoading, setShowQuoteLoading] = useState(false); // New loading state
   
   const [quoteFormData, setQuoteFormData] = useState<QuoteFormData>({
     age: '',
@@ -604,7 +611,10 @@ export default function MedicareShopContent() {
   });
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [realQuotes, setRealQuotes] = useState<MedigapQuote[]>([]);
+  const [advantageQuotes, setAdvantageQuotes] = useState<any[]>([]);
   const [quotesError, setQuotesError] = useState<string | null>(null);
+  const [selectedFlowCategories, setSelectedFlowCategories] = useState<string[]>([]); // Categories selected in flow
+  const [activeCategory, setActiveCategory] = useState<string>(''); // Currently active category for display
   const [loadingPlanButton, setLoadingPlanButton] = useState<string | null>(null); // Track which plan button is loading
   const [showPlanDifferencesModal, setShowPlanDifferencesModal] = useState(false); // Track plan differences modal
   
@@ -629,6 +639,14 @@ export default function MedicareShopContent() {
       saveToStorage(REAL_QUOTES_KEY, realQuotes);
     }
   }, [realQuotes, isInitializing]);
+
+  // Save advantage quotes to localStorage whenever they change (but not during initialization)
+  useEffect(() => {
+    if (!isInitializing) {
+      console.log('💾 Saving advantageQuotes to localStorage:', advantageQuotes.length, 'quotes');
+      saveToStorage(ADVANTAGE_QUOTES_KEY, advantageQuotes);
+    }
+  }, [advantageQuotes, isInitializing]);
 
   // Save filter state to localStorage whenever filters change (but not during initialization)
   useEffect(() => {
@@ -721,6 +739,16 @@ export default function MedicareShopContent() {
           console.error('Error loading quotes from localStorage fallback:', fallbackError);
         }
       }
+
+      // Initialize advantage quotes
+      const savedAdvantageQuotes = localStorage.getItem(ADVANTAGE_QUOTES_KEY);
+      if (savedAdvantageQuotes) {
+        const parsedAdvantageQuotes = JSON.parse(savedAdvantageQuotes);
+        console.log('🔄 Restoring advantageQuotes:', parsedAdvantageQuotes.length, 'quotes');
+        setAdvantageQuotes(parsedAdvantageQuotes);
+      } else {
+        console.log('🔄 No saved advantageQuotes found');
+      }
     } catch (error) {
       console.error('Error loading localStorage data:', error);
     } finally {
@@ -732,21 +760,21 @@ export default function MedicareShopContent() {
   
   // Additional safeguard: if we have quotes but form isn't marked as completed, fix the state
   useEffect(() => {
-    if (!isInitializing && realQuotes.length > 0 && !quoteFormCompleted) {
+    if (!isInitializing && hasQuotes() && !quoteFormCompleted) {
       console.log('🔧 Found quotes but form not marked as completed - fixing state');
       setQuoteFormCompleted(true);
       saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
     }
-  }, [isInitializing, realQuotes.length, quoteFormCompleted]);
+  }, [isInitializing, realQuotes.length, advantageQuotes.length, quoteFormCompleted]);
   
-  // Ensure URL shows step=results when we have completed quotes
+  // Ensure URL shows step=results when we have quotes
   useEffect(() => {
-    if (!isInitializing && quoteFormCompleted && realQuotes.length > 0 && stepParam !== 'results') {
-      console.log('🔧 Form completed with quotes but URL missing step=results - updating URL');
+    if (!isInitializing && hasQuotes() && stepParam !== 'results') {
+      console.log('🔧 Found quotes but URL missing step=results - updating URL');
       const newUrl = `${pathname}?step=results${selectedCategory ? `&category=${selectedCategory}` : ''}`;
       window.history.replaceState(null, '', newUrl);
     }
-  }, [isInitializing, quoteFormCompleted, realQuotes.length, stepParam, pathname, selectedCategory]);
+  }, [isInitializing, realQuotes.length, advantageQuotes.length, stepParam, pathname, selectedCategory]);
   
   const currentCategory = productCategories.find(cat => cat.id === selectedCategory);
 
@@ -927,52 +955,96 @@ export default function MedicareShopContent() {
     
     setQuoteFormData(mappedFormData);
 
-    // Determine the category to use for quotes
-    let categoryToUse = 'medigap'; // default
-    let plansToUse = ['F', 'G', 'N']; // default
-    
     // Set selected categories based on flow choices
     if (flowData.planCategories && flowData.planCategories.length > 0) {
-      const firstCategory = flowData.planCategories[0];
-      if (firstCategory === 'medigap') {
-        categoryToUse = 'medigap';
+      setSelectedFlowCategories(flowData.planCategories);
+    }
+
+    // Hide the flow and show loading page
+    setShowMedicareFlow(false);
+    setShowQuoteLoading(true);
+    
+    // Store the flow data for processing after loading
+    setTimeout(() => {
+      processFlowDataAndFetchQuotes(mappedFormData, flowData);
+    }, 100);
+  };
+
+  // Process flow data and fetch quotes for all selected categories
+  const processFlowDataAndFetchQuotes = async (mappedFormData: QuoteFormData, flowData: any) => {
+    try {
+      const hasMedigap = flowData.planCategories?.includes('medigap');
+      const hasAdvantage = flowData.planCategories?.includes('advantage');
+      
+      // Determine initial category and settings
+      let initialCategory = 'medigap'; // default
+      let plansToUse = ['F', 'G', 'N']; // default
+      
+      if (hasMedigap && hasAdvantage) {
+        // Both selected - default to medigap first, but fetch both in background
+        initialCategory = 'medigap';
         setSelectedCategory('medigap');
-        // Use the selected Medigap plans from the flow, or default to all if none selected
+        setActiveCategory('medigap');
         const selectedPlans = flowData.selectedMedigapPlans && flowData.selectedMedigapPlans.length > 0 
           ? flowData.selectedMedigapPlans 
           : ['F', 'G', 'N'];
         plansToUse = selectedPlans;
         setSelectedQuotePlans(selectedPlans);
-      } else if (firstCategory === 'advantage') {
-        categoryToUse = 'medicare-advantage';
-        setSelectedCategory('medicare-advantage');
+        
+        // Fetch both medigap and advantage quotes simultaneously without individual loading states
+        await Promise.all([
+          handleQuoteFormSubmitWithData(mappedFormData, 'medigap', plansToUse, false),
+          handleQuoteFormSubmitWithData(mappedFormData, 'advantage', undefined, false)
+        ]);
+      } else if (hasMedigap) {
+        initialCategory = 'medigap';
+        setSelectedCategory('medigap');
+        setActiveCategory('medigap');
+        const selectedPlans = flowData.selectedMedigapPlans && flowData.selectedMedigapPlans.length > 0 
+          ? flowData.selectedMedigapPlans 
+          : ['F', 'G', 'N'];
+        plansToUse = selectedPlans;
+        setSelectedQuotePlans(selectedPlans);
+        
+        await handleQuoteFormSubmitWithData(mappedFormData, 'medigap', plansToUse, false);
+      } else if (hasAdvantage) {
+        initialCategory = 'advantage';
+        setSelectedCategory('advantage');
+        setActiveCategory('advantage');
+        
+        await handleQuoteFormSubmitWithData(mappedFormData, 'advantage', undefined, false);
       } else {
-        categoryToUse = firstCategory;
-        setSelectedCategory(firstCategory);
+        // Default to medigap for general flows
+        setSelectedCategory('medigap');
+        setActiveCategory('medigap');
+        setSelectedQuotePlans(['F', 'G', 'N']);
+        
+        await handleQuoteFormSubmitWithData(mappedFormData, 'medigap', ['F', 'G', 'N'], false);
       }
-    } else {
-      // Default to medigap for general flows
-      setSelectedCategory('medigap');
-      setSelectedQuotePlans(['F', 'G', 'N']);
+      
+      setQuoteFormCompleted(true);
+    } catch (error) {
+      console.error('Error processing flow data:', error);
+      setQuotesError('Failed to fetch quotes. Please try again.');
+    } finally {
+      setShowQuoteLoading(false);
     }
-
-    // Hide the flow and proceed with quote fetching
-    setShowMedicareFlow(false);
-    setQuoteFormCompleted(true);
-    
-    // Call quote submission directly with the data and category
-    console.log('🎯 Passing plans to quote function:', plansToUse);
-    setTimeout(() => {
-      handleQuoteFormSubmitWithData(mappedFormData, categoryToUse, plansToUse);
-    }, 100);
   };
 
   // New function that accepts data directly to avoid async state issues
-  const handleQuoteFormSubmitWithData = async (formData: any, category: string, plansList?: string[]) => {
-    console.log('🔥 handleQuoteFormSubmitWithData called with:', { formData, category, plansList });
+  const handleQuoteFormSubmitWithData = async (formData: any, category: string, plansList?: string[], manageLoadingState: boolean = true) => {
+    console.log('🔥 handleQuoteFormSubmitWithData called with:', { formData, category, plansList, manageLoadingState });
     
-    // Validate required fields
-    const requiredFields = ['age', 'zipCode', 'gender', 'tobaccoUse'];
+    // Validate required fields based on category
+    let requiredFields: string[];
+    if (category === 'advantage') {
+      // Medicare Advantage only requires ZIP code
+      requiredFields = ['zipCode'];
+    } else {
+      // Medigap and other categories require all fields
+      requiredFields = ['age', 'zipCode', 'gender', 'tobaccoUse'];
+    }
+    
     const missingFields = requiredFields.filter(field => {
       const value = formData[field];
       return value === '' || value === null || value === undefined;
@@ -991,7 +1063,10 @@ export default function MedicareShopContent() {
       console.log('📊 Calling getMedigapQuotes with data:', formData);
       const plansToFetch = plansList || selectedQuotePlans;
       console.log('🎯 Selected quote plans to fetch:', plansToFetch);
-      setIsLoadingQuotes(true);
+      
+      if (manageLoadingState) {
+        setIsLoadingQuotes(true);
+      }
       setQuotesError(null);
       setRealQuotes([]);
       
@@ -1029,12 +1104,84 @@ export default function MedicareShopContent() {
         console.error('❌ Error getting medigap quotes:', error);
         setQuotesError(error instanceof Error ? error.message : 'Failed to fetch quotes');
       } finally {
-        setIsLoadingQuotes(false);
+        if (manageLoadingState) {
+          setIsLoadingQuotes(false);
+        }
+      }
+    } else if (category === 'advantage') {
+      console.log('📊 Calling getMedicareAdvantageQuotes with data:', formData);
+      
+      if (manageLoadingState) {
+        setIsLoadingQuotes(true);
+      }
+      setQuotesError(null);
+      setAdvantageQuotes([]);
+      
+      try {
+        // Convert form data to API format for Medicare Advantage quotes
+        const quoteParams = {
+          zipCode: formData.zipCode,
+        };
+
+        console.log('Fetching Medicare Advantage quotes with params:', quoteParams);
+        
+        const response = await getMedicareAdvantageQuotes(quoteParams);
+        
+        console.log('📈 Medicare Advantage quotes response:', response);
+        
+        if (response.error) {
+          console.log('🔥 API Error:', response.error);
+          setQuotesError(response.error);
+        } else if (response.quotes && Array.isArray(response.quotes)) {
+          console.log('✅ Success! Received quotes:', response.quotes.length);
+          setAdvantageQuotes(response.quotes);
+          
+          // Save to localStorage for MedicareAdvantageShopContent to pick up
+          localStorage.setItem('medicare_advantage_quotes', JSON.stringify(response.quotes));
+          localStorage.setItem('medicare_advantage_zipcode', formData.zipCode);
+          
+          console.log(`Received ${response.quotes.length} Medicare Advantage quotes`);
+        } else {
+          console.error('❌ Invalid response format:', response);
+          setQuotesError('Invalid response from quotes API');
+        }
+      } catch (error) {
+        console.error('❌ Error getting Medicare Advantage quotes:', error);
+        setQuotesError(error instanceof Error ? error.message : 'Failed to fetch quotes');
+      } finally {
+        if (manageLoadingState) {
+          setIsLoadingQuotes(false);
+        }
       }
     } else {
-      console.log('⚠️ Category not medigap, showing placeholder for:', category);
+      console.log('⚠️ Category not supported, showing placeholder for:', category);
       // For other categories, show placeholder for now
-      setIsLoadingQuotes(false);
+      if (manageLoadingState) {
+        setIsLoadingQuotes(false);
+      }
+    }
+  };
+
+  // Helper function to check if there are any quotes (medigap or advantage)
+  const hasQuotes = () => {
+    return realQuotes.length > 0 || advantageQuotes.length > 0;
+  };
+
+  // Function to toggle between medigap and advantage when both are selected
+  const handleCategoryToggle = (category: 'medigap' | 'advantage') => {
+    setActiveCategory(category);
+    setSelectedCategory(category);
+    
+    // Update URL to reflect the new category
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('category', category);
+    router.push(`/medicare?${params.toString()}`);
+    
+    // If we don't have quotes for this category yet, fetch them
+    if (category === 'medigap' && realQuotes.length === 0 && quoteFormData.zipCode) {
+      handleQuoteFormSubmitWithData(quoteFormData, category);
+    } else if (category === 'advantage' && advantageQuotes.length === 0 && quoteFormData.zipCode) {
+      handleQuoteFormSubmitWithData(quoteFormData, category);
     }
   };
 
@@ -1174,6 +1321,7 @@ export default function MedicareShopContent() {
       localStorage.removeItem(QUOTE_FORM_DATA_KEY);
       localStorage.removeItem(QUOTE_FORM_COMPLETED_KEY);
       localStorage.removeItem(REAL_QUOTES_KEY);
+      localStorage.removeItem(ADVANTAGE_QUOTES_KEY);
       localStorage.removeItem(FILTER_STATE_KEY);
       // Clean up any other Medicare-related data
       cleanupOldStorage();
@@ -1188,6 +1336,7 @@ export default function MedicareShopContent() {
     });
     setQuoteFormCompleted(false);
     setRealQuotes([]);
+    setAdvantageQuotes([]);
     
     // Reset filter states to defaults
     setSearchQuery('');
@@ -1202,6 +1351,11 @@ export default function MedicareShopContent() {
     // Update URL to remove step parameter
     const newUrl = pathname;
     window.history.replaceState(null, '', newUrl);
+    
+    // Navigate back to main Medicare flow page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/medicare';
+    }
   };
 
   // Debug function to check storage state
@@ -1210,11 +1364,14 @@ export default function MedicareShopContent() {
     console.log('LocalStorage - Form Data:', localStorage.getItem(QUOTE_FORM_DATA_KEY));
     console.log('LocalStorage - Form Completed:', localStorage.getItem(QUOTE_FORM_COMPLETED_KEY));
     console.log('LocalStorage - Real Quotes:', localStorage.getItem(REAL_QUOTES_KEY));
+    console.log('LocalStorage - Advantage Quotes:', localStorage.getItem(ADVANTAGE_QUOTES_KEY));
     console.log('LocalStorage - Filter State:', localStorage.getItem(FILTER_STATE_KEY));
     console.log('LocalStorage - Plan Details:', localStorage.getItem('planDetailsData'));
     console.log('LocalStorage - Quotes Backup:', localStorage.getItem('medicare_quotes_backup'));
     console.log('State - quoteFormCompleted:', quoteFormCompleted);
     console.log('State - realQuotes length:', realQuotes.length);
+    console.log('State - advantageQuotes length:', advantageQuotes.length);
+    console.log('State - hasQuotes():', hasQuotes());
     console.log('State - isInitializing:', isInitializing);
     console.log('State - selectedQuotePlans:', selectedQuotePlans);
   };
@@ -1587,8 +1744,22 @@ export default function MedicareShopContent() {
   React.useEffect(() => {
     if (categoryParam && productCategories.find(cat => cat.id === categoryParam)) {
       setSelectedCategory(categoryParam);
+      setActiveCategory(categoryParam); // Also set activeCategory for proper routing
     }
   }, [searchParams, categoryParam]);
+
+  // Debug routing decisions
+  React.useEffect(() => {
+    console.log('🔍 Routing Debug:', {
+      selectedCategory,
+      activeCategory,
+      categoryParam,
+      stepParam,
+      shouldRouteToAdvantage: selectedCategory === 'advantage' || activeCategory === 'advantage',
+      hasAdvantageQuotes: advantageQuotes.length > 0,
+      isInitializing
+    });
+  }, [selectedCategory, activeCategory, categoryParam, stepParam, advantageQuotes.length, isInitializing]);
 
   const displayData = getPaginatedDisplay();
   const paginationInfo = getPaginationInfo();
@@ -1603,10 +1774,28 @@ export default function MedicareShopContent() {
             <p className="text-muted-foreground">Loading your Medicare plans...</p>
           </div>
         </div>
+      ) : showQuoteLoading ? (
+        /* Show loading page between flow and results */
+        <MedicareQuoteLoadingPage
+          quoteType={(() => {
+            const hasMedigap = selectedFlowCategories.includes('medigap');
+            const hasAdvantage = selectedFlowCategories.includes('advantage');
+            if (hasMedigap && hasAdvantage) return 'both';
+            if (hasAdvantage) return 'advantage';
+            return 'medigap';
+          })()}
+          zipCode={quoteFormData.zipCode}
+          age={quoteFormData.age?.toString()}
+          selectedCategories={selectedFlowCategories}
+          onComplete={() => setShowQuoteLoading(false)}
+        />
+      ) : selectedCategory === 'advantage' || activeCategory === 'advantage' ? (
+        /* Route to dedicated Medicare Advantage component */
+        <MedicareAdvantageShopContent />
       ) : (
         <>
-      {/* Show Shopping Header Only When Form is Completed */}
-      {quoteFormCompleted && (
+          {/* Show Shopping Header Only When There Are Quotes */}
+      {hasQuotes() && (
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -1618,15 +1807,74 @@ export default function MedicareShopContent() {
               </p>
             </div>
             
-            {/* Cart Summary & User Info */}
+            {/* Cart Summary */}
             <div className="flex items-center gap-4">
               {cart.length > 0 && (
                 <Badge variant="outline" className="px-3 py-1">
                   {cart.length} plan{cart.length !== 1 ? 's' : ''} selected
                 </Badge>
               )}
-              
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plan Type Controls - Under Shop/Learn/Resources Navigation */}
+      {hasQuotes() && (
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border">
+            <div className="flex items-center gap-4">
+              {/* Category Toggle for when both Medigap and Advantage are selected */}
+              {selectedFlowCategories.includes('medigap') && selectedFlowCategories.includes('advantage') && (
+                <div className="flex items-center gap-2 p-1 bg-background rounded-lg border">
+                  <Button
+                    variant={activeCategory === 'medigap' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleCategoryToggle('medigap')}
+                    className="flex-1"
+                  >
+                    Medicare Supplement
+                  </Button>
+                  <Button
+                    variant={activeCategory === 'advantage' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleCategoryToggle('advantage')}
+                    className="flex-1"
+                  >
+                    Medicare Advantage
+                  </Button>
+                </div>
+              )}
+            </div>
+            
+            {/* Reset Button - Moved to right of toggles */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                  title="Clear all quotes and start over"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset All Data?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will clear all your quotes, form data, and filters. You'll need to start over from the beginning. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearStorageAndReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Reset Everything
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}
@@ -1639,8 +1887,8 @@ export default function MedicareShopContent() {
           onComplete={handleMedicareFlowComplete}
           onCancel={() => setShowMedicareFlow(false)}
         />
-      ) : quoteFormCompleted ? (
-        /* Show Plans When Form is Completed */
+      ) : hasQuotes() ? (
+        /* Show Plans When There Are Quotes */
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Enhanced Sidebar with Combined Filters */}
         <aside className="lg:col-span-1">
@@ -1667,6 +1915,50 @@ export default function MedicareShopContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Plan Categories Dropdown - moved from main content */}
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-3">Plan Category</h4>
+                  <Select value={selectedCategory} onValueChange={(value) => handleCategorySelect(value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select plan category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productCategories.map((category) => {
+                        // For Medigap, show count of real quotes when available
+                        let planCount = category.plans.length;
+                        if (category.id === 'medigap' && realQuotes.length > 0) {
+                          const filteredQuotes = realQuotes.filter(quote => {
+                            const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
+                            if (searchQuery && matchesPlan) {
+                              const carrierName = quote.carrier?.name || 
+                                                 quote.company_base?.name ||
+                                                 quote.company ||
+                                                 'Unknown Carrier';
+                              return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
+                            }
+                            return matchesPlan;
+                          });
+                          planCount = filteredQuotes.length;
+                        }
+                        
+                        return (
+                          <SelectItem key={category.id} value={category.id}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <span>{category.name}</span>
+                                {category.isPopular && (
+                                  <StarFilledIcon className="w-3 h-3 text-yellow-500" />
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground ml-2">({planCount})</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* User Details - moved from top right */}
                 {quoteFormData && (quoteFormData.age || quoteFormData.zipCode || quoteFormData.gender) && (
                   <div>
@@ -1979,54 +2271,10 @@ export default function MedicareShopContent() {
                     )}
                   </p>
                 </div>
-                
-                {/* Plan Categories Dropdown and Plan Types */}
-                <div className="space-y-3">
-                  {/* Plan Categories Dropdown */}
-                  <div>
-                    <Select value={selectedCategory} onValueChange={(value) => handleCategorySelect(value)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select plan category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {productCategories.map((category) => {
-                          // For Medigap, show count of real quotes when available
-                          let planCount = category.plans.length;
-                          if (category.id === 'medigap' && realQuotes.length > 0) {
-                            const filteredQuotes = realQuotes.filter(quote => {
-                              const matchesPlan = selectedQuotePlans.includes(quote.plan || '');
-                              if (searchQuery && matchesPlan) {
-                                const carrierName = quote.carrier?.name || 
-                                                   quote.company_base?.name ||
-                                                   quote.company ||
-                                                   'Unknown Carrier';
-                                return carrierName.toLowerCase().includes(searchQuery.toLowerCase());
-                              }
-                              return matchesPlan;
-                            });
-                            planCount = filteredQuotes.length;
-                          }
-                          
-                          return (
-                            <SelectItem key={category.id} value={category.id}>
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2">
-                                  <span>{category.name}</span>
-                                  {category.isPopular && (
-                                    <StarFilledIcon className="w-3 h-3 text-yellow-500" />
-                                  )}
-                                </div>
-                                <span className="text-xs text-muted-foreground ml-2">({planCount})</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Plan Types Checkboxes/Buttons for Medigap */}
-                  {selectedCategory === 'medigap' && realQuotes.length > 0 && (
+
+                {/* Plan Types Checkboxes/Buttons for Medigap */}
+                {selectedCategory === 'medigap' && realQuotes.length > 0 && (
+                  <div className="space-y-3">
                     <div className="flex items-center gap-4">
                       <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
                       <div className="flex items-center gap-4">
@@ -2145,28 +2393,17 @@ export default function MedicareShopContent() {
                         )}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Product Grid - Show loading for Medigap or display plans */}
               {selectedCategory === 'medigap' && isLoadingQuotes ? (
                 /* Loading Screen for Medigap Quotes */
-                <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6"></div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    Finding Your Medicare Supplement Plans
-                  </h3>
-                  <p className="text-muted-foreground mb-4 max-w-md">
-                    We're searching through our network of licensed carriers to find the best Medigap plans for your area and needs.
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <span className="ml-2">Loading real-time quotes...</span>
-                  </div>
-                </div>
+                <GenericQuoteLoading 
+                  title="Getting Your Medigap Quotes"
+                  message="Searching for Medicare Supplement plans in your area..."
+                />
               ) : selectedCategory === 'medigap' && realQuotes.length === 0 && !isLoadingQuotes ? (
                 /* Empty State for Medigap (when no quotes available) */
                 <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
@@ -2190,6 +2427,7 @@ export default function MedicareShopContent() {
                   </Button>
                 </div>
               ) : (
+                /* Regular Product Grid for other categories - not used for advantage anymore */
                 /* Regular Product Grid */
                 <div className={`grid gap-6 ${
                   selectedQuotePlans.length === 1 
@@ -2595,8 +2833,6 @@ export default function MedicareShopContent() {
           </div>
         </div>
       )}
-        </>
-      )}
 
       {/* Plan Differences Modal */}
       <Dialog open={showPlanDifferencesModal} onOpenChange={setShowPlanDifferencesModal}>
@@ -2746,7 +2982,9 @@ export default function MedicareShopContent() {
         </DialogContent>
       </Dialog>
 
-      <MedicareDisclaimer />
+          <MedicareDisclaimer />
+        </>
+      )}
     </div>
   );
 }

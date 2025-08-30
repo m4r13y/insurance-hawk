@@ -299,27 +299,57 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
 
   // Get estimated total steps for progress calculation
   const getEstimatedTotalSteps = () => {
-    // Quick mode is always 2 steps
+    // Quick mode: base steps + conditional additions
     if (mode === 'quick') {
-      return 2;
+      let estimatedSteps = 2; // Plan Categories + Personal Information
+      
+      // Add conditional steps based on selections
+      if (formData.planCategories.includes('medigap')) {
+        estimatedSteps += 1; // Medigap Plans
+      }
+      if (formData.planCategories.includes('advantage')) {
+        estimatedSteps += 2; // Doctors + Medications  
+      }
+      if (formData.planCategories.includes('additional')) {
+        estimatedSteps += 1; // Additional Options
+      }
+      
+      return estimatedSteps;
     }
     
+    // For guided mode, try to calculate dynamically based on selections
+    const actualSteps = getSteps();
+    if (actualSteps.length > 1) {
+      return actualSteps.length;
+    }
+    
+    // Initial estimates before user selections
     if (!formData.medicareStatus) {
-      return 3 // Estimated: Status -> Next Step -> Personal Info
+      return 4; // Conservative estimate: Status -> Selection -> Options -> Personal Info
     }
     
-    // Calculate based on selected path
+    // Calculate based on selected Medicare status
     if (formData.medicareStatus === "browsing") {
-      return 3 // Status -> Plan Categories -> Personal Info
+      let estimate = 3; // Status -> Plan Categories -> Personal Info
+      // Add estimates for potential additional steps
+      if (formData.planCategories.length === 0) {
+        estimate += 2; // Could have Medigap + Advantage steps
+      }
+      return estimate;
     } else if (formData.medicareStatus === "new") {
-      return 3 // Status -> Experience Level -> Personal Info (minimum)
+      if (formData.newMedicareChoice === "unsure") {
+        return 2; // Status -> Personal Info
+      } else if (formData.newMedicareChoice === "know-what-want") {
+        return 5; // Status -> Plan Selection -> possible subcategories -> Personal Info
+      } else {
+        return 4; // Status -> Experience Level -> Plan Selection -> Personal Info
+      }
     } else if (formData.medicareStatus === "enrolled") {
-      return 3 // Status -> Current Type/Action -> Personal Info (minimum)
+      return 4; // Status -> Current Type -> Action -> Personal Info
     }
     
-    // Fallback to actual steps if calculated
-    const steps = getSteps()
-    return Math.max(steps.length, 2)
+    // Fallback
+    return Math.max(actualSteps.length, 3);
   }
 
   // Check if we're on the actual final step (Personal Information)
@@ -505,7 +535,19 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     }))
   }
 
-  const progress = ((currentStep + 1) / estimatedTotal) * 100
+  // Calculate progress based on actual steps vs estimated
+  const progress = (() => {
+    const actualSteps = getSteps();
+    const totalSteps = Math.max(actualSteps.length, estimatedTotal);
+    
+    // If we have actual steps, use them for more accurate progress
+    if (actualSteps.length > 1) {
+      return ((currentStep + 1) / actualSteps.length) * 100;
+    }
+    
+    // Otherwise use estimated total
+    return ((currentStep + 1) / estimatedTotal) * 100;
+  })();
 
   const canProceed = () => {
     const currentStepName = steps[currentStep]
@@ -561,7 +603,10 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm text-muted-foreground">
-              Step {currentStep + 1} of {estimatedTotal}
+              Step {currentStep + 1} of {(() => {
+                const actualSteps = getSteps();
+                return actualSteps.length > 1 ? actualSteps.length : estimatedTotal;
+              })()}
             </span>
             <span className="text-sm text-muted-foreground">
               {steps[currentStep]}
