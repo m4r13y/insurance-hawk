@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarIcon, HomeIcon, CalendarIcon, CheckCircledIcon } from "@radix-ui/react-icons";
+import { StarIcon, HomeIcon, CalendarIcon, CheckCircledIcon, TokensIcon as DollarSign } from "@radix-ui/react-icons";
 import { OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 

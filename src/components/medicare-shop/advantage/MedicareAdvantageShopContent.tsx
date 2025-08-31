@@ -11,22 +11,29 @@ import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 import { 
-  StarIcon, 
+  StarIcon as Star, 
   PersonIcon,
-  GlobeIcon, 
+  GlobeIcon as Globe, 
   ComponentInstanceIcon, 
-  HeartIcon, 
-  EyeOpenIcon, 
-  ActivityLogIcon,
+  HeartIcon as Heart, 
+  EyeOpenIcon as Eye, 
+  ActivityLogIcon as Activity,
   ExclamationTriangleIcon,
-  CheckCircledIcon,
+  CheckCircledIcon as Shield,
   LightningBoltIcon,
-  InfoCircledIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  Cross1Icon,
-  ResetIcon
+  InfoCircledIcon as Info,
+  CheckIcon as Check,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  Cross1Icon as X,
+  ResetIcon,
+  ReaderIcon as Stethoscope,
+  ArchiveIcon as Pill,
+  ArchiveIcon as Building2,
+  RocketIcon as Ambulance,
+  TokensIcon as DollarSign,
+  GlobeIcon as MapPin,
+  GitHubLogoIcon as GitCompare
 } from "@radix-ui/react-icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";

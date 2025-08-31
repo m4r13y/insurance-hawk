@@ -18,7 +18,7 @@ import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import Image from "next/image";
-import { CheckIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { 
   TokensIcon,
   HeartIcon,
