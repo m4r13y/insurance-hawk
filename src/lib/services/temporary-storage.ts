@@ -64,6 +64,10 @@ export interface QuoteDataDocument {
   data: any;
   savedAt: Timestamp;
   expiresAt: Timestamp;
+  // Optional fields for chunked data
+  chunkIndex?: number;
+  totalChunks?: number;
+  originalKey?: string;
 }
 
 // Legacy interface for backward compatibility
@@ -116,19 +120,58 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
     // Create/update visitor metadata document
     await setDoc(visitorDocRef, visitorMetadata, { merge: true });
     
-    // Save data to appropriate subcollection
-    const subcollectionRef = collection(visitorDocRef, subcollectionName);
-    const dataDocRef = doc(subcollectionRef, key); // Use key as document ID
+    // Handle large quote arrays by splitting them into chunks
+    if (Array.isArray(data) && key.includes('quotes')) {
+      console.log(`💾 Splitting ${data.length} quotes into smaller documents for ${key}`);
+      
+      // Clear existing documents in this subcollection first
+      const subcollectionRef = collection(visitorDocRef, subcollectionName);
+      
+      // Split quotes into chunks of 25 quotes each (roughly 400KB per document)
+      const chunkSize = 25;
+      const chunks = [];
+      for (let i = 0; i < data.length; i += chunkSize) {
+        chunks.push(data.slice(i, i + chunkSize));
+      }
+      
+      console.log(`📦 Created ${chunks.length} chunks for ${key}`);
+      
+      // Save each chunk as a separate document
+      const savePromises = chunks.map(async (chunk, index) => {
+        const chunkDocRef = doc(subcollectionRef, `${key}_chunk_${index}`);
+        const chunkDocument: QuoteDataDocument = {
+          key: `${key}_chunk_${index}`,
+          data: chunk,
+          savedAt: now,
+          expiresAt,
+          chunkIndex: index,
+          totalChunks: chunks.length,
+          originalKey: key
+        };
+        
+        await setDoc(chunkDocRef, chunkDocument);
+        console.log(`✅ Saved chunk ${index + 1}/${chunks.length} for ${key} (${chunk.length} quotes)`);
+      });
+      
+      await Promise.all(savePromises);
+      console.log(`✅ Successfully saved all ${chunks.length} chunks for ${key}`);
+      
+    } else {
+      // Handle non-array data or small arrays normally
+      const subcollectionRef = collection(visitorDocRef, subcollectionName);
+      const dataDocRef = doc(subcollectionRef, key);
+      
+      const quoteDocument: QuoteDataDocument = {
+        key,
+        data,
+        savedAt: now,
+        expiresAt
+      };
+      
+      await setDoc(dataDocRef, quoteDocument);
+      console.log(`✅ Saved data to subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
+    }
     
-    const quoteDocument: QuoteDataDocument = {
-      key,
-      data,
-      savedAt: now,
-      expiresAt
-    };
-    
-    await setDoc(dataDocRef, quoteDocument);
-    console.log(`✅ Saved data to subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
   } catch (error) {
     console.error(`❌ Error saving data for ${key}:`, error);
     // Fallback to localStorage if Firestore fails
@@ -153,11 +196,12 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
     const visitorId = getVisitorId();
     const subcollectionName = getSubcollectionName(key);
     
-    // Reference to the specific data document
+    // Reference to the subcollection
     const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
     const subcollectionRef = collection(visitorDocRef, subcollectionName);
-    const dataDocRef = doc(subcollectionRef, key);
     
+    // First try to load as a single document
+    const dataDocRef = doc(subcollectionRef, key);
     const dataDoc = await getDoc(dataDocRef);
     
     if (dataDoc.exists()) {
@@ -175,10 +219,72 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       
       console.log(`✅ Loaded data from subcollection: ${subcollectionName}/${key}`);
       return documentData.data as T;
-    } else {
-      console.log(`📭 No data found for ${key} in subcollection: ${subcollectionName}`);
-      return defaultValue;
     }
+    
+    // If single document doesn't exist, try to load chunked data
+    if (key.includes('quotes')) {
+      console.log(`🔍 Looking for chunked data for ${key}...`);
+      
+      // Query for chunk documents
+      const chunkedQuery = query(
+        subcollectionRef,
+        where('originalKey', '==', key)
+      );
+      
+      try {
+        const querySnapshot = await getDocs(chunkedQuery);
+        
+        if (!querySnapshot.empty) {
+          console.log(`📦 Found ${querySnapshot.docs.length} chunks for ${key}`);
+          
+          // Sort chunks by index and combine them
+          const chunks: { index: number; data: any[] }[] = [];
+          let expired = false;
+          
+          for (const doc of querySnapshot.docs) {
+            const chunkData = doc.data() as QuoteDataDocument;
+            
+            // Check if chunk has expired
+            const now = new Date();
+            const expiresAt = chunkData.expiresAt.toDate();
+            
+            if (now > expiresAt) {
+              console.log(`⏰ Chunk expired for ${key}, cleaning up...`);
+              await deleteDoc(doc.ref);
+              expired = true;
+              continue;
+            }
+            
+            if (chunkData.chunkIndex !== undefined) {
+              chunks.push({
+                index: chunkData.chunkIndex,
+                data: chunkData.data
+              });
+            }
+          }
+          
+          if (expired && chunks.length === 0) {
+            return defaultValue;
+          }
+          
+          // Sort chunks by index and combine data
+          chunks.sort((a, b) => a.index - b.index);
+          const combinedData: any[] = [];
+          chunks.forEach(chunk => {
+            combinedData.push(...chunk.data);
+          });
+          
+          console.log(`✅ Loaded ${combinedData.length} items from ${chunks.length} chunks for ${key}`);
+          return combinedData as T;
+        }
+      } catch (error) {
+        console.warn(`Failed to query chunked data for ${key}:`, error);
+      }
+    }
+    
+    console.log(`📭 No data found for ${key} in subcollection: ${subcollectionName}`);
+    return defaultValue;
+    
   } catch (error) {
     console.error(`❌ Error loading data for ${key}:`, error);
     // Fallback to localStorage
@@ -204,13 +310,39 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
     const visitorId = getVisitorId();
     const subcollectionName = getSubcollectionName(key);
     
-    // Reference to the specific data document in subcollection
+    // Reference to the subcollection
     const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
     const subcollectionRef = collection(visitorDocRef, subcollectionName);
-    const dataDocRef = doc(subcollectionRef, key);
     
-    await deleteDoc(dataDocRef);
-    console.log(`🗑️ Deleted data from subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
+    // Try to delete single document first
+    const dataDocRef = doc(subcollectionRef, key);
+    try {
+      await deleteDoc(dataDocRef);
+      console.log(`🗑️ Deleted single document from subcollection: ${subcollectionName}/${key}`);
+    } catch (error) {
+      // Document might not exist, continue to check for chunks
+    }
+    
+    // Also delete any chunked documents
+    if (key.includes('quotes')) {
+      try {
+        const chunkedQuery = query(
+          subcollectionRef,
+          where('originalKey', '==', key)
+        );
+        
+        const querySnapshot = await getDocs(chunkedQuery);
+        
+        if (!querySnapshot.empty) {
+          const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+          await Promise.all(deletePromises);
+          console.log(`🗑️ Deleted ${querySnapshot.docs.length} chunks for ${key}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to delete chunks for ${key}:`, error);
+      }
+    }
+    
   } catch (error) {
     console.error(`❌ Error deleting data for ${key}:`, error);
     // Fallback to localStorage cleanup
