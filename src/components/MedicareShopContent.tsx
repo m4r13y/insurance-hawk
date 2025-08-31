@@ -22,7 +22,7 @@ import { getFinalExpenseLifeQuotes } from "@/lib/actions/final-expense-quotes";
 import { getCancerInsuranceQuotes } from "@/lib/actions/cancer-insurance-quotes";
 import { optimizeDentalQuotes, OptimizedDentalQuote, filter2025Quotes } from "@/lib/dental-quote-optimizer";
 import { optimizeHospitalIndemnityQuotes, OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
-import { saveDentalQuotesToStorage, loadDentalQuotesFromStorage } from "@/lib/dental-storage";
+import { saveDentalQuotesToStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
@@ -385,6 +385,8 @@ function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setRealQuotes(result.quotes);
+          // Save Medigap quotes to Firebase storage
+          await saveToStorage(REAL_QUOTES_KEY, result.quotes);
           // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
@@ -395,7 +397,9 @@ function MedicareShopContent() {
         
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
-          setRealQuotes(result.quotes);
+          setAdvantageQuotes(result.quotes);
+          // Save Medicare Advantage quotes to Firebase storage
+          await saveToStorage(ADVANTAGE_QUOTES_KEY, result.quotes);
           // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
@@ -407,6 +411,8 @@ function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setDrugPlanQuotes(result.quotes);
+          // Save Drug Plan quotes to Firebase storage
+          await saveToStorage(DRUG_PLAN_QUOTES_KEY, result.quotes);
           // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
@@ -494,66 +500,6 @@ function MedicareShopContent() {
       return () => clearTimeout(failsafeTimer);
     }
   }, [showQuoteLoading]);
-
-  // Auto-switch to first completed category ONLY during initial loading phase
-  useEffect(() => {
-    // DISABLED: Auto-switching has been disabled to prevent unwanted tab changes
-    // Only auto-switch if we're still in the loading phase AND haven't switched yet AND initial load is not complete
-    if (false) { // Disabled auto-switching
-      // Add a small delay to allow multiple quotes to potentially complete 
-      // and prioritize the most common/important categories
-      const timer = setTimeout(() => {
-        // Only proceed if we still haven't auto-switched (double-check)
-        // AND we're still in the loading phase (this prevents post-load auto-switching)
-        if (hasAutoSwitched || !showQuoteLoading) return;
-        
-        // Map completed quote types to category IDs
-        const categoryMapping: Record<string, string> = {
-          'Supplement Plans': 'medigap',
-          'Plan F': 'medigap',
-          'Plan G': 'medigap', 
-          'Plan N': 'medigap',
-          'Medicare Advantage Plans': 'advantage',
-          'Drug Plans': 'drug-plan',
-          'Dental Insurance': 'dental',
-          'Cancer Insurance': 'cancer',
-          'Hospital Indemnity': 'hospital-indemnity',
-          'Final Expense Life': 'final-expense'
-        };
-
-        // Priority order for auto-switching (most common Medicare categories first)
-        const priorityOrder = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
-        
-        // Find the highest priority completed category
-        let firstCompletedCategory: string | null = null;
-        for (const priority of priorityOrder) {
-          const matchingType = completedQuoteTypes.find(type => categoryMapping[type] === priority);
-          if (matchingType) {
-            firstCompletedCategory = priority;
-            break;
-          }
-        }
-        
-        if (firstCompletedCategory) {
-          console.log(`🎯 Initial auto-switch to first completed category: ${firstCompletedCategory} (from ${completedQuoteTypes.length} completed types)`);
-          
-          // Mark that we've auto-switched FIRST to prevent race conditions
-          setHasAutoSwitched(true);
-          
-          // Set the category to switch to
-          setSelectedCategory(firstCompletedCategory);
-          setActiveCategory(firstCompletedCategory);
-          
-          // Update URL to reflect the auto-selected category
-          const params = new URLSearchParams(searchParams.toString());
-          params.set('category', firstCompletedCategory);
-          router.push(`${pathname}?${params.toString()}`);
-        }
-      }, 1000); // 1 second delay to allow multiple quotes to complete
-
-      return () => clearTimeout(timer);
-    }
-  }, [completedQuoteTypes, hasAutoSwitched, showQuoteLoading, isInitializing, initialLoadComplete, searchParams, pathname, router]);
 
   // Handle quote form submission
   const handleQuoteFormSubmit = async () => {
@@ -698,6 +644,14 @@ function MedicareShopContent() {
           console.log('🔥 Success! Received quotes:', response.quotes.length);
           setRealQuotes(response.quotes);
           
+          // Save Medigap quotes to Firebase storage
+          try {
+            await saveToStorage(REAL_QUOTES_KEY, response.quotes);
+            console.log('💾 Medigap quotes saved to Firebase storage');
+          } catch (error) {
+            console.error('❌ Failed to save Medigap quotes to Firebase:', error);
+          }
+          
           // Mark medigap plans as completed (use same logic as loading items)
           const completedPlans = plansToFetch.length > 1 
             ? ['Supplement Plans'] 
@@ -727,6 +681,14 @@ function MedicareShopContent() {
         } else if (response.quotes && Array.isArray(response.quotes)) {
           console.log('🔥 Success! Received advantage quotes:', response.quotes.length);
           setAdvantageQuotes(response.quotes);
+          
+          // Save advantage quotes to Firebase storage
+          try {
+            await saveToStorage(ADVANTAGE_QUOTES_KEY, response.quotes);
+            console.log('💾 Advantage quotes saved to Firebase storage');
+          } catch (error) {
+            console.error('❌ Failed to save advantage quotes to Firebase:', error);
+          }
           
           // Mark Medicare Advantage as completed
           setCompletedQuoteTypes(prev => [...prev, 'Medicare Advantage Plans']);
@@ -791,23 +753,25 @@ function MedicareShopContent() {
             console.log('✅ Dental quotes optimization successful!');
             setDentalQuotes(optimizationResult.quotes);
             
-            // Save optimized dental quotes using specialized storage function
-            const saveSuccess = saveDentalQuotesToStorage(
-              optimizationResult.quotes,
-              dentalParams,
-              {
-                originalSize: optimizationResult.originalSize,
-                optimizedSize: optimizationResult.optimizedSize,
-                compressionRatio: optimizationResult.compressionRatio
-              }
-            );
-            
-            if (saveSuccess) {
-              console.log('💾 Optimized dental quotes saved to localStorage');
-            } else {
-              console.error('❌ Failed to save optimized dental quotes');
-              // Fallback to regular storage
+            // Save optimized dental quotes using Firebase storage (same as other quotes)
+            try {
               await saveToStorage(DENTAL_QUOTES_KEY, optimizationResult.quotes);
+              console.log('💾 Optimized dental quotes saved to Firebase storage');
+            } catch (error) {
+              console.error('❌ Failed to save dental quotes to Firebase:', error);
+              // Fallback to localStorage-only storage
+              const saveSuccess = saveDentalQuotesToStorage(
+                optimizationResult.quotes,
+                dentalParams,
+                {
+                  originalSize: optimizationResult.originalSize,
+                  optimizedSize: optimizationResult.optimizedSize,
+                  compressionRatio: optimizationResult.compressionRatio
+                }
+              );
+              if (saveSuccess) {
+                console.log('💾 Dental quotes saved to localStorage as fallback');
+              }
             }
             
             // Mark Dental Insurance as completed
@@ -1736,6 +1700,7 @@ function MedicareShopContent() {
             /* Route to dedicated Medicare Advantage component */
             <MedicareAdvantageShopContent 
               isExternallyLoading={false}
+              externalQuotes={advantageQuotes}
             />
           ) : (
             <>

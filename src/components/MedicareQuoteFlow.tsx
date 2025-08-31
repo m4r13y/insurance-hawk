@@ -815,7 +815,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                 <h2 className="text-3xl font-bold text-foreground mb-4">Which additional options interest you?</h2>
                 <p className="text-muted-foreground mb-8">Select the supplemental coverage options you'd like to explore. Each provides different benefits to complement your Medicare coverage.</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                   {additionalOptions.map((option) => (
                     <motion.button
                       key={option.id}

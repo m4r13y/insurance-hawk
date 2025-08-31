@@ -342,9 +342,11 @@ const PlanCard: React.FC<{
 
 // Main Medicare Advantage Shop Component
 export default function MedicareAdvantageShopContent({ 
-  isExternallyLoading = false 
+  isExternallyLoading = false,
+  externalQuotes = null
 }: { 
-  isExternallyLoading?: boolean 
+  isExternallyLoading?: boolean;
+  externalQuotes?: any[] | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -391,7 +393,11 @@ export default function MedicareAdvantageShopContent({
         setZipCode(savedZipCode);
       }
       
-      if (savedPlans) {
+      // Use external quotes if provided, otherwise fall back to localStorage
+      if (externalQuotes && externalQuotes.length > 0) {
+        console.log('🎯 Using external Medicare Advantage quotes:', externalQuotes.length);
+        setPlans(externalQuotes);
+      } else if (savedPlans) {
         try {
           const parsedPlans = JSON.parse(savedPlans);
           setPlans(parsedPlans);
@@ -409,7 +415,7 @@ export default function MedicareAdvantageShopContent({
         }
       }
     }
-  }, []);
+  }, [externalQuotes]);
 
   // Save data to localStorage when it changes
   useEffect(() => {
