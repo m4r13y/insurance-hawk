@@ -16,6 +16,8 @@ import { getDentalQuotes } from "@/lib/actions/dental-quotes";
 import { getHospitalIndemnityQuotes } from "@/lib/actions/hospital-indemnity-quotes";
 import { getFinalExpenseLifeQuotes } from "@/lib/actions/final-expense-quotes";
 import { getCancerInsuranceQuotes } from "@/lib/actions/cancer-insurance-quotes";
+import { optimizeDentalQuotes } from "@/lib/dental-quote-optimizer";
+import { saveDentalQuotesToStorage, loadDentalQuotesFromStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
@@ -223,7 +225,9 @@ export default function MedicareShopContent() {
         const savedQuotes = loadFromStorage(REAL_QUOTES_KEY, []);
         const savedAdvantageQuotes = loadFromStorage(ADVANTAGE_QUOTES_KEY, []);
         const savedDrugPlanQuotes = loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
-        const savedDentalQuotes = loadFromStorage(DENTAL_QUOTES_KEY, []);
+        // Load optimized dental quotes from storage
+        const savedDentalData = loadDentalQuotesFromStorage();
+        const savedDentalQuotes = savedDentalData ? savedDentalData.quotes : [];
         const savedHospitalIndemnityQuotes = loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
         const savedFinalExpenseQuotes = loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
         const savedCancerInsuranceQuotes = loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
@@ -432,6 +436,10 @@ export default function MedicareShopContent() {
       if (type === 'medigap') return realQuotes.length > 0;
       if (type === 'advantage') return advantageQuotes.length > 0;
       if (type === 'drug-plan') return drugPlanQuotes.length > 0;
+      if (type === 'dental') return dentalQuotes.length > 0;
+      if (type === 'hospital-indemnity') return hospitalIndemnityQuotes.length > 0;
+      if (type === 'final-expense') return finalExpenseQuotes.length > 0;
+      if (type === 'cancer') return cancerInsuranceQuotes.length > 0;
       return false;
     });
     
@@ -439,7 +447,7 @@ export default function MedicareShopContent() {
       console.log('All expected quotes are ready!');
       setQuotesReady(true);
     }
-  }, [realQuotes, advantageQuotes, drugPlanQuotes, expectedQuoteTypes, quotesReady]);
+  }, [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes, expectedQuoteTypes, quotesReady]);
 
   // Auto-hide loading page when quotes are ready
   useEffect(() => {
@@ -670,17 +678,84 @@ export default function MedicareShopContent() {
           setQuotesError(response.error);
         } else if (response.quotes && Array.isArray(response.quotes)) {
           console.log('🔥 Success! Received dental quotes:', response.quotes.length);
-          setDentalQuotes(response.quotes);
           
-          // Save dental quotes to localStorage
-          saveToStorage(DENTAL_QUOTES_KEY, response.quotes);
+          // Optimize dental quotes before storing to prevent localStorage bloat
+          console.log('🎯 Optimizing dental quotes for storage...');
+          const optimizationResult = optimizeDentalQuotes(response);
           
-          // Mark Dental Insurance as completed
-          setCompletedQuoteTypes(prev => [...prev, 'Dental Insurance']);
-          setCurrentQuoteType(null);
-          
-          // Preload carrier logos for better user experience
-          preloadCarrierLogos(response.quotes);
+          if (optimizationResult.success) {
+            console.log('✅ Dental quotes optimization successful!');
+            setDentalQuotes(optimizationResult.quotes);
+            
+            // Save optimized dental quotes using specialized storage function
+            const saveSuccess = saveDentalQuotesToStorage(
+              optimizationResult.quotes,
+              dentalParams,
+              {
+                originalSize: optimizationResult.originalSize,
+                optimizedSize: optimizationResult.optimizedSize,
+                compressionRatio: optimizationResult.compressionRatio
+              }
+            );
+            
+            if (saveSuccess) {
+              console.log('💾 Optimized dental quotes saved to localStorage');
+            } else {
+              console.error('❌ Failed to save optimized dental quotes');
+              // Fallback to regular storage
+              saveToStorage(DENTAL_QUOTES_KEY, optimizationResult.quotes);
+            }
+            
+            // Mark Dental Insurance as completed
+            setCompletedQuoteTypes(prev => [...prev, 'Dental Insurance']);
+            setCurrentQuoteType(null);
+            
+            // Set quotes as ready if this is the only expected type
+            if (expectedQuoteTypes.length === 1 && expectedQuoteTypes.includes('dental')) {
+              setQuotesReady(true);
+            }
+            
+            // Navigate to dental results view
+            setActiveCategory('dental');
+            setSelectedCategory('dental');
+            
+            // Update URL to reflect dental category
+            const params = new URLSearchParams(searchParams);
+            params.set('category', 'dental');
+            router.push(`${pathname}?${params.toString()}`);
+            
+            // Preload carrier logos for better user experience
+            preloadCarrierLogos(optimizationResult.quotes);
+          } else {
+            console.error('❌ Dental quotes optimization failed:', optimizationResult.error);
+            // Fallback to original quotes without optimization
+            setDentalQuotes(response.quotes);
+            saveToStorage(DENTAL_QUOTES_KEY, response.quotes);
+            
+            // Mark Dental Insurance as completed
+            setCompletedQuoteTypes(prev => [...prev, 'Dental Insurance']);
+            setCurrentQuoteType(null);
+            
+            // Set quotes as ready if this is the only expected type
+            if (expectedQuoteTypes.length === 1 && expectedQuoteTypes.includes('dental')) {
+              setQuotesReady(true);
+            }
+            
+            // Navigate to dental results view
+            setActiveCategory('dental');
+            setSelectedCategory('dental');
+            
+            // Update URL to reflect dental category
+            const params = new URLSearchParams(searchParams);
+            params.set('category', 'dental');
+            router.push(`${pathname}?${params.toString()}`);
+            
+            // Preload carrier logos for better user experience
+            preloadCarrierLogos(response.quotes);
+          }
+        } else {
+          console.log('🔥 No dental quotes found');
+          setQuotesError('No dental insurance plans found for your area and criteria');
         }
       } else if (targetCategory === 'cancer') {
         console.log('🔥 Category is cancer, proceeding with API call...');

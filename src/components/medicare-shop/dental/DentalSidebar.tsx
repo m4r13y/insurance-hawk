@@ -5,13 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Shield, Calendar, Users, DollarSign } from "lucide-react";
+import { 
+  OptimizedDentalQuote,
+  GroupedDentalQuote, 
+  getMonthlyPremium, 
+  getAnnualMaximum, 
+  getCompanyName,
+  getCoveragePercentages,
+  getDeductible
+} from "@/lib/dental-quote-optimizer";
 
 interface DentalSidebarProps {
-  selectedQuote?: any;
+  selectedQuote?: GroupedDentalQuote;
+  selectedAnnualMaximum?: string;
   className?: string;
 }
 
-export default function DentalSidebar({ selectedQuote, className = "" }: DentalSidebarProps) {
+export default function DentalSidebar({ selectedQuote, selectedAnnualMaximum, className = "" }: DentalSidebarProps) {
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Filter Controls */}
@@ -142,39 +152,68 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
             <CardTitle className="text-lg">Selected Plan Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <div className="font-medium">{selectedQuote.planName}</div>
-              <div className="text-sm text-gray-600">{selectedQuote.carrierName}</div>
-            </div>
-            
-            <Separator />
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Monthly Premium</span>
-                <span className="font-medium">${selectedQuote.monthlyPremium}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Annual Maximum</span>
-                <span className="font-medium">${selectedQuote.annualMaximum?.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Deductible</span>
-                <span className="font-medium">${selectedQuote.deductible}</span>
-              </div>
-            </div>
+            {(() => {
+              // Get the selected annual maximum option or default
+              const selectedOption = selectedAnnualMaximum 
+                ? selectedQuote.annualMaximumOptions.find(opt => opt.displayAmount === selectedAnnualMaximum)
+                : selectedQuote.annualMaximumOptions[0];
+              
+              const monthlyPremium = selectedOption?.monthlyPremium || selectedQuote.defaultMonthlyPremium;
+              const annualMaximum = selectedOption?.displayAmount || selectedQuote.defaultAnnualMaximum;
+              
+              return (
+                <>
+                  <div>
+                    <div className="font-medium">{selectedQuote.planName}</div>
+                    <div className="text-sm text-gray-600">{selectedQuote.companyName}</div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Monthly Premium</span>
+                      <span className="font-medium">${monthlyPremium}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Annual Maximum</span>
+                      <span className="font-medium">${annualMaximum}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Deductible</span>
+                      <span className="font-medium">${selectedQuote.deductible}</span>
+                    </div>
+                  </div>
 
-            <Separator />
+                  <Separator />
 
-            <div className="space-y-1">
-              <div className="text-sm font-medium">Coverage Levels</div>
-              <div className="text-sm">Preventive: {selectedQuote.preventiveCoverage}%</div>
-              <div className="text-sm">Basic: {selectedQuote.basicCoverage}%</div>
-              <div className="text-sm">Major: {selectedQuote.majorCoverage}%</div>
-              {selectedQuote.orthodonticCoverage && (
-                <div className="text-sm">Orthodontic: {selectedQuote.orthodonticCoverage}%</div>
-              )}
-            </div>
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium">Coverage Levels</div>
+                    <div className="text-sm">Preventive: {selectedQuote.coveragePercentages.preventive}%</div>
+                    <div className="text-sm">Basic: {selectedQuote.coveragePercentages.basic}%</div>
+                    <div className="text-sm">Major: {selectedQuote.coveragePercentages.major}%</div>
+                    {selectedQuote.coveragePercentages.orthodontic && (
+                      <div className="text-sm">Orthodontic: {selectedQuote.coveragePercentages.orthodontic}%</div>
+                    )}
+                  </div>
+                  
+                  {selectedQuote.annualMaximumOptions.length > 1 && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Available Annual Maximum Options</div>
+                        {selectedQuote.annualMaximumOptions.map((option) => (
+                          <div key={option.id} className="flex justify-between text-sm">
+                            <span>${option.displayAmount}</span>
+                            <span className="text-gray-600">${option.monthlyPremium}/mo</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       )}

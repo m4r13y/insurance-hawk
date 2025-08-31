@@ -1,35 +1,28 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Shield, Calendar, DollarSign } from "lucide-react";
-
-interface DentalQuote {
-  id: string;
-  planName: string;
-  carrierName: string;
-  monthlyPremium: number;
-  annualMaximum: number;
-  deductible: number;
-  preventiveCoverage: number;
-  basicCoverage: number;
-  majorCoverage: number;
-  orthodonticCoverage?: number;
-  waitingPeriods: {
-    preventive: number;
-    basic: number;
-    major: number;
-  };
-  networkSize?: number;
-  rating?: number;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Star, Shield, Calendar, DollarSign, ChevronDown } from "lucide-react";
+import { 
+  OptimizedDentalQuote, 
+  GroupedDentalQuote,
+  groupQuotesByPlan,
+  getMonthlyPremium, 
+  getAnnualMaximum, 
+  getCompanyName, 
+  getCompanyRating,
+  getCoveragePercentages,
+  getWaitingPeriods,
+  getDeductible
+} from "@/lib/dental-quote-optimizer";
 
 interface DentalShopContentProps {
-  quotes: DentalQuote[];
+  quotes: OptimizedDentalQuote[];
   isLoading?: boolean;
-  onSelectPlan?: (quote: DentalQuote) => void;
+  onSelectPlan?: (quote: GroupedDentalQuote, selectedAnnualMaximum?: string) => void;
 }
 
 export default function DentalShopContent({ 
@@ -37,6 +30,27 @@ export default function DentalShopContent({
   isLoading = false, 
   onSelectPlan 
 }: DentalShopContentProps) {
+  // Group quotes by plan
+  const groupedQuotes = React.useMemo(() => groupQuotesByPlan(quotes), [quotes]);
+  
+  // State to track selected annual maximum for each grouped quote
+  const [selectedAnnualMaximums, setSelectedAnnualMaximums] = useState<{[key: string]: string}>({});
+  
+  // Handle annual maximum selection change
+  const handleAnnualMaximumChange = (quoteKey: string, annualMaximum: string) => {
+    setSelectedAnnualMaximums(prev => ({
+      ...prev,
+      [quoteKey]: annualMaximum
+    }));
+  };
+  
+  // Get the selected annual maximum option for a quote
+  const getSelectedOption = (groupedQuote: GroupedDentalQuote) => {
+    const selectedAmount = selectedAnnualMaximums[groupedQuote.key] || groupedQuote.defaultAnnualMaximum;
+    // Use displayAmount for comparison since that's what we're setting as default now
+    return groupedQuote.annualMaximumOptions.find(option => option.displayAmount === selectedAmount) || groupedQuote.annualMaximumOptions[0];
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -72,88 +86,107 @@ export default function DentalShopContent({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">
-          Dental Insurance Plans ({quotes.length})
+          Dental Insurance Plans ({groupedQuotes.length})
         </h3>
       </div>
 
       <div className="space-y-4">
-        {quotes.map((quote) => (
-          <Card key={quote.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-lg">{quote.planName}</h4>
-                    {quote.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">{quote.rating}</span>
-                      </div>
+        {groupedQuotes.map((groupedQuote) => {
+          const selectedOption = getSelectedOption(groupedQuote);
+          
+          return (
+            <Card key={groupedQuote.key} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-lg">{groupedQuote.planName}</h4>
+                      {groupedQuote.companyRating && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm text-gray-600">{groupedQuote.companyRating}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-gray-600">{groupedQuote.companyName}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-blue-600">
+                      ${selectedOption.monthlyPremium}
+                    </div>
+                    <div className="text-sm text-gray-500">per month</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-600">Annual Maximum</div>
+                    {groupedQuote.annualMaximumOptions.length > 1 ? (
+                      <Select 
+                        value={selectedAnnualMaximums[groupedQuote.key] || groupedQuote.defaultAnnualMaximum}
+                        onValueChange={(value) => handleAnnualMaximumChange(groupedQuote.key, value)}
+                      >
+                        <SelectTrigger className="w-full mt-1 font-semibold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groupedQuote.annualMaximumOptions.map((option) => (
+                            <SelectItem key={option.id} value={option.displayAmount}>
+                              ${option.displayAmount} - ${option.monthlyPremium}/mo
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="font-semibold">${selectedOption.displayAmount}</div>
                     )}
                   </div>
-                  <p className="text-gray-600">{quote.carrierName}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">
-                    ${quote.monthlyPremium}
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-600">Deductible</div>
+                    <div className="font-semibold">${groupedQuote.deductible}</div>
                   </div>
-                  <div className="text-sm text-gray-500">per month</div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-600">Preventive</div>
+                    <div className="font-semibold">{groupedQuote.coveragePercentages.preventive}%</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-sm text-gray-600">Basic</div>
+                    <div className="font-semibold">{groupedQuote.coveragePercentages.basic}%</div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Annual Maximum</div>
-                  <div className="font-semibold">${quote.annualMaximum.toLocaleString()}</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Deductible</div>
-                  <div className="font-semibold">${quote.deductible}</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Preventive</div>
-                  <div className="font-semibold">{quote.preventiveCoverage}%</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Basic</div>
-                  <div className="font-semibold">{quote.basicCoverage}%</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 mb-4">
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  No waiting period for preventive
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Shield className="h-3 w-3" />
-                  {quote.majorCoverage}% major coverage
-                </Badge>
-                {quote.orthodonticCoverage && (
-                  <Badge variant="outline">
-                    {quote.orthodonticCoverage}% orthodontic
+                <div className="flex items-center gap-4 mb-4">
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    No waiting period for preventive
                   </Badge>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span>Basic waiting: {quote.waitingPeriods.basic} months</span>
-                  <span>Major waiting: {quote.waitingPeriods.major} months</span>
-                  {quote.networkSize && (
-                    <span>{quote.networkSize.toLocaleString()} providers</span>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Shield className="h-3 w-3" />
+                    {groupedQuote.coveragePercentages.major}% major coverage
+                  </Badge>
+                  {groupedQuote.coveragePercentages.orthodontic && (
+                    <Badge variant="outline">
+                      {groupedQuote.coveragePercentages.orthodontic}% orthodontic
+                    </Badge>
                   )}
                 </div>
-                <Button 
-                  onClick={() => onSelectPlan?.(quote)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Select Plan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span>Basic waiting: {groupedQuote.waitingPeriods.basic} months</span>
+                    <span>Major waiting: {groupedQuote.waitingPeriods.major} months</span>
+                  </div>
+                  <Button 
+                    onClick={() => onSelectPlan?.(groupedQuote, selectedAnnualMaximums[groupedQuote.key])}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Select Plan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
