@@ -60,8 +60,9 @@ export default function HospitalIndemnityShopContent({
       <div className="space-y-4">
         {quotes.map((quote) => {
           // Get the main hospital confinement benefit from base plans
-          const mainBasePlan = quote.basePlans.find(plan => 
-            plan.name.toLowerCase().includes('hospital confinement') && plan.included
+          const basePlans = quote.basePlans || [];
+          const mainBasePlan = basePlans.find(plan => 
+            plan?.name?.toLowerCase().includes('hospital confinement') && plan?.included
           );
           
           // Get the daily benefit amounts from the main base plan
@@ -74,8 +75,9 @@ export default function HospitalIndemnityShopContent({
             : 0;
 
           // Count included riders for benefits display
-          const includedRiders = quote.riders.filter(rider => rider.included);
-          const additionalRiders = quote.riders.filter(rider => !rider.included);
+          const riders = quote.riders || [];
+          const includedRiders = riders.filter(rider => rider?.included);
+          const additionalRiders = riders.filter(rider => !rider?.included);
 
           return (
             <Card key={quote.id} className="hover:shadow-md transition-shadow">

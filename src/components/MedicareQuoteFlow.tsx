@@ -682,7 +682,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         </div>
 
         {/* Step Content */}
-        <div className="bg-card/50 backdrop-blur-sm min-h-[500px] flex flex-col">
+        <div className="backdrop-blur-sm min-h-[500px] flex flex-col">
           <AnimatePresence mode="wait">
             {/* Step 0: Medicare Status */}
             {steps[currentStep] === "Medicare Status" && (

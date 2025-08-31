@@ -10,50 +10,162 @@ export const FINAL_EXPENSE_QUOTES_KEY = 'medicare_final_expense_quotes';
 export const CANCER_INSURANCE_QUOTES_KEY = 'medicare_cancer_insurance_quotes';
 export const FILTER_STATE_KEY = 'medicare_filter_state';
 
-// Storage helper functions - using localStorage for better persistence
+// Storage helper functions - using localStorage with compression and intelligent cleanup
 export const loadFromStorage = (key: string, defaultValue: any) => {
   if (typeof window === 'undefined') return defaultValue;
   try {
-    const saved = localStorage.getItem(key);
+    // Try localStorage first
+    let saved = localStorage.getItem(key);
+    
+    // If not found in localStorage, try sessionStorage as fallback
+    if (!saved && typeof sessionStorage !== 'undefined') {
+      saved = sessionStorage.getItem(key);
+      if (saved) {
+        console.log('📥 Loaded from sessionStorage fallback:', key);
+      }
+    }
+    
     return saved ? JSON.parse(saved) : defaultValue;
   } catch (error) {
-    console.error('Error loading from localStorage:', error);
+    console.error('Error loading from storage:', error);
     return defaultValue;
   }
+};
+
+// Calculate storage usage
+export const getStorageUsage = () => {
+  let total = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += localStorage[key].length + key.length;
+    }
+  }
+  return total;
+};
+
+// Conservative quote compression - remove only large unnecessary fields
+export const compressQuoteData = (quotes: any[]): any[] => {
+  if (!Array.isArray(quotes)) return quotes;
+  
+  return quotes.map(quote => {
+    // Start with the full quote and remove only problematic large fields
+    const compressed = { ...quote };
+    
+    // Remove large text fields that aren't displayed
+    delete compressed.fullDescription;
+    delete compressed.detailedBenefits;
+    delete compressed.termsAndConditions;
+    delete compressed.brochureUrl;
+    delete compressed.applicationUrl;
+    delete compressed.marketingMaterials;
+    delete compressed.disclosures;
+    delete compressed.legalDisclaimer;
+    delete compressed.benefitDetails;
+    delete compressed.exclusions;
+    delete compressed.limitations;
+    delete compressed.underwritingGuidelines;
+    
+    // Truncate very long string fields but keep the structure
+    Object.keys(compressed).forEach(key => {
+      if (typeof compressed[key] === 'string' && compressed[key].length > 500) {
+        compressed[key] = compressed[key].substring(0, 500) + '...';
+      }
+    });
+    
+    // Compress large arrays but keep essential structure
+    if (compressed.benefits && Array.isArray(compressed.benefits) && compressed.benefits.length > 10) {
+      compressed.benefits = compressed.benefits.slice(0, 10); // Keep first 10 benefits
+    }
+    
+    if (compressed.features && Array.isArray(compressed.features) && compressed.features.length > 10) {
+      compressed.features = compressed.features.slice(0, 10); // Keep first 10 features
+    }
+    
+    // Keep essential arrays for hospital indemnity
+    if (compressed.basePlans && Array.isArray(compressed.basePlans)) {
+      // Don't compress basePlans as they're essential for hospital indemnity
+      // Just ensure they have the right structure
+      compressed.basePlans = compressed.basePlans.map((plan: any) => ({
+        ...plan,
+        // Ensure benefitOptions exist
+        benefitOptions: plan.benefitOptions || []
+      }));
+    }
+    
+    // Keep essential arrays for final expense and drug plans
+    if (compressed.plans && Array.isArray(compressed.plans)) {
+      // Don't compress plans array as it's essential for some quote types
+    }
+    
+    // Keep essential arrays for hospital indemnity
+    if (compressed.riders && Array.isArray(compressed.riders)) {
+      // Keep riders array for hospital indemnity quotes
+    }
+    
+    // Ensure all numeric fields that use toLocaleString are properly converted
+    const numericFields = ['benefit_amount', 'face_value', 'monthly_rate', 'annual_rate', 'annualMaximum', 'dailyBenefit', 'maxDays', 'reviewCount', 'monthlyPremium', 'premium'];
+    numericFields.forEach(field => {
+      if (compressed[field] !== undefined && compressed[field] !== null && compressed[field] !== '') {
+        compressed[field] = Number(compressed[field]) || 0;
+      }
+    });
+    
+    return compressed;
+  });
 };
 
 export const saveToStorage = (key: string, value: any) => {
   if (typeof window === 'undefined') return;
   
-  // Handle undefined/null values
-  const safeValue = value ?? null;
-  const displayValue = typeof safeValue === 'object' ? 
-    (Array.isArray(safeValue) ? `[${safeValue.length}]` : 'object') : 
-    safeValue;
+  console.log('💾 Efficiently saving to localStorage:', key);
   
-  console.log('💾 SAVING to localStorage:', key, '=', displayValue);
   try {
-    const dataString = JSON.stringify(safeValue);
+    let dataToSave = value;
     
-    // Check size and clean up if necessary
-    if (dataString.length > 1000000) { // ~1MB limit
-      console.warn('Data too large for localStorage, attempting cleanup');
-      cleanupOldStorage();
+    // Apply efficient compression ONLY for quote arrays
+    if (Array.isArray(value) && value.length > 0 && 
+        (key.includes('quotes') || key.includes('QUOTES'))) {
+      const original = JSON.stringify(value);
+      dataToSave = compressQuoteData(value);
+      const compressed = JSON.stringify(dataToSave);
+      
+      const reduction = Math.round((1 - compressed.length / original.length) * 100);
+      console.log('🗜️ Compressed', value.length, 'quotes:', reduction + '% size reduction',
+        `(${Math.round(original.length/1024)}KB → ${Math.round(compressed.length/1024)}KB)`);
+    } else {
+      // For non-quote data (like selectedFlowCategories), save as-is
+      console.log('💾 Saving non-quote data without compression:', key);
     }
     
-    localStorage.setItem(key, dataString);
+    localStorage.setItem(key, JSON.stringify(dataToSave));
+    console.log('✅ Successfully saved', key);
+    
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
-      console.warn('LocalStorage quota exceeded, cleaning up old data');
-      cleanupOldStorage();
-      // Retry after cleanup
+      console.warn('🚨 Storage quota exceeded, using sessionStorage fallback for:', key);
+      
+      // Use sessionStorage with compression only for quote data
       try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (retryError) {
-        console.error('Failed to save even after cleanup:', retryError);
+        let fallbackData = value;
+        if (Array.isArray(value) && value.length > 0 && 
+            (key.includes('quotes') || key.includes('QUOTES'))) {
+          // Keep only top 10 most essential quotes
+          fallbackData = value.slice(0, 10).map(quote => ({
+            id: quote.id || Math.random().toString(36).substr(2, 9),
+            planName: quote.planName || quote.plan_name || 'Plan',
+            carrierName: quote.carrierName || quote.carrier?.name || 'Carrier',
+            monthlyPremium: quote.monthlyPremium || quote.monthly_premium || quote.premium || 0
+          }));
+        }
+        
+        sessionStorage.setItem(key, JSON.stringify(fallbackData));
+        console.log('✅ Saved to sessionStorage:', key);
+        
+      } catch (sessionError) {
+        console.error('❌ Complete storage failure:', sessionError);
       }
     } else {
-      console.error('Error saving to localStorage:', error);
+      console.error('❌ Storage error:', error);
     }
   }
 };
@@ -89,4 +201,57 @@ export const cleanupOldStorage = () => {
   } catch (error) {
     console.error('Error during cleanup:', error);
   }
+};
+
+// Aggressive cleanup when approaching storage limit
+export const aggressiveCleanup = () => {
+  try {
+    console.log('🧹 Starting aggressive cleanup...');
+    
+    // Remove all non-essential Medicare data
+    const keysToRemove: string[] = [];
+    Object.keys(localStorage).forEach(key => {
+      // Keep only the most essential keys
+      const essential = [
+        QUOTE_FORM_DATA_KEY,
+        REAL_QUOTES_KEY,
+        ADVANTAGE_QUOTES_KEY,
+        DRUG_PLAN_QUOTES_KEY,
+        DENTAL_QUOTES_KEY,
+        HOSPITAL_INDEMNITY_QUOTES_KEY,
+        FINAL_EXPENSE_QUOTES_KEY,
+        CANCER_INSURANCE_QUOTES_KEY
+      ];
+      
+      if (!essential.includes(key) && key.startsWith('medicare_')) {
+        keysToRemove.push(key);
+      }
+    });
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log('🧹 Removed non-essential data:', key);
+    });
+    
+    console.log('🧹 Aggressive cleanup completed, removed', keysToRemove.length, 'items');
+  } catch (error) {
+    console.error('Error during aggressive cleanup:', error);
+  }
+};
+
+// Simple storage size check
+export const getStorageSizeInfo = () => {
+  if (typeof window === 'undefined') return { size: 0, readable: '0KB' };
+  
+  let total = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += localStorage[key].length + key.length;
+    }
+  }
+  
+  return {
+    size: total,
+    readable: Math.round(total / 1024) + 'KB'
+  };
 };

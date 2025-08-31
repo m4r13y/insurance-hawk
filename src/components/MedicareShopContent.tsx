@@ -37,6 +37,7 @@ import {
   type QuoteFormData,
   loadFromStorage,
   saveToStorage,
+  getStorageSizeInfo,
   QUOTE_FORM_DATA_KEY,
   QUOTE_FORM_COMPLETED_KEY,
   REAL_QUOTES_KEY,
@@ -269,6 +270,12 @@ export default function MedicareShopContent() {
   useEffect(() => {
     const initializeComponent = async () => {
       try {
+        // Monitor storage usage on component initialization
+        console.group('📊 Storage Status on Page Load');
+        const storageInfo = getStorageSizeInfo();
+        console.log('💾 Current storage usage:', storageInfo.readable);
+        console.groupEnd();
+        
         // Load saved data from localStorage
         const savedFormData = loadFromStorage(QUOTE_FORM_DATA_KEY, null);
         const savedCategories = loadFromStorage('selectedFlowCategories', []);
@@ -295,15 +302,24 @@ export default function MedicareShopContent() {
           setQuoteFormData(savedFormData);
         }
         if (savedCategories && Array.isArray(savedCategories)) {
+          console.log('📋 Loading saved categories:', savedCategories);
           setSelectedFlowCategories(savedCategories);
+        } else {
+          console.log('📋 No saved categories found');
         }
         if (savedQuotes && Array.isArray(savedQuotes)) {
+          console.log('📋 Loading realQuotes from storage:', savedQuotes.length, 'quotes');
+          console.log('📋 First realQuote sample:', savedQuotes[0]);
           setRealQuotes(savedQuotes);
         }
         if (savedAdvantageQuotes && Array.isArray(savedAdvantageQuotes)) {
+          console.log('📋 Loading advantageQuotes from storage:', savedAdvantageQuotes.length, 'quotes');
+          console.log('📋 First advantageQuote sample:', savedAdvantageQuotes[0]);
           setAdvantageQuotes(savedAdvantageQuotes);
         }
         if (savedDrugPlanQuotes && Array.isArray(savedDrugPlanQuotes)) {
+          console.log('📋 Loading drugPlanQuotes from storage:', savedDrugPlanQuotes.length, 'quotes');
+          console.log('📋 First drugPlanQuote sample:', savedDrugPlanQuotes[0]);
           setDrugPlanQuotes(savedDrugPlanQuotes);
         }
         if (savedDentalQuotes && Array.isArray(savedDentalQuotes)) {
@@ -328,9 +344,11 @@ export default function MedicareShopContent() {
           }
         }
         if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes)) {
+          console.log('💾 Loading final expense quotes from localStorage:', savedFinalExpenseQuotes.length, 'quotes');
           setFinalExpenseQuotes(savedFinalExpenseQuotes);
         }
         if (savedCancerInsuranceQuotes && Array.isArray(savedCancerInsuranceQuotes)) {
+          console.log('💾 Loading cancer insurance quotes from localStorage:', savedCancerInsuranceQuotes.length, 'quotes');
           setCancerInsuranceQuotes(savedCancerInsuranceQuotes);
         }
         
@@ -347,6 +365,7 @@ export default function MedicareShopContent() {
           
           if (detectedCategories.length > 0) {
             console.log('🔍 Auto-detected categories from existing quotes:', detectedCategories);
+            console.log('📋 Detected categories from quotes:', detectedCategories);
             setSelectedFlowCategories(detectedCategories);
             saveToStorage('selectedFlowCategories', detectedCategories);
           }
@@ -367,10 +386,25 @@ export default function MedicareShopContent() {
 
   // Helper functions from backup
   const hasQuotes = () => {
-    return (realQuotes?.length > 0) || (advantageQuotes?.length > 0) || (drugPlanQuotes?.length > 0) || 
+    const result = (realQuotes?.length > 0) || (advantageQuotes?.length > 0) || (drugPlanQuotes?.length > 0) || 
            (dentalQuotes?.length > 0) || (hospitalIndemnityQuotes?.length > 0) || 
            (finalExpenseQuotes?.length > 0) || (cancerInsuranceQuotes?.length > 0) || 
            (selectedFlowCategories?.length > 0);
+    
+    console.log('🔍 hasQuotes check:', {
+      result,
+      realQuotes: realQuotes?.length || 0,
+      advantageQuotes: advantageQuotes?.length || 0,
+      drugPlanQuotes: drugPlanQuotes?.length || 0,
+      dentalQuotes: dentalQuotes?.length || 0,
+      hospitalIndemnityQuotes: hospitalIndemnityQuotes?.length || 0,
+      finalExpenseQuotes: finalExpenseQuotes?.length || 0,
+      cancerInsuranceQuotes: cancerInsuranceQuotes?.length || 0,
+      selectedFlowCategories: selectedFlowCategories?.length || 0,
+      categories: selectedFlowCategories
+    });
+    
+    return result;
   };
 
   const hasQuotesForPlan = (planType: string) => {
@@ -721,21 +755,23 @@ export default function MedicareShopContent() {
       }
     }
     
-    // Clear quotes for the specific category
-    if (targetCategory === 'medigap') {
-      setRealQuotes([]);
-    } else if (targetCategory === 'advantage') {
-      setAdvantageQuotes([]);
-    } else if (targetCategory === 'drug-plan') {
-      setDrugPlanQuotes([]);
-    } else if (targetCategory === 'dental') {
-      setDentalQuotes([]);
-    } else if (targetCategory === 'cancer') {
-      setCancerInsuranceQuotes([]);
-    } else if (targetCategory === 'hospital-indemnity') {
-      setHospitalIndemnityQuotes([]);
-    } else if (targetCategory === 'final-expense') {
-      setFinalExpenseQuotes([]);
+    // Clear quotes for the specific category (only in non-parallel mode)
+    if (manageLoadingState) {
+      if (targetCategory === 'medigap') {
+        setRealQuotes([]);
+      } else if (targetCategory === 'advantage') {
+        setAdvantageQuotes([]);
+      } else if (targetCategory === 'drug-plan') {
+        setDrugPlanQuotes([]);
+      } else if (targetCategory === 'dental') {
+        setDentalQuotes([]);
+      } else if (targetCategory === 'cancer') {
+        setCancerInsuranceQuotes([]);
+      } else if (targetCategory === 'hospital-indemnity') {
+        setHospitalIndemnityQuotes([]);
+      } else if (targetCategory === 'final-expense') {
+        setFinalExpenseQuotes([]);
+      }
     }
     
     try {
@@ -997,7 +1033,12 @@ export default function MedicareShopContent() {
           setCancerInsuranceQuotes(response.quotes);
           
           // Save cancer insurance quotes to localStorage
+          console.log('💾 Saving cancer insurance quotes to localStorage:', response.quotes.length, 'quotes');
           saveToStorage(CANCER_INSURANCE_QUOTES_KEY, response.quotes);
+          
+          // Log storage usage after saving cancer quotes
+          const storageInfo = getStorageSizeInfo();
+          console.log('📊 Storage usage after cancer quotes:', storageInfo.readable);
           
           // Mark Cancer Insurance as completed
           setCompletedQuoteTypes(prev => [...prev, 'Cancer Insurance']);
@@ -1076,7 +1117,12 @@ export default function MedicareShopContent() {
           setFinalExpenseQuotes(response.quotes);
           
           // Save final expense life quotes to localStorage
+          console.log('💾 Saving final expense quotes to localStorage:', response.quotes.length, 'quotes');
           saveToStorage(FINAL_EXPENSE_QUOTES_KEY, response.quotes);
+          
+          // Log storage usage after saving final expense quotes
+          const storageInfo = getStorageSizeInfo();
+          console.log('📊 Storage usage after final expense quotes:', storageInfo.readable);
           
           // Mark Final Expense Life as completed
           setCompletedQuoteTypes(prev => [...prev, 'Final Expense Life']);
@@ -1344,6 +1390,7 @@ export default function MedicareShopContent() {
     console.log('🔥 Combined categories for tabs:', allCategories);
     
     if (allCategories.length > 0) {
+      console.log('📋 Setting all categories manually:', allCategories);
       setSelectedFlowCategories(allCategories);
       saveToStorage('selectedFlowCategories', allCategories);
     }
@@ -1607,6 +1654,12 @@ export default function MedicareShopContent() {
       
       // Reset current quote type since all are done
       setCurrentQuoteType(null);
+      
+      // Log storage usage after all quotes are saved
+      console.group('📊 Storage Status After Quote Completion');
+      const finalStorageInfo = getStorageSizeInfo();
+      console.log('💾 Final storage usage:', finalStorageInfo.readable);
+      console.groupEnd();
       
       // Loading will be hidden automatically by useEffect when quotes are ready
       

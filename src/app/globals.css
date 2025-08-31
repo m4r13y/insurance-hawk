@@ -6,7 +6,7 @@
   :root {
     --background: 220 6% 98%; /* Cool but very light off-white */
     --foreground: 222.2 84% 4.9%;
-    --card: 220 14% 98% / 0.7;
+    --card: 220 14% 98%; /* Solid background instead of transparent */
     --card-foreground: 222.2 84% 4.9%;
     --popover: 220 6% 99%;
     --popover-foreground: 222.2 84% 4.9%;
@@ -47,7 +47,7 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 0 0% 100% / 0.05;
+    --card: 217.2 32.6% 17.5%; /* Solid dark background instead of transparent */
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -181,5 +181,16 @@
   
   .bg-error-foreground {
     background-color: hsl(var(--error-foreground));
+  }
+}
+
+/* Dropdown/Select specific backgrounds */
+@layer components {
+  .dropdown-bg {
+    @apply bg-white dark:bg-gray-800;
+  }
+  
+  .dropdown-trigger-bg {
+    @apply bg-white dark:bg-gray-800 border border-input;
   }
 }
