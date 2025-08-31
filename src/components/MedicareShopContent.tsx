@@ -87,21 +87,25 @@ import {
   FinalExpenseEmptyState
 } from "@/components/medicare-shop/final-expense";
 
-export default function MedicareShopContent() {
-  // Core state from backup
+// Import custom hooks
+import { useMedicareState } from "@/hooks/medicare";
+import { useLazyQuoteLoading } from "@/hooks/medicare/useLazyQuoteLoading";
+
+// Import extracted components
+import MedicareLoadingStates from './MedicareLoadingStates';
+import QuoteResultsSection from './QuoteResultsSection';
+
+function MedicareShopContent() {
+  // Core navigation hooks
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  // UI State
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [showMedicareFlow, setShowMedicareFlow] = useState(false);
-  const [medicareFlowMode, setMedicareFlowMode] = useState<'guided' | 'quick'>('guided');
-  const [showQuoteLoading, setShowQuoteLoading] = useState(false);
-  const [loadingItems, setLoadingItems] = useState<string[]>([]); // Track specific items being loaded
-  const [showPlanDifferencesModal, setShowPlanDifferencesModal] = useState(false);
+  // Use our custom Medicare state management hooks
+  const medicareState = useMedicareState();
+  const { loadQuotesForCategory } = useLazyQuoteLoading(medicareState);
 
-  // Quote and form state
+  // Form data state (keeping this separate as it's form-specific)
   const [quoteFormData, setQuoteFormData] = useState<QuoteFormData>({
     age: "",
     zipCode: '',
@@ -122,71 +126,66 @@ export default function MedicareShopContent() {
     // State field for cancer insurance
     state: ''
   });
-  const [selectedFlowCategories, setSelectedFlowCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('medigap');
-  const [activeCategory, setActiveCategory] = useState('medigap');
-  const [realQuotes, setRealQuotes] = useState<any[]>([]);
-  const [advantageQuotes, setAdvantageQuotes] = useState<any[]>([]);
-  const [drugPlanQuotes, setDrugPlanQuotes] = useState<any[]>([]);
-  const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
-  const [hospitalIndemnityQuotes, setHospitalIndemnityQuotes] = useState<OptimizedHospitalIndemnityQuote[]>([]);
-  const [finalExpenseQuotes, setFinalExpenseQuotes] = useState<any[]>([]);
-  const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
-  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
-  const [quotesReady, setQuotesReady] = useState(false); // Track when quotes are actually ready for display
-  const [expectedQuoteTypes, setExpectedQuoteTypes] = useState<string[]>([]); // Track which quote types we're expecting
-  const [startedQuoteTypes, setStartedQuoteTypes] = useState<string[]>([]); // Track which quote types have started API calls
-  const [completedQuoteTypes, setCompletedQuoteTypes] = useState<string[]>([]); // Track completed quote types in real-time
-  const [currentQuoteType, setCurrentQuoteType] = useState<string | null>(null); // Currently processing quote type
-  const [totalExpectedQuotes, setTotalExpectedQuotes] = useState(0); // Total number of individual quotes expected
-  const [hasAutoSwitched, setHasAutoSwitched] = useState(false); // Track if we've auto-switched to first completed category
-  const [quotesError, setQuotesError] = useState<string | null>(null);
-  const [loadingPlanButton, setLoadingPlanButton] = useState<string | null>(null);
 
-  // Helper function to check if a specific category is currently loading
-  const isCategoryLoading = (category: string) => {
-    // Check if this category is expected but not yet completed
-    const categoryMapping: Record<string, string> = {
-      'medigap': 'medigap',
-      'advantage': 'advantage', 
-      'drug-plan': 'drug-plan',
-      'dental': 'dental',
-      'cancer': 'cancer',
-      'hospital-indemnity': 'hospital-indemnity',
-      'final-expense': 'final-expense'
+  // Destructure what we need from medicareState for easier access
+  const {
+    // Quote state
+    realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes,
+    hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes,
+    // Quote actions
+    setRealQuotes, setAdvantageQuotes, setDrugPlanQuotes, setDentalQuotes,
+    setHospitalIndemnityQuotes, setFinalExpenseQuotes, setCancerInsuranceQuotes,
+    hasQuotes, getQuotesForCategory,
+    // Loading state
+    isInitializing, setIsInitializing, isLoadingQuotes, setIsLoadingQuotes,
+    showQuoteLoading, setShowQuoteLoading, quotesReady, setQuotesReady,
+    loadingItems, setLoadingItems, loadingPlanButton, setLoadingPlanButton,
+    expectedQuoteTypes, setExpectedQuoteTypes, startedQuoteTypes, setStartedQuoteTypes,
+    completedQuoteTypes, setCompletedQuoteTypes, currentQuoteType, setCurrentQuoteType,
+    totalExpectedQuotes, setTotalExpectedQuotes, hasAutoSwitched, setHasAutoSwitched,
+    isCategoryLoading,
+    // Category management
+    selectedCategory, setSelectedCategory, activeCategory, setActiveCategory,
+    selectedFlowCategories, setSelectedFlowCategories, handleCategoryToggle, handleCategorySelect,
+    // UI state
+    showMedicareFlow, setShowMedicareFlow, medicareFlowMode, setMedicareFlowMode,
+    showPlanDifferencesModal, setShowPlanDifferencesModal, quotesError, setQuotesError,
+  } = medicareState;
+
+  // Optimized category toggle handler for smooth tab switching
+  const handleOptimizedCategoryToggle = useCallback(async (category: any) => {
+    // Don't reload quotes if we already have them for this category
+    const hasExistingQuotes = () => {
+      switch (category) {
+        case 'medigap': return realQuotes && realQuotes.length > 0;
+        case 'advantage': return advantageQuotes && advantageQuotes.length > 0;
+        case 'drug-plan': return drugPlanQuotes && drugPlanQuotes.length > 0;
+        case 'dental': return dentalQuotes && dentalQuotes.length > 0;
+        case 'hospital-indemnity': return hospitalIndemnityQuotes && hospitalIndemnityQuotes.length > 0;
+        case 'final-expense': return finalExpenseQuotes && finalExpenseQuotes.length > 0;
+        case 'cancer': return cancerInsuranceQuotes && cancerInsuranceQuotes.length > 0;
+        default: return false;
+      }
     };
-    
-    const expectedType = categoryMapping[category];
-    if (!expectedType) return false;
-    
-    // If we expect this type but haven't completed it yet, it's loading
-    return expectedQuoteTypes.includes(expectedType) && !completedQuoteTypes.some(completed => {
-      // Handle special cases for completion tracking
-      if (expectedType === 'medigap') {
-        return completed === 'Supplement Plans' || completed.startsWith('Plan ');
-      }
-      if (expectedType === 'advantage') {
-        return completed === 'Medicare Advantage Plans';
-      }
-      if (expectedType === 'drug-plan') {
-        return completed === 'Drug Plans';
-      }
-      if (expectedType === 'dental') {
-        return completed === 'Dental Insurance';
-      }
-      if (expectedType === 'cancer') {
-        return completed === 'Cancer Insurance';
-      }
-      if (expectedType === 'hospital-indemnity') {
-        return completed === 'Hospital Indemnity';
-      }
-      if (expectedType === 'final-expense') {
-        return completed === 'Final Expense Life';
-      }
-      return false;
-    });
-  };
+
+    // Call the category toggle without loading callback if we have quotes
+    if (hasExistingQuotes()) {
+      await handleCategoryToggle(category);
+    } else {
+      // Only load quotes if we don't have them
+      await handleCategoryToggle(category, loadQuotesForCategory);
+    }
+  }, [
+    handleCategoryToggle, loadQuotesForCategory,
+    realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes,
+    hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes
+  ]);
+
+  // Form completion state (keeping this separate as it's form-specific)
   const [quoteFormCompleted, setQuoteFormCompleted] = useState(false);
+  
+  // Track when initial load is completely finished to prevent auto-switching
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Filter and display state
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,10 +198,18 @@ export default function MedicareShopContent() {
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
+
+  // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
+  const handleManualCategorySelect = useCallback((categoryId: string) => {
+    // Mark initial load as complete to prevent future auto-switching
+    setInitialLoadComplete(true);
+    // Call the original category select handler
+    handleCategorySelect(categoryId);
+  }, [handleCategorySelect]);
   const [carrierLogos, setCarrierLogos] = useState<Record<string, string>>({});
 
-  // Product categories for dropdown
-  const productCategories = [
+  // Memoized product categories for dropdown to prevent unnecessary re-renders
+  const productCategories = React.useMemo(() => [
     {
       id: 'medigap',
       name: 'Medicare Supplement',
@@ -238,7 +245,7 @@ export default function MedicareShopContent() {
       name: 'Final Expense Life',
       plans: finalExpenseQuotes || []
     }
-  ];
+  ], [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, cancerInsuranceQuotes, hospitalIndemnityQuotes, finalExpenseQuotes]);
 
   // Preload carrier logos
   const preloadCarrierLogos = useCallback(async (quotes: any[]) => {
@@ -271,66 +278,6 @@ export default function MedicareShopContent() {
       setCarrierLogos(prev => ({ ...prev, ...newLogos }));
     }
   }, [carrierLogos]);
-
-  // Lazy loading function for quotes based on category
-  const loadQuotesForCategory = async (category: string) => {
-    try {
-      switch (category) {
-        case 'medigap':
-          const savedQuotes = await loadFromStorage(REAL_QUOTES_KEY, []);
-          if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
-            setRealQuotes(savedQuotes);
-          }
-          break;
-        case 'advantage':
-          const savedAdvantageQuotes = await loadFromStorage(ADVANTAGE_QUOTES_KEY, []);
-          if (savedAdvantageQuotes && Array.isArray(savedAdvantageQuotes) && savedAdvantageQuotes.length > 0) {
-            setAdvantageQuotes(savedAdvantageQuotes);
-          }
-          break;
-        case 'drug-plan':
-          const savedDrugPlanQuotes = await loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
-          if (savedDrugPlanQuotes && Array.isArray(savedDrugPlanQuotes) && savedDrugPlanQuotes.length > 0) {
-            setDrugPlanQuotes(savedDrugPlanQuotes);
-          }
-          break;
-        case 'dental':
-          const savedDentalData = await loadDentalQuotesFromStorage();
-          const savedDentalQuotes = savedDentalData ? savedDentalData.quotes : [];
-          if (savedDentalQuotes && Array.isArray(savedDentalQuotes) && savedDentalQuotes.length > 0) {
-            setDentalQuotes(savedDentalQuotes);
-          }
-          break;
-        case 'hospital-indemnity':
-          const savedHospitalQuotes = await loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
-          if (savedHospitalQuotes && Array.isArray(savedHospitalQuotes) && savedHospitalQuotes.length > 0) {
-            // Check if optimization is needed
-            const firstQuote = savedHospitalQuotes[0];
-            if (firstQuote?.planName) {
-              setHospitalIndemnityQuotes(savedHospitalQuotes);
-            } else if (firstQuote?.plan_name) {
-              const optimized = optimizeHospitalIndemnityQuotes(savedHospitalQuotes);
-              setHospitalIndemnityQuotes(optimized);
-            }
-          }
-          break;
-        case 'final-expense':
-          const savedFinalExpenseQuotes = await loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
-          if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes) && savedFinalExpenseQuotes.length > 0) {
-            setFinalExpenseQuotes(savedFinalExpenseQuotes);
-          }
-          break;
-        case 'cancer':
-          const savedCancerQuotes = await loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
-          if (savedCancerQuotes && Array.isArray(savedCancerQuotes) && savedCancerQuotes.length > 0) {
-            setCancerInsuranceQuotes(savedCancerQuotes);
-          }
-          break;
-      }
-    } catch (error) {
-      console.error(`Error loading quotes for category ${category}:`, error);
-    }
-  };
 
   // Initialize component with async storage loading
   useEffect(() => {
@@ -377,16 +324,6 @@ export default function MedicareShopContent() {
 
     initializeComponent();
   }, [searchParams]);
-
-  // Helper functions from backup
-  const hasQuotes = () => {
-    const result = (realQuotes?.length > 0) || (advantageQuotes?.length > 0) || (drugPlanQuotes?.length > 0) || 
-           (dentalQuotes?.length > 0) || (hospitalIndemnityQuotes?.length > 0) || 
-           (finalExpenseQuotes?.length > 0) || (cancerInsuranceQuotes?.length > 0) || 
-           (selectedFlowCategories?.length > 0);
-    
-    return result;
-  };
 
   const hasQuotesForPlan = (planType: string) => {
     return realQuotes?.some(quote => quote?.plan === planType) || false;
@@ -448,8 +385,7 @@ export default function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setRealQuotes(result.quotes);
-          setActiveCategory('medigap');
-          setSelectedCategory('medigap');
+          // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
       } else if (planType === 'advantage') {
@@ -460,8 +396,7 @@ export default function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setRealQuotes(result.quotes);
-          setActiveCategory('advantage');
-          setSelectedCategory('advantage');
+          // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
       } else if (planType === 'drug-plan') {
@@ -472,8 +407,7 @@ export default function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setDrugPlanQuotes(result.quotes);
-          setActiveCategory('drug-plan');
-          setSelectedCategory('drug-plan');
+          // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
       }
@@ -488,10 +422,10 @@ export default function MedicareShopContent() {
     }
   }, [preloadCarrierLogos]);
 
-  // Wrapper function for component compatibility
-  const handleFetchQuotes = (planType: string) => {
+  // Memoized wrapper function for component compatibility
+  const handleFetchQuotes = useCallback((planType: string) => {
     fetchIndividualPlanQuotes(planType);
-  };
+  }, [fetchIndividualPlanQuotes]);
 
   // Simple optimization: Only save quotes when they're actually new or changed significantly
   const [lastSaveTimestamp, setLastSaveTimestamp] = useState<{[key: string]: number}>({});
@@ -561,14 +495,16 @@ export default function MedicareShopContent() {
     }
   }, [showQuoteLoading]);
 
-  // Auto-switch to first completed category when parallel quotes finish
+  // Auto-switch to first completed category ONLY during initial loading phase
   useEffect(() => {
-    if (completedQuoteTypes.length > 0 && !hasAutoSwitched && showQuoteLoading) {
+    // Only auto-switch if we're still in the loading phase AND haven't switched yet AND initial load is not complete
+    if (completedQuoteTypes.length > 0 && !hasAutoSwitched && showQuoteLoading && isInitializing === false && !initialLoadComplete) {
       // Add a small delay to allow multiple quotes to potentially complete 
       // and prioritize the most common/important categories
       const timer = setTimeout(() => {
         // Only proceed if we still haven't auto-switched (double-check)
-        if (hasAutoSwitched) return;
+        // AND we're still in the loading phase (this prevents post-load auto-switching)
+        if (hasAutoSwitched || !showQuoteLoading) return;
         
         // Map completed quote types to category IDs
         const categoryMapping: Record<string, string> = {
@@ -598,7 +534,7 @@ export default function MedicareShopContent() {
         }
         
         if (firstCompletedCategory) {
-          console.log(`🎯 Auto-switching to first completed category: ${firstCompletedCategory} (from ${completedQuoteTypes.length} completed types)`);
+          console.log(`🎯 Initial auto-switch to first completed category: ${firstCompletedCategory} (from ${completedQuoteTypes.length} completed types)`);
           
           // Mark that we've auto-switched FIRST to prevent race conditions
           setHasAutoSwitched(true);
@@ -616,7 +552,7 @@ export default function MedicareShopContent() {
 
       return () => clearTimeout(timer);
     }
-  }, [completedQuoteTypes, hasAutoSwitched, showQuoteLoading, searchParams, pathname, router]);
+  }, [completedQuoteTypes, hasAutoSwitched, showQuoteLoading, isInitializing, initialLoadComplete, searchParams, pathname, router]);
 
   // Handle quote form submission
   const handleQuoteFormSubmit = async () => {
@@ -882,16 +818,8 @@ export default function MedicareShopContent() {
               setQuotesReady(true);
             }
             
-            // Navigate to dental results view
-            setActiveCategory('dental');
-            setSelectedCategory('dental');
-            
-            // Update URL to reflect dental category
-            const params = new URLSearchParams(searchParams);
-            params.set('category', 'dental');
-            router.push(`${pathname}?${params.toString()}`);
-            
-            // Preload carrier logos for better user experience
+            // Removed auto-navigation to dental tab - let user manually switch
+            // Only preload carrier logos for better user experience when they do switch
             preloadCarrierLogos(optimizationResult.quotes);
           } else {
             console.error('❌ Dental quotes optimization failed:', optimizationResult.error);
@@ -939,16 +867,8 @@ export default function MedicareShopContent() {
               setQuotesReady(true);
             }
             
-            // Navigate to dental results view
-            setActiveCategory('dental');
-            setSelectedCategory('dental');
-            
-            // Update URL to reflect dental category
-            const params = new URLSearchParams(searchParams);
-            params.set('category', 'dental');
-            router.push(`${pathname}?${params.toString()}`);
-            
-            // Preload carrier logos for better user experience
+            // Removed auto-navigation to dental tab - let user manually switch
+            // Only preload carrier logos for better user experience when they do switch
             preloadCarrierLogos(response.quotes);
           }
         } else {
@@ -1252,28 +1172,6 @@ export default function MedicareShopContent() {
       console.error('Error opening plan details:', error);
       // Could add toast notification here for user feedback
     }
-  };
-
-  const handleCategoryToggle = async (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => {
-    setActiveCategory(category);
-    setSelectedCategory(category);
-    
-    // Load quotes for the newly selected category (lazy loading on manual switch)
-    await loadQuotesForCategory(category);
-    
-    // Save UI state to localStorage only - NOT Firestore to avoid excessive operations
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('activeCategory', category);
-    }
-    
-    // Update URL to reflect the new category
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('category', category);
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
   };
 
   const handleMedicareFlowComplete = async (data: any) => {
@@ -1669,6 +1567,7 @@ export default function MedicareShopContent() {
     setExpectedQuoteTypes([]);
     setCompletedQuoteTypes([]);
     setHasAutoSwitched(false); // Reset auto-switch flag
+    setInitialLoadComplete(false); // Reset initial load flag to allow auto-switching for new submissions
     setCurrentQuoteType(null);
     setTotalExpectedQuotes(0);
   };
@@ -1684,10 +1583,10 @@ export default function MedicareShopContent() {
     setPaymentMode('monthly');
   };
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedQuotePlans(['F', 'G', 'N']);
-  };
+  }, []);
 
   // Display data processing - handle both real quotes types
   const displayData = React.useMemo(() => {
@@ -1774,23 +1673,29 @@ export default function MedicareShopContent() {
     };
   }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery]);
 
-  // Pagination
-  const itemsPerPage = 10;
-  const totalItems = displayData.data.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedData = displayData.data.slice(startIndex, endIndex);
+  // Memoized pagination calculations to prevent unnecessary re-computations
+  const paginationData = React.useMemo(() => {
+    const itemsPerPage = 10;
+    const totalItems = displayData.data.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = displayData.data.slice(startIndex, endIndex);
 
-  const paginationInfo = {
-    currentPage,
-    totalPages,
-    totalItems,
-    startItem: startIndex + 1,
-    endItem: Math.min(endIndex, totalItems),
-    hasPrevPage: currentPage > 1,
-    hasNextPage: currentPage < totalPages
-  };
+    const paginationInfo = {
+      currentPage,
+      totalPages,
+      totalItems,
+      startItem: startIndex + 1,
+      endItem: Math.min(endIndex, totalItems),
+      hasPrevPage: currentPage > 1,
+      hasNextPage: currentPage < totalPages
+    };
+
+    return { paginatedData, paginationInfo };
+  }, [displayData.data, currentPage]);
+
+  const { paginatedData, paginationInfo } = paginationData;
 
   return (
     <MedicareShopLayout
@@ -1800,63 +1705,48 @@ export default function MedicareShopContent() {
       activeCategory={activeCategory}
       selectedCategory={selectedCategory}
       productCategories={productCategories}
-      onCategoryToggle={handleCategoryToggle}
-      onCategorySelect={handleCategorySelect}
+      onCategoryToggle={handleOptimizedCategoryToggle}
+      onCategorySelect={handleManualCategorySelect}
       onReset={clearStorageAndReset}
     >
-      {/* Show loading spinner while initializing */}
-      {isInitializing ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Loading your Medicare plans...</p>
-          </div>
-        </div>
-      ) : showQuoteLoading ? (
-        /* Show loading page between flow and results */
-        <MedicareQuoteLoadingPage
-          loadingItems={loadingItems}
-          zipCode={quoteFormData.zipCode}
-          age={quoteFormData.age?.toString()}
-          selectedCategories={selectedFlowCategories}
-          useExternalProgress={true}
-          externalProgress={quotesReady ? 100 : 75} // Fallback progress
-          completedQuoteTypes={completedQuoteTypes}
-          startedQuoteTypes={startedQuoteTypes}
-          currentQuoteType={currentQuoteType || undefined}
-          totalExpectedQuotes={totalExpectedQuotes}
-          onComplete={() => {
-            console.log('Loading page onComplete triggered', { quotesReady, hasQuotes: hasQuotes() });
-            // Always hide loading after a delay, even if quotesReady is false
-            // This prevents users from getting stuck on loading page
-            if (quotesReady || hasQuotes()) {
-              setShowQuoteLoading(false);
-            } else {
-              // Fallback: hide loading after 2 seconds even if quotes aren't marked as ready
-              // This can happen if there's a state sync issue
-              console.warn('Forcing loading page to close - quotes may not be properly synced');
-              setTimeout(() => {
-                setShowQuoteLoading(false);
-              }, 2000);
-            }
-          }}
-        />
-      ) : selectedCategory === 'advantage' || activeCategory === 'advantage' ? (
-        /* Route to dedicated Medicare Advantage component */
-        <MedicareAdvantageShopContent 
-          isExternallyLoading={isCategoryLoading('advantage')}
-        />
-      ) : (
+      {/* Loading States Component */}
+      <MedicareLoadingStates
+        isInitializing={isInitializing}
+        showQuoteLoading={showQuoteLoading}
+        loadingItems={loadingItems}
+        quoteFormData={quoteFormData}
+        selectedFlowCategories={selectedFlowCategories}
+        quotesReady={quotesReady}
+        completedQuoteTypes={completedQuoteTypes}
+        startedQuoteTypes={startedQuoteTypes}
+        currentQuoteType={currentQuoteType}
+        totalExpectedQuotes={totalExpectedQuotes}
+        hasQuotes={hasQuotes}
+        onLoadingComplete={() => {
+          setShowQuoteLoading(false);
+          setInitialLoadComplete(true); // Mark initial load as complete to prevent future auto-switching
+        }}
+      />
+
+      {/* Content conditionally rendered when not loading */}
+      {!isInitializing && !showQuoteLoading && (
         <>
-          {/* Show content based on form completion and flow state */}
-          {showMedicareFlow ? (
-            /* Show New Medicare Flow */
-            <MedicareQuoteFlow
-              mode={medicareFlowMode}
-              onComplete={handleMedicareFlowComplete}
-              onCancel={() => setShowMedicareFlow(false)}
+          {selectedCategory === 'advantage' || activeCategory === 'advantage' ? (
+            /* Route to dedicated Medicare Advantage component */
+            <MedicareAdvantageShopContent 
+              isExternallyLoading={false}
             />
-          ) : hasQuotes() ? (
+          ) : (
+            <>
+              {/* Show content based on form completion and flow state */}
+              {showMedicareFlow ? (
+                /* Show New Medicare Flow */
+                <MedicareQuoteFlow
+                  mode={medicareFlowMode}
+                  onComplete={handleMedicareFlowComplete}
+                  onCancel={() => setShowMedicareFlow(false)}
+                />
+              ) : hasQuotes() ? (
             /* Show Plans When There Are Quotes */
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Enhanced Sidebar with Combined Filters */}
@@ -1870,7 +1760,7 @@ export default function MedicareShopContent() {
                 selectedCoverageLevel={selectedCoverageLevel}
                 setSelectedCoverageLevel={setSelectedCoverageLevel}
                 selectedCategory={selectedCategory}
-                onCategorySelect={handleCategorySelect}
+                onCategorySelect={handleManualCategorySelect}
                 selectedMedigapPlans={selectedMedigapPlans}
                 setSelectedMedigapPlans={setSelectedMedigapPlans}
                 applyDiscounts={applyDiscounts}
@@ -1944,22 +1834,16 @@ export default function MedicareShopContent() {
                         title="Getting Your Medigap Quotes"
                         message="Searching for Medicare Supplement plans in your area..."
                       />
-                    ) : selectedCategory === 'medigap' && realQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('medigap') ? (
+                    ) : selectedCategory === 'medigap' && realQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Medigap */
                       <MedigapEmptyState onResetFilters={resetFilters} />
-                    ) : selectedCategory === 'medigap' && realQuotes.length === 0 && isCategoryLoading('medigap') ? (
-                      /* Loading State for Medigap (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Medigap Quotes"
-                        message="Searching for Medicare Supplement plans in your area..."
-                      />
                     ) : selectedCategory === 'drug-plan' && isLoadingQuotes ? (
                       /* Loading Screen for Drug Plan Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Drug Plan Quotes"
                         message="Searching for Drug Plan (PDP) coverage in your area..."
                       />
-                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('drug-plan') ? (
+                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Drug Plans */
                       <div className="text-center py-12">
                         <p className="text-muted-foreground mb-4">No drug plans found for your area.</p>
@@ -1970,40 +1854,11 @@ export default function MedicareShopContent() {
                           Try Again
                         </button>
                       </div>
-                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && isCategoryLoading('drug-plan') ? (
-                      /* Loading State for Drug Plans (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Drug Plan Quotes"
-                        message="Searching for Drug Plan (PDP) coverage in your area..."
-                      />
                     ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length > 0 ? (
                       /* Display Drug Plans */
                       <div className="space-y-6">
-                        {isCategoryLoading('drug-plan') ? (
-                          /* Loading overlay for drug plans */
-                          <div className="space-y-4">
-                            {[...Array(3)].map((_, i) => (
-                              <div key={i} className="bg-card border rounded-lg p-6 animate-pulse">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="h-8 bg-gray-200 rounded w-20 mb-1"></div>
-                                    <div className="h-3 bg-gray-200 rounded w-16"></div>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                  <div className="h-4 bg-gray-200 rounded"></div>
-                                  <div className="h-4 bg-gray-200 rounded"></div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          /* Actual drug plan data */
-                          paginatedData.map((quote: any, index: number) => (
+                        {/* Actual drug plan data */}
+                        {paginatedData.map((quote: any, index: number) => (
                           <div key={index} className="bg-card border rounded-lg p-6">
                             <div className="flex justify-between items-start">
                               <div>
@@ -2022,8 +1877,7 @@ export default function MedicareShopContent() {
                               </div>
                             </div>
                           </div>
-                        ))
-                        )}
+                        ))}
                       </div>
                     ) : selectedCategory === 'dental' && isLoadingQuotes ? (
                       /* Loading Screen for Dental Quotes */
@@ -2031,20 +1885,14 @@ export default function MedicareShopContent() {
                         title="Getting Your Dental Insurance Quotes"
                         message="Searching for dental insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('dental') ? (
+                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Dental */
                       <DentalEmptyState />
-                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && isCategoryLoading('dental') ? (
-                      /* Loading State for Dental (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Dental Insurance Quotes"
-                        message="Searching for dental insurance plans in your area..."
-                      />
                     ) : selectedCategory === 'dental' && dentalQuotes.length > 0 ? (
                       /* Display Dental Plans */
                       <DentalShopContent 
                         quotes={dentalQuotes} 
-                        isLoading={isCategoryLoading('dental')} 
+                        isLoading={false} 
                       />
                     ) : selectedCategory === 'cancer' && isLoadingQuotes ? (
                       /* Loading Screen for Cancer Insurance Quotes */
@@ -2052,20 +1900,14 @@ export default function MedicareShopContent() {
                         title="Getting Your Cancer Insurance Quotes"
                         message="Searching for cancer insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('cancer') ? (
+                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Cancer Insurance */
                       <CancerInsuranceEmptyState />
-                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && isCategoryLoading('cancer') ? (
-                      /* Loading State for Cancer Insurance (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Cancer Insurance Quotes"
-                        message="Searching for cancer insurance plans in your area..."
-                      />
                     ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length > 0 ? (
                       /* Display Cancer Insurance Plans */
                       <CancerInsuranceShopContent 
                         quotes={cancerInsuranceQuotes} 
-                        isLoading={isCategoryLoading('cancer')} 
+                        isLoading={false} 
                       />
                     ) : selectedCategory === 'hospital-indemnity' && isLoadingQuotes ? (
                       /* Loading Screen for Hospital Indemnity Quotes */
@@ -2073,20 +1915,14 @@ export default function MedicareShopContent() {
                         title="Getting Your Hospital Indemnity Quotes"
                         message="Searching for hospital indemnity insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('hospital-indemnity') ? (
+                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Hospital Indemnity */
                       <HospitalIndemnityEmptyState />
-                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && isCategoryLoading('hospital-indemnity') ? (
-                      /* Loading State for Hospital Indemnity (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Hospital Indemnity Quotes"
-                        message="Searching for hospital indemnity insurance plans in your area..."
-                      />
                     ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length > 0 ? (
                       /* Display Hospital Indemnity Plans */
                       <HospitalIndemnityShopContent 
                         quotes={hospitalIndemnityQuotes} 
-                        isLoading={isCategoryLoading('hospital-indemnity')} 
+                        isLoading={false} 
                       />
                     ) : selectedCategory === 'final-expense' && isLoadingQuotes ? (
                       /* Loading Screen for Final Expense Quotes */
@@ -2094,20 +1930,14 @@ export default function MedicareShopContent() {
                         title="Getting Your Final Expense Life Insurance Quotes"
                         message="Searching for final expense life insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && !isLoadingQuotes && !isCategoryLoading('final-expense') ? (
+                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && !isLoadingQuotes ? (
                       /* Empty State for Final Expense */
                       <FinalExpenseEmptyState />
-                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && isCategoryLoading('final-expense') ? (
-                      /* Loading State for Final Expense (when expected but not completed) */
-                      <GenericQuoteLoading 
-                        title="Getting Your Final Expense Life Insurance Quotes"
-                        message="Searching for final expense life insurance plans in your area..."
-                      />
                     ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length > 0 ? (
                       /* Display Final Expense Plans */
                       <FinalExpenseShopContent 
                         quotes={finalExpenseQuotes} 
-                        isLoading={isCategoryLoading('final-expense')} 
+                        isLoading={false} 
                       />
                     ) : (
                       /* Display Medigap Plans */
@@ -2116,38 +1946,7 @@ export default function MedicareShopContent() {
                           ? 'grid-cols-1 sm:grid-cols-2' 
                           : 'grid-cols-1'
                       }`}>
-                        {isCategoryLoading('medigap') && (
-                          /* Loading overlay for medigap plans */
-                          <div className="space-y-4">
-                            {[...Array(3)].map((_, i) => (
-                              <Card key={i} className="animate-pulse">
-                                <CardContent className="p-6">
-                                  <div className="mb-6 pb-4 border-b">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                                      <div>
-                                        <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
-                                        <div className="h-4 bg-gray-200 rounded w-24"></div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                    {[...Array(2)].map((_, j) => (
-                                      <div key={j} className="border rounded-lg p-4">
-                                        <div className="h-5 bg-gray-200 rounded w-20 mb-3"></div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                          <div className="h-4 bg-gray-200 rounded"></div>
-                                          <div className="h-4 bg-gray-200 rounded"></div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        )}
-                        {!isCategoryLoading('medigap') && displayData.type === 'grouped' && (
+                        {displayData.type === 'grouped' && (
                           // Grouped by carrier display (Medigap real quotes) - inline from backup
                           paginatedData.map((carrierGroup: any) => {
                             // Filter plans based on selected plan types
@@ -2405,8 +2204,10 @@ export default function MedicareShopContent() {
               </div>
             </div>
           )}
-        </>
-      )}
+              </>
+            )}
+          </>
+        )}
 
       {/* Plan Differences Modal */}
       <PlanComparisonModal
@@ -2420,3 +2221,6 @@ export default function MedicareShopContent() {
     </MedicareShopLayout>
   );
 }
+
+// Export memoized component for better performance
+export default React.memo(MedicareShopContent);
