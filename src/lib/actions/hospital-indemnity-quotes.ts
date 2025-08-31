@@ -110,38 +110,46 @@ export async function getHospitalIndemnityQuotes(params: HospitalIndemnityQuoteP
     
     console.log('🏥 getHospitalIndemnityQuotes result:', result);
     
-    if (result.data && typeof result.data === 'object') {
-      const data = result.data as any;
-      
-      if (data.success && data.quotes) {
-        console.log(`🏥 Success! Received ${data.quotes.length} hospital indemnity quotes`);
-        return {
-          quotes: data.quotes,
-          success: true
-        };
-      } else if (data.error) {
-        console.error('🏥 API Error:', data.error);
+    // Handle different response formats (matching hawknest-admin)
+    let quotes: unknown[] = [];
+    
+    if (result.data) {
+      // Check if result.data has quotes array (wrapped response)
+      if (typeof result.data === "object" && "quotes" in result.data && Array.isArray((result.data as Record<string, unknown>).quotes)) {
+        quotes = (result.data as Record<string, unknown>).quotes as unknown[];
+      }
+      // If the response is an array itself (direct response)
+      else if (Array.isArray(result.data)) {
+        quotes = result.data;
+      }
+      // If the response has a results array (alternative CSG format)
+      else if (typeof result.data === "object" && "results" in result.data && Array.isArray((result.data as Record<string, unknown>).results)) {
+        quotes = (result.data as Record<string, unknown>).results as unknown[];
+      }
+      // Check for error in response
+      else if (typeof result.data === "object" && "error" in result.data) {
+        console.error('🏥 API Error:', (result.data as any).error);
         return {
           quotes: [],
           success: false,
-          error: data.error
-        };
-      } else {
-        console.error('🏥 Unexpected response format:', data);
-        return {
-          quotes: [],
-          success: false,
-          error: 'Unexpected response format from hospital indemnity quotes API'
+          error: (result.data as any).error
         };
       }
-    } else {
-      console.error('🏥 Invalid response:', result);
+    }
+    
+    if (quotes.length === 0) {
+      console.warn('🏥 No quotes returned from API');
       return {
         quotes: [],
-        success: false,
-        error: 'Invalid response from hospital indemnity quotes service'
+        success: true
       };
     }
+    
+    console.log(`🏥 Success! Received ${quotes.length} hospital indemnity quotes`);
+    return {
+      quotes: quotes as HospitalIndemnityQuote[],
+      success: true
+    };
   } catch (error) {
     console.error('🏥 Error calling getHospitalIndemnityQuotes:', error);
     return {

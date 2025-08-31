@@ -640,7 +640,6 @@ export default function MedicareAdvantageShopContent() {
             zipCode={zipCode}
             plans={plans}
             onFiltersChange={handleFiltersChange}
-            onSearch={handleSearch}
           />
         </aside>
 

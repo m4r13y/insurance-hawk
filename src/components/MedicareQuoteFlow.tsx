@@ -546,16 +546,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
       fields.tobaccoUse = true
     }
     
-    // Benefit Amount: Hospital Indemnity
-    if (hasHospital) {
-      fields.benefitAmount = true
-    }
-
     // Cancer Insurance specific fields
     if (hasCancer) {
       fields.familyType = true
       fields.carcinomaInSitu = true
       fields.premiumMode = true
+      fields.benefitAmount = true
     }
 
     // Dental Insurance specific fields
@@ -1246,8 +1242,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Benefit Amount *</Label>
-                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('hospital') && (
-                                      <div className="text-xs text-gray-500 mt-0.5">Hospital Indemnity</div>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('cancer') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Cancer Insurance</div>
                                     )}
                                   </div>
                                   <Select 
@@ -1445,6 +1441,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                       <SelectValue placeholder="Select underwriting type" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                      <SelectItem value="No Preference">No Preference (Show All Options)</SelectItem>
                                       <SelectItem value="Guaranteed">Guaranteed Issue (No Health Questions)</SelectItem>
                                       <SelectItem value="Simplified">Simplified Issue (Few Health Questions)</SelectItem>
                                       <SelectItem value="Full">Full Underwriting (Medical Exam Required)</SelectItem>

@@ -49,8 +49,8 @@ interface QuoteFormData {
   // Final Expense specific fields
   desiredFaceValue?: string;
   desiredRate?: string;
-  underwritingType?: 'Guaranteed' | 'Simplified' | 'Full' | '';
-  // Hospital Indemnity specific fields
+  underwritingType?: 'Guaranteed' | 'Simplified' | 'Full' | 'No Preference' | '';
+  // Cancer Insurance specific fields
   benefitAmount?: string;
   // State field for cancer insurance
   state?: string;

@@ -104,7 +104,7 @@ export default function MedicareShopContent() {
     desiredFaceValue: '',
     desiredRate: '',
     underwritingType: '',
-    // Hospital Indemnity specific fields
+    // Cancer Insurance specific fields  
     benefitAmount: '',
     // State field for cancer insurance
     state: ''
@@ -653,13 +653,16 @@ export default function MedicareShopContent() {
         
         setCurrentQuoteType('Dental Insurance');
         
-        // Add coveredMembers parameter for dental quotes
-        const dentalFormData = {
-          ...formData,
-          coveredMembers: formData.coveredMembers ? parseInt(formData.coveredMembers) : 1 // Use form data or default to individual coverage
+        // Only send necessary parameters for dental quotes
+        const dentalParams = {
+          age: typeof formData.age === 'number' ? formData.age : parseInt(formData.age.toString()),
+          zipCode: formData.zipCode,
+          gender: formData.gender,
+          tobaccoUse: formData.tobaccoUse || false,
+          coveredMembers: formData.coveredMembers ? parseInt(formData.coveredMembers) : 1
         };
         
-        const response = await getDentalQuotes(dentalFormData);
+        const response = await getDentalQuotes(dentalParams);
         console.log('🔥 Dental API Response:', response);
         
         if (response.error) {
@@ -684,16 +687,15 @@ export default function MedicareShopContent() {
         
         setCurrentQuoteType('Cancer Insurance');
         
-        // Convert formData to CancerInsuranceQuoteParams format
+        // Convert formData to CancerInsuranceQuoteParams format - using minimal required parameters
         const cancerParams = {
-          zipCode: formData.zipCode,
+          state: 'TX' as const, // Cancer insurance is only available in Texas
           age: typeof formData.age === 'number' ? formData.age : parseInt(formData.age.toString()),
-          gender: formData.gender === 'male' ? 'M' as const : 'F' as const,
-          tobaccoUse: formData.tobaccoUse || false,
-          familyType: (formData.familyType as 'individual' | 'family') || 'individual',
-          benefitAmount: formData.benefitAmount ? parseInt(formData.benefitAmount) : 10000,
-          carcinomaInSitu: formData.carcinomaInSitu || false,
-          premiumMode: (formData.premiumMode as 'monthly' | 'annual') || 'monthly'
+          familyType: 'Applicant Only' as const, // Use default for broader coverage
+          tobaccoStatus: formData.tobaccoUse ? 'Tobacco' as const : 'Non-Tobacco' as const,
+          premiumMode: 'Monthly Bank Draft' as const, // Use most common payment mode
+          carcinomaInSitu: '25%' as const, // Use default conservative option
+          benefitAmount: 25000 // Use standard benefit amount
         };
         
         const response = await getCancerInsuranceQuotes(cancerParams);
@@ -754,7 +756,7 @@ export default function MedicareShopContent() {
         
         setCurrentQuoteType('Final Expense Life');
         
-        // Convert formData to FinalExpenseQuoteParams format
+        // Convert formData to simplified FinalExpenseQuoteParams format
         const finalExpenseParams = {
           zipCode: formData.zipCode,
           age: typeof formData.age === 'number' ? formData.age : parseInt(formData.age.toString()),
@@ -762,7 +764,10 @@ export default function MedicareShopContent() {
           tobaccoUse: formData.tobaccoUse || false,
           desiredFaceValue: formData.desiredFaceValue ? parseInt(formData.desiredFaceValue) : 10000,
           desiredRate: formData.desiredRate ? parseFloat(formData.desiredRate) : undefined,
-          underwritingType: (formData.underwritingType as 'Full' | 'Simplified' | 'Guaranteed') || undefined
+          // Only include underwritingType if user has a specific preference (not "No Preference")
+          ...(formData.underwritingType && formData.underwritingType !== 'No Preference' ? {
+            underwritingType: formData.underwritingType as 'Full' | 'Simplified' | 'Guaranteed'
+          } : {})
         };
         
         const response = await getFinalExpenseLifeQuotes(finalExpenseParams);
@@ -953,7 +958,7 @@ export default function MedicareShopContent() {
       desiredFaceValue: data.desiredFaceValue || "",
       desiredRate: data.desiredRate || "",
       underwritingType: data.underwritingType || "",
-      // Hospital Indemnity specific fields
+      // Cancer Insurance specific fields
       benefitAmount: data.benefitAmount || "",
       // State field for cancer insurance
       state: data.state || ""

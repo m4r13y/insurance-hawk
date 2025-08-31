@@ -11,23 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Search, 
   Filter, 
   Star, 
   DollarSign, 
-  MapPin, 
   Shield,
   Heart,
   Eye,
   Pill,
-  Building2
+  Building2,
+  Search,
+  MapPin
 } from "lucide-react";
 
 interface MedicareAdvantageSidebarProps {
   zipCode?: string;
   plans: any[];
   onFiltersChange: (filters: MedicareAdvantageFilters) => void;
-  onSearch: (zipCode: string) => void;
 }
 
 export interface MedicareAdvantageFilters {
@@ -61,10 +60,8 @@ const defaultFilters: MedicareAdvantageFilters = {
 export default function MedicareAdvantageSidebar({
   zipCode = '',
   plans,
-  onFiltersChange,
-  onSearch
+  onFiltersChange
 }: MedicareAdvantageSidebarProps) {
-  const [searchZip, setSearchZip] = useState(zipCode);
   const [filters, setFilters] = useState<MedicareAdvantageFilters>(defaultFilters);
 
   // Extract unique values from plans for filter options
@@ -95,52 +92,8 @@ export default function MedicareAdvantageSidebar({
     onFiltersChange(defaultFilters);
   };
 
-  const handleSearch = () => {
-    if (searchZip && searchZip.length === 5) {
-      onSearch(searchZip);
-    }
-  };
-
   return (
     <div className="space-y-4">
-      {/* ZIP Code Search */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Search className="w-4 h-4" />
-            Search Location
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="zip-search">ZIP Code</Label>
-            <div className="flex gap-2">
-              <Input
-                id="zip-search"
-                placeholder="Enter ZIP code"
-                value={searchZip}
-                onChange={(e) => setSearchZip(e.target.value)}
-                maxLength={5}
-                className="flex-1"
-              />
-              <Button 
-                onClick={handleSearch}
-                size="sm"
-                disabled={!searchZip || searchZip.length !== 5}
-              >
-                Search
-              </Button>
-            </div>
-          </div>
-          {zipCode && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="w-3 h-3" />
-              Showing plans for {zipCode}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Active Filters */}
       {(filters.planTypes.length > 0 || filters.starRatings.length > 0 || 
         filters.hasLowIncomeSubsidy || filters.hasGapCoverage || 
