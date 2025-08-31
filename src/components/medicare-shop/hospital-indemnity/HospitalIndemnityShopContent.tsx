@@ -37,12 +37,6 @@ export default function HospitalIndemnityShopContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          Hospital Indemnity Plans ({quotes.length})
-        </h3>
-      </div>
-
       <div className="space-y-4">
         {quotes.map((quote) => {
           // Get the main hospital confinement benefit from base plans

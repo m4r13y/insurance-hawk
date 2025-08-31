@@ -69,12 +69,6 @@ export default function FinalExpenseShopContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          Final Expense Life Insurance Plans ({quotes.length})
-        </h3>
-      </div>
-
       <div className="space-y-4">
         {quotes.map((quote) => (
           <Card key={quote.id} className="hover:shadow-md transition-shadow">
