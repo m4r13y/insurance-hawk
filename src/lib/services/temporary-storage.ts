@@ -6,7 +6,8 @@ import { db } from '@/lib/firebase';
 // Key used for storing visitor ID in localStorage
 const VISITOR_ID_KEY = 'visitor_id';
 
-// Generate unique visitor ID and store in localStorage
+// Generate unique visitor ID and store i
+
 const getVisitorId = (): string => {
   if (typeof window === 'undefined') {
     // Server-side: generate temporary ID
@@ -27,7 +28,6 @@ const getVisitorId = (): string => {
     }
     
     localStorage.setItem(VISITOR_ID_KEY, visitorId);
-    console.log('🆔 Generated new visitor ID:', visitorId);
   }
   
   return visitorId;
@@ -92,7 +92,6 @@ const DATABASE_NAME = 'temp'; // Using the temp database
 const COLLECTION_NAME = 'visitors'; // Using the visitors collection
 const MAX_RETRIES = 3; // Maximum retry attempts for failed operations
 const BASE_DELAY = 1000; // Base delay for exponential backoff (1 second)
-const METADATA_UPDATE_INTERVAL = 5 * 60 * 1000; // Only update visitor metadata every 5 minutes
 
 // Queue management for concurrent operations
 class OperationQueue {
@@ -152,7 +151,6 @@ class OperationQueue {
           error?.message?.includes('exhausted') ||
           error?.message?.includes('overloading')) {
         const backoffDelay = Math.min(5000, 1000 * Math.pow(2, this.consecutiveErrors));
-        console.log(`🐌 Resource exhausted, backing off for ${backoffDelay}ms`);
         await new Promise(resolve => setTimeout(resolve, backoffDelay));
       }
       
@@ -170,25 +168,6 @@ class OperationQueue {
 // Global operation queue
 const operationQueue = new OperationQueue();
 
-// Track last metadata update to avoid excessive writes
-let lastMetadataUpdate = 0;
-
-// Helper function to check if metadata update is needed
-const shouldUpdateMetadata = (): boolean => {
-  const now = Date.now();
-  const timeSinceLastUpdate = now - lastMetadataUpdate;
-  const shouldUpdate = timeSinceLastUpdate > METADATA_UPDATE_INTERVAL;
-  
-  if (shouldUpdate) {
-    lastMetadataUpdate = now;
-    console.log('📝 Metadata update needed (last update was', Math.round(timeSinceLastUpdate / 1000), 'seconds ago)');
-  } else {
-    console.log('⏭️ Skipping metadata update (last update was', Math.round(timeSinceLastUpdate / 1000), 'seconds ago)');
-  }
-  
-  return shouldUpdate;
-};
-
 // Helper function for exponential backoff retry
 const retryWithBackoff = async (fn: () => Promise<any>, retries = MAX_RETRIES): Promise<any> => {
   try {
@@ -201,7 +180,6 @@ const retryWithBackoff = async (fn: () => Promise<any>, retries = MAX_RETRIES): 
       error?.message?.includes('timeout')
     )) {
       const delay = BASE_DELAY * (MAX_RETRIES - retries + 1); // Exponential backoff
-      console.log(`⏳ Retrying operation in ${delay}ms... (${retries} retries left)`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryWithBackoff(fn, retries - 1);
     }
@@ -219,7 +197,6 @@ const getExpirationTimestamp = (): Timestamp => {
 // Save data to Firestore with subcollections for each quote category
 export const saveTemporaryData = async (key: string, data: any): Promise<void> => {
   return operationQueue.add(async () => {
-    console.log(`🔄 Processing save operation for ${key} (queue)`);
     try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
@@ -236,17 +213,18 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       
       // Only update visitor metadata for actual quote data from API responses or quote submissions
       // NOT for UI state changes like activeCategory, selectedCategory, filters, etc.
-      // BUT we DO want to track form completions and form data as these are important customer events
+      // Form data and form status should also be local-only for better privacy and performance
       const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                        key.includes('selected_categories') || key.includes('current_flow_step') ||
-                       key.includes('filter_state') || key.includes('ui_state');
+                       key.includes('filter_state') || key.includes('ui_state') ||
+                       key.includes('quote_form_completed') || key.includes('quote_form_data') ||
+                       key.includes('form_status') || key.includes('form_data');
       
       // For UI state, only save to localStorage - don't save to Firestore at all
       if (isUIState) {
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem(key, JSON.stringify(data));
-            console.log(`🎨 UI state saved to localStorage only: ${key} - skipping Firestore`);
           } catch (localError) {
             console.error(`❌ Failed to save UI state to localStorage:`, localError);
           }
@@ -255,10 +233,9 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       }
       
       // Check what kind of data this is to determine if we should update visitor metadata
+      // Only quote data from APIs should trigger visitor metadata updates
       const isNewQuoteSubmission = key.includes('quotes') && Array.isArray(data) && data.length > 0;
-      const isFormCompletion = key.includes('quote_form_completed') && data === true;
-      const isFormData = key.includes('quote_form_data') && data && typeof data === 'object';
-      const isImportantEvent = isNewQuoteSubmission || isFormCompletion || isFormData;
+      const isImportantEvent = isNewQuoteSubmission;
       const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
       
       // Check if visitor document already exists to avoid unnecessary createdAt updates
@@ -269,10 +246,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
           if (!existingDoc.exists()) {
             // First time creating visitor document
             shouldUpdateMetadata = true;
-            const eventDescription = isNewQuoteSubmission ? `${data.length} quotes` : 
-                                   isFormCompletion ? 'form completion' :
-                                   isFormData ? 'form data' : 'important event';
-            console.log(`📝 ✅ Creating NEW visitor document for: ${key} (${eventDescription})`);
           } else {
             // Document exists - only update lastActivity, not createdAt
             const existingData = existingDoc.data();
@@ -283,23 +256,12 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
             // Only update if it's been more than 5 minutes since last update (avoid constant updates)
             if (timeSinceLastUpdate > 5 * 60 * 1000) {
               shouldUpdateMetadata = true;
-              const eventDescription = isNewQuoteSubmission ? `${data.length} quotes` : 
-                                     isFormCompletion ? 'form completion' :
-                                     isFormData ? 'form data' : 'important event';
-              console.log(`📝 ✅ Updating visitor lastActivity for: ${key} (${eventDescription}) - last update was ${Math.round(timeSinceLastUpdate / 60000)}min ago`);
-            } else {
-              console.log(`⏭️ ⚠️ SKIPPED visitor metadata update for: ${key} - updated recently (${Math.round(timeSinceLastUpdate / 1000)}s ago)`);
             }
           }
         } catch (error) {
           console.warn('Could not check existing visitor document:', error);
           shouldUpdateMetadata = true; // Fallback to update
         }
-      } else {
-        const dataDescription = Array.isArray(data) ? `${data.length} items` : 
-                               typeof data === 'object' ? 'object' : 
-                               typeof data;
-        console.log(`⏭️ ⚠️ SKIPPED visitor metadata update for: ${key} (${dataDescription}) - not an important event`);
       }
       
       if (shouldUpdateMetadata) {
@@ -316,7 +278,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       
       // Handle large quote arrays by splitting them into chunks
       if (Array.isArray(data) && key.includes('quotes') && data.length > 10) {
-      console.log(`💾 Splitting ${data.length} quotes into smaller documents for ${key}`);
       
       // Use smaller chunks (25 quotes) to reduce Firebase load and prevent resource exhaustion
       const chunkSize = 25;
@@ -324,8 +285,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       for (let i = 0; i < data.length; i += chunkSize) {
         chunks.push(data.slice(i, i + chunkSize));
       }
-      
-      console.log(`📦 Created ${chunks.length} chunks for ${key}`);
       
       // Instead of deleting and recreating, update existing chunks where possible
       const subcollectionRef = collection(visitorDocRef, subcollectionName);
@@ -371,7 +330,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
         
         try {
           await retryWithBackoff(() => setDoc(chunkDocRef, chunkDocument));
-          console.log(`✅ Saved chunk ${index + 1}/${chunks.length} for ${key} (${chunk.length} quotes)`);
           
           // Longer delay between chunks to prevent Firebase resource exhaustion
           if (index < chunks.length - 1) {
@@ -382,8 +340,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
           // Don't throw immediately, try to save remaining chunks
         }
       }
-      
-      console.log(`✅ Successfully saved all ${chunks.length} chunks for ${key}`);
       
     } else {
       // Handle non-array data or small arrays normally
@@ -398,7 +354,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       };
       
       await retryWithBackoff(() => setDoc(dataDocRef, quoteDocument));
-      console.log(`✅ Saved data to subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
     }
     
   } catch (error) {
@@ -407,7 +362,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(key, JSON.stringify(data));
-        console.log(`📱 Fallback: Saved ${key} to localStorage`);
       } catch (localError) {
         console.error(`❌ Failed to save to localStorage as well:`, localError);
       }
@@ -419,26 +373,25 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
 // Load data from Firestore subcollections with auto-cleanup and timeout handling
 export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): Promise<T> => {
   return operationQueue.add(async () => {
-    console.log(`🔄 Processing load operation for ${key} (queue)`);
     
     // Check if this is UI state - if so, load from localStorage only
     const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                      key.includes('selected_categories') || key.includes('current_flow_step') ||
-                     key.includes('filter_state') || key.includes('ui_state');
+                     key.includes('filter_state') || key.includes('ui_state') ||
+                     key.includes('quote_form_completed') || key.includes('quote_form_data') ||
+                     key.includes('form_status') || key.includes('form_data');
     
     if (isUIState) {
       if (typeof window !== 'undefined') {
         try {
           const stored = localStorage.getItem(key);
           if (stored) {
-            console.log(`🎨 UI state loaded from localStorage: ${key}`);
             return JSON.parse(stored);
           }
         } catch (localError) {
           console.warn(`Failed to parse UI state from localStorage for ${key}:`, localError);
         }
       }
-      console.log(`🎨 No UI state found in localStorage for ${key}, returning default`);
       return defaultValue;
     }
     
@@ -594,12 +547,13 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
   // Check if this is UI state - if so, only delete from localStorage
   const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                    key.includes('selected_categories') || key.includes('current_flow_step') ||
-                   key.includes('filter_state') || key.includes('ui_state');
+                   key.includes('filter_state') || key.includes('ui_state') ||
+                   key.includes('quote_form_completed') || key.includes('quote_form_data') ||
+                   key.includes('form_status') || key.includes('form_data');
   
   if (isUIState) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(key);
-      console.log(`🎨 UI state removed from localStorage: ${key}`);
     }
     return; // Exit early - UI state is only in localStorage
   }

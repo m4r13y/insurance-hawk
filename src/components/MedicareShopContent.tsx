@@ -26,7 +26,6 @@ import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
-import StorageDiagnostics from '@/components/StorageDiagnostics';
 
 // Import organized components
 import {
@@ -1994,16 +1993,6 @@ export default function MedicareShopContent() {
                       <p className="text-sm text-red-700 mt-1">{quotesError}</p>
                     </CardContent>
                   </Card>
-                )}
-
-                {/* Storage Diagnostics - Temporary Debug Tool */}
-                {process.env.NODE_ENV === 'development' && (
-                  <StorageDiagnostics 
-                    onDataRestored={() => {
-                      // Refresh the page or reload data
-                      window.location.reload();
-                    }}
-                  />
                 )}
 
                 <div className="space-y-6">
