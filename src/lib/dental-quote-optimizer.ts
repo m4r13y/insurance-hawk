@@ -11,6 +11,7 @@ export interface RawDentalQuote {
   gender: string | null;
   plan_name: string;
   state: string;
+  last_modified: string; // ISO date string
   base_plans: Array<{
     name: string; // Full plan name
     benefit_notes: string;
@@ -64,6 +65,87 @@ export interface OptimizedDentalQuotesResponse {
   originalSize?: number;
   optimizedSize?: number;
   compressionRatio?: string;
+}
+
+/**
+ * Debug function to show all last_modified fields in a quote for verification
+ */
+export function debugLastModifiedFields(rawQuote: any): void {
+  console.log('🔍 DEBUG: All last_modified fields in quote:', {
+    quoteKey: rawQuote.key,
+    quoteLevelLastModified: rawQuote.last_modified,
+    planName: rawQuote.plan_name,
+    companyLastModified: rawQuote.company_base?.last_modified,
+    parentCompanyLastModified: rawQuote.company_base?.parent_company_base?.last_modified,
+    // Show structure to verify we're at the right level
+    quoteFields: Object.keys(rawQuote).slice(0, 10)
+  });
+}
+
+/**
+ * Validates the structure of a raw quote to ensure we're processing it correctly
+ */
+export function validateQuoteStructure(rawQuote: any): boolean {
+  const requiredQuoteFields = ['key', 'plan_name', 'last_modified', 'base_plans', 'company_base'];
+  const missingFields = requiredQuoteFields.filter(field => !rawQuote[field]);
+  
+  if (missingFields.length > 0) {
+    console.warn(`⚠️ Quote ${rawQuote.key || 'unknown'} missing required fields: ${missingFields.join(', ')}`);
+    return false;
+  }
+  
+  // Verify we have the right last_modified (quote level, not nested)
+  const quoteLevelLastModified = rawQuote.last_modified;
+  const companyLastModified = rawQuote.company_base?.last_modified;
+  const parentCompanyLastModified = rawQuote.company_base?.parent_company_base?.last_modified;
+  
+  console.log(`🔍 Quote ${rawQuote.key} last_modified levels:`, {
+    quoteLevelLastModified,
+    companyLastModified,
+    parentCompanyLastModified
+  });
+  
+  return true;
+}
+
+/**
+ * Checks if a quote was last modified in 2025
+ * Specifically checks the quote-level last_modified field, not nested company fields
+ */
+export function isQuoteFrom2025(rawQuote: any): boolean {
+  // Ensure we're checking the quote-level last_modified, not nested ones
+  const quoteLevelLastModified = rawQuote.last_modified;
+  
+  if (!quoteLevelLastModified) {
+    console.log(`⚠️ Quote ${rawQuote.key} has no quote-level last_modified field, skipping`);
+    return false;
+  }
+  
+  // Verify this is at the quote level by checking it's a sibling to plan_name
+  if (!rawQuote.plan_name) {
+    console.warn(`⚠️ Quote ${rawQuote.key} missing plan_name - may be checking wrong last_modified level`);
+  }
+  
+  try {
+    const modifiedYear = new Date(quoteLevelLastModified).getFullYear();
+    const is2025 = modifiedYear === 2025;
+    
+    console.log(`📅 Quote ${rawQuote.key}: last_modified=${quoteLevelLastModified} (${modifiedYear}) - ${is2025 ? 'INCLUDED' : 'FILTERED OUT'}`);
+    
+    return is2025;
+  } catch (error) {
+    console.warn(`⚠️ Invalid last_modified date format for quote ${rawQuote.key}: ${quoteLevelLastModified}`);
+    return false;
+  }
+}
+
+/**
+ * Filters dental quotes to only include those from 2025
+ */
+export function filter2025Quotes(quotes: any[]): any[] {
+  const filtered = quotes.filter(isQuoteFrom2025);
+  console.log(`🎯 Filtered from ${quotes.length} to ${filtered.length} quotes (2025 only)`);
+  return filtered;
 }
 
 /**
@@ -148,13 +230,22 @@ export function optimizeDentalQuotes(rawResponse: any): OptimizedDentalQuotesRes
     
     console.log(`📊 Processing ${rawResponse.quotes.length} dental quotes...`);
     
+    // Filter quotes to only include those with 2025 last_modified dates
+    const current2025Quotes = filter2025Quotes(rawResponse.quotes);
+    
     // Extract optimized quotes
     const optimizedQuotes: OptimizedDentalQuote[] = [];
     
-    for (let i = 0; i < rawResponse.quotes.length; i++) {
+    for (let i = 0; i < current2025Quotes.length; i++) {
       try {
-        const rawQuote = rawResponse.quotes[i];
-        console.log(`🔍 Processing quote ${i + 1}/${rawResponse.quotes.length}:`, rawQuote.key);
+        const rawQuote = current2025Quotes[i];
+        console.log(`🔍 Processing quote ${i + 1}/${current2025Quotes.length}:`, rawQuote.key);
+        
+        // Validate the quote structure to ensure we're processing it correctly
+        if (!validateQuoteStructure(rawQuote)) {
+          console.warn(`⚠️ Skipping quote ${rawQuote.key} due to structure validation failure`);
+          continue;
+        }
         
         const optimizedQuote = extractQuoteFields(rawQuote);
         optimizedQuotes.push(optimizedQuote);

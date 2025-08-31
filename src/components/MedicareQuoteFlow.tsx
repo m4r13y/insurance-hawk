@@ -531,18 +531,18 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
       fields.state = true
     }
     
-    // Gender: Med Supp, Dental, Final Expense, Cancer
-    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
+    // Gender: Med Supp, Dental, Final Expense, Cancer, Hospital Indemnity
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense || hasHospital) {
       fields.gender = true
     }
     
-    // Age: Med Supp, Dental, Final Expense, Cancer  
-    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
+    // Age: Med Supp, Dental, Final Expense, Cancer, Hospital Indemnity  
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense || hasHospital) {
       fields.age = true
     }
     
-    // Tobacco Use: Med Supp, Dental, Final Expense, Cancer
-    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
+    // Tobacco Use: Med Supp, Dental, Final Expense, Cancer, Hospital Indemnity
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense || hasHospital) {
       fields.tobaccoUse = true
     }
     

@@ -341,7 +341,11 @@ const PlanCard: React.FC<{
 };
 
 // Main Medicare Advantage Shop Component
-export default function MedicareAdvantageShopContent() {
+export default function MedicareAdvantageShopContent({ 
+  isExternallyLoading = false 
+}: { 
+  isExternallyLoading?: boolean 
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -691,7 +695,7 @@ export default function MedicareAdvantageShopContent() {
           )}
 
           {/* Loading State */}
-          {loading && (
+          {(loading || isExternallyLoading) && (
             <GenericQuoteLoading 
               title="Getting Your Medicare Advantage Quotes"
               message="Searching for Medicare Advantage plans in your area..."
@@ -699,7 +703,7 @@ export default function MedicareAdvantageShopContent() {
           )}
 
           {/* Plans List */}
-          {!loading && displayPlans.length > 0 && (
+          {!loading && !isExternallyLoading && displayPlans.length > 0 && (
             <div className="space-y-6">
               {/* Results Header with Plan Type Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -823,7 +827,7 @@ export default function MedicareAdvantageShopContent() {
           )}
 
           {/* No Plans Message */}
-          {!loading && !error && displayPlans.length === 0 && zipCode && (
+          {!loading && !isExternallyLoading && !error && displayPlans.length === 0 && zipCode && (
             <div className="text-center py-12">
               <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -837,7 +841,7 @@ export default function MedicareAdvantageShopContent() {
           )}
 
           {/* Getting Started Message */}
-          {!loading && !error && displayPlans.length === 0 && !zipCode && (
+          {!loading && !isExternallyLoading && !error && displayPlans.length === 0 && !zipCode && (
             <div className="text-center py-12">
               <Shield className="h-12 w-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">

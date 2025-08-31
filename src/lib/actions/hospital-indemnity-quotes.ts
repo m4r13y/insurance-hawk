@@ -102,7 +102,7 @@ export async function getHospitalIndemnityQuotes(params: HospitalIndemnityQuoteP
       age: params.age,
       gender: params.gender,
       tobacco: params.tobaccoUse ? 1 : 0,
-      offset: params.offset || 0
+      offset: "10"
     };
 
     const getHospitalIndemnityQuotesFunction = httpsCallable(functions, 'getHospitalIndemnityQuotes');

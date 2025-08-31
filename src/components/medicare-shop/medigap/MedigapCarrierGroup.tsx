@@ -101,6 +101,19 @@ export default function MedigapCarrierGroup({
             : 'md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
         } md:gap-4`}>
           {(() => {
+            console.log('MedigapCarrierGroup layout debug:', {
+              carrierName: carrierGroup.carrierName,
+              selectedQuotePlans,
+              selectedPlansLength: selectedQuotePlans.length,
+              layoutClass: selectedQuotePlans.length === 1 
+                ? 'md:grid md:grid-cols-1'
+                : selectedQuotePlans.length === 2
+                ? 'md:grid md:grid-cols-2 md:gap-6' 
+                : 'md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
+            });
+            return null;
+          })()}
+          {(() => {
             // Group quotes by plan type within this carrier (only for selected plan types)
             const planGroups = filteredQuotes.reduce((groups: Record<string, any[]>, quote: any) => {
               const planType = quote.plan || 'Unknown';

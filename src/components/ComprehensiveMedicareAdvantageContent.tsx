@@ -615,7 +615,6 @@ export default function ComprehensiveMedicareAdvantageContent({
             zipCode={zipCode}
             plans={externalQuotes || plans}
             onFiltersChange={handleFiltersChange}
-            onSearch={handleSearch}
           />
         </aside>
 
