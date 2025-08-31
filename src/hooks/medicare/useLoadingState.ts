@@ -13,7 +13,6 @@ export interface LoadingState {
   currentQuoteType: string | null;
   totalExpectedQuotes: number;
   hasAutoSwitched: boolean;
-  isSwitchingCategory: boolean;
 }
 
 export interface LoadingActions {
@@ -29,7 +28,6 @@ export interface LoadingActions {
   setCurrentQuoteType: React.Dispatch<React.SetStateAction<string | null>>;
   setTotalExpectedQuotes: React.Dispatch<React.SetStateAction<number>>;
   setHasAutoSwitched: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsSwitchingCategory: React.Dispatch<React.SetStateAction<boolean>>;
   resetLoadingState: () => void;
   isCategoryLoading: (category: string) => boolean;
 }
@@ -48,7 +46,6 @@ export const useLoadingState = () => {
   const [currentQuoteType, setCurrentQuoteType] = useState<string | null>(null);
   const [totalExpectedQuotes, setTotalExpectedQuotes] = useState(0);
   const [hasAutoSwitched, setHasAutoSwitched] = useState(false);
-  const [isSwitchingCategory, setIsSwitchingCategory] = useState(false);
 
   // Helper functions
   const resetLoadingState = useCallback(() => {
@@ -118,7 +115,6 @@ export const useLoadingState = () => {
     currentQuoteType,
     totalExpectedQuotes,
     hasAutoSwitched,
-    isSwitchingCategory,
   };
 
   const loadingActions: LoadingActions = {
