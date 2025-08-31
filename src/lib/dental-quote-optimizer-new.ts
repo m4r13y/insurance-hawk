@@ -9,29 +9,28 @@ export interface RawDentalQuote {
   key: string;
   age: number;
   gender: string | null;
-  plan_name: string;
+  planName: string;
+  name: string; // Full plan name
   state: string;
-  base_plans: Array<{
-    name: string; // Full plan name
-    benefit_notes: string;
-    limitation_notes: string;
+  benefits: Array<{
+    amount: string;
+    rate: number;
+    quantifier: string;
+    dependentRiders: any[];
     included: boolean;
-    benefits: Array<{
-      amount: string;
-      rate: number;
-      quantifier: string;
-      dependent_riders: any[];
-    }>;
   }>;
-  company_base: {
+  benefitNotes: string;
+  limitationNotes: string;
+  companyBase: {
     key: string;
     name: string;
-    name_full: string;
+    nameFull: string;
     naic: string;
-    ambest_rating: string;
-    ambest_outlook: string;
+    ambestRating: string;
+    ambestOutlook: string;
   };
-  product_key: string;
+  productKey: string;
+  riders: any[];
   tobacco: string | null;
 }
 
@@ -69,56 +68,33 @@ export interface OptimizedDentalQuotesResponse {
 /**
  * Extracts essential fields from a single raw dental quote
  */
-function extractQuoteFields(rawQuote: any): OptimizedDentalQuote {
-  // Log the raw quote structure to debug field names
-  console.log('🔍 Processing raw quote structure:', {
-    key: rawQuote.key,
-    plan_name: rawQuote.plan_name,
-    base_plans: rawQuote.base_plans?.length,
-    company_base: rawQuote.company_base?.name
-  });
-
-  // Get the main benefit from base_plans (API uses base_plans, not benefits directly)
-  const basePlan = rawQuote.base_plans?.find((plan: any) => plan.included) || rawQuote.base_plans?.[0];
-  
-  if (!basePlan) {
-    console.warn(`⚠️ No valid base plan found for quote ${rawQuote.key}`, rawQuote.base_plans);
-    throw new Error(`No valid base plan found for quote ${rawQuote.key}`);
-  }
-
-  // Get the main benefit from the base plan
-  const mainBenefit = basePlan.benefits?.[0];
+function extractQuoteFields(rawQuote: RawDentalQuote): OptimizedDentalQuote {
+  // Get the main benefit (should be first one with included: true)
+  const mainBenefit = rawQuote.benefits?.find(b => b.included) || rawQuote.benefits?.[0];
   
   if (!mainBenefit) {
-    console.warn(`⚠️ No valid benefit found in base plan for quote ${rawQuote.key}`, basePlan.benefits);
-    throw new Error(`No valid benefit found in base plan for quote ${rawQuote.key}`);
+    throw new Error(`No valid benefit found for quote ${rawQuote.key}`);
   }
 
-  console.log('💰 Main benefit found:', mainBenefit);
-  console.log('🏢 Company data:', rawQuote.company_base);
-
-  const optimized = {
-    id: rawQuote.key || '',
-    planName: rawQuote.plan_name || '',
-    fullPlanName: basePlan.name || '',
-    companyName: rawQuote.company_base?.name || '',
-    companyFullName: rawQuote.company_base?.name_full || '',
-    naic: rawQuote.company_base?.naic || '',
+  return {
+    id: rawQuote.key,
+    planName: rawQuote.planName,
+    fullPlanName: rawQuote.name,
+    companyName: rawQuote.companyBase?.name || '',
+    companyFullName: rawQuote.companyBase?.nameFull || '',
+    naic: rawQuote.companyBase?.naic || '',
     annualMaximum: parseInt(mainBenefit.amount) || 0,
     monthlyPremium: mainBenefit.rate || 0,
-    state: rawQuote.state || '',
-    benefitNotes: basePlan.benefit_notes || '',
-    limitationNotes: basePlan.limitation_notes || '',
-    ambestRating: rawQuote.company_base?.ambest_rating || '',
-    ambestOutlook: rawQuote.company_base?.ambest_outlook || '',
-    productKey: rawQuote.product_key || '',
-    age: rawQuote.age || 0,
+    state: rawQuote.state,
+    benefitNotes: rawQuote.benefitNotes || '',
+    limitationNotes: rawQuote.limitationNotes || '',
+    ambestRating: rawQuote.companyBase?.ambestRating || '',
+    ambestOutlook: rawQuote.companyBase?.ambestOutlook || '',
+    productKey: rawQuote.productKey,
+    age: rawQuote.age,
     gender: rawQuote.gender,
     tobacco: rawQuote.tobacco
   };
-
-  console.log('✅ Optimized quote:', optimized);
-  return optimized;
 }
 
 /**
@@ -130,13 +106,6 @@ export function optimizeDentalQuotes(rawResponse: any): OptimizedDentalQuotesRes
     const originalJson = JSON.stringify(rawResponse);
     const originalSize = originalJson.length;
     
-    console.log('🎯 Starting dental quotes optimization...');
-    console.log('📦 Raw response structure:', {
-      success: rawResponse.success,
-      quotesCount: rawResponse.quotes?.length,
-      firstQuoteKeys: rawResponse.quotes?.[0] ? Object.keys(rawResponse.quotes[0]).slice(0, 10) : []
-    });
-    
     // Validate response structure
     if (!rawResponse || !rawResponse.quotes || !Array.isArray(rawResponse.quotes)) {
       return {
@@ -146,25 +115,10 @@ export function optimizeDentalQuotes(rawResponse: any): OptimizedDentalQuotesRes
       };
     }
     
-    console.log(`📊 Processing ${rawResponse.quotes.length} dental quotes...`);
-    
     // Extract optimized quotes
-    const optimizedQuotes: OptimizedDentalQuote[] = [];
-    
-    for (let i = 0; i < rawResponse.quotes.length; i++) {
-      try {
-        const rawQuote = rawResponse.quotes[i];
-        console.log(`🔍 Processing quote ${i + 1}/${rawResponse.quotes.length}:`, rawQuote.key);
-        
-        const optimizedQuote = extractQuoteFields(rawQuote);
-        optimizedQuotes.push(optimizedQuote);
-        
-        console.log(`✅ Successfully optimized quote ${i + 1}: ${optimizedQuote.planName} - $${optimizedQuote.monthlyPremium}/mo`);
-      } catch (error) {
-        console.error(`❌ Failed to process quote ${i + 1}:`, error);
-        // Continue with other quotes instead of failing completely
-      }
-    }
+    const optimizedQuotes: OptimizedDentalQuote[] = rawResponse.quotes.map((rawQuote: any) => {
+      return extractQuoteFields(rawQuote);
+    });
     
     // Calculate optimized size
     const optimizedResponse = {
@@ -241,7 +195,7 @@ export function filterQuotesByAnnualMaximum(
  */
 export function getUniquePlanNames(quotes: OptimizedDentalQuote[]): string[] {
   const planNames = quotes.map(quote => quote.planName);
-  return Array.from(new Set(planNames)).sort();
+  return [...new Set(planNames)].sort();
 }
 
 /**
@@ -249,5 +203,5 @@ export function getUniquePlanNames(quotes: OptimizedDentalQuote[]): string[] {
  */
 export function getUniqueAnnualMaximums(quotes: OptimizedDentalQuote[]): number[] {
   const amounts = quotes.map(quote => quote.annualMaximum);
-  return Array.from(new Set(amounts)).sort((a, b) => a - b);
+  return [...new Set(amounts)].sort((a, b) => a - b);
 }

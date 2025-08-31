@@ -16,7 +16,7 @@ import { getDentalQuotes } from "@/lib/actions/dental-quotes";
 import { getHospitalIndemnityQuotes } from "@/lib/actions/hospital-indemnity-quotes";
 import { getFinalExpenseLifeQuotes } from "@/lib/actions/final-expense-quotes";
 import { getCancerInsuranceQuotes } from "@/lib/actions/cancer-insurance-quotes";
-import { optimizeDentalQuotes } from "@/lib/dental-quote-optimizer";
+import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 import { saveDentalQuotesToStorage, loadDentalQuotesFromStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
@@ -117,7 +117,7 @@ export default function MedicareShopContent() {
   const [realQuotes, setRealQuotes] = useState<any[]>([]);
   const [advantageQuotes, setAdvantageQuotes] = useState<any[]>([]);
   const [drugPlanQuotes, setDrugPlanQuotes] = useState<any[]>([]);
-  const [dentalQuotes, setDentalQuotes] = useState<any[]>([]);
+  const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
   const [hospitalIndemnityQuotes, setHospitalIndemnityQuotes] = useState<any[]>([]);
   const [finalExpenseQuotes, setFinalExpenseQuotes] = useState<any[]>([]);
   const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
@@ -728,9 +728,39 @@ export default function MedicareShopContent() {
             preloadCarrierLogos(optimizationResult.quotes);
           } else {
             console.error('❌ Dental quotes optimization failed:', optimizationResult.error);
-            // Fallback to original quotes without optimization
-            setDentalQuotes(response.quotes);
-            saveToStorage(DENTAL_QUOTES_KEY, response.quotes);
+            // Fallback: Try to optimize quotes individually
+            try {
+              const fallbackQuotes = response.quotes.map((quote: any) => {
+                const basePlan = quote.base_plans?.find((plan: any) => plan.included) || quote.base_plans?.[0];
+                const mainBenefit = basePlan?.benefits?.[0];
+                
+                return {
+                  id: quote.key || '',
+                  planName: quote.plan_name || '',
+                  fullPlanName: basePlan?.name || '',
+                  companyName: quote.company_base?.name || '',
+                  companyFullName: quote.company_base?.name_full || '',
+                  naic: quote.company_base?.naic || '',
+                  annualMaximum: parseInt(mainBenefit?.amount || '0'),
+                  monthlyPremium: mainBenefit?.rate || 0,
+                  state: quote.state || '',
+                  benefitNotes: basePlan?.benefit_notes || '',
+                  limitationNotes: basePlan?.limitation_notes || '',
+                  ambestRating: quote.company_base?.ambest_rating || '',
+                  ambestOutlook: quote.company_base?.ambest_outlook || '',
+                  productKey: quote.product_key || '',
+                  age: quote.age || 0,
+                  gender: quote.gender,
+                  tobacco: quote.tobacco
+                } as OptimizedDentalQuote;
+              });
+              
+              setDentalQuotes(fallbackQuotes);
+              saveToStorage(DENTAL_QUOTES_KEY, fallbackQuotes);
+            } catch (fallbackError) {
+              console.error('❌ Fallback dental quote processing failed:', fallbackError);
+              setDentalQuotes([]);
+            }
             
             // Mark Dental Insurance as completed
             setCompletedQuoteTypes(prev => [...prev, 'Dental Insurance']);
