@@ -3,10 +3,11 @@
 import { collection, doc, setDoc, getDoc, deleteDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// Key used for storing visitor ID in localStorage
+const VISITOR_ID_KEY = 'visitor_id';
+
 // Generate unique visitor ID and store in localStorage
 const getVisitorId = (): string => {
-  const VISITOR_ID_KEY = 'visitor_id';
-  
   if (typeof window === 'undefined') {
     // Server-side: generate temporary ID
     return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -36,15 +37,20 @@ const getVisitorId = (): string => {
 const getSubcollectionName = (key: string): string => {
   const keyMapping: { [key: string]: string } = {
     'medicare_real_quotes': 'medigap_quotes',
+    'medicare_quotes': 'medigap_quotes', // Alternative key for real quotes
     'medicare_advantage_quotes': 'advantage_quotes', 
     'medicare_drug_plan_quotes': 'drug_plan_quotes',
     'medicare_dental_quotes': 'dental_quotes',
+    'dental_quotes_optimized': 'dental_quotes_optimized',
+    'dental_quotes_meta': 'dental_quotes_meta',
+    'dental_search_history': 'dental_search_history',
     'medicare_hospital_indemnity_quotes': 'hospital_indemnity_quotes',
     'medicare_final_expense_quotes': 'final_expense_quotes',
     'medicare_cancer_insurance_quotes': 'cancer_insurance_quotes',
     'medicare_quote_form_data': 'form_data',
     'medicare_quote_form_completed': 'form_status',
-    'medicare_filter_state': 'filter_state'
+    'medicare_filter_state': 'filter_state',
+    'planDetailsData': 'plan_details'
   };
   
   return keyMapping[key] || 'misc_data';
@@ -84,6 +90,124 @@ export interface TemporaryStorageData {
 const TTL_HOURS = 24; // Data expires after 24 hours
 const DATABASE_NAME = 'temp'; // Using the temp database
 const COLLECTION_NAME = 'visitors'; // Using the visitors collection
+const MAX_RETRIES = 3; // Maximum retry attempts for failed operations
+const BASE_DELAY = 1000; // Base delay for exponential backoff (1 second)
+const METADATA_UPDATE_INTERVAL = 5 * 60 * 1000; // Only update visitor metadata every 5 minutes
+
+// Queue management for concurrent operations
+class OperationQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private processing = false;
+  private maxConcurrent = 1; // Maximum concurrent operations (reduced to 1 for Firebase limits)
+  private activeOperations = 0;
+  private lastOperationTime = 0;
+  private minDelay = 500; // Minimum delay between operations (increased to 500ms)
+  private consecutiveErrors = 0; // Track consecutive errors for backoff
+  private maxConsecutiveErrors = 3; // Max errors before increasing delay
+
+  async add<T>(operation: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await operation();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.processQueue();
+    });
+  }
+
+  private async processQueue() {
+    if (this.processing || this.activeOperations >= this.maxConcurrent) {
+      return;
+    }
+
+    const operation = this.queue.shift();
+    if (!operation) {
+      return;
+    }
+
+    this.processing = true;
+    this.activeOperations++;
+
+    try {
+      // Ensure minimum delay between operations
+      const now = Date.now();
+      const timeSinceLastOp = now - this.lastOperationTime;
+      if (timeSinceLastOp < this.minDelay) {
+        await new Promise(resolve => setTimeout(resolve, this.minDelay - timeSinceLastOp));
+      }
+
+      await operation();
+      this.consecutiveErrors = 0; // Reset error count on success
+      this.lastOperationTime = Date.now();
+    } catch (error: any) {
+      this.consecutiveErrors++;
+      console.error('❌ Operation failed:', error?.code || error?.message);
+      
+      // Check for resource exhaustion and apply adaptive backoff
+      if (error?.code === 'resource-exhausted' || 
+          error?.message?.includes('exhausted') ||
+          error?.message?.includes('overloading')) {
+        const backoffDelay = Math.min(5000, 1000 * Math.pow(2, this.consecutiveErrors));
+        console.log(`🐌 Resource exhausted, backing off for ${backoffDelay}ms`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+      }
+      
+      throw error; // Re-throw to let the caller handle it
+    } finally {
+      this.activeOperations--;
+      this.processing = false;
+      
+      // Process next operation in queue
+      setTimeout(() => this.processQueue(), 50);
+    }
+  }
+}
+
+// Global operation queue
+const operationQueue = new OperationQueue();
+
+// Track last metadata update to avoid excessive writes
+let lastMetadataUpdate = 0;
+
+// Helper function to check if metadata update is needed
+const shouldUpdateMetadata = (): boolean => {
+  const now = Date.now();
+  const timeSinceLastUpdate = now - lastMetadataUpdate;
+  const shouldUpdate = timeSinceLastUpdate > METADATA_UPDATE_INTERVAL;
+  
+  if (shouldUpdate) {
+    lastMetadataUpdate = now;
+    console.log('📝 Metadata update needed (last update was', Math.round(timeSinceLastUpdate / 1000), 'seconds ago)');
+  } else {
+    console.log('⏭️ Skipping metadata update (last update was', Math.round(timeSinceLastUpdate / 1000), 'seconds ago)');
+  }
+  
+  return shouldUpdate;
+};
+
+// Helper function for exponential backoff retry
+const retryWithBackoff = async (fn: () => Promise<any>, retries = MAX_RETRIES): Promise<any> => {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && (
+      error?.code === 'deadline-exceeded' || 
+      error?.code === 'unavailable' ||
+      error?.message?.includes('deadline') ||
+      error?.message?.includes('timeout')
+    )) {
+      const delay = BASE_DELAY * (MAX_RETRIES - retries + 1); // Exponential backoff
+      console.log(`⏳ Retrying operation in ${delay}ms... (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries - 1);
+    }
+    throw error;
+  }
+};
 
 // Helper to create expiration timestamp
 const getExpirationTimestamp = (): Timestamp => {
@@ -94,7 +218,9 @@ const getExpirationTimestamp = (): Timestamp => {
 
 // Save data to Firestore with subcollections for each quote category
 export const saveTemporaryData = async (key: string, data: any): Promise<void> => {
-  try {
+  return operationQueue.add(async () => {
+    console.log(`🔄 Processing save operation for ${key} (queue)`);
+    try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
       if (typeof window !== 'undefined') {
@@ -103,31 +229,96 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       return;
     }
     
-    const visitorId = getVisitorId();
-    const now = Timestamp.now();
-    const expiresAt = getExpirationTimestamp();
-    const subcollectionName = getSubcollectionName(key);
-    
-    // Update visitor metadata (lightweight document)
-    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
-    const visitorMetadata: VisitorMetadata = {
-      visitorId,
-      createdAt: now,
-      lastActivity: now,
-      expiresAt
-    };
-    
-    // Create/update visitor metadata document
-    await setDoc(visitorDocRef, visitorMetadata, { merge: true });
-    
-    // Handle large quote arrays by splitting them into chunks
-    if (Array.isArray(data) && key.includes('quotes')) {
+      const visitorId = getVisitorId();
+      const now = Timestamp.now();
+      const expiresAt = getExpirationTimestamp();
+      const subcollectionName = getSubcollectionName(key);
+      
+      // Only update visitor metadata for actual quote data from API responses or quote submissions
+      // NOT for UI state changes like activeCategory, selectedCategory, filters, etc.
+      // BUT we DO want to track form completions and form data as these are important customer events
+      const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
+                       key.includes('selected_categories') || key.includes('current_flow_step') ||
+                       key.includes('filter_state') || key.includes('ui_state');
+      
+      // For UI state, only save to localStorage - don't save to Firestore at all
+      if (isUIState) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(key, JSON.stringify(data));
+            console.log(`🎨 UI state saved to localStorage only: ${key} - skipping Firestore`);
+          } catch (localError) {
+            console.error(`❌ Failed to save UI state to localStorage:`, localError);
+          }
+        }
+        return; // Exit early - don't save UI state to Firestore
+      }
+      
+      // Check what kind of data this is to determine if we should update visitor metadata
+      const isNewQuoteSubmission = key.includes('quotes') && Array.isArray(data) && data.length > 0;
+      const isFormCompletion = key.includes('quote_form_completed') && data === true;
+      const isFormData = key.includes('quote_form_data') && data && typeof data === 'object';
+      const isImportantEvent = isNewQuoteSubmission || isFormCompletion || isFormData;
+      const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+      
+      // Check if visitor document already exists to avoid unnecessary createdAt updates
+      let shouldUpdateMetadata = false;
+      if (isImportantEvent) {
+        try {
+          const existingDoc = await getDoc(visitorDocRef);
+          if (!existingDoc.exists()) {
+            // First time creating visitor document
+            shouldUpdateMetadata = true;
+            const eventDescription = isNewQuoteSubmission ? `${data.length} quotes` : 
+                                   isFormCompletion ? 'form completion' :
+                                   isFormData ? 'form data' : 'important event';
+            console.log(`📝 ✅ Creating NEW visitor document for: ${key} (${eventDescription})`);
+          } else {
+            // Document exists - only update lastActivity, not createdAt
+            const existingData = existingDoc.data();
+            const lastUpdate = existingData.lastActivity?.toDate();
+            const now = new Date();
+            const timeSinceLastUpdate = now.getTime() - (lastUpdate?.getTime() || 0);
+            
+            // Only update if it's been more than 5 minutes since last update (avoid constant updates)
+            if (timeSinceLastUpdate > 5 * 60 * 1000) {
+              shouldUpdateMetadata = true;
+              const eventDescription = isNewQuoteSubmission ? `${data.length} quotes` : 
+                                     isFormCompletion ? 'form completion' :
+                                     isFormData ? 'form data' : 'important event';
+              console.log(`📝 ✅ Updating visitor lastActivity for: ${key} (${eventDescription}) - last update was ${Math.round(timeSinceLastUpdate / 60000)}min ago`);
+            } else {
+              console.log(`⏭️ ⚠️ SKIPPED visitor metadata update for: ${key} - updated recently (${Math.round(timeSinceLastUpdate / 1000)}s ago)`);
+            }
+          }
+        } catch (error) {
+          console.warn('Could not check existing visitor document:', error);
+          shouldUpdateMetadata = true; // Fallback to update
+        }
+      } else {
+        const dataDescription = Array.isArray(data) ? `${data.length} items` : 
+                               typeof data === 'object' ? 'object' : 
+                               typeof data;
+        console.log(`⏭️ ⚠️ SKIPPED visitor metadata update for: ${key} (${dataDescription}) - not an important event`);
+      }
+      
+      if (shouldUpdateMetadata) {
+        const visitorMetadata: VisitorMetadata = {
+          visitorId,
+          createdAt: now,
+          lastActivity: now,
+          expiresAt
+        };
+        
+        // Create/update visitor metadata document with retry
+        await retryWithBackoff(() => setDoc(visitorDocRef, visitorMetadata, { merge: true }));
+      }
+      
+      // Handle large quote arrays by splitting them into chunks
+      if (Array.isArray(data) && key.includes('quotes') && data.length > 10) {
       console.log(`💾 Splitting ${data.length} quotes into smaller documents for ${key}`);
       
-      // Clear existing documents in this subcollection first
-      const subcollectionRef = collection(visitorDocRef, subcollectionName);
-      
-      // Split quotes into chunks of 25 quotes each (roughly 400KB per document)
+      // Use smaller chunks (25 quotes) to reduce Firebase load and prevent resource exhaustion
       const chunkSize = 25;
       const chunks = [];
       for (let i = 0; i < data.length; i += chunkSize) {
@@ -136,8 +327,37 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       
       console.log(`📦 Created ${chunks.length} chunks for ${key}`);
       
-      // Save each chunk as a separate document
-      const savePromises = chunks.map(async (chunk, index) => {
+      // Instead of deleting and recreating, update existing chunks where possible
+      const subcollectionRef = collection(visitorDocRef, subcollectionName);
+      try {
+        const existingQuery = query(
+          subcollectionRef,
+          where('originalKey', '==', key)
+        );
+        const existingDocs = await getDocs(existingQuery);
+        
+        // Delete existing chunks in smaller batches to avoid timeout
+        if (!existingDocs.empty) {
+          const deletePromises = existingDocs.docs.map(doc => deleteDoc(doc.ref));
+          // Process deletes in batches of 10 to avoid overwhelming Firestore
+          for (let i = 0; i < deletePromises.length; i += 10) {
+            const batch = deletePromises.slice(i, i + 10);
+            await Promise.all(batch);
+            // Small delay between batches to prevent hot-spotting
+            if (i + 10 < deletePromises.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+          console.log(`�️ Cleaned up ${existingDocs.docs.length} existing chunks`);
+        }
+      } catch (error) {
+        console.warn(`Warning: Could not clean up existing chunks for ${key}:`, error);
+        // Continue with save operation even if cleanup fails
+      }
+      
+      // Save chunks sequentially to avoid DEADLINE_EXCEEDED
+      for (let index = 0; index < chunks.length; index++) {
+        const chunk = chunks[index];
         const chunkDocRef = doc(subcollectionRef, `${key}_chunk_${index}`);
         const chunkDocument: QuoteDataDocument = {
           key: `${key}_chunk_${index}`,
@@ -149,11 +369,20 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
           originalKey: key
         };
         
-        await setDoc(chunkDocRef, chunkDocument);
-        console.log(`✅ Saved chunk ${index + 1}/${chunks.length} for ${key} (${chunk.length} quotes)`);
-      });
+        try {
+          await retryWithBackoff(() => setDoc(chunkDocRef, chunkDocument));
+          console.log(`✅ Saved chunk ${index + 1}/${chunks.length} for ${key} (${chunk.length} quotes)`);
+          
+          // Longer delay between chunks to prevent Firebase resource exhaustion
+          if (index < chunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Increased to 1 second
+          }
+        } catch (chunkError) {
+          console.error(`❌ Failed to save chunk ${index} for ${key} after retries:`, chunkError);
+          // Don't throw immediately, try to save remaining chunks
+        }
+      }
       
-      await Promise.all(savePromises);
       console.log(`✅ Successfully saved all ${chunks.length} chunks for ${key}`);
       
     } else {
@@ -168,22 +397,52 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
         expiresAt
       };
       
-      await setDoc(dataDocRef, quoteDocument);
+      await retryWithBackoff(() => setDoc(dataDocRef, quoteDocument));
       console.log(`✅ Saved data to subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
     }
     
   } catch (error) {
     console.error(`❌ Error saving data for ${key}:`, error);
-    // Fallback to localStorage if Firestore fails
+    // Enhanced fallback with better error handling
     if (typeof window !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(data));
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+        console.log(`📱 Fallback: Saved ${key} to localStorage`);
+      } catch (localError) {
+        console.error(`❌ Failed to save to localStorage as well:`, localError);
+      }
     }
   }
+  });
 };
 
-// Load data from Firestore subcollections with auto-cleanup
+// Load data from Firestore subcollections with auto-cleanup and timeout handling
 export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): Promise<T> => {
-  try {
+  return operationQueue.add(async () => {
+    console.log(`🔄 Processing load operation for ${key} (queue)`);
+    
+    // Check if this is UI state - if so, load from localStorage only
+    const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
+                     key.includes('selected_categories') || key.includes('current_flow_step') ||
+                     key.includes('filter_state') || key.includes('ui_state');
+    
+    if (isUIState) {
+      if (typeof window !== 'undefined') {
+        try {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            console.log(`🎨 UI state loaded from localStorage: ${key}`);
+            return JSON.parse(stored);
+          }
+        } catch (localError) {
+          console.warn(`Failed to parse UI state from localStorage for ${key}:`, localError);
+        }
+      }
+      console.log(`🎨 No UI state found in localStorage for ${key}, returning default`);
+      return defaultValue;
+    }
+    
+    try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
       if (typeof window !== 'undefined') {
@@ -200,39 +459,54 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
     const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
     const subcollectionRef = collection(visitorDocRef, subcollectionName);
     
-    // First try to load as a single document
+    // First try to load as a single document with timeout
     const dataDocRef = doc(subcollectionRef, key);
-    const dataDoc = await getDoc(dataDocRef);
     
-    if (dataDoc.exists()) {
-      const documentData = dataDoc.data() as QuoteDataDocument;
+    try {
+      const dataDoc = await Promise.race([
+        getDoc(dataDocRef),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 10000) // 10 second timeout
+        )
+      ]) as any;
       
-      // Check if data has expired
-      const now = new Date();
-      const expiresAt = documentData.expiresAt.toDate();
-      
-      if (now > expiresAt) {
-        console.log(`⏰ Data expired for ${key}, cleaning up...`);
-        await deleteDoc(dataDocRef);
-        return defaultValue;
+      if (dataDoc.exists()) {
+        const documentData = dataDoc.data() as QuoteDataDocument;
+        
+        // Check if data has expired
+        const now = new Date();
+        const expiresAt = documentData.expiresAt.toDate();
+        
+        if (now > expiresAt) {
+          console.log(`⏰ Data expired for ${key}, cleaning up...`);
+          await deleteDoc(dataDocRef);
+          return defaultValue;
+        }
+        
+        console.log(`✅ Loaded data from subcollection: ${subcollectionName}/${key}`);
+        return documentData.data as T;
       }
-      
-      console.log(`✅ Loaded data from subcollection: ${subcollectionName}/${key}`);
-      return documentData.data as T;
+    } catch (timeoutError) {
+      console.warn(`⏱️ Timeout loading single document for ${key}, trying chunked approach`);
     }
     
-    // If single document doesn't exist, try to load chunked data
+    // If single document doesn't exist or timed out, try to load chunked data
     if (key.includes('quotes')) {
       console.log(`🔍 Looking for chunked data for ${key}...`);
       
-      // Query for chunk documents
-      const chunkedQuery = query(
-        subcollectionRef,
-        where('originalKey', '==', key)
-      );
-      
       try {
-        const querySnapshot = await getDocs(chunkedQuery);
+        // Query for chunk documents with timeout
+        const chunkedQuery = query(
+          subcollectionRef,
+          where('originalKey', '==', key)
+        );
+        
+        const querySnapshot = await Promise.race([
+          getDocs(chunkedQuery),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), 15000) // 15 second timeout
+          )
+        ]) as any;
         
         if (!querySnapshot.empty) {
           console.log(`📦 Found ${querySnapshot.docs.length} chunks for ${key}`);
@@ -250,7 +524,10 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
             
             if (now > expiresAt) {
               console.log(`⏰ Chunk expired for ${key}, cleaning up...`);
-              await deleteDoc(doc.ref);
+              // Clean up expired chunks in background (don't await to avoid blocking)
+              deleteDoc(doc.ref).catch(error => 
+                console.warn(`Failed to delete expired chunk:`, error)
+              );
               expired = true;
               continue;
             }
@@ -277,8 +554,16 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
           console.log(`✅ Loaded ${combinedData.length} items from ${chunks.length} chunks for ${key}`);
           return combinedData as T;
         }
-      } catch (error) {
-        console.warn(`Failed to query chunked data for ${key}:`, error);
+      } catch (queryError) {
+        console.warn(`❌ Failed to query chunked data for ${key}:`, queryError);
+        // Fallback to localStorage if available
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            console.log(`📱 Fallback: Loaded ${key} from localStorage`);
+            return JSON.parse(stored);
+          }
+        }
       }
     }
     
@@ -287,17 +572,38 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
     
   } catch (error) {
     console.error(`❌ Error loading data for ${key}:`, error);
-    // Fallback to localStorage
+    // Enhanced fallback to localStorage
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultValue;
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          console.log(`📱 Fallback: Loaded ${key} from localStorage due to Firestore error`);
+          return JSON.parse(stored);
+        }
+      } catch (localError) {
+        console.warn(`Failed to parse localStorage data for ${key}:`, localError);
+      }
     }
     return defaultValue;
   }
+  });
 };
 
 // Delete specific data from visitor's quote data (subcollection approach)
 export const deleteTemporaryData = async (key: string): Promise<void> => {
+  // Check if this is UI state - if so, only delete from localStorage
+  const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
+                   key.includes('selected_categories') || key.includes('current_flow_step') ||
+                   key.includes('filter_state') || key.includes('ui_state');
+  
+  if (isUIState) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+      console.log(`🎨 UI state removed from localStorage: ${key}`);
+    }
+    return; // Exit early - UI state is only in localStorage
+  }
+  
   try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');

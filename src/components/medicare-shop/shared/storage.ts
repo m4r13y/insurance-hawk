@@ -283,18 +283,18 @@ export const clearAllQuotes = async () => {
   console.log('🧹 Clearing all quotes from Firestore temp database and UI state...');
   
   try {
-    // Clear quote data from Firestore
-    await Promise.all([
-      saveToStorage(REAL_QUOTES_KEY, []),
-      saveToStorage(ADVANTAGE_QUOTES_KEY, []),
-      saveToStorage(DRUG_PLAN_QUOTES_KEY, []),
-      saveToStorage(DENTAL_QUOTES_KEY, []),
-      saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []),
-      saveToStorage(FINAL_EXPENSE_QUOTES_KEY, []),
-      saveToStorage(CANCER_INSURANCE_QUOTES_KEY, []),
-      saveToStorage(FILTER_STATE_KEY, {}),
-      saveToStorage(QUOTE_FORM_COMPLETED_KEY, false)
-    ]);
+    // Clear quote data from Firestore - Use sequential operations instead of Promise.all to prevent overwhelming Firestore
+    console.log('🔄 Clearing quote data sequentially to prevent rate limiting...');
+    
+    await saveToStorage(REAL_QUOTES_KEY, []);
+    await saveToStorage(ADVANTAGE_QUOTES_KEY, []);
+    await saveToStorage(DRUG_PLAN_QUOTES_KEY, []);
+    await saveToStorage(DENTAL_QUOTES_KEY, []);
+    await saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
+    await saveToStorage(FINAL_EXPENSE_QUOTES_KEY, []);
+    await saveToStorage(CANCER_INSURANCE_QUOTES_KEY, []);
+    await saveToStorage(FILTER_STATE_KEY, {});
+    await saveToStorage(QUOTE_FORM_COMPLETED_KEY, false);
     
     // Clear UI state from localStorage
     if (typeof window !== 'undefined') {
