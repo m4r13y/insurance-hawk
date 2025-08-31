@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import GenericQuoteLoading from "@/components/GenericQuoteLoading";
 import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "./MedicareAdvantageSidebar";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
+import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 import { 
   Star, 
   DollarSign, 
@@ -702,9 +702,9 @@ export default function MedicareAdvantageShopContent({
 
           {/* Loading State */}
           {(loading || isExternallyLoading) && (
-            <GenericQuoteLoading 
+            <PlanCardsSkeleton 
+              count={6}
               title="Getting Your Medicare Advantage Quotes"
-              message="Searching for Medicare Advantage plans in your area..."
             />
           )}
 
@@ -834,29 +834,18 @@ export default function MedicareAdvantageShopContent({
 
           {/* No Plans Message */}
           {!loading && !isExternallyLoading && !error && displayPlans.length === 0 && zipCode && (
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Plans Found
-              </h3>
-              <p className="text-gray-600">
-                We couldn't find any Medicare Advantage plans for ZIP code {zipCode}.
-                Please try a different ZIP code or adjust your filters.
-              </p>
-            </div>
+            <PlanCardsSkeleton 
+              count={3}
+              title="No plans available in your area"
+            />
           )}
 
           {/* Getting Started Message */}
           {!loading && !isExternallyLoading && !error && displayPlans.length === 0 && !zipCode && (
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Find Medicare Advantage Plans
-              </h3>
-              <p className="text-gray-600">
-                Enter your ZIP code in the sidebar to see available Medicare Advantage plans in your area.
-              </p>
-            </div>
+            <PlanCardsSkeleton 
+              count={3}
+              title="Enter your ZIP code to view plans"
+            />
           )}
         </main>
       </div>

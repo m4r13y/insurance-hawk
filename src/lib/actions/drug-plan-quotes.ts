@@ -12,6 +12,7 @@ interface DrugPlanQuote {
   plan_name?: string
   plan_id?: string
   contract_id?: string
+  contract_year?: string
   month_rate?: number
   part_c_rate?: number
   part_d_rate?: number
@@ -73,9 +74,23 @@ export async function getDrugPlanQuotes(
       console.log('⚠️ No quotes array in response')
       return { quotes: [] }
     }
+
+    console.log('📋 Total quotes received:', quotes.length)
     
-    console.log('✅ Drug Plan quotes received:', quotes.length, 'quotes')
-    return { quotes: quotes }
+    // Filter quotes to only include 2025 contract year
+    const filtered2025Quotes = quotes.filter(quote => {
+      const contractYear = quote.contract_year
+      const is2025 = contractYear === "2025"
+      
+      if (!is2025) {
+        console.log(`🔧 Filtering out drug plan quote with contract_year: ${contractYear}`)
+      }
+      
+      return is2025
+    })
+    
+    console.log('✅ Drug Plan quotes after 2025 filter:', filtered2025Quotes.length, 'quotes')
+    return { quotes: filtered2025Quotes }
     
   } catch (error) {
     console.error('❌ Error fetching Drug Plan quotes:', error)
