@@ -336,6 +336,13 @@ export default function MedicareShopContent() {
   useEffect(() => {
     const initializeComponent = async () => {
       try {
+        // Monitor storage usage on component initialization
+        console.group('📊 Storage Status on Page Load');
+        const storageInfo = await getFirestoreStorageInfo();
+        console.log('� Firestore storage usage:', storageInfo.readable);
+        console.log('📊 Total quotes across all categories:', storageInfo.totalQuotes);
+        console.groupEnd();
+        
         // Migrate legacy localStorage data if it exists
         await migrateLegacyStorage();
         
@@ -358,6 +365,7 @@ export default function MedicareShopContent() {
           setQuoteFormData(savedFormData);
         }
         if (savedCategories && Array.isArray(savedCategories)) {
+          console.log('� Loading saved categories from Firestore:', savedCategories);
           setSelectedFlowCategories(savedCategories);
         }
         
@@ -368,6 +376,75 @@ export default function MedicareShopContent() {
         
         setActiveCategory(initialCategory);
         setSelectedCategory(initialCategory);
+          console.log('� Loading realQuotes from Firestore:', savedQuotes.length, 'quotes');
+          console.log('📋 First realQuote sample:', savedQuotes[0]);
+          setRealQuotes(savedQuotes);
+        }
+        if (savedAdvantageQuotes && Array.isArray(savedAdvantageQuotes)) {
+          console.log('� Loading advantageQuotes from Firestore:', savedAdvantageQuotes.length, 'quotes');
+          console.log('📋 First advantageQuote sample:', savedAdvantageQuotes[0]);
+          setAdvantageQuotes(savedAdvantageQuotes);
+        }
+        if (savedDrugPlanQuotes && Array.isArray(savedDrugPlanQuotes)) {
+          console.log('📋 Loading drugPlanQuotes from storage:', savedDrugPlanQuotes.length, 'quotes');
+          console.log('📋 First drugPlanQuote sample:', savedDrugPlanQuotes[0]);
+          setDrugPlanQuotes(savedDrugPlanQuotes);
+        }
+        if (savedDentalQuotes && Array.isArray(savedDentalQuotes)) {
+          setDentalQuotes(savedDentalQuotes);
+        }
+        if (savedHospitalIndemnityQuotes && Array.isArray(savedHospitalIndemnityQuotes)) {
+          // Check if these are already optimized quotes (have 'planName' field)
+          // or raw quotes (have 'plan_name' field)
+          if (savedHospitalIndemnityQuotes.length > 0) {
+            const firstQuote = savedHospitalIndemnityQuotes[0];
+            if (firstQuote.planName) {
+              // Already optimized quotes
+              setHospitalIndemnityQuotes(savedHospitalIndemnityQuotes);
+            } else if (firstQuote.plan_name) {
+              // Raw quotes that need optimization and 2025 filtering
+              console.log('🔄 Converting saved raw hospital indemnity quotes...');
+              const optimized = optimizeHospitalIndemnityQuotes(savedHospitalIndemnityQuotes);
+              setHospitalIndemnityQuotes(optimized);
+              // Save the optimized version back to storage
+              await saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, optimized);
+            }
+          }
+        }
+        if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes)) {
+          console.log('� Loading final expense quotes from Firestore:', savedFinalExpenseQuotes.length, 'quotes');
+          console.log('💾 Sample final expense quote:', savedFinalExpenseQuotes[0]);
+          setFinalExpenseQuotes(savedFinalExpenseQuotes);
+        } else {
+          console.log('💾 No final expense quotes found in localStorage');
+        }
+        if (savedCancerInsuranceQuotes && Array.isArray(savedCancerInsuranceQuotes)) {
+          console.log('� Loading cancer insurance quotes from Firestore:', savedCancerInsuranceQuotes.length, 'quotes');
+          setCancerInsuranceQuotes(savedCancerInsuranceQuotes);
+        }
+        
+        // Auto-detect categories if not properly saved but quotes exist
+        if (!savedCategories || savedCategories.length === 0) {
+          const detectedCategories = [];
+          if (savedQuotes && savedQuotes.length > 0) detectedCategories.push('medigap');
+          if (savedAdvantageQuotes && savedAdvantageQuotes.length > 0) detectedCategories.push('advantage');
+          if (savedDrugPlanQuotes && savedDrugPlanQuotes.length > 0) detectedCategories.push('drug-plan');
+          if (savedDentalQuotes && savedDentalQuotes.length > 0) detectedCategories.push('dental');
+          if (savedHospitalIndemnityQuotes && savedHospitalIndemnityQuotes.length > 0) detectedCategories.push('hospital-indemnity');
+          if (savedFinalExpenseQuotes && savedFinalExpenseQuotes.length > 0) detectedCategories.push('final-expense');
+          if (savedCancerInsuranceQuotes && savedCancerInsuranceQuotes.length > 0) detectedCategories.push('cancer');
+          
+          if (detectedCategories.length > 0) {
+            console.log('🔍 Auto-detected categories from existing quotes:', detectedCategories);
+            console.log('📋 Detected categories from quotes:', detectedCategories);
+            setSelectedFlowCategories(detectedCategories);
+            saveSelectedCategories(detectedCategories);
+          }
+        }
+        
+        setActiveCategory(initialCategory);
+        setSelectedCategory(initialCategory);
+
         setIsInitializing(false);
       } catch (error) {
         console.error('Error initializing component:', error);
@@ -385,6 +462,19 @@ export default function MedicareShopContent() {
            (finalExpenseQuotes?.length > 0) || (cancerInsuranceQuotes?.length > 0) || 
            (selectedFlowCategories?.length > 0);
     
+    console.log('🔍 hasQuotes check:', {
+      result,
+      realQuotes: realQuotes?.length || 0,
+      advantageQuotes: advantageQuotes?.length || 0,
+      drugPlanQuotes: drugPlanQuotes?.length || 0,
+      dentalQuotes: dentalQuotes?.length || 0,
+      hospitalIndemnityQuotes: hospitalIndemnityQuotes?.length || 0,
+      finalExpenseQuotes: finalExpenseQuotes?.length || 0,
+      cancerInsuranceQuotes: cancerInsuranceQuotes?.length || 0,
+      selectedFlowCategories: selectedFlowCategories?.length || 0,
+      categories: selectedFlowCategories
+    });
+    
     return result;
   };
 
@@ -396,10 +486,13 @@ export default function MedicareShopContent() {
     setLoadingPlanButton(planType);
     
     try {
+      console.log(`Fetching quotes for plan type: ${planType}`);
+      
       // Use stored form data if not provided
       const dataToUse = formData || loadFromStorage(QUOTE_FORM_DATA_KEY, null);
       
       if (!dataToUse) {
+        console.log('⚠️ Form data incomplete for individual plan fetch');
         return [];
       }
 
@@ -415,10 +508,14 @@ export default function MedicareShopContent() {
           tobacco: dataToUse.tobaccoUse ? "1" as const : "0" as const,
           plans: [planType], // Only fetch for this specific plan
         };
+
+        console.log(`Fetching Plan ${planType} quotes with params:`, quoteParams);
         
         const result = await getMedigapQuotes(quoteParams);
         
         if (result?.quotes && result.quotes.length > 0) {
+          console.log(`✅ Success! Received ${result.quotes.length} quotes for Plan ${planType}`);
+          
           // Add the new quotes to existing quotes (merge, don't replace)
           setRealQuotes(prev => [...prev, ...result.quotes || []]);
           
@@ -429,6 +526,8 @@ export default function MedicareShopContent() {
           
           await preloadCarrierLogos(result.quotes);
           return result.quotes;
+        } else {
+          console.log(`❌ No quotes received for Plan ${planType}`);
         }
       } 
       // Handle quote type categories (supplement, advantage)
@@ -444,6 +543,7 @@ export default function MedicareShopContent() {
         setLoadingItems(planNames);
         
         const result = await getMedigapQuotes(dataToUse);
+        console.log('Received medigap quotes result:', result);
         
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
@@ -456,6 +556,7 @@ export default function MedicareShopContent() {
         setLoadingItems(['Medicare Advantage Plans']);
         
         const result = await getMedicareAdvantageQuotes(dataToUse);
+        console.log('Received advantage quotes result:', result);
         
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
@@ -468,6 +569,7 @@ export default function MedicareShopContent() {
         setLoadingItems(['Drug Plans']);
         
         const result = await getDrugPlanQuotes(dataToUse);
+        console.log('Received drug plan quotes result:', result);
         
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
@@ -533,7 +635,22 @@ export default function MedicareShopContent() {
     });
     
     if (hasAllExpectedQuotes && !quotesReady) {
+      console.log('All expected quotes are ready!');
       setQuotesReady(true);
+    } else if (!hasAllExpectedQuotes) {
+      // Debug logging to help diagnose loading issues
+      console.log('Quotes status check:', {
+        expectedQuoteTypes,
+        realQuotes: realQuotes.length,
+        advantageQuotes: advantageQuotes.length,
+        drugPlanQuotes: drugPlanQuotes.length,
+        dentalQuotes: dentalQuotes.length,
+        hospitalIndemnityQuotes: hospitalIndemnityQuotes.length,
+        finalExpenseQuotes: finalExpenseQuotes.length,
+        cancerInsuranceQuotes: cancerInsuranceQuotes.length,
+        hasAllExpectedQuotes,
+        quotesReady
+      });
     }
   }, [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes, expectedQuoteTypes, quotesReady]);
 
@@ -567,9 +684,6 @@ export default function MedicareShopContent() {
       // Add a small delay to allow multiple quotes to potentially complete 
       // and prioritize the most common/important categories
       const timer = setTimeout(() => {
-        // Only proceed if we still haven't auto-switched (double-check)
-        if (hasAutoSwitched) return;
-        
         // Map completed quote types to category IDs
         const categoryMapping: Record<string, string> = {
           'Supplement Plans': 'medigap',
@@ -600,9 +714,6 @@ export default function MedicareShopContent() {
         if (firstCompletedCategory) {
           console.log(`🎯 Auto-switching to first completed category: ${firstCompletedCategory} (from ${completedQuoteTypes.length} completed types)`);
           
-          // Mark that we've auto-switched FIRST to prevent race conditions
-          setHasAutoSwitched(true);
-          
           // Set the category to switch to
           setSelectedCategory(firstCompletedCategory);
           setActiveCategory(firstCompletedCategory);
@@ -611,6 +722,9 @@ export default function MedicareShopContent() {
           const params = new URLSearchParams(searchParams.toString());
           params.set('category', firstCompletedCategory);
           router.push(`${pathname}?${params.toString()}`);
+          
+          // Mark that we've auto-switched
+          setHasAutoSwitched(true);
         }
       }, 1000); // 1 second delay to allow multiple quotes to complete
 
@@ -620,6 +734,10 @@ export default function MedicareShopContent() {
 
   // Handle quote form submission
   const handleQuoteFormSubmit = async () => {
+    console.log('🔥 handleQuoteFormSubmit called');
+    console.log('🔥 quoteFormData:', quoteFormData);
+    console.log('🔥 selectedCategory:', selectedCategory);
+    
     // Use the conditional validation by calling handleQuoteFormSubmitWithData
     await handleQuoteFormSubmitWithData(quoteFormData, selectedCategory);
   };
@@ -627,6 +745,13 @@ export default function MedicareShopContent() {
   // Handle quote form submission with specific form data (for async state issues)
   const handleQuoteFormSubmitWithData = async (formData: QuoteFormData, category?: string, plansList?: string[], manageLoadingState: boolean = true) => {
     const targetCategory = category || selectedCategory;
+    console.log('🔥 handleQuoteFormSubmitWithData called');
+    console.log('🔥 formData:', formData);
+    console.log('🔥 formData.age:', formData.age, 'type:', typeof formData.age);
+    console.log('🔥 targetCategory:', targetCategory);
+    console.log('🔥 plansList:', plansList);
+    console.log('🔥 manageLoadingState:', manageLoadingState);
+    console.log('🔥 selectedCategory state:', selectedCategory);
     
     // Helper function to safely convert age
     const getSafeAge = (age: number | ''): number => {
@@ -1254,12 +1379,9 @@ export default function MedicareShopContent() {
     }
   };
 
-  const handleCategoryToggle = async (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => {
+  const handleCategoryToggle = (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => {
     setActiveCategory(category);
     setSelectedCategory(category);
-    
-    // Load quotes for the newly selected category (lazy loading on manual switch)
-    await loadQuotesForCategory(category);
     
     // Save UI state to localStorage only - NOT Firestore to avoid excessive operations
     if (typeof window !== 'undefined') {
