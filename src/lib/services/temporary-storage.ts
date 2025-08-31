@@ -78,7 +78,7 @@ export interface TemporaryStorageData {
 
 // Configuration
 const TTL_HOURS = 24; // Data expires after 24 hours
-const DATABASE_NAME = 'default'; // Using the default database
+const DATABASE_NAME = 'temp'; // Using the temp database
 const COLLECTION_NAME = 'visitors'; // Using the visitors collection
 
 // Helper to create expiration timestamp

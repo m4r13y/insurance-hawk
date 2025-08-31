@@ -1,9 +1,12 @@
 
 {
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
+  "firestore": [
+    {
+      "rules": "firestore.rules",
+      "indexes": "firestore.indexes.json",
+      "database": "temp"
+    }
+  ],
   "hosting": {
     "public": ".next/out",
     "ignore": [

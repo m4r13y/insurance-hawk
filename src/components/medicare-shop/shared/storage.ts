@@ -78,12 +78,12 @@ export const loadCurrentFlowStep = (): string => {
 
 // === QUOTE DATA FUNCTIONS (Firestore for reliable persistence) ===
 
-// Storage helper functions - using ONLY Firestore default database
+// Storage helper functions - using ONLY Firestore temp database
 export const loadFromStorage = async (key: string, defaultValue: any) => {
   if (typeof window === 'undefined') return defaultValue;
   
   try {
-    console.log('🔥 Loading from Firestore:', key);
+    console.log('🔥 Loading from Firestore temp database:', key);
     const data = await loadFromFirestore(key, defaultValue);
     
     if (data !== defaultValue) {
@@ -173,7 +173,7 @@ export const compressQuoteData = (quotes: any[]): any[] => {
 export const saveToStorage = async (key: string, value: any) => {
   if (typeof window === 'undefined') return;
   
-  console.log('🔥 Saving to Firestore:', key);
+  console.log('🔥 Saving to Firestore temp database:', key);
   
   try {
     let dataToSave = value;
@@ -192,9 +192,9 @@ export const saveToStorage = async (key: string, value: any) => {
       console.log('💾 Saving data without compression:', key);
     }
     
-    // Save to Firestore default database
+    // Save to Firestore temp database
     await saveToFirestore(key, dataToSave);
-    console.log('✅ Successfully saved to Firestore:', key);
+    console.log('✅ Successfully saved to Firestore temp database:', key);
     
   } catch (error) {
     console.error('❌ Firestore save error:', key, error);
@@ -280,7 +280,7 @@ export const getAllQuotesCount = async (): Promise<number> => {
 
 // Clear all quote data from Firestore AND UI state from localStorage
 export const clearAllQuotes = async () => {
-  console.log('🧹 Clearing all quotes from Firestore and UI state...');
+  console.log('🧹 Clearing all quotes from Firestore temp database and UI state...');
   
   try {
     // Clear quote data from Firestore
