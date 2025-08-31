@@ -87,8 +87,28 @@
   * {
     @apply border-border;
   }
+  
+  /* Prevent layout shift when scrollbar is hidden by modals */
+  html {
+    /* Modern solution: Reserve space for scrollbar */
+    scrollbar-gutter: stable;
+  }
+  
   body {
     @apply bg-background text-foreground;
+    /* Fallback for older browsers: Always show scrollbar */
+    overflow-y: scroll;
+  }
+  
+  /* When modal is open and scroll is locked, maintain scrollbar space */
+  body[style*="overflow: hidden"] {
+    overflow: hidden !important;
+    padding-right: var(--scrollbar-width, 0px);
+  }
+  
+  /* For Radix UI modals specifically */
+  body[data-scroll-locked] {
+    padding-right: var(--scrollbar-width, 0px);
   }
 }
 

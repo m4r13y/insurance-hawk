@@ -30,6 +30,28 @@ export default function RootLayout({
         <title>The Insurance Hawk</title>
         <meta name="description" content="Save your money, keep your freedom" />
         <link rel="icon" href="/favicon.svg" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function calculateScrollbarWidth() {
+                  const scrollDiv = document.createElement('div');
+                  scrollDiv.style.cssText = 'width: 100px; height: 100px; overflow: scroll; position: absolute; top: -9999px;';
+                  document.body.appendChild(scrollDiv);
+                  const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+                  document.body.removeChild(scrollDiv);
+                  document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+                }
+                
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', calculateScrollbarWidth);
+                } else {
+                  calculateScrollbarWidth();
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={cn("font-sans antialiased gradient-bg text-foreground min-h-screen flex flex-col", inter.variable)}>
         {/* Main Header */}
