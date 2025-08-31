@@ -1,92 +1,80 @@
 /**
  * Test script for dental quote optimization
- * Demonstrates the massive storage savings achieved by filtering out bloat data
+ * Demonstrates the storage savings from removing unnecessary data
  */
 
 import fs from 'fs';
 import path from 'path';
-import { optimizeDentalQuotes, createQuoteSummary, sortQuotesByPremium } from './src/lib/dental-quote-optimizer.js';
+import { optimizeDentalQuotes, calculateStorageSavings } from './lib/services/optimize-dental-quotes.js';
 
-// Read the raw API response
-const rawDataPath = path.join(process.cwd(), 'docs', 'dental-raw-api-response.md');
+async function testDentalQuoteOptimization() {
+  console.log('🦷 Testing Dental Quote Data Optimization...\n');
 
-try {
-  console.log('🦷 Testing Dental Quote Optimization...\n');
-  
-  // Read the markdown file
-  let fileContent = fs.readFileSync(rawDataPath, 'utf8');
-  
-  // Extract JSON from markdown (remove ```markdown and ``` wrapper)
-  const jsonStart = fileContent.indexOf('{');
-  const jsonEnd = fileContent.lastIndexOf('}') + 1;
-  
-  if (jsonStart === -1 || jsonEnd === 0) {
-    throw new Error('No JSON found in markdown file');
-  }
-  
-  const jsonContent = fileContent.slice(jsonStart, jsonEnd);
-  console.log(`📄 Raw file size: ${fileContent.length.toLocaleString()} characters`);
-  console.log(`📦 JSON content size: ${jsonContent.length.toLocaleString()} characters`);
-  
-  // Parse the JSON
-  const rawResponse = JSON.parse(jsonContent);
-  console.log(`📊 Raw quotes found: ${rawResponse.quotes?.length || 0}`);
-  
-  // Optimize the quotes
-  const optimizedResult = optimizeDentalQuotes(rawResponse);
-  
-  if (!optimizedResult.success) {
-    console.error('❌ Optimization failed:', optimizedResult.error);
+  try {
+    // Read the raw API response
+    const rawDataPath = path.join(process.cwd(), 'docs', 'dental-raw-api-response.md');
+    let rawContent = fs.readFileSync(rawDataPath, 'utf8');
+    
+    // Extract JSON from markdown (remove markdown formatting)
+    const jsonStart = rawContent.indexOf('{');
+    const jsonEnd = rawContent.lastIndexOf('}') + 1;
+    const jsonContent = rawContent.slice(jsonStart, jsonEnd);
+    
+    const originalResponse = JSON.parse(jsonContent);
+    console.log('✅ Successfully loaded raw API response');
+    console.log(`📊 Original quotes count: ${originalResponse.quotes?.length || 0}`);
+    
+    // Optimize the data
+    const optimizedResponse = optimizeDentalQuotes(originalResponse);
+    console.log(`📊 Optimized quotes count: ${optimizedResponse.quotes?.length || 0}`);
+    
+    // Calculate storage savings
+    const savings = calculateStorageSavings(originalResponse, optimizedResponse);
+    
+    console.log('\n💾 Storage Analysis:');
+    console.log(`📏 Original size: ${savings.originalSize.toLocaleString()} characters`);
+    console.log(`📦 Optimized size: ${savings.optimizedSize.toLocaleString()} characters`);
+    console.log(`💰 Space saved: ${savings.savings.toLocaleString()} characters`);
+    console.log(`📈 Reduction: ${savings.savingsPercentage}`);
+    console.log(`🗜️  Compression ratio: ${savings.compressionRatio}`);
+    
+    // Show what was preserved in the first quote
+    if (optimizedResponse.quotes.length > 0) {
+      const firstQuote = optimizedResponse.quotes[0];
+      console.log('\n🔍 Sample Optimized Quote Data:');
+      console.log(`🆔 Quote Key: ${firstQuote.key}`);
+      console.log(`👤 Age: ${firstQuote.age}`);
+      console.log(`📍 State: ${firstQuote.state}`);
+      console.log(`📋 Plan: ${firstQuote.plan_name}`);
+      console.log(`🏢 Company: ${firstQuote.company_base?.name}`);
+      console.log(`💰 Monthly Premium: $${firstQuote.base_plans?.[0]?.benefits?.[0]?.rate || 'N/A'}`);
+      console.log(`⭐ Rating: ${firstQuote.company_base?.ambest_rating || 'N/A'}`);
+    }
+    
+    // Show what massive data was removed
+    console.log('\n🗑️  Removed Bloat Data:');
+    const originalCompany = originalResponse.quotes?.[0]?.company_base;
+    if (originalCompany?.med_supp_market_data) {
+      console.log(`📊 Medicare market data years: ${originalCompany.med_supp_market_data.length}`);
+      const stateDataCount = originalCompany.med_supp_market_data
+        .reduce((total, year) => total + (year.med_supp_state_market_data?.length || 0), 0);
+      console.log(`🗺️  State market records removed: ${stateDataCount}`);
+      console.log(`❌ This data is 100% irrelevant to dental quotes!`);
+    }
+    
+    // Write optimized data to file for comparison
+    const optimizedPath = path.join(process.cwd(), 'docs', 'dental-optimized-response.json');
+    fs.writeFileSync(optimizedPath, JSON.stringify(optimizedResponse, null, 2));
+    console.log(`\n💾 Optimized data saved to: ${optimizedPath}`);
+    
+    console.log('\n✅ Optimization test completed successfully!');
+    console.log('🚀 This optimized data is ready for localStorage storage');
+    
+  } catch (error) {
+    console.error('❌ Error during optimization test:', error.message);
     process.exit(1);
   }
-  
-  console.log(`\n✅ Optimization Results:`);
-  console.log(`   📈 Original size: ${optimizedResult.originalSize?.toLocaleString()} chars`);
-  console.log(`   📉 Optimized size: ${optimizedResult.optimizedSize?.toLocaleString()} chars`);
-  console.log(`   🎯 Space saved: ${optimizedResult.compressionRatio}`);
-  console.log(`   🦷 Quotes processed: ${optimizedResult.quotes.length}`);
-  
-  // Show sample quotes
-  console.log(`\n📋 Sample Optimized Quotes:`);
-  const sortedQuotes = sortQuotesByPremium(optimizedResult.quotes);
-  
-  sortedQuotes.slice(0, 5).forEach((quote, index) => {
-    const summary = createQuoteSummary(quote);
-    console.log(`   ${index + 1}. ${summary.companyName}`);
-    console.log(`      Plan: ${summary.planName}`);
-    console.log(`      Premium: $${summary.monthlyPremium}/month`);
-    console.log(`      Max Benefit: $${summary.annualMaximum}`);
-    console.log(`      Rating: ${summary.ambestRating}`);
-    console.log(`      State: ${summary.state}`);
-    console.log('');
-  });
-  
-  // Show what was removed
-  console.log(`🗑️  Removed bloat data:`);
-  console.log(`   ❌ Medicare supplement market data (7 years × 50 states)`);
-  console.log(`   ❌ Detailed underwriting data arrays`);
-  console.log(`   ❌ Contextual data objects`);
-  console.log(`   ❌ County inclusion/exclusion arrays`);
-  console.log(`   ❌ ZIP code arrays`);
-  console.log(`   ❌ Parent company nested data`);
-  
-  console.log(`\n✅ Kept essential data:`);
-  console.log(`   ✅ Monthly premium rates`);
-  console.log(`   ✅ Plan names and details`);
-  console.log(`   ✅ Company information`);
-  console.log(`   ✅ Benefit descriptions (HTML)`);
-  console.log(`   ✅ Limitation notes`);
-  console.log(`   ✅ A.M. Best ratings`);
-  console.log(`   ✅ Application links`);
-  
-  // Write optimized data to file for comparison
-  const optimizedPath = path.join(process.cwd(), 'docs', 'dental-optimized-response.json');
-  fs.writeFileSync(optimizedPath, JSON.stringify(optimizedResult, null, 2));
-  console.log(`\n💾 Optimized data saved to: ${optimizedPath}`);
-  
-  console.log(`\n🎉 Optimization complete! Storage usage reduced by ${optimizedResult.compressionRatio}!`);
-  
-} catch (error) {
-  console.error('❌ Test failed:', error);
-  process.exit(1);
 }
+
+// Run the test
+testDentalQuoteOptimization();
