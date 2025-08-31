@@ -497,8 +497,9 @@ function MedicareShopContent() {
 
   // Auto-switch to first completed category ONLY during initial loading phase
   useEffect(() => {
+    // DISABLED: Auto-switching has been disabled to prevent unwanted tab changes
     // Only auto-switch if we're still in the loading phase AND haven't switched yet AND initial load is not complete
-    if (completedQuoteTypes.length > 0 && !hasAutoSwitched && showQuoteLoading && isInitializing === false && !initialLoadComplete) {
+    if (false) { // Disabled auto-switching
       // Add a small delay to allow multiple quotes to potentially complete 
       // and prioritize the most common/important categories
       const timer = setTimeout(() => {
