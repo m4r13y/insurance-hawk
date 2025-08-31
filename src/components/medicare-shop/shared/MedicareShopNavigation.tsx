@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { RotateCcw } from "lucide-react";
+import { ResetIcon } from "@radix-ui/react-icons";
 
 interface MedicareShopNavigationProps {
   selectedFlowCategories: string[];
@@ -54,7 +54,7 @@ export default function MedicareShopNavigation({
               className="gap-2 text-muted-foreground hover:text-foreground"
               title="Clear all quotes and start over"
             >
-              <RotateCcw className="h-4 w-4" />
+              <ResetIcon className="h-4 w-4" />
               Reset
             </Button>
           </AlertDialogTrigger>

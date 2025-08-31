@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Calendar, Users, DollarSign, Star } from "lucide-react";
+import { PersonIcon, CalendarIcon, GroupIcon, StarIcon } from "@radix-ui/react-icons";
 import { OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 
 interface DentalSidebarProps {
@@ -20,7 +20,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Shield className="h-5 w-5" />
+              <PersonIcon className="h-5 w-5" />
               Selected Plan
             </CardTitle>
           </CardHeader>
@@ -59,7 +59,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Company Rating</span>
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  <Star className="h-3 w-3" />
+                  <StarIcon className="h-3 w-3" />
                   {selectedQuote.ambestRating || 'N/A'}
                 </Badge>
               </div>
@@ -115,7 +115,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <span className="h-5 w-5 text-green-600 flex items-center justify-center font-bold">$</span>
               Benefits
             </CardTitle>
           </CardHeader>
@@ -133,7 +133,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <CalendarIcon className="h-5 w-5" />
               Limitations & Waiting Periods
             </CardTitle>
           </CardHeader>
@@ -150,7 +150,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5" />
+            <GroupIcon className="h-5 w-5" />
             Important Information
           </CardTitle>
         </CardHeader>

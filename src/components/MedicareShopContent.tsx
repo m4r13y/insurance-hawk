@@ -181,6 +181,9 @@ function MedicareShopContent() {
   // Form completion state (keeping this separate as it's form-specific)
   const [quoteFormCompleted, setQuoteFormCompleted] = useState(false);
   
+  // Track when we're recovering an existing session to prevent showing landing page
+  const [isRecoveringSession, setIsRecoveringSession] = useState(false);
+  
   // Track when initial load is completely finished to prevent auto-switching
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
@@ -203,6 +206,14 @@ function MedicareShopContent() {
     // Call the manual category toggle handler (which WILL update URL)
     handleCategoryToggle(categoryId as any);
   }, [handleCategoryToggle]);
+
+  // Enhanced wrapper that prevents ALL automatic category changes after manual selection
+  const handleManualCategoryToggle = useCallback(async (category: any) => {
+    // Always mark as manual selection to prevent any auto-switching
+    setInitialLoadComplete(true);
+    // Call optimized toggle
+    await handleOptimizedCategoryToggle(category);
+  }, [handleOptimizedCategoryToggle]);
   const [carrierLogos, setCarrierLogos] = useState<Record<string, string>>({});
 
   // Memoized product categories for dropdown to prevent unnecessary re-renders
@@ -283,6 +294,27 @@ function MedicareShopContent() {
         // Migrate legacy localStorage data if it exists
         await migrateLegacyStorage();
         
+        // Check for existing quote session on page refresh
+        const hasVisitorId = localStorage.getItem('visitor_id');
+        const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
+        const hasActiveCategory = localStorage.getItem('activeCategory');
+        
+        // Check if we have any saved quotes
+        const hasExistingQuotes = await Promise.all([
+          loadFromStorage(REAL_QUOTES_KEY, []),
+          loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
+          loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
+          loadFromStorage(DENTAL_QUOTES_KEY, []),
+          loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []),
+          loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []),
+          loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, [])
+        ]).then(quotesArrays => quotesArrays.some(quotes => quotes && quotes.length > 0));
+        
+        // If we have all required keys, this is a page refresh with existing session
+        // We don't need to check hasQuoteFormCompleted as it might not be set reliably
+        const isExistingSession = hasVisitorId && hasMedicareCategories && hasActiveCategory;
+        const hasExistingQuoteSession = isExistingSession && hasExistingQuotes;
+        
         // Only load form data on initialization - quotes will be loaded lazily
         const savedFormData = await loadFromStorage(QUOTE_FORM_DATA_KEY, null);
 
@@ -305,8 +337,34 @@ function MedicareShopContent() {
           setSelectedFlowCategories(savedCategories);
         }
         
-        // Load quotes for the active category only (lazy loading)
-        if (initialCategory) {
+        // For existing sessions with quotes, load all quotes and show results
+        if (hasExistingQuoteSession) {
+          console.log('Detected existing quote session on page refresh, loading all quotes...');
+          console.log('Saved categories:', savedCategories);
+          console.log('Saved form data:', savedFormData);
+          console.log('Has existing quotes:', hasExistingQuotes);
+          
+          // Set recovery mode and form completed state FIRST
+          setIsRecoveringSession(true);
+          setQuoteFormCompleted(true);
+          medicareState.setShowMedicareFlow(false);
+          
+          // Load quotes for all selected categories
+          if (savedCategories && Array.isArray(savedCategories)) {
+            console.log('Loading quotes for categories:', savedCategories);
+            await Promise.all(savedCategories.map(category => loadQuotesForCategory(category)));
+          }
+          
+          // Reset recovery mode after quotes are loaded
+          setIsRecoveringSession(false);
+        } else if (isExistingSession && savedFormData) {
+          // For existing sessions with form data but no quotes, they've completed the flow but need to regenerate quotes
+          console.log('Existing session with form data but no quotes, showing flow selection...');
+          setQuoteFormCompleted(true);
+          medicareState.setShowMedicareFlow(false); // This will show the flow selection page
+        } else if (initialCategory) {
+          // For new sessions or incomplete sessions, load quotes for active category only
+          console.log('New session or incomplete, loading single category:', initialCategory);
           await loadQuotesForCategory(initialCategory);
         }
         
@@ -1382,10 +1440,13 @@ function MedicareShopContent() {
       // Set loading items for all categories
       setLoadingItems(loadingItemsList);
       
-      // Set initial category for display (but don't update URL automatically)
-      const firstCategory = executionPlan[0]?.category || 'medigap';
-      setSelectedCategory(firstCategory);
-      setActiveCategory(firstCategory);
+      // DO NOT automatically set category during quote execution
+      // Only update category if user hasn't manually selected one yet (initial load only)
+      if (!initialLoadComplete) {
+        const firstCategory = executionPlan[0]?.category || 'medigap';
+        setSelectedCategory(firstCategory);
+        setActiveCategory(firstCategory);
+      }
       
       // DO NOT update URL automatically - only manual selection should update URL
       
@@ -1689,7 +1750,7 @@ function MedicareShopContent() {
       activeCategory={activeCategory}
       selectedCategory={selectedCategory}
       productCategories={productCategories}
-      onCategoryToggle={handleOptimizedCategoryToggle}
+      onCategoryToggle={handleManualCategoryToggle}
       onCategorySelect={handleManualCategorySelect}
       onReset={clearStorageAndReset}
     >
@@ -1731,7 +1792,7 @@ function MedicareShopContent() {
                   onComplete={handleMedicareFlowComplete}
                   onCancel={() => setShowMedicareFlow(false)}
                 />
-              ) : hasQuotes() ? (
+              ) : hasQuotes() || isRecoveringSession ? (
             /* Show Plans When There Are Quotes */
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Enhanced Sidebar with Combined Filters */}

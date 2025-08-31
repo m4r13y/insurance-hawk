@@ -11,28 +11,23 @@ import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 import { 
-  Star, 
-  DollarSign, 
-  MapPin, 
-  Phone, 
-  Globe, 
-  Pill, 
-  Heart, 
-  Eye, 
-  Stethoscope,
-  Ambulance,
-  Building2,
-  Shield,
-  Activity,
-  Zap,
-  Info,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  GitCompare,
-  X,
-  RotateCcw
-} from "lucide-react";
+  StarIcon, 
+  PersonIcon,
+  GlobeIcon, 
+  ComponentInstanceIcon, 
+  HeartIcon, 
+  EyeOpenIcon, 
+  ActivityLogIcon,
+  ExclamationTriangleIcon,
+  CheckCircledIcon,
+  LightningBoltIcon,
+  InfoCircledIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Cross1Icon,
+  ResetIcon
+} from "@radix-ui/react-icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";

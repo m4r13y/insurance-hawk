@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Shield, Heart, DollarSign } from "lucide-react";
+import { StarIcon, PersonIcon, HeartIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface CancerInsuranceQuote {
@@ -32,7 +32,7 @@ export default function CancerInsuranceShopContent({
   if (!quotes || quotes.length === 0) {
     return (
       <div className="text-center py-12">
-        <Heart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <HeartIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Cancer Insurance Plans Found</h3>
         <p className="text-gray-500">
           We couldn't find any cancer insurance plans for your area. Please try adjusting your search criteria.
@@ -90,7 +90,7 @@ export default function CancerInsuranceShopContent({
                     'Peace of mind protection'
                   ].map((benefit, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
-                      <Shield className="h-3 w-3 text-green-500" />
+                      <PersonIcon className="h-3 w-3 text-green-500" />
                       <span>{benefit}</span>
                     </div>
                   ))}
@@ -102,7 +102,7 @@ export default function CancerInsuranceShopContent({
                   Cancer Insurance Coverage
                 </Badge>
                 <Badge variant="outline" className="flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" />
+                  <span className="text-xs">$</span>
                   ${quote.benefit_amount.toLocaleString()} benefit
                 </Badge>
               </div>

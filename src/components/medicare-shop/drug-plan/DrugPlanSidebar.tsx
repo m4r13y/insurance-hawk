@@ -10,15 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Search, 
-  Filter, 
-  DollarSign, 
-  Pill, 
-  Star, 
-  RefreshCw,
-  Info,
-  Shield
-} from 'lucide-react';
+  MagnifyingGlassIcon as Search, 
+  MixerHorizontalIcon as Filter, 
+  TokensIcon as DollarSign, 
+  ArchiveIcon as Pill, 
+  StarIcon as Star, 
+  UpdateIcon as RefreshCw,
+  InfoCircledIcon as Info,
+  CheckCircledIcon as Shield
+} from '@radix-ui/react-icons';
 
 interface DrugPlanSidebarProps {
   searchQuery: string;

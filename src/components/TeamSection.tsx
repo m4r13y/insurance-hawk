@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, Users, Award, Phone, Mail, MapPin, Star, Shield, Heart, Facebook, Calendar, CheckCircle } from "lucide-react"
+import { ArrowRightIcon as ArrowRight, DividerVerticalIcon as Users, BadgeIcon as Award, MobileIcon as Phone, EnvelopeClosedIcon as Mail, GlobeIcon as MapPin, StarIcon as Star, CheckCircledIcon as Shield, HeartIcon as Heart, Share1Icon as Facebook, CalendarIcon as Calendar, CheckCircledIcon as CheckCircle } from "@radix-ui/react-icons"
 import AnimatedButton from "./animated-button"
 
 const teamMembers = [

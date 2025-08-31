@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, DollarSign, Info, Calendar } from "lucide-react";
+import { HomeIcon, InfoCircledIcon, CalendarIcon } from "@radix-ui/react-icons";
 
 interface HospitalIndemnitySidebarProps {
   selectedQuote?: any;
@@ -18,7 +18,7 @@ export default function HospitalIndemnitySidebar({ selectedQuote, className = ""
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
+            <HomeIcon className="h-5 w-5" />
             Hospital Plan Filters
           </CardTitle>
         </CardHeader>
@@ -88,7 +88,7 @@ export default function HospitalIndemnitySidebar({ selectedQuote, className = ""
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
+              💰
               How It Works
             </h4>
             <div className="space-y-2 text-sm text-gray-600">
@@ -100,7 +100,7 @@ export default function HospitalIndemnitySidebar({ selectedQuote, className = ""
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+              <HomeIcon className="h-4 w-4" />
               What It Covers
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">

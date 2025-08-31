@@ -31,6 +31,9 @@ export const useCategoryManagement = () => {
   // Timeout refs to prevent delayed category switching
   const manualTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const automaticTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Safety flag to prevent automatic category switching
+  const manualSelectionMade = useRef<boolean>(false);
 
   const handleCategoryToggle = useCallback(async (
     category: CategoryType, 
@@ -40,6 +43,9 @@ export const useCategoryManagement = () => {
     if (category === activeCategory) {
       return;
     }
+
+    // Mark that a manual selection has been made
+    manualSelectionMade.current = true;
 
     // Cancel any pending manual category operations
     if (manualTimeoutRef.current) {
@@ -78,6 +84,12 @@ export const useCategoryManagement = () => {
     category: CategoryType, 
     loadQuotesCallback?: (category: string) => Promise<void>
   ) => {
+    // COMPLETELY DISABLED - no automatic category switching allowed after manual selection
+    if (manualSelectionMade.current) {
+      console.log('🚫 Auto-switching disabled - manual selection already made');
+      return;
+    }
+
     // Only update state if category actually changed
     if (category === activeCategory) {
       return;

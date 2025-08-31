@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Umbrella, Calendar, DollarSign } from "lucide-react";
+import { StarIcon, CalendarIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface FinalExpenseQuote {
@@ -58,7 +58,7 @@ export default function FinalExpenseShopContent({
   if (!quotes || quotes.length === 0) {
     return (
       <div className="text-center py-12">
-        <Umbrella className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <span className="mx-auto h-12 w-12 text-gray-400 mb-4 flex items-center justify-center text-3xl">☂️</span>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Final Expense Plans Found</h3>
         <p className="text-gray-500">
           We couldn't find any final expense life insurance plans for your area. Please try adjusting your search criteria.
@@ -85,7 +85,7 @@ export default function FinalExpenseShopContent({
                     <h4 className="font-semibold text-lg">{quote.plan_name || 'Final Expense Life Insurance'}</h4>
                     {quote.am_best_rating && (
                       <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm text-gray-600">{quote.am_best_rating}</span>
                       </div>
                     )}
@@ -123,35 +123,35 @@ export default function FinalExpenseShopContent({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {/* Generate features based on available data */}
                   <div className="flex items-center gap-2 text-sm">
-                    <Umbrella className="h-3 w-3 text-orange-500" />
+                    <span className="h-3 w-3 text-orange-500">☂️</span>
                     <span>Coverage up to ${quote.face_value?.toLocaleString() || '0'}</span>
                   </div>
                   {quote.underwriting_type === 'guaranteed' && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Umbrella className="h-3 w-3 text-orange-500" />
+                      <span className="h-3 w-3 text-orange-500">☂️</span>
                       <span>Guaranteed Acceptance</span>
                     </div>
                   )}
                   {quote.has_pdf_app && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Umbrella className="h-3 w-3 text-orange-500" />
+                      <span className="h-3 w-3 text-orange-500">☂️</span>
                       <span>PDF Application Available</span>
                     </div>
                   )}
                   {quote.e_app_link && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Umbrella className="h-3 w-3 text-orange-500" />
+                      <span className="h-3 w-3 text-orange-500">☂️</span>
                       <span>Online Application Available</span>
                     </div>
                   )}
                   {quote.am_best_rating && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Umbrella className="h-3 w-3 text-orange-500" />
+                      <span className="h-3 w-3 text-orange-500">☂️</span>
                       <span>AM Best Rating: {quote.am_best_rating}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm">
-                    <Umbrella className="h-3 w-3 text-orange-500" />
+                    <span className="h-3 w-3 text-orange-500">☂️</span>
                     <span>Final Expense Life Insurance</span>
                   </div>
                 </div>
@@ -160,7 +160,7 @@ export default function FinalExpenseShopContent({
               <div className="flex items-center gap-4 mb-4">
                 {quote.underwriting_type && (
                   <Badge variant="outline" className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                    <CalendarIcon className="h-3 w-3" />
                     {quote.underwriting_type}
                   </Badge>
                 )}
@@ -171,7 +171,7 @@ export default function FinalExpenseShopContent({
                 )}
                 {quote.monthly_fee && (
                   <Badge variant="outline" className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
+                    <span className="h-3 w-3 font-bold">$</span>
                     ${quote.monthly_fee} monthly fee
                   </Badge>
                 )}

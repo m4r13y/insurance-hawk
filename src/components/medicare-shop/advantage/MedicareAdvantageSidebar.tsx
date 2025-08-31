@@ -11,17 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Filter, 
-  Star, 
-  DollarSign, 
-  Shield,
-  Heart,
-  Eye,
-  Pill,
-  Building2,
-  Search,
-  MapPin
-} from "lucide-react";
+  MixerHorizontalIcon, 
+  StarIcon, 
+  HeartIcon,
+  EyeOpenIcon,
+  ComponentInstanceIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  GlobeIcon,
+  CheckCircledIcon
+} from "@radix-ui/react-icons";
 
 interface MedicareAdvantageSidebarProps {
   zipCode?: string;
@@ -148,7 +147,7 @@ export default function MedicareAdvantageSidebar({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="w-4 h-4" />
+            <MixerHorizontalIcon className="w-4 h-4" />
             Filter Plans
           </CardTitle>
         </CardHeader>
@@ -158,7 +157,7 @@ export default function MedicareAdvantageSidebar({
           <div className="space-y-2">
             <Label>Search Plans</Label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search by plan name or carrier..."
                 value={filters.searchQuery}
@@ -195,7 +194,7 @@ export default function MedicareAdvantageSidebar({
           {/* Monthly Premium Range */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
+              <span className="text-sm">$</span>
               Monthly Premium Range
             </Label>
             <Slider
@@ -217,7 +216,7 @@ export default function MedicareAdvantageSidebar({
           {/* Star Rating */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
-              <Star className="w-4 h-4" />
+              <StarIcon className="w-4 h-4" />
               Minimum Star Rating
             </Label>
             <div className="space-y-2">
@@ -235,7 +234,7 @@ export default function MedicareAdvantageSidebar({
                   />
                   <label htmlFor={`rating-${rating}`} className="flex items-center gap-1 text-sm cursor-pointer">
                     {[...Array(rating)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <StarIcon key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                     ))}
                     <span className="text-muted-foreground">& up</span>
                   </label>
@@ -299,7 +298,7 @@ export default function MedicareAdvantageSidebar({
                   }
                 />
                 <label htmlFor="low-income" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Shield className="w-3 h-3" />
+                  <CheckCircledIcon className="w-3 h-3" />
                   Low Income Subsidy
                 </label>
               </div>
@@ -313,7 +312,7 @@ export default function MedicareAdvantageSidebar({
                   }
                 />
                 <label htmlFor="gap-coverage" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Shield className="w-3 h-3" />
+                  <CheckCircledIcon className="w-3 h-3" />
                   Gap Coverage
                 </label>
               </div>
@@ -327,7 +326,7 @@ export default function MedicareAdvantageSidebar({
                   }
                 />
                 <label htmlFor="dental-coverage" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Heart className="w-3 h-3" />
+                  <HeartIcon className="w-3 h-3" />
                   Dental Coverage
                 </label>
               </div>
@@ -341,7 +340,7 @@ export default function MedicareAdvantageSidebar({
                   }
                 />
                 <label htmlFor="vision-coverage" className="text-sm cursor-pointer flex items-center gap-2">
-                  <Eye className="w-3 h-3" />
+                  <EyeOpenIcon className="w-3 h-3" />
                   Vision Coverage
                 </label>
               </div>
@@ -354,7 +353,7 @@ export default function MedicareAdvantageSidebar({
               <Separator />
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
+                  <GlobeIcon className="w-4 h-4" />
                   Available Counties
                 </Label>
                 <div className="space-y-2 max-h-32 overflow-y-auto">

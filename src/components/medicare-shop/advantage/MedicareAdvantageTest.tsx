@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
-import { Copy, Check } from "lucide-react";
+import { CopyIcon, CheckIcon } from "@radix-ui/react-icons";
 
 export default function MedicareAdvantageTest() {
   const [zipCode, setZipCode] = useState("68154"); // Default test zip
@@ -92,12 +92,12 @@ export default function MedicareAdvantageTest() {
                   >
                     {copied ? (
                       <>
-                        <Check className="h-4 w-4" />
+                        <CheckIcon className="h-4 w-4" />
                         Copied!
                       </>
                     ) : (
                       <>
-                        <Copy className="h-4 w-4" />
+                        <CopyIcon className="h-4 w-4" />
                         Copy Response
                       </>
                     )}

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Building2, Calendar, DollarSign, ShieldCheck } from "lucide-react";
+import { StarIcon, HomeIcon, CalendarIcon, CheckCircledIcon } from "@radix-ui/react-icons";
 import { OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
@@ -26,7 +26,7 @@ export default function HospitalIndemnityShopContent({
   if (!quotes || quotes.length === 0) {
     return (
       <div className="text-center py-12">
-        <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <HomeIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Hospital Indemnity Plans Found</h3>
         <p className="text-gray-500">
           We couldn't find any hospital indemnity insurance plans for your area. Please try adjusting your search criteria.
@@ -74,7 +74,7 @@ export default function HospitalIndemnityShopContent({
                       <h4 className="font-semibold text-lg">{quote.planName}</h4>
                       {quote.ambest?.rating && (
                         <Badge variant="outline" className="flex items-center gap-1">
-                          <Star className="h-3 w-3" />
+                          <StarIcon className="h-3 w-3" />
                           {quote.ambest.rating}
                         </Badge>
                       )}
@@ -117,13 +117,13 @@ export default function HospitalIndemnityShopContent({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {basePlans.filter(plan => plan?.included).slice(0, 3).map((plan, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <ShieldCheck className="h-3 w-3 text-green-500" />
+                        <CheckCircledIcon className="h-3 w-3 text-green-500" />
                         <span>{plan?.name}</span>
                       </div>
                     ))}
                     {includedRiders.slice(0, 3).map((rider, idx) => (
                       <div key={`rider-${idx}`} className="flex items-center gap-2 text-sm">
-                        <ShieldCheck className="h-3 w-3 text-blue-500" />
+                        <CheckCircledIcon className="h-3 w-3 text-blue-500" />
                         <span>{rider.name}</span>
                       </div>
                     ))}
@@ -132,11 +132,11 @@ export default function HospitalIndemnityShopContent({
 
                 <div className="flex items-center gap-4 mb-4">
                   <Badge variant="outline" className="flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
+                    <HomeIcon className="h-3 w-3" />
                     Age {quote.age}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                    <CalendarIcon className="h-3 w-3" />
                     {quote.state}
                   </Badge>
                   {(quote.hhDiscount || 0) > 0 && (

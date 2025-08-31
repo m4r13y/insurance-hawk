@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 interface GenericQuoteLoadingProps {
   title?: string;
@@ -19,7 +19,7 @@ export default function GenericQuoteLoading({
           <div className="flex flex-col items-center space-y-6">
             {/* Loading Spinner */}
             <div className="relative">
-              <Loader2 className="h-16 w-16 text-primary animate-spin" />
+              <ReloadIcon className="h-16 w-16 text-primary animate-spin" />
               <div className="absolute inset-0 rounded-full border-4 border-muted animate-pulse" />
             </div>
             

@@ -6,18 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Star, 
-  DollarSign, 
-  Pill, 
-  Shield, 
-  Phone, 
-  MapPin, 
-  Clock,
-  CheckCircle,
-  XCircle,
-  Info,
-  ExternalLink
-} from 'lucide-react';
+  StarIcon as Star, 
+  TokensIcon as DollarSign, 
+  ArchiveIcon as Pill, 
+  CheckCircledIcon as Shield, 
+  MobileIcon as Phone, 
+  GlobeIcon as MapPin, 
+  ClockIcon as Clock,
+  CheckCircledIcon as CheckCircle,
+  CrossCircledIcon as XCircle,
+  InfoCircledIcon as Info,
+  ExternalLinkIcon as ExternalLink
+} from '@radix-ui/react-icons';
 
 interface DrugPlanDetailsProps {
   plan: {

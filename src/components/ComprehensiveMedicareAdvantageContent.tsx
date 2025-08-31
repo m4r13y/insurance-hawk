@@ -14,32 +14,32 @@ import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import GenericQuoteLoading from "@/components/GenericQuoteLoading";
 import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "@/components/medicare-shop/advantage/MedicareAdvantageSidebar";
 import { 
-  Star, 
-  DollarSign, 
-  MapPin, 
-  Phone, 
-  Globe, 
-  Pill, 
-  Heart, 
-  Eye, 
-  Stethoscope,
-  Ambulance,
-  Building2,
-  Shield,
-  Activity,
-  Zap,
-  Search,
-  Filter,
-  GitCompare,
-  Download,
-  ExternalLink,
-  Info,
-  Check,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Loader2
-} from "lucide-react";
+  StarIcon as Star, 
+  TokensIcon as DollarSign, 
+  GlobeIcon as MapPin, 
+  MobileIcon as Phone, 
+  GlobeIcon as Globe, 
+  ArchiveIcon as Pill, 
+  HeartIcon as Heart, 
+  EyeOpenIcon as Eye, 
+  ReaderIcon as Stethoscope,
+  RocketIcon as Ambulance,
+  ArchiveIcon as Building2,
+  CheckCircledIcon as Shield,
+  ActivityLogIcon as Activity,
+  LightningBoltIcon as Zap,
+  MagnifyingGlassIcon as Search,
+  MixerHorizontalIcon as Filter,
+  GitHubLogoIcon as GitCompare,
+  DownloadIcon as Download,
+  ExternalLinkIcon as ExternalLink,
+  InfoCircledIcon as Info,
+  CheckIcon as Check,
+  CrossCircledIcon as X,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  UpdateIcon as Loader2
+} from "@radix-ui/react-icons";
 import Image from "next/image";
 
 interface MedicareAdvantageQuote {

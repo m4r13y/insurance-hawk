@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowRight, ArrowLeft, Check, User, Users, Building, UserCheck, Heart, Shield, Phone, DollarSign, Calendar, MapPin } from "lucide-react"
+import { ArrowRightIcon as ArrowRight, ArrowLeftIcon as ArrowLeft, CheckIcon as Check, PersonIcon as User, DividerVerticalIcon as Users, ArchiveIcon as Building, PersonIcon as UserCheck, HeartIcon as Heart, CheckCircledIcon as Shield, MobileIcon as Phone, TokensIcon as DollarSign, CalendarIcon as Calendar, GlobeIcon as MapPin } from "@radix-ui/react-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

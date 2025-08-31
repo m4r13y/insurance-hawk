@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Shield, Info, DollarSign } from "lucide-react";
+import { HeartIcon, PersonIcon, InfoCircledIcon } from "@radix-ui/react-icons";
 
 interface CancerInsuranceSidebarProps {
   selectedQuote?: any;
@@ -18,7 +18,7 @@ export default function CancerInsuranceSidebar({ selectedQuote, className = "" }
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Heart className="h-5 w-5" />
+            <HeartIcon className="h-5 w-5" />
             Cancer Plan Filters
           </CardTitle>
         </CardHeader>
@@ -77,7 +77,7 @@ export default function CancerInsuranceSidebar({ selectedQuote, className = "" }
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Shield className="h-4 w-4" />
+              <PersonIcon className="h-4 w-4" />
               What It Covers
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -93,7 +93,7 @@ export default function CancerInsuranceSidebar({ selectedQuote, className = "" }
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
+              <span className="w-4 h-4 text-center text-sm">$</span>
               How It Works
             </h4>
             <div className="space-y-2 text-sm text-gray-600">
@@ -105,7 +105,7 @@ export default function CancerInsuranceSidebar({ selectedQuote, className = "" }
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Info className="h-4 w-4" />
+              <InfoCircledIcon className="h-4 w-4" />
               Important Notes
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">

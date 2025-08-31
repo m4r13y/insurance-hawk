@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, Calendar, DollarSign, ChevronDown } from "lucide-react";
+import { PersonIcon, CalendarIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import { 
   OptimizedDentalQuote, 
@@ -59,7 +59,7 @@ export default function DentalShopContent({
   if (!quotes || quotes.length === 0) {
     return (
       <div className="text-center py-12">
-        <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <PersonIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No dental plans found</h3>
         <p className="text-gray-500">Please try adjusting your search criteria.</p>
       </div>
@@ -130,19 +130,19 @@ export default function DentalShopContent({
                 {/* Plan Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <span className="h-4 w-4 text-green-600 flex items-center justify-center font-bold">$</span>
                     <span className="text-sm text-gray-700">
                       ${selectedQuote.annualMaximum.toLocaleString()} Annual Maximum
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-blue-600" />
+                    <PersonIcon className="h-4 w-4 text-blue-600" />
                     <span className="text-sm text-gray-700">
                       {selectedQuote.ambestOutlook} Outlook
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-purple-600" />
+                    <CalendarIcon className="h-4 w-4 text-purple-600" />
                     <span className="text-sm text-gray-700">
                       Age {selectedQuote.age}
                     </span>

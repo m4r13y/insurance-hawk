@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { UpdateIcon } from "@radix-ui/react-icons";
 
 interface MedigapPlanTypeControlsProps {
   selectedQuotePlans: string[];
@@ -54,7 +54,7 @@ export default function MedigapPlanTypeControls({
             >
               {loadingPlanButton === 'F' ? (
                 <>
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  <UpdateIcon className="w-3 h-3 animate-spin mr-1" />
                   Loading...
                 </>
               ) : (
@@ -92,7 +92,7 @@ export default function MedigapPlanTypeControls({
             >
               {loadingPlanButton === 'G' ? (
                 <>
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  <UpdateIcon className="w-3 h-3 animate-spin mr-1" />
                   Loading...
                 </>
               ) : (
@@ -130,7 +130,7 @@ export default function MedigapPlanTypeControls({
             >
               {loadingPlanButton === 'N' ? (
                 <>
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  <UpdateIcon className="w-3 h-3 animate-spin mr-1" />
                   Loading...
                 </>
               ) : (

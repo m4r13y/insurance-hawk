@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Heart } from "lucide-react";
+import { HeartIcon } from "@radix-ui/react-icons";
 
 interface CancerInsuranceEmptyStateProps {
   title?: string;
@@ -14,7 +14,7 @@ export default function CancerInsuranceEmptyState({
 }: CancerInsuranceEmptyStateProps) {
   return (
     <div className="text-center py-12">
-      <Heart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+      <HeartIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
       <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-500 max-w-md mx-auto">{description}</p>
       <div className="mt-6">

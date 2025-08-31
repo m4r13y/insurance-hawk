@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, SortAsc, Star, DollarSign, Pill, Shield, Phone, ExternalLink } from 'lucide-react';
+import { MagnifyingGlassIcon, MixerHorizontalIcon, TriangleUpIcon, StarIcon, PersonIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface DrugPlanQuote {
@@ -108,7 +108,7 @@ export default function DrugPlanShopContent({
     return (
       <div className="text-center py-8">
         <div className="text-red-600 mb-4">
-          <Shield className="h-12 w-12 mx-auto mb-2" />
+          <PersonIcon className="h-12 w-12 mx-auto mb-2" />
           <p className="text-lg font-semibold">Error Loading Quotes</p>
           <p className="text-sm">{error}</p>
         </div>
@@ -119,7 +119,7 @@ export default function DrugPlanShopContent({
   if (quotes.length === 0) {
     return (
       <div className="text-center py-8">
-        <Pill className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+        <span className="h-12 w-12 mx-auto mb-4 text-gray-400 flex items-center justify-center text-3xl">💊</span>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">No Drug Plans Found</h3>
         <p className="text-gray-600">No drug plan quotes are available at this time.</p>
       </div>
@@ -153,7 +153,7 @@ export default function DrugPlanShopContent({
                     </div>
                     {quote.rating && (
                       <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                        <StarIcon className="h-4 w-4 text-yellow-400 fill-current" />
                         <span className="ml-1 text-sm font-medium">{quote.rating}</span>
                       </div>
                     )}
@@ -203,7 +203,7 @@ export default function DrugPlanShopContent({
                     onClick={() => onGetQuote?.(quote)}
                     className="w-full"
                   >
-                    <Phone className="h-4 w-4 mr-2" />
+                    <span className="h-4 w-4 mr-2">📞</span>
                     Get Quote
                   </Button>
                   <Button 
@@ -211,7 +211,7 @@ export default function DrugPlanShopContent({
                     onClick={() => onQuoteSelect?.(quote)}
                     className="w-full"
                   >
-                    <ExternalLink className="h-4 w-4 mr-2" />
+                    <ExternalLinkIcon className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
                 </div>

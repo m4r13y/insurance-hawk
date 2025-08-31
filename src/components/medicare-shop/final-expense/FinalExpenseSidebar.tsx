@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Umbrella, DollarSign, Info, Users } from "lucide-react";
+import { CheckCircledIcon, InfoCircledIcon, PersonIcon } from "@radix-ui/react-icons";
 
 interface FinalExpenseSidebarProps {
   selectedQuote?: any;
@@ -18,7 +18,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Umbrella className="h-5 w-5" />
+            <CheckCircledIcon className="h-5 w-5" />
             Final Expense Filters
           </CardTitle>
         </CardHeader>
@@ -96,7 +96,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
+              <span className="text-sm">$</span>
               What It Covers
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -112,7 +112,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Umbrella className="h-4 w-4" />
+              <CheckCircledIcon className="h-4 w-4" />
               Plan Types
             </h4>
             <div className="space-y-2 text-sm text-gray-600">
@@ -129,7 +129,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <PersonIcon className="h-4 w-4" />
               Who Should Consider
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -144,7 +144,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Info className="h-4 w-4" />
+              <InfoCircledIcon className="h-4 w-4" />
               Important Notes
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">

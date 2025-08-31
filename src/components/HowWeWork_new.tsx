@@ -1,14 +1,14 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Stethoscope, Building, Users } from "lucide-react"
+import { ActivityLogIcon, ExclamationTriangleIcon, PersonIcon } from "@radix-ui/react-icons"
 
 const steps = [
   {
     number: "01",
     title: "Medicare Plans",
     description: "Comprehensive Medicare coverage including supplements, advantage plans, and prescription drug coverage.",
-    icon: <Stethoscope className="w-8 h-8" />,
+    icon: <ActivityLogIcon className="w-8 h-8" />,
     gradient: "from-blue-500/20 to-blue-600/10",
     features: [
       "Parts A, B, C & D Coverage",
@@ -20,7 +20,7 @@ const steps = [
     number: "02",
     title: "Group Insurance",
     description: "Competitive group benefits for your employees with access to major national carriers.",
-    icon: <Building className="w-8 h-8" />,
+    icon: <ExclamationTriangleIcon className="w-8 h-8" />,
     gradient: "from-green-500/20 to-green-600/10",
     features: [
       "Employee Benefits Package",
@@ -32,7 +32,7 @@ const steps = [
     number: "03",
     title: "Family Health",
     description: "Guaranteed renewable health plans that give families more control over healthcare costs.",
-    icon: <Users className="w-8 h-8" />,
+    icon: <PersonIcon className="w-8 h-8" />,
     gradient: "from-purple-500/20 to-purple-600/10",
     features: [
       "Low Deductible Options",

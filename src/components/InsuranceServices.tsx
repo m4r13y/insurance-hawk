@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Stethoscope, Users, Building, Smile, HeartHandshake, Plus } from "lucide-react"
+import { ReaderIcon as Stethoscope, DividerVerticalIcon as Users, ArchiveIcon as Building, FaceIcon as Smile, HeartIcon as HeartHandshake, PlusIcon as Plus } from "@radix-ui/react-icons"
 
 const services = [
   {

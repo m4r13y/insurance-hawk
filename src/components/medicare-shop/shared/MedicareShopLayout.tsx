@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Plus } from "lucide-react";
+import { ResetIcon, PlusIcon } from "@radix-ui/react-icons";
 import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
 
 interface MedicareShopLayoutProps {
@@ -78,7 +78,7 @@ export default function MedicareShopLayout({
                     className="gap-2 text-muted-foreground hover:text-foreground"
                     title="Clear all quotes and start over"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <ResetIcon className="h-4 w-4" />
                     Reset
                   </Button>
                 </AlertDialogTrigger>
@@ -189,7 +189,7 @@ export default function MedicareShopLayout({
                       "More Quotes"
                     ) : (
                       <>
-                        <Plus className="h-4 w-4" />
+                        <PlusIcon className="h-4 w-4" />
                       </>
                     )}
                   </Button>

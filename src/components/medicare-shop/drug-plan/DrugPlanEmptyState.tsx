@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pill, RefreshCw, Phone, Search } from 'lucide-react';
+import { ArchiveIcon as Pill, UpdateIcon as RefreshCw, MobileIcon as Phone, MagnifyingGlassIcon as Search } from '@radix-ui/react-icons';
 
 interface DrugPlanEmptyStateProps {
   type?: 'no-results' | 'no-quotes' | 'error';
