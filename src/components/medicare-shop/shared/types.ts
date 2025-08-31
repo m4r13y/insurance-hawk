@@ -40,6 +40,20 @@ interface QuoteFormData {
   email?: string;
   firstName?: string;
   effectiveDate?: string;
+  // Cancer Insurance specific fields
+  familyType?: 'individual' | 'family' | '';
+  carcinomaInSitu?: boolean | null;
+  premiumMode?: 'monthly' | 'annual' | '';
+  // Dental Insurance specific fields
+  coveredMembers?: string;
+  // Final Expense specific fields
+  desiredFaceValue?: string;
+  desiredRate?: string;
+  underwritingType?: 'Guaranteed' | 'Simplified' | 'Full' | '';
+  // Hospital Indemnity specific fields
+  benefitAmount?: string;
+  // State field for cancer insurance
+  state?: string;
 }
 
 interface MedigapQuote {

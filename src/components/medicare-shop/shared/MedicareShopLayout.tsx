@@ -17,7 +17,7 @@ interface MedicareShopLayoutProps {
   activeCategory: string;
   selectedCategory: string;
   productCategories: any[];
-  onCategoryToggle: (category: 'medigap' | 'advantage') => void;
+  onCategoryToggle: (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => void;
   onCategorySelect: (category: string) => void;
   onReset: () => void;
 }
@@ -98,25 +98,81 @@ export default function MedicareShopLayout({
                 </AlertDialogContent>
               </AlertDialog>
 
-              {/* Plan Type Toggle - Moved from center */}
-              {selectedFlowCategories.includes('medigap') && selectedFlowCategories.includes('advantage') && (
-                <div className="flex items-center gap-2 p-1 bg-background rounded-lg border">
-                  <Button
-                    variant={activeCategory === 'medigap' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => onCategoryToggle('medigap')}
-                    className="flex-1"
-                  >
-                    Medicare Supplement
-                  </Button>
-                  <Button
-                    variant={activeCategory === 'advantage' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => onCategoryToggle('advantage')}
-                    className="flex-1"
-                  >
-                    Medicare Advantage
-                  </Button>
+              {/* Plan Type Toggle - Now includes all insurance types */}
+              {(selectedFlowCategories.includes('medigap') || selectedFlowCategories.includes('advantage') || selectedFlowCategories.includes('drug-plan') || 
+                selectedFlowCategories.includes('dental') || selectedFlowCategories.includes('cancer') || selectedFlowCategories.includes('hospital-indemnity') || 
+                selectedFlowCategories.includes('final-expense')) && selectedFlowCategories.length > 1 && (
+                <div className="flex items-center gap-2 p-1 bg-background rounded-lg border flex-wrap">
+                  {selectedFlowCategories.includes('medigap') && (
+                    <Button
+                      variant={activeCategory === 'medigap' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('medigap')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Medicare Supplement
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('advantage') && (
+                    <Button
+                      variant={activeCategory === 'advantage' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('advantage')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Medicare Advantage
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('drug-plan') && (
+                    <Button
+                      variant={activeCategory === 'drug-plan' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('drug-plan')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Drug Plans
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('dental') && (
+                    <Button
+                      variant={activeCategory === 'dental' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('dental')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Dental
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('cancer') && (
+                    <Button
+                      variant={activeCategory === 'cancer' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('cancer')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Cancer
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('hospital-indemnity') && (
+                    <Button
+                      variant={activeCategory === 'hospital-indemnity' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('hospital-indemnity')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Hospital
+                    </Button>
+                  )}
+                  {selectedFlowCategories.includes('final-expense') && (
+                    <Button
+                      variant={activeCategory === 'final-expense' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => onCategoryToggle('final-expense')}
+                      className="flex-1 min-w-fit"
+                    >
+                      Final Expense
+                    </Button>
+                  )}
                 </div>
               )}
 

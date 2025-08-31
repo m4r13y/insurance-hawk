@@ -3,6 +3,11 @@ export const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
 export const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
 export const REAL_QUOTES_KEY = 'medicare_real_quotes'; // Now using localStorage instead of sessionStorage
 export const ADVANTAGE_QUOTES_KEY = 'medicare_advantage_quotes';
+export const DRUG_PLAN_QUOTES_KEY = 'medicare_drug_plan_quotes';
+export const DENTAL_QUOTES_KEY = 'medicare_dental_quotes';
+export const HOSPITAL_INDEMNITY_QUOTES_KEY = 'medicare_hospital_indemnity_quotes';
+export const FINAL_EXPENSE_QUOTES_KEY = 'medicare_final_expense_quotes';
+export const CANCER_INSURANCE_QUOTES_KEY = 'medicare_cancer_insurance_quotes';
 export const FILTER_STATE_KEY = 'medicare_filter_state';
 
 // Storage helper functions - using localStorage for better persistence

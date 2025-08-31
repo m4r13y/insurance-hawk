@@ -84,6 +84,12 @@ const additionalOptions = [
     name: "Hospital Indemnity",
     description: "Cash benefits for hospital stays and medical events",
     features: ["Daily hospital benefits", "Emergency room coverage", "Outpatient surgery"]
+  },
+  {
+    id: "final-expense",
+    name: "Final Expense Life Insurance",
+    description: "Life insurance to cover end-of-life expenses",
+    features: ["Guaranteed acceptance", "No medical exam", "Burial and funeral costs"]
   }
 ]
 
@@ -186,6 +192,16 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     state: "",
     tobaccoUse: null as boolean | null,
     benefitAmount: "",
+    // Cancer Insurance specific fields
+    familyType: "",
+    carcinomaInSitu: null as boolean | null,
+    premiumMode: "",
+    // Dental Insurance specific fields
+    coveredMembers: "",
+    // Final Expense specific fields
+    desiredFaceValue: "",
+    desiredRate: "",
+    underwritingType: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -480,7 +496,17 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
       gender: false,
       age: false,
       tobaccoUse: false,
-      benefitAmount: false
+      benefitAmount: false,
+      // Cancer Insurance specific fields
+      familyType: false,
+      carcinomaInSitu: false,
+      premiumMode: false,
+      // Dental Insurance specific fields
+      coveredMembers: false,
+      // Final Expense specific fields
+      desiredFaceValue: false,
+      desiredRate: false,
+      underwritingType: false
     }
 
     // Check selected plan categories
@@ -492,10 +518,11 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     const hasDental = formData.selectedAdditionalOptions.includes('dental')
     const hasCancer = formData.selectedAdditionalOptions.includes('cancer')
     const hasHospital = formData.selectedAdditionalOptions.includes('hospital')
+    const hasFinalExpense = formData.selectedAdditionalOptions.includes('final-expense')
 
     // Apply requirements based on the breakdown:
     // Zip Code: All (Except Cancer)
-    if (hasAdvantage || hasMedigap || hasPartD || hasDental || hasHospital) {
+    if (hasAdvantage || hasMedigap || hasPartD || hasDental || hasHospital || hasFinalExpense) {
       fields.zipCode = true
     }
     
@@ -505,26 +532,50 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
     }
     
     // Gender: Med Supp, Dental, Final Expense, Cancer
-    if (hasMedigap || hasDental || hasCancer) {
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
       fields.gender = true
     }
     
     // Age: Med Supp, Dental, Final Expense, Cancer  
-    if (hasMedigap || hasDental || hasCancer) {
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
       fields.age = true
     }
     
     // Tobacco Use: Med Supp, Dental, Final Expense, Cancer
-    if (hasMedigap || hasDental || hasCancer) {
+    if (hasMedigap || hasDental || hasCancer || hasFinalExpense) {
       fields.tobaccoUse = true
     }
     
-    // Benefit Amount: Final Expense, Hospital Indemnity
+    // Benefit Amount: Hospital Indemnity
     if (hasHospital) {
       fields.benefitAmount = true
     }
 
+    // Cancer Insurance specific fields
+    if (hasCancer) {
+      fields.familyType = true
+      fields.carcinomaInSitu = true
+      fields.premiumMode = true
+    }
+
+    // Dental Insurance specific fields
+    if (hasDental) {
+      fields.coveredMembers = true
+    }
+
+    // Final Expense specific fields
+    if (hasFinalExpense) {
+      fields.desiredFaceValue = true
+      fields.underwritingType = true
+    }
+
     return fields
+  }
+
+  // Helper function to determine if multiple plan types are selected (for contextual labels)
+  const hasMultiplePlanTypes = () => {
+    const totalSelections = formData.planCategories.length + formData.selectedAdditionalOptions.length
+    return totalSelections > 1
   }
 
   const skipDoctors = () => {
@@ -585,6 +636,18 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
         if (requiredFields.age && !formData.age) validations.push(false)
         if (requiredFields.tobaccoUse && formData.tobaccoUse === null) validations.push(false)
         if (requiredFields.benefitAmount && !formData.benefitAmount) validations.push(false)
+        
+        // Cancer Insurance specific validations
+        if (requiredFields.familyType && !formData.familyType) validations.push(false)
+        if (requiredFields.carcinomaInSitu && formData.carcinomaInSitu === null) validations.push(false)
+        if (requiredFields.premiumMode && !formData.premiumMode) validations.push(false)
+        
+        // Dental Insurance specific validations
+        if (requiredFields.coveredMembers && !formData.coveredMembers) validations.push(false)
+        
+        // Final Expense specific validations
+        if (requiredFields.desiredFaceValue && !formData.desiredFaceValue) validations.push(false)
+        if (requiredFields.underwritingType && !formData.underwritingType) validations.push(false)
         
         return validations.length === 0
       default:
@@ -995,7 +1058,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* Age */}
                               {requiredFields.age && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">Your Age *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Your Age *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <div className="h-5"></div>
+                                    )}
+                                  </div>
                                   <Input
                                     type="number"
                                     placeholder="65"
@@ -1013,7 +1081,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* ZIP Code */}
                               {requiredFields.zipCode && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">ZIP Code *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">ZIP Code *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <div className="h-5"></div>
+                                    )}
+                                  </div>
                                   <Input
                                     type="text"
                                     placeholder="12345"
@@ -1030,7 +1103,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* State */}
                               {requiredFields.state && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">State *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">State *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <div className="h-5"></div>
+                                    )}
+                                  </div>
                                   <Select 
                                     value={formData.state} 
                                     onValueChange={(value) => setFormData(prev => ({ 
@@ -1042,56 +1120,62 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                       <SelectValue placeholder="Select state" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="AL">Alabama</SelectItem>
-                                      <SelectItem value="AK">Alaska</SelectItem>
-                                      <SelectItem value="AZ">Arizona</SelectItem>
-                                      <SelectItem value="AR">Arkansas</SelectItem>
-                                      <SelectItem value="CA">California</SelectItem>
-                                      <SelectItem value="CO">Colorado</SelectItem>
-                                      <SelectItem value="CT">Connecticut</SelectItem>
-                                      <SelectItem value="DE">Delaware</SelectItem>
-                                      <SelectItem value="FL">Florida</SelectItem>
-                                      <SelectItem value="GA">Georgia</SelectItem>
-                                      <SelectItem value="HI">Hawaii</SelectItem>
-                                      <SelectItem value="ID">Idaho</SelectItem>
-                                      <SelectItem value="IL">Illinois</SelectItem>
-                                      <SelectItem value="IN">Indiana</SelectItem>
-                                      <SelectItem value="IA">Iowa</SelectItem>
-                                      <SelectItem value="KS">Kansas</SelectItem>
-                                      <SelectItem value="KY">Kentucky</SelectItem>
-                                      <SelectItem value="LA">Louisiana</SelectItem>
-                                      <SelectItem value="ME">Maine</SelectItem>
-                                      <SelectItem value="MD">Maryland</SelectItem>
-                                      <SelectItem value="MA">Massachusetts</SelectItem>
-                                      <SelectItem value="MI">Michigan</SelectItem>
-                                      <SelectItem value="MN">Minnesota</SelectItem>
-                                      <SelectItem value="MS">Mississippi</SelectItem>
-                                      <SelectItem value="MO">Missouri</SelectItem>
-                                      <SelectItem value="MT">Montana</SelectItem>
-                                      <SelectItem value="NE">Nebraska</SelectItem>
-                                      <SelectItem value="NV">Nevada</SelectItem>
-                                      <SelectItem value="NH">New Hampshire</SelectItem>
-                                      <SelectItem value="NJ">New Jersey</SelectItem>
-                                      <SelectItem value="NM">New Mexico</SelectItem>
-                                      <SelectItem value="NY">New York</SelectItem>
-                                      <SelectItem value="NC">North Carolina</SelectItem>
-                                      <SelectItem value="ND">North Dakota</SelectItem>
-                                      <SelectItem value="OH">Ohio</SelectItem>
-                                      <SelectItem value="OK">Oklahoma</SelectItem>
-                                      <SelectItem value="OR">Oregon</SelectItem>
-                                      <SelectItem value="PA">Pennsylvania</SelectItem>
-                                      <SelectItem value="RI">Rhode Island</SelectItem>
-                                      <SelectItem value="SC">South Carolina</SelectItem>
-                                      <SelectItem value="SD">South Dakota</SelectItem>
-                                      <SelectItem value="TN">Tennessee</SelectItem>
-                                      <SelectItem value="TX">Texas</SelectItem>
-                                      <SelectItem value="UT">Utah</SelectItem>
-                                      <SelectItem value="VT">Vermont</SelectItem>
-                                      <SelectItem value="VA">Virginia</SelectItem>
-                                      <SelectItem value="WA">Washington</SelectItem>
-                                      <SelectItem value="WV">West Virginia</SelectItem>
-                                      <SelectItem value="WI">Wisconsin</SelectItem>
-                                      <SelectItem value="WY">Wyoming</SelectItem>
+                                      {formData.selectedAdditionalOptions.includes('cancer') ? (
+                                        <SelectItem value="TX">Texas</SelectItem>
+                                      ) : (
+                                        <>
+                                          <SelectItem value="AL">Alabama</SelectItem>
+                                          <SelectItem value="AK">Alaska</SelectItem>
+                                          <SelectItem value="AZ">Arizona</SelectItem>
+                                          <SelectItem value="AR">Arkansas</SelectItem>
+                                          <SelectItem value="CA">California</SelectItem>
+                                          <SelectItem value="CO">Colorado</SelectItem>
+                                          <SelectItem value="CT">Connecticut</SelectItem>
+                                          <SelectItem value="DE">Delaware</SelectItem>
+                                          <SelectItem value="FL">Florida</SelectItem>
+                                          <SelectItem value="GA">Georgia</SelectItem>
+                                          <SelectItem value="HI">Hawaii</SelectItem>
+                                          <SelectItem value="ID">Idaho</SelectItem>
+                                          <SelectItem value="IL">Illinois</SelectItem>
+                                          <SelectItem value="IN">Indiana</SelectItem>
+                                          <SelectItem value="IA">Iowa</SelectItem>
+                                          <SelectItem value="KS">Kansas</SelectItem>
+                                          <SelectItem value="KY">Kentucky</SelectItem>
+                                          <SelectItem value="LA">Louisiana</SelectItem>
+                                          <SelectItem value="ME">Maine</SelectItem>
+                                          <SelectItem value="MD">Maryland</SelectItem>
+                                          <SelectItem value="MA">Massachusetts</SelectItem>
+                                          <SelectItem value="MI">Michigan</SelectItem>
+                                          <SelectItem value="MN">Minnesota</SelectItem>
+                                          <SelectItem value="MS">Mississippi</SelectItem>
+                                          <SelectItem value="MO">Missouri</SelectItem>
+                                          <SelectItem value="MT">Montana</SelectItem>
+                                          <SelectItem value="NE">Nebraska</SelectItem>
+                                          <SelectItem value="NV">Nevada</SelectItem>
+                                          <SelectItem value="NH">New Hampshire</SelectItem>
+                                          <SelectItem value="NJ">New Jersey</SelectItem>
+                                          <SelectItem value="NM">New Mexico</SelectItem>
+                                          <SelectItem value="NY">New York</SelectItem>
+                                          <SelectItem value="NC">North Carolina</SelectItem>
+                                          <SelectItem value="ND">North Dakota</SelectItem>
+                                          <SelectItem value="OH">Ohio</SelectItem>
+                                          <SelectItem value="OK">Oklahoma</SelectItem>
+                                          <SelectItem value="OR">Oregon</SelectItem>
+                                          <SelectItem value="PA">Pennsylvania</SelectItem>
+                                          <SelectItem value="RI">Rhode Island</SelectItem>
+                                          <SelectItem value="SC">South Carolina</SelectItem>
+                                          <SelectItem value="SD">South Dakota</SelectItem>
+                                          <SelectItem value="TN">Tennessee</SelectItem>
+                                          <SelectItem value="TX">Texas</SelectItem>
+                                          <SelectItem value="UT">Utah</SelectItem>
+                                          <SelectItem value="VT">Vermont</SelectItem>
+                                          <SelectItem value="VA">Virginia</SelectItem>
+                                          <SelectItem value="WA">Washington</SelectItem>
+                                          <SelectItem value="WV">West Virginia</SelectItem>
+                                          <SelectItem value="WI">Wisconsin</SelectItem>
+                                          <SelectItem value="WY">Wyoming</SelectItem>
+                                        </>
+                                      )}
                                     </SelectContent>
                                   </Select>
                                 </div>
@@ -1100,7 +1184,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* Gender */}
                               {requiredFields.gender && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">Gender *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Gender *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <div className="h-5"></div>
+                                    )}
+                                  </div>
                                   <div className="flex gap-2">
                                     <Button
                                       type="button"
@@ -1125,7 +1214,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* Tobacco Use */}
                               {requiredFields.tobaccoUse && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <div className="h-5"></div>
+                                    )}
+                                  </div>
                                   <div className="flex gap-2">
                                     <Button
                                       type="button"
@@ -1150,7 +1244,12 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                               {/* Benefit Amount */}
                               {requiredFields.benefitAmount && (
                                 <div className="space-y-2">
-                                  <Label className="text-sm font-medium text-foreground">Benefit Amount *</Label>
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Benefit Amount *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Hospital Indemnity</p>
+                                    )}
+                                  </div>
                                   <Select 
                                     value={formData.benefitAmount} 
                                     onValueChange={(value) => setFormData(prev => ({ 
@@ -1169,6 +1268,186 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                       <SelectItem value="25000">$25,000</SelectItem>
                                       <SelectItem value="30000">$30,000</SelectItem>
                                       <SelectItem value="50000">$50,000</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+
+                              {/* Cancer Insurance: Family Type */}
+                              {requiredFields.familyType && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Coverage Type *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={formData.familyType === "individual" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, familyType: "individual" }))}
+                                      className="flex-1"
+                                    >
+                                      Individual
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant={formData.familyType === "family" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, familyType: "family" }))}
+                                      className="flex-1"
+                                    >
+                                      Family
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Cancer Insurance: Carcinoma In Situ Coverage */}
+                              {requiredFields.carcinomaInSitu && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Carcinoma In Situ Coverage *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={formData.carcinomaInSitu === false ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, carcinomaInSitu: false }))}
+                                      className="flex-1"
+                                    >
+                                      No
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant={formData.carcinomaInSitu === true ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, carcinomaInSitu: true }))}
+                                      className="flex-1"
+                                    >
+                                      Yes
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Cancer Insurance: Premium Mode */}
+                              {requiredFields.premiumMode && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Premium Payment *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={formData.premiumMode === "monthly" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, premiumMode: "monthly" }))}
+                                      className="flex-1"
+                                    >
+                                      Monthly
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant={formData.premiumMode === "annual" ? "default" : "outline"}
+                                      onClick={() => setFormData(prev => ({ ...prev, premiumMode: "annual" }))}
+                                      className="flex-1"
+                                    >
+                                      Annual
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Dental Insurance: Covered Members */}
+                              {requiredFields.coveredMembers && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Number of Covered Members *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Dental Insurance</p>
+                                    )}
+                                  </div>
+                                  <Select 
+                                    value={formData.coveredMembers} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      coveredMembers: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select number of members" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1">1 (Individual)</SelectItem>
+                                      <SelectItem value="2">2 (Couple)</SelectItem>
+                                      <SelectItem value="3">3 (Small Family)</SelectItem>
+                                      <SelectItem value="4">4 (Family)</SelectItem>
+                                      <SelectItem value="5">5+ (Large Family)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+
+                              {/* Final Expense: Desired Face Value */}
+                              {requiredFields.desiredFaceValue && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Desired Coverage Amount *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Final Expense Life Insurance</p>
+                                    )}
+                                  </div>
+                                  <Select 
+                                    value={formData.desiredFaceValue} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      desiredFaceValue: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select coverage amount" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="5000">$5,000</SelectItem>
+                                      <SelectItem value="10000">$10,000</SelectItem>
+                                      <SelectItem value="15000">$15,000</SelectItem>
+                                      <SelectItem value="20000">$20,000</SelectItem>
+                                      <SelectItem value="25000">$25,000</SelectItem>
+                                      <SelectItem value="30000">$30,000</SelectItem>
+                                      <SelectItem value="50000">$50,000</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+
+                              {/* Final Expense: Underwriting Type */}
+                              {requiredFields.underwritingType && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-sm font-medium text-foreground">Underwriting Preference *</Label>
+                                    {hasMultiplePlanTypes() && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">Final Expense Life Insurance</p>
+                                    )}
+                                  </div>
+                                  <Select 
+                                    value={formData.underwritingType} 
+                                    onValueChange={(value) => setFormData(prev => ({ 
+                                      ...prev, 
+                                      underwritingType: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select underwriting type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Guaranteed">Guaranteed Issue (No Health Questions)</SelectItem>
+                                      <SelectItem value="Simplified">Simplified Issue (Few Health Questions)</SelectItem>
+                                      <SelectItem value="Full">Full Underwriting (Medical Exam Required)</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>

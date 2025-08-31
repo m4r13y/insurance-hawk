@@ -1,0 +1,737 @@
+FORMAT: 1A
+HOST: https://api.csgactuarial.com
+
+# Final Expense Life API
+Final Expense Life API is a *Final Expense Life* service, exposing Final Expense Life insurance rates and related information.
+
+Please reference [CSG API](http://docs.csgapi.apiary.io/) to authenticate with this resource. 
+
+# Group Quotes
+Quotes related resources of the **Final Expense Life API**.  Returns face values by desired monthly rate or desired face value.
+
+You may query by zip5 OR state abbreviation.
+
+## Quotes Collection By Monthly Rate [/v1/final_expense_life/quotes.json{?zip5,state,age,gender,tobacco,desired_rate,benefit_name,offset,underwriting_type}]
+### List all quotes with the face values for a given monthly rate, filtered by query string [GET]
+
++ Parameters
+    + zip5 (optional, string, `15963`) ... String `zip5` code of the plans you seek.
+    + state (optional, string, `NE`) ... String `state` abbreviation of the plans you seek. 
+    + age (required, integer, `65`) ... `age` of the customer.
+    + gender (required, string, `M`) ... `gender` of the customer.  [M, F]
+    + tobacco (required, integer, `0`) ... `tobacco` status of the customer. [0, 1]
+    + desired_rate (required, integer, `50`) ... `desired rate` in dollars per month, including fees.
+    + benefit_name (optional, string, `Graded+Benefit`) ... Filter by benefit name.  Graded Benefit, Level Benefit, Large Pay, Return Of Premium, Small Pay, or Single Pay.  If not specified then all plans return.
+    + offset (optional, integer, `0`) ... Skip a specified number of results
+    + underwriting_type (optional, string, `Full`) ... Specifies the underwriting type. [Full, Simplified, Guaranteed]
+
++ Request
+    + Headers
+    
+            x-api-token: 0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8
+
++ Response 200 (application/json)
+
+        [
+            {
+                "benefit_name": "Plan 5",
+                "face_amount_max": 25000,
+                "annual_rate": 473.10,
+                "monthly_fee": 3.00,
+                "monthly_rate": 39.46,
+                "county_excluded": [],
+                "face_value": 10000,
+                "plan_name": "Silver Premier Choice",
+                "company_name": "5 Star Life Insurance Company",
+                "zip5_excluded": [],
+                "benefit_rate": 43.71,
+                "zip3": [],
+                "zip3_excluded": [],
+                "annual_rate_max": 1128.75,
+                "annual_fee": 36.00,
+                "state": "NE",
+                "zip5": [],
+                "age": 54,
+                "county": [],
+                "created_date": "2014-05-13T20:46:35.643655",
+                "riders": [],
+                "hh_discount": 0.00,
+                "tobacco": true,
+                "last_modified": "2014-05-13T20:46:35.643678",
+                "annual_rate_min": 254.55,
+                "monthly_modal_factor": 0.08,
+                "face_amount_min": 5000,
+                "key": "agdkZXZ-ZGV2ciILEhVGaW5hbEV4cGVuc2VMaWZlUXVvdGUYgICAgIDYrQgMogESZmluYWxfZXhwZW5zZV9saWZl",
+                "gender": "M",
+                "monthly_single_pay_face": null,
+                "company_base": {
+                    "key": "aghzfmNzZ2FwaXIFSS29tcGFueRiAgICacsdwCQyiAQhtZWRfc3VwcA",
+                    "parent_company_base": null,
+                    "underwriting_data": [],
+                    "sp_rating": "N/A",
+                    "naic": "57142",
+                    "type": "FRATERNAL",
+                    "name": "Best Meds Of Norway"
+                },
+                "is_down_payment_plan": false,
+                "has_pdf_app": false,
+                "semi_annual_fee": 12.5,
+                "semi_annual_rate": 312.55,
+                "quarterly_single_pay_face": null,
+                "semi_annual_modal_factor": 0.515,
+                "single_pay_annual_rate": null,
+                "quarterly_pay_face": null,
+                "full_underwriting": true,
+                "monthly_pay_face": null,
+                "effective_date": "2017-07-05T00:00:00",
+                "quarterly_fee": 15.6,
+                "semi_annual_single_pay_face": null,
+                "single_pay_quarterly_rate": null,
+                "company": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzbCwyiAQhtZWRfc3VwcA",
+                "e_app_link": "http://external.website.link",
+                "expires_date": "2099-12-31T00:00:00",
+                "quarterly_modal_factor": 0.265,
+                "single_pay_monthly_rate": null,
+                "single_pay_semi_annual_rate": null,
+                "has_brochure": false,
+                "semi_annual_pay_face": "",
+                "annual_single_pay_face": "",
+                "underwriting_type": "Full",
+                "annual_pay_face": null,
+                "quarterly_rate": 120.84,
+                "down_payment_value": null
+            }
+        ]
+
+## Quotes Collection By Face Value [/v1/final_expense_life/quotes.json{?zip5,state,age,gender,tobacco,benefit_name,desired_face_value,offset,underwriting_type}]
+### List of all quotes with the rates for a given face value, filtered by query string [GET]
+
++ Parameters
+    + zip5 (optional, string, `15963`) ... String `zip5` code of the plans you seek.
+    + state (optional, string, `NE`) ... String `state` abbreviation of the plans you seek.
+    + age (required, integer, `65`) ... `age` of the customer.
+    + gender (required, string, `M`) ... `gender` of the customer.  [M, F]
+    + tobacco (required, integer, `0`) ... `tobacco` status of the customer. [0, 1]
+    + desired_face_value (required, integer, `10000`) ... `desired face value` is the amount of coverage 
+    + benefit_name (optional, string, `Graded+benefit`) ... Filter by benefit name.  Graded Benefit, Level Benefit, Large Pay, Return Of Premium, Small Pay, or Single Pay.  If not specified then all plans return.
+    + offset (optional, integer, `80`) ... Skip a specified number of results
+    + underwriting_type (optional, string, `Full`) ... Specifies the underwriting type. [Full, Simplified, Guaranteed]
+
++ Request
+    + Headers
+    
+            x-api-token: 0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8
+
++ Response 200 (application/json)
+
+        [
+            {
+                "benefit_name": "Plan 5",
+                "face_amount_max": 25000,
+                "annual_rate": 473.10,
+                "monthly_fee": 3.00,
+                "monthly_rate": 39.46,
+                "county_excluded": [],
+                "face_value": 10000,
+                "plan_name": "Silver Premier Choice",
+                "company_name": "5 Star Life Insurance Company",
+                "zip5_excluded": [],
+                "benefit_rate": 43.71,
+                "zip3": [],
+                "zip3_excluded": [],
+                "annual_rate_max": 1128.75,
+                "annual_fee": 36.00,
+                "state": "NE",
+                "zip5": [],
+                "age": 54,
+                "county": [],
+                "created_date": "2014-05-13T20:46:35.643655",
+                "riders": [],
+                "hh_discount": 0.00,
+                "tobacco": true,
+                "last_modified": "2014-05-13T20:46:35.643678",
+                "annual_rate_min": 254.55,
+                "monthly_modal_factor": 0.08,
+                "face_amount_min": 5000,
+                "key": "agdkZXZ-ZGV2ciILEhVGaW5hbEV4cGVuc2VMaWZlUXVvdGUYgICAgIDYrQgMogESZmluYWxfZXhwZW5zZV9saWZl",
+                "gender": "M",
+                "monthly_single_pay_face": null,
+                "company_base": {
+                    "key": "aghzfmNzZ2FwaXIFSS29tcGFueRiAgICacsdwCQyiAQhtZWRfc3VwcA",
+                    "parent_company_base": null,
+                    "underwriting_data": [],
+                    "sp_rating": "N/A",
+                    "naic": "57142",
+                    "type": "FRATERNAL",
+                    "name": "Best Meds Of Norway"
+                },
+                "is_down_payment_plan": false,
+                "has_pdf_app": false,
+                "semi_annual_fee": 12.5,
+                "semi_annual_rate": 312.55,
+                "quarterly_single_pay_face": null,
+                "semi_annual_modal_factor": 0.515,
+                "single_pay_annual_rate": null,
+                "quarterly_pay_face": null,
+                "full_underwriting": true,
+                "monthly_pay_face": null,
+                "effective_date": "2017-07-05T00:00:00",
+                "quarterly_fee": 15.6,
+                "semi_annual_single_pay_face": null,
+                "single_pay_quarterly_rate": null,
+                "company": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzbCwyiAQhtZWRfc3VwcA",
+                "e_app_link": "http://external.website.link",
+                "expires_date": "2099-12-31T00:00:00",
+                "quarterly_modal_factor": 0.265,
+                "single_pay_monthly_rate": null,
+                "single_pay_semi_annual_rate": null,
+                "has_brochure": false,
+                "semi_annual_pay_face": "",
+                "annual_single_pay_face": "",
+                "underwriting_type": "Full",
+                "annual_pay_face": null,
+                "quarterly_rate": 120.84,
+                "down_payment_value": null
+            }
+        ]
+
+## Open Companies Collection [/v1/final_expense_life/open/companies.json]
+### List of all the Final Expense Life Open Company data. [GET]
+
++ Request
+    + Headers
+    
+            x-api-token: 0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name_full": "AMERICAN MEMORIAL LIFE INSURANCE COMPANY",
+                "name": "American Memorial Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJnFCgyiAQhtZWRfc3VwcA",
+                "naic": "67989"
+            },
+            {
+                "name_full": "AMERICAN REPUBLIC INSURANCE COMPANY",
+                "name": "American Republic Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNKxCwyiAQhtZWRfc3VwcA",
+                "naic": "60836"
+            },
+            {
+                "name_full": "AMERICAN RETIREMENT LIFE INSURANCE COMPANY (CIGNA)",
+                "name": "American Retirement Life Ins Co (CIGNA)",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM74CQyiAQhtZWRfc3VwcA",
+                "naic": "88366"
+            },
+            {
+                "name_full": "AMERICAN-AMICABLE LIFE INSURANCE COMPANY OF TEXAS",
+                "name": "American Amicable Life Ins Co Of TX",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwMjiCwyiAQhtZWRfc3VwcA",
+                "naic": "68594"
+            },
+            {
+                "name_full": "American Continental Insurance Company (Aetna)",
+                "name": "American Continental Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIChCQyiAQhtZWRfc3VwcA",
+                "naic": "12321"
+            },
+            {
+                "name_full": "American General Life Insurance Company",
+                "name": "American Gen Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIaaCgyiAQhtZWRfc3VwcA",
+                "naic": "60488"
+            },
+            {
+                "name_full": "American National Life Insurance Company of Texas",
+                "name": "American Natl Life Ins Co Of TX",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoKSACgyiAQhtZWRfc3VwcA",
+                "naic": "71773"
+            },
+            {
+                "name_full": "Americo Financial Life and Annuity Insurance Company",
+                "name": "Americo Fin Life & Ann Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNKJCAyiAQhtZWRfc3VwcA",
+                "naic": "61999"
+            },
+            {
+                "name_full": "BANKERS FIDELITY LIFE INSURANCE COMPANY",
+                "name": "Bankers Fidelity Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoMSfCQyiAQhtZWRfc3VwcA",
+                "naic": "61239"
+            },
+            {
+                "name_full": "Baltimore Life Insurance Company",
+                "name": "Baltimore Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM6QCAyiAQhtZWRfc3VwcA",
+                "naic": "61212"
+            },
+            {
+                "name_full": "CHRISTIAN FIDELITY LIFE INSURANCE COMPANY",
+                "name": "Christian Fidelity Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgICRCQyiAQhtZWRfc3VwcA",
+                "naic": "61859"
+            },
+            {
+                "name_full": "COLONIAL PENN LIFE INSURANCE COMPANY",
+                "name": "Colonial Penn Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNedCgyiAQhtZWRfc3VwcA",
+                "naic": "62065"
+            },
+            {
+                "name_full": "Cincinnati Equitable Life Insurance Company",
+                "name": "Cincinnati Equitable Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNfjCQyiAQhtZWRfc3VwcA",
+                "naic": "88064"
+            },
+            {
+                "name_full": "Colorado Bankers Life Insurance Company",
+                "name": "Colorado Bankers Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM64CgyiAQhtZWRfc3VwcA",
+                "naic": "84786"
+            },
+            {
+                "name_full": "Columbian Mutual Life Insurance Company",
+                "name": "Columbian Mut Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwMiCCwyiAQhtZWRfc3VwcA",
+                "naic": "62103"
+            },
+            {
+                "name_full": "Continental Life Insurance Company of Brentwood, Tennessee (Aetna)",
+                "name": "Continental Life Ins Co Brentwood",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKvXCwyiAQhtZWRfc3VwcA",
+                "naic": "68500"
+            },
+            {
+                "name_full": "DEGREE OF HONOR PROTECTIVE ASSOCIATION",
+                "name": "Degree Of Honor Protective Assn",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIClCQyiAQhtZWRfc3VwcA",
+                "naic": "57088"
+            },
+            {
+                "name_full": "EMC NATIONAL LIFE COMPANY",
+                "name": "EMC Natl Life Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNKJCwyiAQhtZWRfc3VwcA",
+                "naic": "62928"
+            },
+            {
+                "name_full": "EQUITRUST LIFE INSURANCE COMPANY",
+                "name": "Equitrust Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKvnCAyiAQhtZWRfc3VwcA",
+                "naic": "62510"
+            },
+            {
+                "name_full": "FORETHOUGHT LIFE INSURANCE COMPANY",
+                "name": "Forethought Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJyXCAyiAQhtZWRfc3VwcA",
+                "naic": "91642"
+            },
+            {
+                "name_full": "Family Benefit Life Insurance Company",
+                "name": "Family Benefit Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO6kCgyiAQhtZWRfc3VwcA",
+                "naic": "70742"
+            },
+            {
+                "name_full": "Federal Life Insurance Company (Mutual)",
+                "name": "Federal Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO7YCQyiAQhtZWRfc3VwcA",
+                "naic": "63223"
+            },
+            {
+                "name_full": "Fidelity Life Association A Legal Reserve Life Insurance Company",
+                "name": "Fidelity Life Assn A Legal Reserve L",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIbaCwyiAQhtZWRfc3VwcA",
+                "naic": "63290"
+            },
+            {
+                "name_full": "GERBER LIFE INSURANCE COMPANY",
+                "name": "Gerber Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJnlCwyiAQhtZWRfc3VwcA",
+                "naic": "70939"
+            },
+            {
+                "name_full": "GPM Health and Life Insurance Company",
+                "name": "GPM Health and Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgICJCAyiAQhtZWRfc3VwcA",
+                "naic": "67059"
+            },
+            {
+                "name_full": "GRANGE LIFE INSURANCE COMPANY",
+                "name": "Grange Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwPWmCQyiAQhtZWRfc3VwcA",
+                "naic": "71218"
+            },
+            {
+                "name_full": "Gleaner Life Insurance Society",
+                "name": "Gleaner Life Ins Society",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIDFCQyiAQhtZWRfc3VwcA",
+                "naic": "56154"
+            },
+            {
+                "name_full": "Government Personnel Mutual Life Insurance Company",
+                "name": "Government Personnel Mut Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzLCgyiAQhtZWRfc3VwcA",
+                "naic": "63967"
+            },
+            {
+                "name_full": "Great Western Insurance Company",
+                "name": "Great Western Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJmVCAyiAQhtZWRfc3VwcA",
+                "naic": "71480"
+            },
+            {
+                "name_full": "Humana Insurance Company",
+                "name": "Humana Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIDpCQyiAQhtZWRfc3VwcA",
+                "naic": "73288"
+            },
+            {
+                "name_full": "ILLINOIS MUTUAL LIFE INSURANCE COMPANY",
+                "name": "Illinois Mut Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwPX6CgyiAQhtZWRfc3VwcA",
+                "naic": "64580"
+            },
+            {
+                "name_full": "John Hancock Life Insurance Company (USA)",
+                "name": "John Hancock Life Ins Co USA",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgICxCwyiAQhtZWRfc3VwcA",
+                "naic": "65838"
+            },
+            {
+                "name_full": "KSKJ Life American Slovenian Catholic Union",
+                "name": "KSKJ Life Amer Slovenian Catholic Un",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIbWCQyiAQhtZWRfc3VwcA",
+                "naic": "56227"
+            },
+            {
+                "name_full": "Liberty Bankers Life Insurance Company",
+                "name": "Liberty Bankers Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKu3CAyiAQhtZWRfc3VwcA",
+                "naic": "68543"
+            },
+            {
+                "name_full": "LifeShield National Insurance Co.",
+                "name": "LifeShield Natl Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNKFCAyiAQhtZWRfc3VwcA",
+                "naic": "99724"
+            },
+            {
+                "name_full": "Lily Life Insurance Company ",
+                "name": "Lily Life Insurance Company ",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIbmCQyiAQhtZWRfc3VwcA",
+                "naic": "87661"
+            },
+            {
+                "name_full": "Lincoln Heritage Life Insurance Company",
+                "name": "Lincoln Heritage Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM6wCwyiAQhtZWRfc3VwcA",
+                "naic": "65927"
+            },
+            {
+                "name_full": "Loyal American Life Insurance Company (CIGNA)",
+                "name": "Loyal Amer Life Ins Co (CIGNA)",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzLCwyiAQhtZWRfc3VwcA",
+                "naic": "65722"
+            },
+            {
+                "name_full": "Lumico Life Insurance Company",
+                "name": "Lumico Life Insurance Company",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM7oCgyiAQhtZWRfc3VwcA",
+                "naic": "73504"
+            },
+            {
+                "name_full": "MEDICO INSURANCE COMPANY",
+                "name": "Medico Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKvHCAyiAQhtZWRfc3VwcA",
+                "naic": "31119"
+            },
+            {
+                "name_full": "MOTORISTS LIFE INSURANCE COMPANY",
+                "name": "Motorists Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO74CQyiAQhtZWRfc3VwcA",
+                "naic": "66311"
+            },
+            {
+                "name_full": "MUTUAL OF OMAHA INSURANCE COMPANY",
+                "name": "Mutual Of Omaha Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgJS4CQyiAQhtZWRfc3VwcA",
+                "naic": "71412"
+            },
+            {
+                "name_full": "NATIONAL SLOVAK SOCIETY OF THE UNITED STATES OF AMERICA",
+                "name": "National Slovak Society Of The Usa",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNKFCQyiAQhtZWRfc3VwcA",
+                "naic": "56782"
+            },
+            {
+                "name_full": "NATIONWIDE LIFE INSURANCE COMPANY",
+                "name": "Nationwide Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgJSoCwyiAQhtZWRfc3VwcA",
+                "naic": "66869"
+            },
+            {
+                "name_full": "National Guardian Life Insurance Company",
+                "name": "National Guardian Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNe9CgyiAQhtZWRfc3VwcA",
+                "naic": "66583"
+            },
+            {
+                "name_full": "National Western Life Insurance Company",
+                "name": "National Western Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzrCAyiAQhtZWRfc3VwcA",
+                "naic": "66850"
+            },
+            {
+                "name_full": "New Era Life Insurance Company",
+                "name": "New Era Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL-hCwyiAQhtZWRfc3VwcA",
+                "naic": "78743"
+            },
+            {
+                "name_full": "New York Life Insurance Company",
+                "name": "New York Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIDxCwyiAQhtZWRfc3VwcA",
+                "naic": "66915"
+            },
+            {
+                "name_full": "OCCIDENTAL LIFE INSURANCE COMPANY OF NORTH CAROLINA",
+                "name": "Occidental Life Ins Co Of NC",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoMTfCQyiAQhtZWRfc3VwcA",
+                "naic": "67148"
+            },
+            {
+                "name_full": "OXFORD LIFE INSURANCE COMPANY",
+                "name": "Oxford Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgJT4CQyiAQhtZWRfc3VwcA",
+                "naic": "76112"
+            },
+            {
+                "name_full": "Old American Insurance Company",
+                "name": "Old Amer Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJmFCwyiAQhtZWRfc3VwcA",
+                "naic": "67199"
+            },
+            {
+                "name_full": "PEKIN LIFE INSURANCE COMPANY",
+                "name": "Pekin Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIb6CwyiAQhtZWRfc3VwcA",
+                "naic": "67628"
+            },
+            {
+                "name_full": "PHL VARIABLE INSURANCE COMPANY",
+                "name": "PHL Variable Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL-xCAyiAQhtZWRfc3VwcA",
+                "naic": "93548"
+            },
+            {
+                "name_full": "PHYSICIANS MUTUAL INSURANCE COMPANY",
+                "name": "Physicians Mut Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL_hCAyiAQhtZWRfc3VwcA",
+                "naic": "80578"
+            },
+            {
+                "name_full": "PIONEER AMERICAN INSURANCE COMPANY",
+                "name": "Pioneer Amer Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM6ICgyiAQhtZWRfc3VwcA",
+                "naic": "67873"
+            },
+            {
+                "name_full": "PIONEER SECURITY LIFE INSURANCE COMPANY",
+                "name": "Pioneer Security Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgJToCgyiAQhtZWRfc3VwcA",
+                "naic": "67946"
+            },
+            {
+                "name_full": "Philadelphia American Life Insurance Company",
+                "name": "Philadelphia Amer Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgICJCQyiAQhtZWRfc3VwcA",
+                "naic": "67784"
+            },
+            {
+                "name_full": "Polish Roman Catholic Union Of America",
+                "name": "Polish Roman Catholic Union Of Amer",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJmtCwyiAQhtZWRfc3VwcA",
+                "naic": "57630"
+            },
+            {
+                "name_full": "Prosperity Life Group",
+                "name": "Prosperity Life Group",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL-uCwyiAQhtZWRfc3VwcA",
+                "naic": "60183"
+            },
+            {
+                "name_full": "Prosperity Life Group",
+                "name": "Prosperity Life Group",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIbqCwyiAQhtZWRfc3VwcA",
+                "naic": "60176"
+            },
+            {
+                "name_full": "RESERVE NATIONAL INSURANCE COMPANY",
+                "name": "Reserve Natl Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgKPCCAyiAQhtZWRfc3VwcA",
+                "naic": "68462"
+            },
+            {
+                "name_full": "Royal Neighbors Of Amer",
+                "name": "Royal Neighbors Of Amer",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwIa2CQyiAQhtZWRfc3VwcA",
+                "naic": "57657"
+            },
+            {
+                "name_full": "SECURITY NATIONAL LIFE INSURANCE COMPANY",
+                "name": "Security Natl Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO7ECgyiAQhtZWRfc3VwcA",
+                "naic": "69485"
+            },
+            {
+                "name_full": "SENIOR LIFE INSURANCE COMPANY",
+                "name": "Senior Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNeDCwyiAQhtZWRfc3VwcA",
+                "naic": "78662"
+            },
+            {
+                "name_full": "SONS OF NORWAY",
+                "name": "Sons Of Norway",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoKSwCQyiAQhtZWRfc3VwcA",
+                "naic": "57142"
+            },
+            {
+                "name_full": "STANDARD LIFE AND CASUALTY INSURANCE COMPANY",
+                "name": "Standard Life & Cas Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgIDpCAyiAQhtZWRfc3VwcA",
+                "naic": "71706"
+            },
+            {
+                "name_full": "Sentinel Security Life Insurance Company",
+                "name": "Sentinel Security Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwMiSCAyiAQhtZWRfc3VwcA",
+                "naic": "68802"
+            },
+            {
+                "name_full": "Standard Life and Accident Insurance Company",
+                "name": "Standard Life & Accident Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwMjyCwyiAQhtZWRfc3VwcA",
+                "naic": "86355"
+            },
+            {
+                "name_full": "Sterling Investors Life Insurance Company",
+                "name": "Sterling Investors Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKuvCgyiAQhtZWRfc3VwcA",
+                "naic": "89184"
+            },
+            {
+                "name_full": "THE CHESAPEAKE LIFE INSURANCE COMPANY",
+                "name": "Chesapeake Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJn5CAyiAQhtZWRfc3VwcA",
+                "naic": "61832"
+            },
+            {
+                "name_full": "THE LAFAYETTE LIFE INSURANCE COMPANY",
+                "name": "Lafayette Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzLCQyiAQhtZWRfc3VwcA",
+                "naic": "65242"
+            },
+            {
+                "name_full": "TRANSAMERICA LIFE INSURANCE COMPANY",
+                "name": "Transamerica Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwPW2CAyiAQhtZWRfc3VwcA",
+                "naic": "86231"
+            },
+            {
+                "name_full": "The American Home Life Insurance Company",
+                "name": "American Home Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNftCAyiAQhtZWRfc3VwcA",
+                "naic": "60542"
+            },
+            {
+                "name_full": "The Order Of United Commercial Travelers Of America",
+                "name": "Order of United Commercial Travelers",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoM7ECQyiAQhtZWRfc3VwcA",
+                "naic": "56383"
+            },
+            {
+                "name_full": "Trinity Life Insurance Company",
+                "name": "Trinity Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO7oCQyiAQhtZWRfc3VwcA",
+                "naic": "60227"
+            },
+            {
+                "name_full": "UNITED AMERICAN INSURANCE COMPANY",
+                "name": "United Amer Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJnNCAyiAQhtZWRfc3VwcA",
+                "naic": "92916"
+            },
+            {
+                "name_full": "UNITED LIFE INSURANCE COMPANY",
+                "name": "United Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJy7CAyiAQhtZWRfc3VwcA",
+                "naic": "69973"
+            },
+            {
+                "name_full": "UNITED OF OMAHA LIFE INSURANCE COMPANY",
+                "name": "United Of Omaha Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL-BCAyiAQhtZWRfc3VwcA",
+                "naic": "69868"
+            },
+            {
+                "name_full": "UNIVERSAL FIDELITY LIFE INSURANCE COMPANY",
+                "name": "Universal Fidelity Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgO7ECwyiAQhtZWRfc3VwcA",
+                "naic": "70122"
+            },
+            {
+                "name_full": "United Farm Family Life Insurance Company",
+                "name": "United Farm Family Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwJzbCwyiAQhtZWRfc3VwcA",
+                "naic": "69892"
+            },
+            {
+                "name_full": "United Heritage Life Insurance Company",
+                "name": "United Heritage Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgNfdCgyiAQhtZWRfc3VwcA",
+                "naic": "63983"
+            },
+            {
+                "name_full": "United Home Life Insurance Company",
+                "name": "United Home Life Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJnlCAyiAQhtZWRfc3VwcA",
+                "naic": "69922"
+            },
+            {
+                "name_full": "United National Life Insurance Company of America",
+                "name": "United Natl Life Ins Co Of Amer",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwMjKCQyiAQhtZWRfc3VwcA",
+                "naic": "92703"
+            },
+            {
+                "name_full": "United States Branch of The Independent Order of Foresters",
+                "name": "Independent Order Of Foresters Us Br",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAgKOqCAyiAQhtZWRfc3VwcA",
+                "naic": "58068"
+            },
+            {
+                "name_full": "WASHINGTON NATIONAL INSURANCE COMPANY",
+                "name": "Washington Natl Ins Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoNLpCQyiAQhtZWRfc3VwcA",
+                "naic": "70319"
+            },
+            {
+                "name_full": "WESTERN - SOUTHERN LIFE ASSURANCE COMPANY",
+                "name": "Western Southern Life Assur Co",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwKvvCgyiAQhtZWRfc3VwcA",
+                "naic": "92622"
+            },
+            {
+                "name_full": "Western Catholic Union",
+                "name": "Western Catholic Union",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAwL_xCgyiAQhtZWRfc3VwcA",
+                "naic": "57711"
+            },
+            {
+                "name_full": "William Penn Association",
+                "name": "William Penn Assn",
+                "key": "aghzfmNzZ2FwaXIUCxIHQ29tcGFueRiAgICAoJmtCgyiAQhtZWRfc3VwcA",
+                "naic": "57010"
+            }
+        ]

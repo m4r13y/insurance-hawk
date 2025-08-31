@@ -1317,13 +1317,6 @@ export default function MedicareShopContent() {
       ) : showQuoteLoading ? (
         /* Show loading page between flow and results */
         <MedicareQuoteLoadingPage
-          quoteType={(() => {
-            const hasMedigap = selectedFlowCategories.includes('medigap');
-            const hasAdvantage = selectedFlowCategories.includes('advantage');
-            if (hasMedigap && hasAdvantage) return 'both';
-            if (hasAdvantage) return 'advantage';
-            return 'medigap';
-          })()}
           zipCode={quoteFormData.zipCode}
           age={quoteFormData.age?.toString()}
           selectedCategories={selectedFlowCategories}

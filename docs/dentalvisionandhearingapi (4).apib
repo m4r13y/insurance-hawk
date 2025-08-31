@@ -1,0 +1,211 @@
+FORMAT: 1A
+HOST: https://api.csgactuarial.com
+
+# Dental Vision and Hearing API
+Dental Vision and Hearing API is a *Dental Vision and Hearing* service, exposing Dental Vision and Hearing insurance rates and related information.
+
+Please reference [CSG API](http://docs.csgapi.apiary.io/) to authenticate with this resource. 
+
+# Group Quotes
+Quotes related resources of the **Dental Vision and Hearing API**
+
+## Quotes Collection [/v1/dental/quotes.json{?zip5,age,gender,tobacco,offset,covered_members}]
+### List all quotes filtered by query string [GET]
+
++ Parameters
+    + zip5 (required, string, `15963`) ... String `zip5` code of the plans you seek.
+    + age (required, integer, `65`) ... `age` of the customer.
+    + gender (required, string, `M`) ... `gender` of the customer.  [M, F]
+    + tobacco (required, integer, `0`) ... `tobacco` status of the customer. [0, 1]
+    + covered_members (required, string, `all`) ... `all` include all types of members.
+    + offset (optional, integer, `1`) ... Skip a specified number of results
+
++ Request
+    + Headers
+    
+            x-api-token: 0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8
+
++ Response 200 (application/json)
+
+        [
+    {
+        "key": "agZjc2dhcGlyGAsSC0RlbnRhbFF1b3RlGICAkIztnIcIDKIBBmRlbnRhbA",
+        "age": 75,
+        "base_plans": [
+            {
+                "benefit_notes": "</ul>Bright Idea Dental will coverage dental expenses up to $3,000 annually per covered individual.<ul><li>Preventative services are covered at 100% and include exams, cleanings, bitewing x-rays, and fluoride treatments.</li><li>Basic services are covered at 80% and include full mouth x-rays, restorative amalgams & composites, simple extractions, and sealants.</li><li>Major services are covered at 50% and include endodontics, all periodontics, dentures, crowns, bridges, anesthesia, complex extractions, onlays and implants.</ul>",
+                "benefits": [
+                    {
+                        "amount": "3000",
+                        "dependent_riders": [],
+                        "quantifier": "Annual Maximum Benefit",
+                        "rate": 49.0
+                    }
+                ],
+                "included": false,
+                "limitation_notes": "</ul><li>Co-pay per visit is $25.</ul><li>Guaranteed Acceptance - No age limit restriction.</li><li>No waiting period for Preventative or Basic services.  12 month waiting period for Major services.</li><ul>",
+                "name": "$25 Co-Pay"
+            }
+        ],
+        "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDA7L2ogQoMogEIbWVkX3N1cHA",
+        "contextual_data": {},
+        "county": [],
+        "county_excluded": [],
+        "covered_members": "I",
+        "created_date": "2020-01-05T12:38:58.206810",
+        "e_app_link": "",
+        "effective_date": "2017-10-01T00:00:00",
+        "expires_date": "2099-12-31T00:00:00",
+        "gender": null,
+        "has_brochure": false,
+        "has_pdf_app": false,
+        "has_zip3": false,
+        "has_zip5": false,
+        "hh_discount": 0.0,
+        "last_modified": "2020-01-05T16:29:31.067080",
+        "plan_name": "Bright Idea Dental 3000",
+        "product_key": null,
+        "riders": [
+            {
+                "benefit_notes": "BRIGHT IDEA VISION: Guaranteed Acceptance - No Waiting Period - Open Enrollment.  LENS OPTIONS: Progressive Lenses - Member is responsible for the difference between the Covered Allowance and the Progressive Lens charge.  COPAYS: $10 Exams - $25 Eye Glasses (Lenses or Frames).  LENSES (per pair) COVERAGE: Single Vision, Bi-Focal; Tri-Focal; Lenticular - 100%; Progressive - See Lens Options.  CONTACT LENSES: Elective - Up to $150; Medically necessary - 100% covered.  FREQUENCIES (months): Exam/Lens/Frames - 12/24/24 (based on date of service.",
+                "benefits": [
+                    {
+                        "amount": "",
+                        "dependent_riders": [],
+                        "quantifier": "Include Vision",
+                        "rate": 14.0
+                    }
+                ],
+                "included": false,
+                "limitation_notes": "Additional lens options available.  Some limitations and exclusions apply.  See plan for details.",
+                "name": "Vision"
+            }
+        ],
+        "state": "TX",
+        "tobacco": null,
+        "zip3": [],
+        "zip3_excluded": [],
+        "zip5": [],
+        "zip5_excluded": [],
+        "company_base": {
+            "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDA7L2ogQoMogEIbWVkX3N1cHA",
+            "ambest_outlook": "N/A",
+            "ambest_rating": "N/A",
+            "business_type": "Dental",
+            "customer_complaint_ratio": -1.0,
+            "customer_satisfaction_ratio": -1.0,
+            "default_resources": null,
+            "established_year": 2005,
+            "last_modified": "2018-05-22T13:43:26.744110",
+            "med_supp_market_data": [],
+            "med_supp_national_market_data": null,
+            "med_supp_state_market_data": [],
+            "naic": "00001",
+            "name": "Agentra Healthcare Solutions",
+            "name_full": "Agentra Healthcare Solutions",
+            "parent_company": null,
+            "parent_company_base": null,
+            "sp_rating": "N/A",
+            "type": "Dental",
+            "underwriting_data": []
+        }
+    }
+    ]
+
+## Quote [/v1/dental/quotes/{key}.json]
+A single Quote object with all its details
+
++ Parameters
+    + key (required, string, `aghzfmNzZ2FwaXIYCxILRGVudGFsUXVvdGUYgICAgPjChAoMogEGZGVudGFs`) ... String `key` of the Quote to perform action with. Has example value.
+
+### Retrieve a Quote [GET]
+
++ Request
+    + Headers
+    
+            x-api-token: 0529636d81a5b09e189302aac2ddb4aabb75ed48667242f3c953feb2591dc2a8
+
++ Response 200 (application/json)
+
+        {
+        "key": "agZjc2dhcGlyGAsSC0RlbnRhbFF1b3RlGICAkIztnIcIDKIBBmRlbnRhbA",
+        "age": 75,
+        "base_plans": [
+            {
+                "benefit_notes": "</ul>Bright Idea Dental will coverage dental expenses up to $3,000 annually per covered individual.<ul><li>Preventative services are covered at 100% and include exams, cleanings, bitewing x-rays, and fluoride treatments.</li><li>Basic services are covered at 80% and include full mouth x-rays, restorative amalgams & composites, simple extractions, and sealants.</li><li>Major services are covered at 50% and include endodontics, all periodontics, dentures, crowns, bridges, anesthesia, complex extractions, onlays and implants.</ul>",
+                "benefits": [
+                    {
+                        "amount": "3000",
+                        "dependent_riders": [],
+                        "quantifier": "Annual Maximum Benefit",
+                        "rate": 49.0
+                    }
+                ],
+                "included": false,
+                "limitation_notes": "</ul><li>Co-pay per visit is $25.</ul><li>Guaranteed Acceptance - No age limit restriction.</li><li>No waiting period for Preventative or Basic services.  12 month waiting period for Major services.</li><ul>",
+                "name": "$25 Co-Pay"
+            }
+        ],
+        "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDA7L2ogQoMogEIbWVkX3N1cHA",
+        "contextual_data": {},
+        "county": [],
+        "county_excluded": [],
+        "covered_members": "I",
+        "created_date": "2020-01-05T12:38:58.206810",
+        "e_app_link": "",
+        "effective_date": "2017-10-01T00:00:00",
+        "expires_date": "2099-12-31T00:00:00",
+        "gender": null,
+        "has_brochure": false,
+        "has_pdf_app": false,
+        "has_zip3": false,
+        "has_zip5": false,
+        "hh_discount": 0.0,
+        "last_modified": "2020-01-05T16:29:31.067080",
+        "plan_name": "Bright Idea Dental 3000",
+        "product_key": null,
+        "riders": [
+            {
+                "benefit_notes": "BRIGHT IDEA VISION: Guaranteed Acceptance - No Waiting Period - Open Enrollment.  LENS OPTIONS: Progressive Lenses - Member is responsible for the difference between the Covered Allowance and the Progressive Lens charge.  COPAYS: $10 Exams - $25 Eye Glasses (Lenses or Frames).  LENSES (per pair) COVERAGE: Single Vision, Bi-Focal; Tri-Focal; Lenticular - 100%; Progressive - See Lens Options.  CONTACT LENSES: Elective - Up to $150; Medically necessary - 100% covered.  FREQUENCIES (months): Exam/Lens/Frames - 12/24/24 (based on date of service.",
+                "benefits": [
+                    {
+                        "amount": "",
+                        "dependent_riders": [],
+                        "quantifier": "Include Vision",
+                        "rate": 14.0
+                    }
+                ],
+                "included": false,
+                "limitation_notes": "Additional lens options available.  Some limitations and exclusions apply.  See plan for details.",
+                "name": "Vision"
+            }
+        ],
+        "state": "TX",
+        "tobacco": null,
+        "zip3": [],
+        "zip3_excluded": [],
+        "zip5": [],
+        "zip5_excluded": [],
+        "company_base": {
+            "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDA7L2ogQoMogEIbWVkX3N1cHA",
+            "ambest_outlook": "N/A",
+            "ambest_rating": "N/A",
+            "business_type": "Dental",
+            "customer_complaint_ratio": -1.0,
+            "customer_satisfaction_ratio": -1.0,
+            "default_resources": null,
+            "established_year": 2005,
+            "last_modified": "2018-05-22T13:43:26.744110",
+            "med_supp_market_data": [],
+            "med_supp_national_market_data": null,
+            "med_supp_state_market_data": [],
+            "naic": "00001",
+            "name": "Agentra Healthcare Solutions",
+            "name_full": "Agentra Healthcare Solutions",
+            "parent_company": null,
+            "parent_company_base": null,
+            "sp_rating": "N/A",
+            "type": "Dental",
+            "underwriting_data": []
+        }
+    }
