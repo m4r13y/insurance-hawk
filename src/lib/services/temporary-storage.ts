@@ -6,7 +6,53 @@ import { db } from '@/lib/firebase';
 // Key used for storing visitor ID in localStorage
 const VISITOR_ID_KEY = 'visitor_id';
 
-// Generate unique visitor ID and store i
+// In-memory cache to prevent constant Firestore queries
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const cache = new Map<string, CacheEntry<any>>();
+const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const QUOTE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes for quote data
+
+// Helper to check if cache entry is valid
+const isCacheValid = <T>(entry: CacheEntry<T>): boolean => {
+  return Date.now() - entry.timestamp < entry.ttl;
+};
+
+// Helper to get from cache
+const getFromCache = <T>(key: string): T | null => {
+  const entry = cache.get(key);
+  if (entry && isCacheValid(entry)) {
+    console.log(`🎯 Cache hit for ${key}`);
+    return entry.data;
+  }
+  if (entry) {
+    console.log(`⏰ Cache expired for ${key}`);
+    cache.delete(key);
+  }
+  return null;
+};
+
+// Helper to set cache
+const setCache = <T>(key: string, data: T, ttl: number = DEFAULT_CACHE_TTL): void => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  });
+  console.log(`💾 Cached ${key} for ${ttl/1000}s`);
+};
+
+// Helper to clear cache for a key
+const clearCache = (key: string): void => {
+  cache.delete(key);
+  console.log(`🗑️ Cleared cache for ${key}`);
+};
+
+// Generate unique visitor ID and store it
 
 const getVisitorId = (): string => {
   if (typeof window === 'undefined') {
@@ -196,15 +242,22 @@ const getExpirationTimestamp = (): Timestamp => {
 // Save data to Firestore with subcollections for each quote category
 export const saveTemporaryData = async (key: string, data: any): Promise<void> => {
   return operationQueue.add(async () => {
+    // Clear cache for this key since we're updating it
+    clearCache(key);
+    
     try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
       if (typeof window !== 'undefined') {
         localStorage.setItem(key, JSON.stringify(data));
+        // Cache the localStorage data
+        const ttl = key.includes('quotes') ? QUOTE_CACHE_TTL : DEFAULT_CACHE_TTL;
+        setCache(key, data, ttl);
       }
       return;
     }
     
+      console.log(`💾 Saving to Firestore: ${key}`);
       const visitorId = getVisitorId();
       const now = Timestamp.now();
       const expiresAt = getExpirationTimestamp();
@@ -370,6 +423,12 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
 export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): Promise<T> => {
   return operationQueue.add(async () => {
     
+    // Check cache first
+    const cached = getFromCache<T>(key);
+    if (cached !== null) {
+      return cached;
+    }
+    
     // Check if this is UI state - if so, load from localStorage only
     const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                      key.includes('selected_categories') || key.includes('current_flow_step') ||
@@ -382,7 +441,10 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
         try {
           const stored = localStorage.getItem(key);
           if (stored) {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            // Cache UI state for shorter time
+            setCache(key, parsed, 30 * 1000); // 30 seconds for UI state
+            return parsed;
           }
         } catch (localError) {
           console.warn(`Failed to parse UI state from localStorage for ${key}:`, localError);
@@ -396,11 +458,15 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       console.warn('Firestore not available, falling back to localStorage');
       if (typeof window !== 'undefined') {
         const stored = localStorage.getItem(key);
-        return stored ? JSON.parse(stored) : defaultValue;
+        const result = stored ? JSON.parse(stored) : defaultValue;
+        // Cache localStorage fallback data
+        setCache(key, result, DEFAULT_CACHE_TTL);
+        return result;
       }
       return defaultValue;
     }
 
+    console.log(`🔍 Loading from Firestore: ${key}`);
     const visitorId = getVisitorId();
     const subcollectionName = getSubcollectionName(key);
     
@@ -428,10 +494,14 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
         
         if (now > expiresAt) {
           await deleteDoc(dataDocRef);
+          setCache(key, defaultValue, QUOTE_CACHE_TTL);
           return defaultValue;
         }
         
-        
+        console.log(`✅ Loaded from Firestore: ${key}`);
+        // Cache the result with longer TTL for quote data
+        const ttl = key.includes('quotes') ? QUOTE_CACHE_TTL : DEFAULT_CACHE_TTL;
+        setCache(key, documentData.data as T, ttl);
         return documentData.data as T;
       }
     } catch (timeoutError) {
@@ -486,6 +556,7 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
           }
           
           if (expired && chunks.length === 0) {
+            setCache(key, defaultValue, QUOTE_CACHE_TTL);
             return defaultValue;
           }
           
@@ -496,20 +567,27 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
             combinedData.push(...chunk.data);
           });
           
-          
+          console.log(`✅ Loaded chunked data from Firestore: ${key}`);
+          // Cache the result with longer TTL for quote data
+          setCache(key, combinedData as T, QUOTE_CACHE_TTL);
           return combinedData as T;
         }
       } catch (queryError) {
+        console.warn(`⚠️ Query error for ${key}:`, queryError);
         // Fallback to localStorage if available
         if (typeof window !== 'undefined') {
           const stored = localStorage.getItem(key);
           if (stored) {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            setCache(key, parsed, DEFAULT_CACHE_TTL);
+            return parsed;
           }
         }
       }
     }
-    
+
+    console.log(`📭 No data found for ${key}, returning default`);
+    setCache(key, defaultValue, DEFAULT_CACHE_TTL);
     return defaultValue;
     
   } catch (error) {
@@ -519,12 +597,15 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          setCache(key, parsed, DEFAULT_CACHE_TTL);
+          return parsed;
         }
       } catch (localError) {
         // Silently handle localStorage parsing errors
       }
     }
+    setCache(key, defaultValue, DEFAULT_CACHE_TTL);
     return defaultValue;
   }
   });
@@ -532,6 +613,9 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
 
 // Delete specific data from visitor's quote data (subcollection approach)
 export const deleteTemporaryData = async (key: string): Promise<void> => {
+  // Clear cache for this key since we're deleting it
+  clearCache(key);
+  
   // Check if this is UI state - if so, only delete from localStorage
   const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                    key.includes('selected_categories') || key.includes('current_flow_step') ||
@@ -546,6 +630,7 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
     return; // Exit early - UI state is only in localStorage
   }
   
+  console.log(`🗑️ Deleting from Firestore: ${key}`);
   try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
@@ -690,3 +775,32 @@ const compressQuoteData = (quotes: any[]): any[] => {
     return compressed;
   });
 };
+
+// Export cache management functions for debugging and manual cache management
+export const clearAllCache = (): void => {
+  cache.clear();
+  console.log('🧹 Cleared all cache');
+};
+
+export const getCacheStats = (): { size: number, keys: string[] } => {
+  return {
+    size: cache.size,
+    keys: Array.from(cache.keys())
+  };
+};
+
+// Auto-cleanup expired cache entries every 5 minutes
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    let cleanedCount = 0;
+    for (const [key, entry] of cache.entries()) {
+      if (!isCacheValid(entry)) {
+        cache.delete(key);
+        cleanedCount++;
+      }
+    }
+    if (cleanedCount > 0) {
+      console.log(`🧹 Auto-cleaned ${cleanedCount} expired cache entries`);
+    }
+  }, 5 * 60 * 1000); // 5 minutes
+}
