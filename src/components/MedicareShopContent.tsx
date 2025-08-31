@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { debounce } from "lodash";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -549,54 +550,29 @@ export default function MedicareShopContent() {
     fetchIndividualPlanQuotes(planType);
   };
 
-  // Persist advantage quotes to Firestore when they change
-  useEffect(() => {
-    if (advantageQuotes.length > 0) {
-      saveToStorage(ADVANTAGE_QUOTES_KEY, advantageQuotes);
-    }
-  }, [advantageQuotes]);
+  // Simple optimization: Only save quotes when they're actually new or changed significantly
+  const [lastSaveTimestamp, setLastSaveTimestamp] = useState<{[key: string]: number}>({});
+  
+  // Helper to check if we should save (avoid excessive saves)
+  const shouldSaveQuotes = useCallback((key: string, quotes: any[]): boolean => {
+    if (quotes.length === 0) return false;
+    
+    const now = Date.now();
+    const lastSave = lastSaveTimestamp[key] || 0;
+    const timeSinceLastSave = now - lastSave;
+    
+    // Only save if it's been at least 30 seconds since last save for this key
+    // OR if this is the first time we have quotes
+    return timeSinceLastSave > 30000 || lastSave === 0;
+  }, [lastSaveTimestamp]);
 
-  // Persist supplement quotes to Firestore when they change
-  useEffect(() => {
-    if (realQuotes.length > 0) {
-      saveToStorage(REAL_QUOTES_KEY, realQuotes);
+  // Optimized save function
+  const saveQuotesIfNeeded = useCallback(async (key: string, quotes: any[]) => {
+    if (shouldSaveQuotes(key, quotes)) {
+      await saveToStorage(key, quotes);
+      setLastSaveTimestamp(prev => ({ ...prev, [key]: Date.now() }));
     }
-  }, [realQuotes]);
-
-  // Persist drug plan quotes to Firestore when they change
-  useEffect(() => {
-    if (drugPlanQuotes.length > 0) {
-      saveToStorage(DRUG_PLAN_QUOTES_KEY, drugPlanQuotes);
-    }
-  }, [drugPlanQuotes]);
-
-  // Persist final expense quotes to Firestore when they change
-  useEffect(() => {
-    if (finalExpenseQuotes.length > 0) {
-      saveToStorage(FINAL_EXPENSE_QUOTES_KEY, finalExpenseQuotes);
-    }
-  }, [finalExpenseQuotes]);
-
-  // Persist hospital indemnity quotes to Firestore when they change
-  useEffect(() => {
-    if (hospitalIndemnityQuotes.length > 0) {
-      saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, hospitalIndemnityQuotes);
-    }
-  }, [hospitalIndemnityQuotes]);
-
-  // Persist cancer insurance quotes to Firestore when they change
-  useEffect(() => {
-    if (cancerInsuranceQuotes.length > 0) {
-      saveToStorage(CANCER_INSURANCE_QUOTES_KEY, cancerInsuranceQuotes);
-    }
-  }, [cancerInsuranceQuotes]);
-
-  // Persist dental quotes to Firestore when they change
-  useEffect(() => {
-    if (dentalQuotes.length > 0) {
-      saveToStorage(DENTAL_QUOTES_KEY, dentalQuotes);
-    }
-  }, [dentalQuotes]);
+  }, [shouldSaveQuotes]);
 
   // Check if all expected quotes are ready
   useEffect(() => {
@@ -917,8 +893,8 @@ export default function MedicareShopContent() {
           console.log('🔥 Success! Received drug plan quotes:', response.quotes.length);
           setDrugPlanQuotes(response.quotes);
           
-          // Save drug plan quotes to Firestore
-          await saveToStorage(DRUG_PLAN_QUOTES_KEY, response.quotes);
+          // Save drug plan quotes to Firestore with optimization
+          saveQuotesIfNeeded(DRUG_PLAN_QUOTES_KEY, response.quotes);
           
           // Mark Drug Plans as completed
           setCompletedQuoteTypes(prev => [...prev, 'Drug Plans']);
@@ -1361,7 +1337,11 @@ export default function MedicareShopContent() {
   const handleCategoryToggle = (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => {
     setActiveCategory(category);
     setSelectedCategory(category);
-    saveToStorage('activeCategory', category); // Fire and forget - no await needed for UI performance
+    
+    // Save UI state to localStorage only - NOT Firestore to avoid excessive operations
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeCategory', category);
+    }
     
     // Update URL to reflect the new category
     const params = new URLSearchParams(searchParams.toString());

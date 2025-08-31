@@ -144,7 +144,6 @@ class OperationQueue {
       this.lastOperationTime = Date.now();
     } catch (error: any) {
       this.consecutiveErrors++;
-      console.error('❌ Operation failed:', error?.code || error?.message);
       
       // Check for resource exhaustion and apply adaptive backoff
       if (error?.code === 'resource-exhausted' || 
@@ -259,8 +258,8 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
             }
           }
         } catch (error) {
-          console.warn('Could not check existing visitor document:', error);
-          shouldUpdateMetadata = true; // Fallback to update
+          // Fallback to update on error
+          shouldUpdateMetadata = true;
         }
       }
       
@@ -307,10 +306,8 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
               await new Promise(resolve => setTimeout(resolve, 100));
             }
           }
-          console.log(`�️ Cleaned up ${existingDocs.docs.length} existing chunks`);
         }
       } catch (error) {
-        console.warn(`Warning: Could not clean up existing chunks for ${key}:`, error);
         // Continue with save operation even if cleanup fails
       }
       
@@ -336,7 +333,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
             await new Promise(resolve => setTimeout(resolve, 1000)); // Increased to 1 second
           }
         } catch (chunkError) {
-          console.error(`❌ Failed to save chunk ${index} for ${key} after retries:`, chunkError);
           // Don't throw immediately, try to save remaining chunks
         }
       }
@@ -431,21 +427,19 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
         const expiresAt = documentData.expiresAt.toDate();
         
         if (now > expiresAt) {
-          console.log(`⏰ Data expired for ${key}, cleaning up...`);
           await deleteDoc(dataDocRef);
           return defaultValue;
         }
         
-        console.log(`✅ Loaded data from subcollection: ${subcollectionName}/${key}`);
+        
         return documentData.data as T;
       }
     } catch (timeoutError) {
-      console.warn(`⏱️ Timeout loading single document for ${key}, trying chunked approach`);
+      // Try chunked approach if single document times out
     }
     
     // If single document doesn't exist or timed out, try to load chunked data
     if (key.includes('quotes')) {
-      console.log(`🔍 Looking for chunked data for ${key}...`);
       
       try {
         // Query for chunk documents with timeout
@@ -462,7 +456,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
         ]) as any;
         
         if (!querySnapshot.empty) {
-          console.log(`📦 Found ${querySnapshot.docs.length} chunks for ${key}`);
           
           // Sort chunks by index and combine them
           const chunks: { index: number; data: any[] }[] = [];
@@ -476,11 +469,10 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
             const expiresAt = chunkData.expiresAt.toDate();
             
             if (now > expiresAt) {
-              console.log(`⏰ Chunk expired for ${key}, cleaning up...`);
               // Clean up expired chunks in background (don't await to avoid blocking)
-              deleteDoc(doc.ref).catch(error => 
-                console.warn(`Failed to delete expired chunk:`, error)
-              );
+              deleteDoc(doc.ref).catch(() => {
+                // Silently handle cleanup errors
+              });
               expired = true;
               continue;
             }
@@ -504,23 +496,20 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
             combinedData.push(...chunk.data);
           });
           
-          console.log(`✅ Loaded ${combinedData.length} items from ${chunks.length} chunks for ${key}`);
+          
           return combinedData as T;
         }
       } catch (queryError) {
-        console.warn(`❌ Failed to query chunked data for ${key}:`, queryError);
         // Fallback to localStorage if available
         if (typeof window !== 'undefined') {
           const stored = localStorage.getItem(key);
           if (stored) {
-            console.log(`📱 Fallback: Loaded ${key} from localStorage`);
             return JSON.parse(stored);
           }
         }
       }
     }
     
-    console.log(`📭 No data found for ${key} in subcollection: ${subcollectionName}`);
     return defaultValue;
     
   } catch (error) {
@@ -530,11 +519,10 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       try {
         const stored = localStorage.getItem(key);
         if (stored) {
-          console.log(`📱 Fallback: Loaded ${key} from localStorage due to Firestore error`);
           return JSON.parse(stored);
         }
       } catch (localError) {
-        console.warn(`Failed to parse localStorage data for ${key}:`, localError);
+        // Silently handle localStorage parsing errors
       }
     }
     return defaultValue;
@@ -578,7 +566,6 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
     const dataDocRef = doc(subcollectionRef, key);
     try {
       await deleteDoc(dataDocRef);
-      console.log(`🗑️ Deleted single document from subcollection: ${subcollectionName}/${key}`);
     } catch (error) {
       // Document might not exist, continue to check for chunks
     }
@@ -596,10 +583,9 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
         if (!querySnapshot.empty) {
           const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
           await Promise.all(deletePromises);
-          console.log(`🗑️ Deleted ${querySnapshot.docs.length} chunks for ${key}`);
         }
       } catch (error) {
-        console.warn(`Failed to delete chunks for ${key}:`, error);
+        // Silently handle chunk deletion errors
       }
     }
     
@@ -628,7 +614,6 @@ export const cleanupVisitorData = async (): Promise<void> => {
     
     // Delete the entire visitor document (this will cascade delete all subcollections)
     await deleteDoc(visitorDocRef);
-    console.log(`🗑️ Cleaned up all temporary data for visitor: ${visitorId}`);
     
     // Also clean localStorage
     if (typeof window !== 'undefined') {
@@ -658,7 +643,6 @@ export const cleanupExpiredData = async (): Promise<void> => {
     const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
     
     await Promise.all(deletePromises);
-    console.log(`🗑️ Cleaned up ${querySnapshot.docs.length} expired visitor documents`);
   } catch (error) {
     console.error('❌ Error cleaning up expired data:', error);
   }
