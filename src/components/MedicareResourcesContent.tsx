@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
+import MedicareNavigationTabsWrapper from "@/components/MedicareNavigationTabsWrapper";
 import { 
   TokensIcon,
   CalendarIcon,
@@ -81,13 +81,13 @@ export default function MedicareResourcesContent() {
             </div>
             {/* Navigation Tabs - Right side */}
             <div className="hidden lg:block">
-              <MedicareNavigationTabs />
+              <MedicareNavigationTabsWrapper />
             </div>
           </div>
           
           {/* Navigation Tabs for mobile - centered */}
           <div className="lg:hidden flex justify-center mb-6">
-            <MedicareNavigationTabs />
+            <MedicareNavigationTabsWrapper />
           </div>
         </div>
       </section>

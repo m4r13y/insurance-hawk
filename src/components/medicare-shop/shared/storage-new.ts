@@ -1,4 +1,4 @@
-// Storage keys - Firestore for quotes, localStorage for UI state
+// Storage keys - now using Firestore temp database as the ONLY storage
 export const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
 export const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
 export const REAL_QUOTES_KEY = 'medicare_real_quotes';
@@ -10,11 +10,6 @@ export const FINAL_EXPENSE_QUOTES_KEY = 'medicare_final_expense_quotes';
 export const CANCER_INSURANCE_QUOTES_KEY = 'medicare_cancer_insurance_quotes';
 export const FILTER_STATE_KEY = 'medicare_filter_state';
 
-// UI state keys - stored in localStorage for instant access
-export const SELECTED_CATEGORIES_KEY = 'medicare_selected_categories';
-export const CURRENT_FLOW_STEP_KEY = 'medicare_current_flow_step';
-export const UI_STATE_KEY = 'medicare_ui_state';
-
 // Import Firestore storage functions
 import { 
   saveToStorage as saveToFirestore, 
@@ -22,61 +17,9 @@ import {
   saveToStorageSync as saveToFirestoreSync
 } from '@/lib/services/storage-bridge';
 
-// Firestore-only configuration for quote data
+// Firestore-only configuration
 const MAX_QUOTE_SIZE = 1000; // Maximum number of quotes per category
 const MAX_VISITOR_AGE_HOURS = 24; // Maximum visitor session length
-
-// === UI STATE FUNCTIONS (localStorage for instant access) ===
-
-// Save UI state to localStorage (categories, flow state, etc.)
-export const saveUIState = (key: string, value: any) => {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    console.log('💾 Saved UI state to localStorage:', key);
-  } catch (error) {
-    console.warn('Failed to save UI state:', key, error);
-  }
-};
-
-// Load UI state from localStorage 
-export const loadUIState = (key: string, defaultValue: any) => {
-  if (typeof window === 'undefined') return defaultValue;
-  
-  try {
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return defaultValue;
-  } catch (error) {
-    console.warn('Failed to load UI state:', key, error);
-    return defaultValue;
-  }
-};
-
-// Save selected categories to localStorage for instant UI updates
-export const saveSelectedCategories = (categories: string[]) => {
-  saveUIState(SELECTED_CATEGORIES_KEY, categories);
-};
-
-// Load selected categories from localStorage
-export const loadSelectedCategories = (): string[] => {
-  return loadUIState(SELECTED_CATEGORIES_KEY, []);
-};
-
-// Save current flow step for navigation persistence
-export const saveCurrentFlowStep = (step: string) => {
-  saveUIState(CURRENT_FLOW_STEP_KEY, step);
-};
-
-// Load current flow step
-export const loadCurrentFlowStep = (): string => {
-  return loadUIState(CURRENT_FLOW_STEP_KEY, 'category-selection');
-};
-
-// === QUOTE DATA FUNCTIONS (Firestore for reliable persistence) ===
 
 // Storage helper functions - using ONLY Firestore temp database
 export const loadFromStorage = async (key: string, defaultValue: any) => {
@@ -278,12 +221,11 @@ export const getAllQuotesCount = async (): Promise<number> => {
   }
 };
 
-// Clear all quote data from Firestore AND UI state from localStorage
+// Clear all quote data from Firestore
 export const clearAllQuotes = async () => {
-  console.log('🧹 Clearing all quotes from Firestore temp database and UI state...');
+  console.log('🧹 Clearing all quotes from Firestore temp database...');
   
   try {
-    // Clear quote data from Firestore
     await Promise.all([
       saveToStorage(REAL_QUOTES_KEY, []),
       saveToStorage(ADVANTAGE_QUOTES_KEY, []),
@@ -296,17 +238,9 @@ export const clearAllQuotes = async () => {
       saveToStorage(QUOTE_FORM_COMPLETED_KEY, false)
     ]);
     
-    // Clear UI state from localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(SELECTED_CATEGORIES_KEY);
-      localStorage.removeItem(CURRENT_FLOW_STEP_KEY);
-      localStorage.removeItem(UI_STATE_KEY);
-      console.log('✅ Cleared UI state from localStorage');
-    }
-    
-    console.log('✅ All quotes and UI state cleared');
+    console.log('✅ All quotes cleared from Firestore');
   } catch (error) {
-    console.error('❌ Error clearing quotes and UI state:', error);
+    console.error('❌ Error clearing quotes:', error);
   }
 };
 
@@ -382,15 +316,14 @@ export const getFirestoreStorageInfo = async () => {
   }
 };
 
-// Legacy localStorage migration (quotes to Firestore, UI state remains local)
+// Legacy localStorage cleanup (for migration)
 export const migrateLegacyStorage = async () => {
   if (typeof window === 'undefined') return;
   
   console.log('🔄 Checking for legacy localStorage data to migrate...');
   
   try {
-    // Quote data keys - migrate to Firestore
-    const quoteKeys = [
+    const legacyKeys = [
       QUOTE_FORM_DATA_KEY,
       REAL_QUOTES_KEY,
       ADVANTAGE_QUOTES_KEY,
@@ -403,17 +336,9 @@ export const migrateLegacyStorage = async () => {
       QUOTE_FORM_COMPLETED_KEY
     ];
 
-    // UI state keys - keep in localStorage (just clean up old formats)
-    const uiKeys = [
-      'medicare_flow_categories', // old key
-      'medicare_selected_flow_categories', // old key  
-      'selectedFlowCategories' // very old key
-    ];
-
     let migratedCount = 0;
     
-    // Migrate quote data to Firestore
-    for (const key of quoteKeys) {
+    for (const key of legacyKeys) {
       const localData = localStorage.getItem(key);
       if (localData) {
         try {
@@ -421,47 +346,22 @@ export const migrateLegacyStorage = async () => {
           await saveToStorage(key, parsedData);
           localStorage.removeItem(key); // Remove after successful migration
           migratedCount++;
-          console.log('✅ Migrated quote data to Firestore:', key);
+          console.log('✅ Migrated legacy data:', key);
         } catch (error) {
-          console.warn('Failed to migrate quote data:', key, error);
-        }
-      }
-    }
-    
-    // Clean up old UI state keys and consolidate
-    let hasUIData = false;
-    for (const oldKey of uiKeys) {
-      const localData = localStorage.getItem(oldKey);
-      if (localData) {
-        try {
-          const parsedData = JSON.parse(localData);
-          if (Array.isArray(parsedData) && parsedData.length > 0) {
-            saveSelectedCategories(parsedData);
-            hasUIData = true;
-            console.log('✅ Migrated UI state to new format:', oldKey);
-          }
-          localStorage.removeItem(oldKey); // Clean up old key
-        } catch (error) {
-          console.warn('Failed to migrate UI state:', oldKey, error);
+          console.warn('Failed to migrate:', key, error);
         }
       }
     }
     
     if (migratedCount > 0) {
-      console.log(`🎉 Successfully migrated ${migratedCount} quote items to Firestore`);
+      console.log(`🎉 Successfully migrated ${migratedCount} items from localStorage to Firestore`);
+    } else {
+      console.log('ℹ️ No legacy localStorage data found to migrate');
     }
     
-    if (hasUIData) {
-      console.log('🎉 Successfully migrated UI state to new format');
-    }
-    
-    if (migratedCount === 0 && !hasUIData) {
-      console.log('ℹ️ No legacy data found to migrate');
-    }
-    
-    return { quotesMigrated: migratedCount, uiMigrated: hasUIData };
+    return migratedCount;
   } catch (error) {
     console.error('Error during legacy storage migration:', error);
-    return { quotesMigrated: 0, uiMigrated: false };
+    return 0;
   }
 };

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MedicareShopContent from "@/components/MedicareShopContent";
 import MedicareLearnContent from "@/components/MedicareLearnContent";
 import MedicareResourcesContent from "@/components/MedicareResourcesContent";
 
-export default function MedicarePage() {
+function MedicarePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [section, setSection] = useState('shop');
@@ -47,4 +47,23 @@ export default function MedicarePage() {
   };
 
   return renderContent();
+}
+
+function MedicareFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-pulse text-lg">Loading Medicare information...</div>
+    </div>
+  );
+}
+
+// Disable static generation since this page uses dynamic search params
+export const dynamic = 'force-dynamic';
+
+export default function MedicarePage() {
+  return (
+    <Suspense fallback={<MedicareFallback />}>
+      <MedicarePageContent />
+    </Suspense>
+  );
 }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
+import MedicareNavigationTabsWrapper from "@/components/MedicareNavigationTabsWrapper";
 import { 
   ReaderIcon,
   VideoIcon,
@@ -658,7 +658,7 @@ export default function MedicareLearnContent() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">Learn About Medicare Plans</h2>
             {/* Navigation Tabs - Right side */}
-            <MedicareNavigationTabs />
+            <MedicareNavigationTabsWrapper />
           </div>
           <div className="flex flex-wrap gap-2">
             {planCategories.map((category) => (

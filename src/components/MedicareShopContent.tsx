@@ -38,7 +38,12 @@ import {
   type QuoteFormData,
   loadFromStorage,
   saveToStorage,
-  getStorageSizeInfo,
+  getFirestoreStorageInfo,
+  migrateLegacyStorage,
+  saveSelectedCategories,
+  loadSelectedCategories,
+  saveCurrentFlowStep,
+  loadCurrentFlowStep,
   QUOTE_FORM_DATA_KEY,
   QUOTE_FORM_COMPLETED_KEY,
   REAL_QUOTES_KEY,
@@ -267,29 +272,46 @@ export default function MedicareShopContent() {
     }
   }, [carrierLogos]);
 
-  // Initialize component
+  // Initialize component with async storage loading
   useEffect(() => {
     const initializeComponent = async () => {
       try {
         // Monitor storage usage on component initialization
         console.group('📊 Storage Status on Page Load');
-        const storageInfo = getStorageSizeInfo();
-        console.log('💾 Current storage usage:', storageInfo.readable);
+        const storageInfo = await getFirestoreStorageInfo();
+        console.log('� Firestore storage usage:', storageInfo.readable);
+        console.log('📊 Total quotes across all categories:', storageInfo.totalQuotes);
         console.groupEnd();
         
-        // Load saved data from localStorage
-        const savedFormData = loadFromStorage(QUOTE_FORM_DATA_KEY, null);
-        const savedCategories = loadFromStorage('selectedFlowCategories', []);
-        const savedQuotes = loadFromStorage(REAL_QUOTES_KEY, []);
-        const savedAdvantageQuotes = loadFromStorage(ADVANTAGE_QUOTES_KEY, []);
-        const savedDrugPlanQuotes = loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
+        // Migrate legacy localStorage data if it exists
+        await migrateLegacyStorage();
+        
+        // Load saved data from Firestore
+        const [
+          savedFormData,
+          savedQuotes,
+          savedAdvantageQuotes,
+          savedDrugPlanQuotes,
+          savedHospitalIndemnityQuotes,
+          savedFinalExpenseQuotes,
+          savedCancerInsuranceQuotes
+        ] = await Promise.all([
+          loadFromStorage(QUOTE_FORM_DATA_KEY, null),
+          loadFromStorage(REAL_QUOTES_KEY, []),
+          loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
+          loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
+          loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []),
+          loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []),
+          loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, [])
+        ]);
+
+        // Load UI state from localStorage
+        const savedCategories = loadSelectedCategories();
+        const savedActiveCategory = loadCurrentFlowStep();
+
         // Load optimized dental quotes from storage
-        const savedDentalData = loadDentalQuotesFromStorage();
+        const savedDentalData = await loadDentalQuotesFromStorage();
         const savedDentalQuotes = savedDentalData ? savedDentalData.quotes : [];
-        const savedHospitalIndemnityQuotes = loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
-        const savedFinalExpenseQuotes = loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
-        const savedCancerInsuranceQuotes = loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
-        const savedActiveCategory = loadFromStorage('activeCategory', 'medigap');
 
         // Check URL for category parameter - this takes precedence
         const urlCategory = searchParams.get('category');
@@ -303,18 +325,18 @@ export default function MedicareShopContent() {
           setQuoteFormData(savedFormData);
         }
         if (savedCategories && Array.isArray(savedCategories)) {
-          console.log('📋 Loading saved categories:', savedCategories);
+          console.log('� Loading saved categories from Firestore:', savedCategories);
           setSelectedFlowCategories(savedCategories);
         } else {
-          console.log('📋 No saved categories found');
+          console.log('📋 No saved categories found in Firestore');
         }
         if (savedQuotes && Array.isArray(savedQuotes)) {
-          console.log('📋 Loading realQuotes from storage:', savedQuotes.length, 'quotes');
+          console.log('� Loading realQuotes from Firestore:', savedQuotes.length, 'quotes');
           console.log('📋 First realQuote sample:', savedQuotes[0]);
           setRealQuotes(savedQuotes);
         }
         if (savedAdvantageQuotes && Array.isArray(savedAdvantageQuotes)) {
-          console.log('📋 Loading advantageQuotes from storage:', savedAdvantageQuotes.length, 'quotes');
+          console.log('� Loading advantageQuotes from Firestore:', savedAdvantageQuotes.length, 'quotes');
           console.log('📋 First advantageQuote sample:', savedAdvantageQuotes[0]);
           setAdvantageQuotes(savedAdvantageQuotes);
         }
@@ -340,19 +362,19 @@ export default function MedicareShopContent() {
               const optimized = optimizeHospitalIndemnityQuotes(savedHospitalIndemnityQuotes);
               setHospitalIndemnityQuotes(optimized);
               // Save the optimized version back to storage
-              saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, optimized);
+              await saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, optimized);
             }
           }
         }
         if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes)) {
-          console.log('💾 Loading final expense quotes from localStorage:', savedFinalExpenseQuotes.length, 'quotes');
+          console.log('� Loading final expense quotes from Firestore:', savedFinalExpenseQuotes.length, 'quotes');
           console.log('💾 Sample final expense quote:', savedFinalExpenseQuotes[0]);
           setFinalExpenseQuotes(savedFinalExpenseQuotes);
         } else {
           console.log('💾 No final expense quotes found in localStorage');
         }
         if (savedCancerInsuranceQuotes && Array.isArray(savedCancerInsuranceQuotes)) {
-          console.log('💾 Loading cancer insurance quotes from localStorage:', savedCancerInsuranceQuotes.length, 'quotes');
+          console.log('� Loading cancer insurance quotes from Firestore:', savedCancerInsuranceQuotes.length, 'quotes');
           setCancerInsuranceQuotes(savedCancerInsuranceQuotes);
         }
         
@@ -371,7 +393,7 @@ export default function MedicareShopContent() {
             console.log('🔍 Auto-detected categories from existing quotes:', detectedCategories);
             console.log('📋 Detected categories from quotes:', detectedCategories);
             setSelectedFlowCategories(detectedCategories);
-            saveToStorage('selectedFlowCategories', detectedCategories);
+            saveSelectedCategories(detectedCategories);
           }
         }
         
@@ -528,49 +550,49 @@ export default function MedicareShopContent() {
     fetchIndividualPlanQuotes(planType);
   };
 
-  // Persist advantage quotes to localStorage when they change
+  // Persist advantage quotes to Firestore when they change
   useEffect(() => {
     if (advantageQuotes.length > 0) {
       saveToStorage(ADVANTAGE_QUOTES_KEY, advantageQuotes);
     }
   }, [advantageQuotes]);
 
-  // Persist supplement quotes to localStorage when they change
+  // Persist supplement quotes to Firestore when they change
   useEffect(() => {
     if (realQuotes.length > 0) {
       saveToStorage(REAL_QUOTES_KEY, realQuotes);
     }
   }, [realQuotes]);
 
-  // Persist drug plan quotes to localStorage when they change
+  // Persist drug plan quotes to Firestore when they change
   useEffect(() => {
     if (drugPlanQuotes.length > 0) {
       saveToStorage(DRUG_PLAN_QUOTES_KEY, drugPlanQuotes);
     }
   }, [drugPlanQuotes]);
 
-  // Persist final expense quotes to localStorage when they change
+  // Persist final expense quotes to Firestore when they change
   useEffect(() => {
     if (finalExpenseQuotes.length > 0) {
       saveToStorage(FINAL_EXPENSE_QUOTES_KEY, finalExpenseQuotes);
     }
   }, [finalExpenseQuotes]);
 
-  // Persist hospital indemnity quotes to localStorage when they change
+  // Persist hospital indemnity quotes to Firestore when they change
   useEffect(() => {
     if (hospitalIndemnityQuotes.length > 0) {
       saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, hospitalIndemnityQuotes);
     }
   }, [hospitalIndemnityQuotes]);
 
-  // Persist cancer insurance quotes to localStorage when they change
+  // Persist cancer insurance quotes to Firestore when they change
   useEffect(() => {
     if (cancerInsuranceQuotes.length > 0) {
       saveToStorage(CANCER_INSURANCE_QUOTES_KEY, cancerInsuranceQuotes);
     }
   }, [cancerInsuranceQuotes]);
 
-  // Persist dental quotes to localStorage when they change
+  // Persist dental quotes to Firestore when they change
   useEffect(() => {
     if (dentalQuotes.length > 0) {
       saveToStorage(DENTAL_QUOTES_KEY, dentalQuotes);
@@ -896,8 +918,8 @@ export default function MedicareShopContent() {
           console.log('🔥 Success! Received drug plan quotes:', response.quotes.length);
           setDrugPlanQuotes(response.quotes);
           
-          // Save drug plan quotes to localStorage
-          saveToStorage(DRUG_PLAN_QUOTES_KEY, response.quotes);
+          // Save drug plan quotes to Firestore
+          await saveToStorage(DRUG_PLAN_QUOTES_KEY, response.quotes);
           
           // Mark Drug Plans as completed
           setCompletedQuoteTypes(prev => [...prev, 'Drug Plans']);
@@ -953,7 +975,7 @@ export default function MedicareShopContent() {
             } else {
               console.error('❌ Failed to save optimized dental quotes');
               // Fallback to regular storage
-              saveToStorage(DENTAL_QUOTES_KEY, optimizationResult.quotes);
+              await saveToStorage(DENTAL_QUOTES_KEY, optimizationResult.quotes);
             }
             
             // Mark Dental Insurance as completed
@@ -1007,7 +1029,7 @@ export default function MedicareShopContent() {
                 });
               console.log(`🎯 Fallback: Filtered to ${fallbackQuotes.length} quotes (2025 only)`);
               setDentalQuotes(fallbackQuotes);
-              saveToStorage(DENTAL_QUOTES_KEY, fallbackQuotes);
+              await saveToStorage(DENTAL_QUOTES_KEY, fallbackQuotes);
             } catch (fallbackError) {
               console.error('❌ Fallback dental quote processing failed:', fallbackError);
               setDentalQuotes([]);
@@ -1064,13 +1086,13 @@ export default function MedicareShopContent() {
           console.log('🔥 Success! Received cancer insurance quotes:', response.quotes.length);
           setCancerInsuranceQuotes(response.quotes);
           
-          // Save cancer insurance quotes to localStorage
-          console.log('💾 Saving cancer insurance quotes to localStorage:', response.quotes.length, 'quotes');
-          saveToStorage(CANCER_INSURANCE_QUOTES_KEY, response.quotes);
+          // Save cancer insurance quotes to Firestore
+          console.log('� Saving cancer insurance quotes to Firestore:', response.quotes.length, 'quotes');
+          await saveToStorage(CANCER_INSURANCE_QUOTES_KEY, response.quotes);
           
           // Log storage usage after saving cancer quotes
-          const storageInfo = getStorageSizeInfo();
-          console.log('📊 Storage usage after cancer quotes:', storageInfo.readable);
+          const storageInfo = await getFirestoreStorageInfo();
+          console.log('📊 Firestore usage after cancer quotes:', storageInfo.readable);
           
           // Mark Cancer Insurance as completed
           setCompletedQuoteTypes(prev => [...prev, 'Cancer Insurance']);
@@ -1109,8 +1131,8 @@ export default function MedicareShopContent() {
           
           setHospitalIndemnityQuotes(optimizationResult);
           
-          // Save optimized hospital indemnity quotes to localStorage
-          saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, optimizationResult);
+          // Save optimized hospital indemnity quotes to Firestore
+          await saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, optimizationResult);
           
           // Mark Hospital Indemnity as completed
           setCompletedQuoteTypes(prev => [...prev, 'Hospital Indemnity']);
@@ -1149,16 +1171,16 @@ export default function MedicareShopContent() {
           console.log('🔥 Setting finalExpenseQuotes state with:', response.quotes.length, 'quotes');
           setFinalExpenseQuotes(response.quotes);
           
-          // Save final expense life quotes to localStorage
-          console.log('💾 Saving final expense quotes to localStorage:', response.quotes.length, 'quotes');
-          saveToStorage(FINAL_EXPENSE_QUOTES_KEY, response.quotes);
+          // Save final expense life quotes to Firestore
+          console.log('💾 Saving final expense quotes to Firestore:', response.quotes.length, 'quotes');
+          await saveToStorage(FINAL_EXPENSE_QUOTES_KEY, response.quotes);
           
           // Verify save was successful
-          const verified = loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
+          const verified = await loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
           console.log('✅ Verified final expense quotes in storage:', verified.length, 'quotes');
           
           // Log storage usage after saving final expense quotes
-          const storageInfo = getStorageSizeInfo();
+          const storageInfo = await getFirestoreStorageInfo();
           console.log('📊 Storage usage after final expense quotes:', storageInfo.readable);
           
           // Mark Final Expense Life as completed
@@ -1173,8 +1195,8 @@ export default function MedicareShopContent() {
       // Mark form as completed
       setQuoteFormCompleted(true);
       
-      // Immediately save the completion status to localStorage to ensure persistence
-      saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
+      // Immediately save the completion status to Firestore to ensure persistence
+      await saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
       
       // Update URL to indicate results are shown
       const newUrl = `${pathname}?step=results${targetCategory ? `&category=${targetCategory}` : ''}`;
@@ -1340,7 +1362,7 @@ export default function MedicareShopContent() {
   const handleCategoryToggle = (category: 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense') => {
     setActiveCategory(category);
     setSelectedCategory(category);
-    saveToStorage('activeCategory', category);
+    saveToStorage('activeCategory', category); // Fire and forget - no await needed for UI performance
     
     // Update URL to reflect the new category
     const params = new URLSearchParams(searchParams.toString());
@@ -1391,7 +1413,7 @@ export default function MedicareShopContent() {
     
     console.log('🔥 Mapped form data:', mappedFormData);
     setQuoteFormData(mappedFormData);
-    saveToStorage(QUOTE_FORM_DATA_KEY, mappedFormData);
+    await saveToStorage(QUOTE_FORM_DATA_KEY, mappedFormData);
     
     // Combine plan categories and additional options for complete category list
     const allCategories = [];
@@ -1429,7 +1451,7 @@ export default function MedicareShopContent() {
     if (allCategories.length > 0) {
       console.log('📋 Setting all categories manually:', allCategories);
       setSelectedFlowCategories(allCategories);
-      saveToStorage('selectedFlowCategories', allCategories);
+      saveSelectedCategories(allCategories);
     }
     
     setShowMedicareFlow(false);
@@ -1694,8 +1716,13 @@ export default function MedicareShopContent() {
       
       // Log storage usage after all quotes are saved
       console.group('📊 Storage Status After Quote Completion');
-      const finalStorageInfo = getStorageSizeInfo();
-      console.log('💾 Final storage usage:', finalStorageInfo.readable);
+      try {
+        const finalStorageInfo = await getFirestoreStorageInfo();
+        console.log('� Final Firestore storage usage:', finalStorageInfo.readable);
+        console.log('📦 Total quotes stored:', finalStorageInfo.totalQuotes);
+      } catch (error) {
+        console.warn('Could not get storage info:', error);
+      }
       console.groupEnd();
       
       // Loading will be hidden automatically by useEffect when quotes are ready
@@ -1724,6 +1751,7 @@ export default function MedicareShopContent() {
       tobaccoUse: null
     });
     setSelectedFlowCategories([]);
+    saveSelectedCategories([]); // Clear UI state as well
     setRealQuotes([]);
     setAdvantageQuotes([]);
     setDrugPlanQuotes([]);

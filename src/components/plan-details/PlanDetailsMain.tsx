@@ -52,10 +52,8 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       
       router.push(finalReturnUrl);
     } else {
-      // Fallback to Medicare shop page with results step if quotes exist
-      const hasQuotes = localStorage.getItem('medicare_real_quotes');
-      const fallbackUrl = hasQuotes ? '/medicare/shop?step=results' : '/medicare/shop';
-      router.push(fallbackUrl);
+      // Fallback to Medicare shop page with results step - check Firestore for quotes
+      router.push('/medicare/shop?step=results');
     }
   };
 
