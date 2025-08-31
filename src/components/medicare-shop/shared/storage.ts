@@ -10,7 +10,19 @@ export const FINAL_EXPENSE_QUOTES_KEY = 'medicare_final_expense_quotes';
 export const CANCER_INSURANCE_QUOTES_KEY = 'medicare_cancer_insurance_quotes';
 export const FILTER_STATE_KEY = 'medicare_filter_state';
 
-// Storage helper functions - using localStorage with compression and intelligent cleanup
+// Import Firestore storage functions
+import { 
+  saveToStorage as saveToFirestore, 
+  loadFromStorage as loadFromFirestore,
+  saveToStorageSync as saveToFirestoreSync
+} from '@/lib/services/storage-bridge';
+
+// Enhanced storage option - can use Firestore + localStorage hybrid
+const USE_FIRESTORE = true; // Set to false to disable Firestore
+const MAX_QUOTE_SIZE = 1000; // Maximum number of quotes per category
+const MAX_VISITOR_AGE_HOURS = 24; // Maximum visitor session length
+
+// Storage helper functions - using localStorage with Firestore backup
 export const loadFromStorage = (key: string, defaultValue: any) => {
   if (typeof window === 'undefined') return defaultValue;
   try {
@@ -25,7 +37,74 @@ export const loadFromStorage = (key: string, defaultValue: any) => {
       }
     }
     
-    return saved ? JSON.parse(saved) : defaultValue;
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    
+    // If not found locally and Firestore is enabled, try loading from there
+    if (USE_FIRESTORE) {
+      console.log('🔄 Attempting to load from Firestore backup:', key);
+      // Note: This is async, so we return the default and load in background
+      loadFromFirestore(key, defaultValue).then(data => {
+        if (data !== defaultValue) {
+          console.log('✅ Loaded from Firestore backup:', key);
+          // Update localStorage with the data from Firestore
+          try {
+            localStorage.setItem(key, JSON.stringify(data));
+          } catch (error) {
+            console.warn('Failed to cache Firestore data to localStorage:', error);
+          }
+        }
+      }).catch(error => {
+        console.warn('Firestore load failed for', key, ':', error);
+      });
+    }
+    
+    return defaultValue;
+  } catch (error) {
+    console.error('Error loading from storage:', error);
+    return defaultValue;
+  }
+};
+
+// Async version for when you can wait for Firestore
+export const loadFromStorageAsync = async (key: string, defaultValue: any) => {
+  if (typeof window === 'undefined') return defaultValue;
+  
+  try {
+    // Try localStorage first
+    let saved = localStorage.getItem(key);
+    
+    if (saved) {
+      console.log('📥 Loaded from localStorage:', key);
+      return JSON.parse(saved);
+    }
+    
+    // Try sessionStorage
+    if (typeof sessionStorage !== 'undefined') {
+      saved = sessionStorage.getItem(key);
+      if (saved) {
+        console.log('📥 Loaded from sessionStorage:', key);
+        return JSON.parse(saved);
+      }
+    }
+    
+    // Try Firestore if enabled
+    if (USE_FIRESTORE) {
+      const data = await loadFromFirestore(key, defaultValue);
+      if (data !== defaultValue) {
+        console.log('✅ Loaded from Firestore:', key);
+        // Cache in localStorage
+        try {
+          localStorage.setItem(key, JSON.stringify(data));
+        } catch (error) {
+          console.warn('Failed to cache Firestore data to localStorage:', error);
+        }
+        return data;
+      }
+    }
+    
+    return defaultValue;
   } catch (error) {
     console.error('Error loading from storage:', error);
     return defaultValue;
@@ -102,8 +181,17 @@ export const compressQuoteData = (quotes: any[]): any[] => {
       // Keep riders array for hospital indemnity quotes
     }
     
+    // Keep essential objects with nested properties
+    if (compressed.ambest && typeof compressed.ambest === 'object') {
+      // Keep A.M. Best rating info for insurance quotes
+      compressed.ambest = {
+        rating: compressed.ambest.rating,
+        outlook: compressed.ambest.outlook
+      };
+    }
+    
     // Ensure all numeric fields that use toLocaleString are properly converted
-    const numericFields = ['benefit_amount', 'face_value', 'monthly_rate', 'annual_rate', 'annualMaximum', 'dailyBenefit', 'maxDays', 'reviewCount', 'monthlyPremium', 'premium'];
+    const numericFields = ['benefit_amount', 'face_value', 'monthly_rate', 'annual_rate', 'annualMaximum', 'dailyBenefit', 'maxDays', 'reviewCount', 'monthlyPremium', 'premium', 'policyFee', 'hhDiscount'];
     numericFields.forEach(field => {
       if (compressed[field] !== undefined && compressed[field] !== null && compressed[field] !== '') {
         compressed[field] = Number(compressed[field]) || 0;
@@ -117,7 +205,7 @@ export const compressQuoteData = (quotes: any[]): any[] => {
 export const saveToStorage = (key: string, value: any) => {
   if (typeof window === 'undefined') return;
   
-  console.log('💾 Efficiently saving to localStorage:', key);
+  console.log('💾 Efficiently saving to storage:', key);
   
   try {
     let dataToSave = value;
@@ -138,35 +226,64 @@ export const saveToStorage = (key: string, value: any) => {
     }
     
     localStorage.setItem(key, JSON.stringify(dataToSave));
-    console.log('✅ Successfully saved', key);
+    console.log('✅ Successfully saved to localStorage:', key);
+    
+    // Also save to Firestore asynchronously if enabled
+    if (USE_FIRESTORE) {
+      saveToFirestoreSync(key, dataToSave);
+    }
     
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
-      console.warn('🚨 Storage quota exceeded, using sessionStorage fallback for:', key);
+      console.warn('🚨 Storage quota exceeded, trying Firestore backup for:', key);
       
-      // Use sessionStorage with compression only for quote data
-      try {
-        let fallbackData = value;
-        if (Array.isArray(value) && value.length > 0 && 
-            (key.includes('quotes') || key.includes('QUOTES'))) {
-          // Keep only top 10 most essential quotes
-          fallbackData = value.slice(0, 10).map(quote => ({
-            id: quote.id || Math.random().toString(36).substr(2, 9),
-            planName: quote.planName || quote.plan_name || 'Plan',
-            carrierName: quote.carrierName || quote.carrier?.name || 'Carrier',
-            monthlyPremium: quote.monthlyPremium || quote.monthly_premium || quote.premium || 0
-          }));
+      // Try Firestore first for quota exceeded errors
+      if (USE_FIRESTORE) {
+        try {
+          saveToFirestore(key, value).then(() => {
+            console.log('✅ Saved to Firestore backup:', key);
+          }).catch(firestoreError => {
+            console.error('❌ Firestore backup failed:', firestoreError);
+            // Fall back to sessionStorage
+            trySessionStorageFallback(key, value);
+          });
+        } catch (firestoreError) {
+          console.error('❌ Firestore backup failed:', firestoreError);
+          trySessionStorageFallback(key, value);
         }
-        
-        sessionStorage.setItem(key, JSON.stringify(fallbackData));
-        console.log('✅ Saved to sessionStorage:', key);
-        
-      } catch (sessionError) {
-        console.error('❌ Complete storage failure:', sessionError);
+      } else {
+        trySessionStorageFallback(key, value);
       }
     } else {
       console.error('❌ Storage error:', error);
+      // Try Firestore for other errors too
+      if (USE_FIRESTORE) {
+        saveToFirestoreSync(key, value);
+      }
     }
+  }
+};
+
+// Helper function for sessionStorage fallback
+const trySessionStorageFallback = (key: string, value: any) => {
+  try {
+    let fallbackData = value;
+    if (Array.isArray(value) && value.length > 0 && 
+        (key.includes('quotes') || key.includes('QUOTES'))) {
+      // Keep only top 10 most essential quotes
+      fallbackData = value.slice(0, 10).map(quote => ({
+        id: quote.id || Math.random().toString(36).substr(2, 9),
+        planName: quote.planName || quote.plan_name || 'Plan',
+        carrierName: quote.carrierName || quote.carrier?.name || 'Carrier',
+        monthlyPremium: quote.monthlyPremium || quote.monthly_premium || quote.premium || 0
+      }));
+    }
+    
+    sessionStorage.setItem(key, JSON.stringify(fallbackData));
+    console.log('✅ Saved to sessionStorage fallback:', key);
+    
+  } catch (sessionError) {
+    console.error('❌ Complete storage failure:', sessionError);
   }
 };
 

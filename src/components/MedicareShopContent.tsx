@@ -26,6 +26,7 @@ import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
+import StorageDiagnostics from '@/components/StorageDiagnostics';
 
 // Import organized components
 import {
@@ -345,7 +346,10 @@ export default function MedicareShopContent() {
         }
         if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes)) {
           console.log('💾 Loading final expense quotes from localStorage:', savedFinalExpenseQuotes.length, 'quotes');
+          console.log('💾 Sample final expense quote:', savedFinalExpenseQuotes[0]);
           setFinalExpenseQuotes(savedFinalExpenseQuotes);
+        } else {
+          console.log('💾 No final expense quotes found in localStorage');
         }
         if (savedCancerInsuranceQuotes && Array.isArray(savedCancerInsuranceQuotes)) {
           console.log('💾 Loading cancer insurance quotes from localStorage:', savedCancerInsuranceQuotes.length, 'quotes');
@@ -541,9 +545,37 @@ export default function MedicareShopContent() {
   // Persist drug plan quotes to localStorage when they change
   useEffect(() => {
     if (drugPlanQuotes.length > 0) {
-      saveToStorage('drugPlanQuotes', drugPlanQuotes);
+      saveToStorage(DRUG_PLAN_QUOTES_KEY, drugPlanQuotes);
     }
   }, [drugPlanQuotes]);
+
+  // Persist final expense quotes to localStorage when they change
+  useEffect(() => {
+    if (finalExpenseQuotes.length > 0) {
+      saveToStorage(FINAL_EXPENSE_QUOTES_KEY, finalExpenseQuotes);
+    }
+  }, [finalExpenseQuotes]);
+
+  // Persist hospital indemnity quotes to localStorage when they change
+  useEffect(() => {
+    if (hospitalIndemnityQuotes.length > 0) {
+      saveToStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, hospitalIndemnityQuotes);
+    }
+  }, [hospitalIndemnityQuotes]);
+
+  // Persist cancer insurance quotes to localStorage when they change
+  useEffect(() => {
+    if (cancerInsuranceQuotes.length > 0) {
+      saveToStorage(CANCER_INSURANCE_QUOTES_KEY, cancerInsuranceQuotes);
+    }
+  }, [cancerInsuranceQuotes]);
+
+  // Persist dental quotes to localStorage when they change
+  useEffect(() => {
+    if (dentalQuotes.length > 0) {
+      saveToStorage(DENTAL_QUOTES_KEY, dentalQuotes);
+    }
+  }, [dentalQuotes]);
 
   // Check if all expected quotes are ready
   useEffect(() => {
@@ -1114,11 +1146,16 @@ export default function MedicareShopContent() {
           setQuotesError(response.error);
         } else if (response.quotes && Array.isArray(response.quotes)) {
           console.log('🔥 Success! Received final expense life quotes:', response.quotes.length);
+          console.log('🔥 Setting finalExpenseQuotes state with:', response.quotes.length, 'quotes');
           setFinalExpenseQuotes(response.quotes);
           
           // Save final expense life quotes to localStorage
           console.log('💾 Saving final expense quotes to localStorage:', response.quotes.length, 'quotes');
           saveToStorage(FINAL_EXPENSE_QUOTES_KEY, response.quotes);
+          
+          // Verify save was successful
+          const verified = loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
+          console.log('✅ Verified final expense quotes in storage:', verified.length, 'quotes');
           
           // Log storage usage after saving final expense quotes
           const storageInfo = getStorageSizeInfo();
@@ -1931,6 +1968,16 @@ export default function MedicareShopContent() {
                   </Card>
                 )}
 
+                {/* Storage Diagnostics - Temporary Debug Tool */}
+                {process.env.NODE_ENV === 'development' && (
+                  <StorageDiagnostics 
+                    onDataRestored={() => {
+                      // Refresh the page or reload data
+                      window.location.reload();
+                    }}
+                  />
+                )}
+
                 <div className="space-y-6">
                   {/* Results Header with Pagination Info */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1948,6 +1995,12 @@ export default function MedicareShopContent() {
                       <MedigapResultsHeader
                         selectedCategory={selectedCategory}
                         realQuotes={realQuotes}
+                        advantageQuotes={advantageQuotes}
+                        drugPlanQuotes={drugPlanQuotes}
+                        dentalQuotes={dentalQuotes}
+                        hospitalIndemnityQuotes={hospitalIndemnityQuotes}
+                        finalExpenseQuotes={finalExpenseQuotes}
+                        cancerInsuranceQuotes={cancerInsuranceQuotes}
                         paginationInfo={paginationInfo}
                       />
                     </div>
@@ -2043,7 +2096,7 @@ export default function MedicareShopContent() {
                               </div>
                               <div className="text-right">
                                 <div className="text-2xl font-bold">
-                                  ${quote?.premium || quote?.monthly_premium || 'N/A'}
+                                  ${quote?.monthlyPremium || quote?.premium || quote?.monthly_premium || 'N/A'}
                                   <span className="text-sm font-normal text-muted-foreground">/month</span>
                                 </div>
                               </div>

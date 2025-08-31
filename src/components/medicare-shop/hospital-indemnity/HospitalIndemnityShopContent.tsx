@@ -86,20 +86,22 @@ export default function HospitalIndemnityShopContent({
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-lg">{quote.planName}</h4>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Star className="h-3 w-3" />
-                        {quote.ambest.rating}
-                      </Badge>
+                      {quote.ambest?.rating && (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Star className="h-3 w-3" />
+                          {quote.ambest.rating}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-gray-600">{quote.companyName}</p>
                     <p className="text-sm text-gray-500">{quote.companyFullName}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-600">
-                      ${quote.monthlyPremium}
+                      ${quote.monthlyPremium || 0}
                     </div>
                     <div className="text-sm text-gray-500">per month</div>
-                    {quote.policyFee > 0 && (
+                    {(quote.policyFee || 0) > 0 && (
                       <div className="text-xs text-gray-400">
                         +${quote.policyFee} policy fee
                       </div>
@@ -116,7 +118,7 @@ export default function HospitalIndemnityShopContent({
                   </div>
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <div className="text-sm text-blue-700">Base Plans</div>
-                    <div className="font-semibold text-blue-800">{quote.basePlans.length}</div>
+                    <div className="font-semibold text-blue-800">{basePlans.length}</div>
                   </div>
                   <div className="bg-purple-50 p-3 rounded-lg">
                     <div className="text-sm text-purple-700">Available Riders</div>
@@ -127,10 +129,10 @@ export default function HospitalIndemnityShopContent({
                 <div className="mb-4">
                   <h5 className="font-medium mb-2">Included Benefits</h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {quote.basePlans.filter(plan => plan.included).slice(0, 3).map((plan, idx) => (
+                    {basePlans.filter(plan => plan?.included).slice(0, 3).map((plan, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
                         <ShieldCheck className="h-3 w-3 text-green-500" />
-                        <span>{plan.name}</span>
+                        <span>{plan?.name}</span>
                       </div>
                     ))}
                     {includedRiders.slice(0, 3).map((rider, idx) => (
@@ -151,10 +153,10 @@ export default function HospitalIndemnityShopContent({
                     <Calendar className="h-3 w-3" />
                     {quote.state}
                   </Badge>
-                  {quote.hhDiscount > 0 && (
+                  {(quote.hhDiscount || 0) > 0 && (
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
-                      {(quote.hhDiscount * 100)}% HH Discount
+                      {((quote.hhDiscount || 0) * 100)}% HH Discount
                     </Badge>
                   )}
                   <Badge variant={quote.tobacco ? "destructive" : "outline"}>
@@ -164,7 +166,11 @@ export default function HospitalIndemnityShopContent({
 
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">
-                    A.M. Best Rating: {quote.ambest.rating} ({quote.ambest.outlook})
+                    {quote.ambest?.rating ? (
+                      `A.M. Best Rating: ${quote.ambest.rating}${quote.ambest.outlook ? ` (${quote.ambest.outlook})` : ''}`
+                    ) : (
+                      'Rating information not available'
+                    )}
                   </div>
                   <Button 
                     onClick={() => onSelectPlan?.(quote)}

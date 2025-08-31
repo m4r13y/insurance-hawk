@@ -1,7 +1,7 @@
 
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-// import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore, type Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions"; // Re-enabled for quote functionality
 import { getAuth, type Auth } from "firebase/auth"; // Add Auth for Firebase Functions
@@ -22,7 +22,7 @@ const firebaseConfig = {
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
-// let db: Firestore | null = null; // Firestore removed for this app
+let db: Firestore | null = null; // Firestore enabled for temporary quote storage
 let storage: FirebaseStorage | null = null;
 let functions: Functions | null = null; // Re-enabled for quote functionality
 let dataConnect: DataConnect | null = null; // Add DataConnect
@@ -40,7 +40,7 @@ if (hasEssentialConfig) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     // auth = getAuth(app);
-    // Firestore removed for this app
+    db = getFirestore(app, 'temp'); // Connect to the 'temp' database for temporary quote storage
     storage = getStorage(app);
     functions = getFunctions(app, 'us-central1'); // Re-enabled for quote functionality with region
     auth = getAuth(app); // Add auth for Firebase Functions
@@ -59,7 +59,7 @@ if (hasEssentialConfig) {
     console.error("Firebase initialization error:", e);
     app = null;
     // auth = null;
-    // db = null; // Firestore removed for this app
+    db = null; // Reset Firestore on error
     storage = null;
     functions = null;
     auth = null; // Reset auth on error
@@ -74,7 +74,7 @@ if (!isFirebaseConfigured) {
 export { 
   app as default,
   auth,
-  // db, // Firestore removed for this app
+  db, // Firestore enabled for temporary quote storage
   storage,
   functions, // Re-enabled for quote functionality
   dataConnect, // Add DataConnect export
