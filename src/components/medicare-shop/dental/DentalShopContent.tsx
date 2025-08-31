@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Shield, Calendar, DollarSign, ChevronDown } from "lucide-react";
+import { Shield, Calendar, DollarSign, ChevronDown } from "lucide-react";
+import { StarFilledIcon } from '@radix-ui/react-icons';
 import { 
   OptimizedDentalQuote, 
   groupQuotesByPlan,
@@ -67,12 +68,6 @@ export default function DentalShopContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Dental Insurance Plans ({quotes.length} found)
-        </h2>
-      </div>
-
       <div className="space-y-4">
         {Object.entries(groupedQuotes).map(([planName, planQuotes]) => {
           const selectedQuote = getSelectedQuote(planName, planQuotes);
@@ -88,7 +83,7 @@ export default function DentalShopContent({
                       </h3>
                       {selectedQuote.ambestRating && (
                         <Badge variant="secondary" className="flex items-center gap-1">
-                          <Star className="h-3 w-3" />
+                          <StarFilledIcon className="w-4 h-4 text-yellow-400 mr-1" />
                           {selectedQuote.ambestRating}
                         </Badge>
                       )}

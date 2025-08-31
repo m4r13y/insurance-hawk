@@ -176,11 +176,7 @@ function MedicareShopContent() {
       // Only load quotes if we don't have them
       await handleCategoryToggle(category, loadQuotesForCategory);
     }
-  }, [
-    handleCategoryToggle, handleCategoryToggleAutomatic, loadQuotesForCategory,
-    realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes,
-    hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes
-  ]);
+  }, [handleCategoryToggle, loadQuotesForCategory]);
 
   // Form completion state (keeping this separate as it's form-specific)
   const [quoteFormCompleted, setQuoteFormCompleted] = useState(false);

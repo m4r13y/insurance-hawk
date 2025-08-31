@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 export type CategoryType = 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense';
@@ -28,6 +28,10 @@ export const useCategoryManagement = () => {
   const [activeCategory, setActiveCategory] = useState('medigap');
   const [selectedFlowCategories, setSelectedFlowCategories] = useState<string[]>([]);
 
+  // Timeout refs to prevent delayed category switching
+  const manualTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const automaticTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleCategoryToggle = useCallback(async (
     category: CategoryType, 
     loadQuotesCallback?: (category: string) => Promise<void>
@@ -35,6 +39,12 @@ export const useCategoryManagement = () => {
     // Only update state if category actually changed
     if (category === activeCategory) {
       return;
+    }
+
+    // Cancel any pending manual category operations
+    if (manualTimeoutRef.current) {
+      clearTimeout(manualTimeoutRef.current);
+      manualTimeoutRef.current = null;
     }
 
     // Set the new category immediately for UI responsiveness
@@ -53,8 +63,9 @@ export const useCategoryManagement = () => {
     
     // Load quotes in background without blocking UI
     if (loadQuotesCallback) {
-      // Use setTimeout to allow UI to update first
-      setTimeout(() => {
+      // Use setTimeout to allow UI to update first, but store ref to cancel if needed
+      manualTimeoutRef.current = setTimeout(() => {
+        manualTimeoutRef.current = null;
         loadQuotesCallback(category).catch(error => {
           console.error(`Error loading quotes for category ${category}:`, error);
         });
@@ -72,6 +83,12 @@ export const useCategoryManagement = () => {
       return;
     }
 
+    // Cancel any pending automatic category operations
+    if (automaticTimeoutRef.current) {
+      clearTimeout(automaticTimeoutRef.current);
+      automaticTimeoutRef.current = null;
+    }
+
     // Set the new category immediately for UI responsiveness
     setActiveCategory(category);
     setSelectedCategory(category);
@@ -85,8 +102,9 @@ export const useCategoryManagement = () => {
     
     // Load quotes in background without blocking UI
     if (loadQuotesCallback) {
-      // Use setTimeout to allow UI to update first
-      setTimeout(() => {
+      // Use setTimeout to allow UI to update first, but store ref to cancel if needed
+      automaticTimeoutRef.current = setTimeout(() => {
+        automaticTimeoutRef.current = null;
         loadQuotesCallback(category).catch(error => {
           console.error(`Error loading quotes for category ${category}:`, error);
         });
