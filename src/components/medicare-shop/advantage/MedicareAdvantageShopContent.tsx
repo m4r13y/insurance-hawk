@@ -726,76 +726,46 @@ export default function MedicareAdvantageShopContent() {
                 <div className="space-y-3">
                   <div className="flex flex-col gap-3">
                     <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {/* HMO */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {/* HMO (includes HMO + HMOPOS) */}
                       <div className="flex items-center space-x-2">
                         <Checkbox 
-                          id="header-plan-hmo"
-                          checked={selectedAdvantageTypes.includes('HMO')}
+                          id="header-plan-hmo-group"
+                          checked={selectedAdvantageTypes.includes('HMO') || selectedAdvantageTypes.includes('HMOPOS')}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'HMO']);
+                              const newTypes = [...selectedAdvantageTypes];
+                              if (!newTypes.includes('HMO')) newTypes.push('HMO');
+                              if (!newTypes.includes('HMOPOS')) newTypes.push('HMOPOS');
+                              setSelectedAdvantageTypes(newTypes);
                             } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMO'));
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMO' && plan !== 'HMOPOS'));
                             }
                           }}
                         />
-                        <label htmlFor="header-plan-hmo" className="text-sm font-medium">
+                        <label htmlFor="header-plan-hmo-group" className="text-sm font-medium">
                           HMO
                         </label>
                       </div>
                       
-                      {/* HMOPOS */}
+                      {/* PPO (includes Local PPO + Regional PPO) */}
                       <div className="flex items-center space-x-2">
                         <Checkbox 
-                          id="header-plan-hmopos"
-                          checked={selectedAdvantageTypes.includes('HMOPOS')}
+                          id="header-plan-ppo-group"
+                          checked={selectedAdvantageTypes.includes('LOCAL PPO') || selectedAdvantageTypes.includes('REGIONAL PPO')}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'HMOPOS']);
+                              const newTypes = [...selectedAdvantageTypes];
+                              if (!newTypes.includes('LOCAL PPO')) newTypes.push('LOCAL PPO');
+                              if (!newTypes.includes('REGIONAL PPO')) newTypes.push('REGIONAL PPO');
+                              setSelectedAdvantageTypes(newTypes);
                             } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMOPOS'));
+                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'LOCAL PPO' && plan !== 'REGIONAL PPO'));
                             }
                           }}
                         />
-                        <label htmlFor="header-plan-hmopos" className="text-sm font-medium">
-                          HMOPOS
-                        </label>
-                      </div>
-                      
-                      {/* Local PPO */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-local-ppo"
-                          checked={selectedAdvantageTypes.includes('LOCAL PPO')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'LOCAL PPO']);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'LOCAL PPO'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-local-ppo" className="text-sm font-medium">
-                          Local PPO
-                        </label>
-                      </div>
-                      
-                      {/* Regional PPO */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-regional-ppo"
-                          checked={selectedAdvantageTypes.includes('REGIONAL PPO')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'REGIONAL PPO']);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'REGIONAL PPO'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-regional-ppo" className="text-sm font-medium">
-                          Regional PPO
+                        <label htmlFor="header-plan-ppo-group" className="text-sm font-medium">
+                          PPO
                         </label>
                       </div>
                       

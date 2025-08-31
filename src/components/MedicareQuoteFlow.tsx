@@ -1061,7 +1061,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Your Age *</Label>
                                     {hasMultiplePlanTypes() && (
-                                      <div className="h-5"></div>
+                                      <div className="text-xs text-gray-500 mt-0.5">General Info</div>
                                     )}
                                   </div>
                                   <Input
@@ -1084,7 +1084,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">ZIP Code *</Label>
                                     {hasMultiplePlanTypes() && (
-                                      <div className="h-5"></div>
+                                      <div className="text-xs text-gray-500 mt-0.5">General Info</div>
                                     )}
                                   </div>
                                   <Input
@@ -1106,7 +1106,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">State *</Label>
                                     {hasMultiplePlanTypes() && (
-                                      <div className="h-5"></div>
+                                      <div className="text-xs text-gray-500 mt-0.5">General Info</div>
                                     )}
                                   </div>
                                   <Select 
@@ -1187,7 +1187,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Gender *</Label>
                                     {hasMultiplePlanTypes() && (
-                                      <div className="h-5"></div>
+                                      <div className="text-xs text-gray-500 mt-0.5">General Info</div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -1217,7 +1217,7 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Tobacco Use *</Label>
                                     {hasMultiplePlanTypes() && (
-                                      <div className="h-5"></div>
+                                      <div className="text-xs text-gray-500 mt-0.5">General Info</div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -1246,8 +1246,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Benefit Amount *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Hospital Indemnity</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('hospital') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Hospital Indemnity</div>
                                     )}
                                   </div>
                                   <Select 
@@ -1278,8 +1278,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Coverage Type *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('cancer') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Cancer Insurance</div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -1308,8 +1308,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Carcinoma In Situ Coverage *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('cancer') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Cancer Insurance</div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -1338,8 +1338,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Premium Payment *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Cancer Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('cancer') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Cancer Insurance</div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -1368,8 +1368,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Number of Covered Members *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Dental Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('dental') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Dental Insurance</div>
                                     )}
                                   </div>
                                   <Select 
@@ -1398,8 +1398,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Desired Coverage Amount *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Final Expense Life Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('final-expense') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Final Expense Life Insurance</div>
                                     )}
                                   </div>
                                   <Select 
@@ -1430,8 +1430,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                                 <div className="space-y-2">
                                   <div>
                                     <Label className="text-sm font-medium text-foreground">Underwriting Preference *</Label>
-                                    {hasMultiplePlanTypes() && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">Final Expense Life Insurance</p>
+                                    {hasMultiplePlanTypes() && formData.selectedAdditionalOptions.includes('final-expense') && (
+                                      <div className="text-xs text-gray-500 mt-0.5">Final Expense Life Insurance</div>
                                     )}
                                   </div>
                                   <Select 

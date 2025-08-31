@@ -296,23 +296,35 @@ export default function MedicareAdvantageSidebar({
           {/* Plan Type */}
           <div className="space-y-3">
             <Label>Plan Type</Label>
-            <div className="space-y-2">
-              {['HMO', 'HMOPOS', 'LOCAL PPO', 'REGIONAL PPO', 'PFFS', 'MSA'].map(type => (
-                <div key={type} className="flex items-center space-x-2">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'HMO', label: 'HMO', includes: ['HMO', 'HMOPOS'] },
+                { value: 'PPO', label: 'PPO', includes: ['LOCAL PPO', 'REGIONAL PPO'] },
+                { value: 'PFFS', label: 'PFFS', includes: ['PFFS'] },
+                { value: 'MSA', label: 'MSA', includes: ['MSA'] }
+              ].map(planType => (
+                <div key={planType.value} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`type-${type}`}
-                    checked={filters.planTypes.includes(type)}
+                    id={`type-${planType.value}`}
+                    checked={planType.includes.some(type => filters.planTypes.includes(type))}
                     onCheckedChange={(checked) => {
-                      const newTypes = checked
-                        ? [...filters.planTypes, type]
-                        : filters.planTypes.filter(t => t !== type);
+                      let newTypes = [...filters.planTypes];
+                      if (checked) {
+                        // Add all included types for this group
+                        planType.includes.forEach(type => {
+                          if (!newTypes.includes(type)) {
+                            newTypes.push(type);
+                          }
+                        });
+                      } else {
+                        // Remove all included types for this group
+                        newTypes = newTypes.filter(type => !planType.includes.includes(type));
+                      }
                       updateFilters({ planTypes: newTypes });
                     }}
                   />
-                  <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">
-                    {type === 'HMOPOS' ? 'HMOPOS' : 
-                     type === 'LOCAL PPO' ? 'Local PPO' : 
-                     type === 'REGIONAL PPO' ? 'Regional PPO' : type}
+                  <label htmlFor={`type-${planType.value}`} className="text-sm cursor-pointer">
+                    {planType.label}
                   </label>
                 </div>
               ))}
