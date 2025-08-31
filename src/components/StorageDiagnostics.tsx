@@ -52,7 +52,7 @@ export default function StorageDiagnostics({ onDataRestored }: StorageDiagnostic
       analysis.localStorage.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // Check Firestore (temp database, visitors collection)
+    // Check Firestore (default database, visitors collection)
     try {
       const finalExpenseData = await loadTemporaryData('medicare_final_expense_quotes', []);
       const hospitalData = await loadTemporaryData('medicare_hospital_indemnity_quotes', []);

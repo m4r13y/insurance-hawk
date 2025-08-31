@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rules for the default database - allow anonymous access to visitor documents
+    match /visitors/{visitorId} {
+      // Allow read/write access if the visitorId matches the expected pattern
+      allow read, write: if isValidVisitorId(visitorId);
+      
+      // Allow access to all subcollections under a visitor document
+      match /{subcollection}/{documentId} {
+        allow read, write: if isValidVisitorId(visitorId);
+      }
+    }
+    
+    // Helper function to validate visitor ID format
+    function isValidVisitorId(visitorId) {
+      // Pattern: visitor_<timestamp>_<randomString> or temp_<timestamp>_<randomString>
+      return visitorId.matches('^(visitor|temp)_[0-9]+_[a-zA-Z0-9]+$');
+    }
+    
+    // Default deny for all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

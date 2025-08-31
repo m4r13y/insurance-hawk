@@ -40,7 +40,7 @@ if (hasEssentialConfig) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     // auth = getAuth(app);
-    db = getFirestore(app, 'temp'); // Connect to the 'temp' database for temporary quote storage
+    db = getFirestore(app); // Connect to the default database where we deployed the security rules
     storage = getStorage(app);
     functions = getFunctions(app, 'us-central1'); // Re-enabled for quote functionality with region
     auth = getAuth(app); // Add auth for Firebase Functions

@@ -32,18 +32,38 @@ const getVisitorId = (): string => {
   return visitorId;
 };
 
-// Storage interface for visitors collection
-export interface VisitorData {
+// Map storage keys to subcollection names
+const getSubcollectionName = (key: string): string => {
+  const keyMapping: { [key: string]: string } = {
+    'medicare_real_quotes': 'medigap_quotes',
+    'medicare_advantage_quotes': 'advantage_quotes', 
+    'medicare_drug_plan_quotes': 'drug_plan_quotes',
+    'medicare_dental_quotes': 'dental_quotes',
+    'medicare_hospital_indemnity_quotes': 'hospital_indemnity_quotes',
+    'medicare_final_expense_quotes': 'final_expense_quotes',
+    'medicare_cancer_insurance_quotes': 'cancer_insurance_quotes',
+    'medicare_quote_form_data': 'form_data',
+    'medicare_quote_form_completed': 'form_status',
+    'medicare_filter_state': 'filter_state'
+  };
+  
+  return keyMapping[key] || 'misc_data';
+};
+
+// Storage interface for visitor metadata
+export interface VisitorMetadata {
   visitorId: string;
   createdAt: Timestamp;
   lastActivity: Timestamp;
   expiresAt: Timestamp;
-  quoteData: {
-    [key: string]: {
-      data: any;
-      savedAt: Timestamp;
-    };
-  };
+}
+
+// Interface for quote data documents within subcollections
+export interface QuoteDataDocument {
+  key: string;
+  data: any;
+  savedAt: Timestamp;
+  expiresAt: Timestamp;
 }
 
 // Legacy interface for backward compatibility
@@ -58,7 +78,7 @@ export interface TemporaryStorageData {
 
 // Configuration
 const TTL_HOURS = 24; // Data expires after 24 hours
-const DATABASE_NAME = 'temp'; // Using the temp database
+const DATABASE_NAME = 'default'; // Using the default database
 const COLLECTION_NAME = 'visitors'; // Using the visitors collection
 
 // Helper to create expiration timestamp
@@ -68,7 +88,7 @@ const getExpirationTimestamp = (): Timestamp => {
   return Timestamp.fromDate(expirationTime);
 };
 
-// Save data to Firestore visitors collection with TTL
+// Save data to Firestore with subcollections for each quote category
 export const saveTemporaryData = async (key: string, data: any): Promise<void> => {
   try {
     if (!db) {
@@ -82,40 +102,35 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
     const visitorId = getVisitorId();
     const now = Timestamp.now();
     const expiresAt = getExpirationTimestamp();
+    const subcollectionName = getSubcollectionName(key);
     
-    // Reference to the visitor document
+    // Update visitor metadata (lightweight document)
     const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
-    
-    // Get existing visitor data or create new
-    const visitorDoc = await getDoc(visitorDocRef);
-    let visitorData: VisitorData;
-    
-    if (visitorDoc.exists()) {
-      visitorData = visitorDoc.data() as VisitorData;
-      // Update last activity and extend expiration
-      visitorData.lastActivity = now;
-      visitorData.expiresAt = expiresAt;
-    } else {
-      // Create new visitor document
-      visitorData = {
-        visitorId,
-        createdAt: now,
-        lastActivity: now,
-        expiresAt,
-        quoteData: {}
-      };
-    }
-    
-    // Add/update the specific quote data
-    visitorData.quoteData[key] = {
-      data,
-      savedAt: now
+    const visitorMetadata: VisitorMetadata = {
+      visitorId,
+      createdAt: now,
+      lastActivity: now,
+      expiresAt
     };
-
-    await setDoc(visitorDocRef, visitorData);
-    console.log(`✅ Saved temporary data: ${key} for visitor: ${visitorId}`);
+    
+    // Create/update visitor metadata document
+    await setDoc(visitorDocRef, visitorMetadata, { merge: true });
+    
+    // Save data to appropriate subcollection
+    const subcollectionRef = collection(visitorDocRef, subcollectionName);
+    const dataDocRef = doc(subcollectionRef, key); // Use key as document ID
+    
+    const quoteDocument: QuoteDataDocument = {
+      key,
+      data,
+      savedAt: now,
+      expiresAt
+    };
+    
+    await setDoc(dataDocRef, quoteDocument);
+    console.log(`✅ Saved data to subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
   } catch (error) {
-    console.error(`❌ Error saving temporary data for ${key}:`, error);
+    console.error(`❌ Error saving data for ${key}:`, error);
     // Fallback to localStorage if Firestore fails
     if (typeof window !== 'undefined') {
       localStorage.setItem(key, JSON.stringify(data));
@@ -123,65 +138,59 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
   }
 };
 
-// Load data from Firestore visitors collection with auto-cleanup
+// Load data from Firestore subcollections with auto-cleanup
 export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): Promise<T> => {
   try {
     if (!db) {
       console.warn('Firestore not available, falling back to localStorage');
       if (typeof window !== 'undefined') {
-        const fallbackData = localStorage.getItem(key);
-        if (fallbackData) {
-          try {
-            return JSON.parse(fallbackData);
-          } catch {
-            return defaultValue;
-          }
-        }
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : defaultValue;
       }
       return defaultValue;
     }
-    
+
     const visitorId = getVisitorId();
-    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
-    const visitorDoc = await getDoc(visitorDocRef);
+    const subcollectionName = getSubcollectionName(key);
     
-    if (visitorDoc.exists()) {
-      const visitorData = visitorDoc.data() as VisitorData;
+    // Reference to the specific data document
+    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+    const subcollectionRef = collection(visitorDocRef, subcollectionName);
+    const dataDocRef = doc(subcollectionRef, key);
+    
+    const dataDoc = await getDoc(dataDocRef);
+    
+    if (dataDoc.exists()) {
+      const documentData = dataDoc.data() as QuoteDataDocument;
       
-      // Check if visitor data has expired
-      if (visitorData.expiresAt.toDate() < new Date()) {
-        console.log(`🗑️ Visitor data expired for ${visitorId}, cleaning up...`);
-        await deleteDoc(visitorDocRef);
+      // Check if data has expired
+      const now = new Date();
+      const expiresAt = documentData.expiresAt.toDate();
+      
+      if (now > expiresAt) {
+        console.log(`⏰ Data expired for ${key}, cleaning up...`);
+        await deleteDoc(dataDocRef);
         return defaultValue;
       }
       
-      // Check if the specific quote data exists
-      if (visitorData.quoteData && visitorData.quoteData[key]) {
-        console.log(`✅ Loaded temporary data: ${key} for visitor: ${visitorId}`);
-        return visitorData.quoteData[key].data;
-      }
+      console.log(`✅ Loaded data from subcollection: ${subcollectionName}/${key}`);
+      return documentData.data as T;
+    } else {
+      console.log(`📭 No data found for ${key} in subcollection: ${subcollectionName}`);
+      return defaultValue;
     }
-    
-    console.log(`📭 No temporary data found for ${key}, using default`);
-    return defaultValue;
   } catch (error) {
-    console.error(`❌ Error loading temporary data for ${key}:`, error);
-    // Fallback to localStorage if Firestore fails
+    console.error(`❌ Error loading data for ${key}:`, error);
+    // Fallback to localStorage
     if (typeof window !== 'undefined') {
-      const fallbackData = localStorage.getItem(key);
-      if (fallbackData) {
-        try {
-          return JSON.parse(fallbackData);
-        } catch {
-          return defaultValue;
-        }
-      }
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
     }
     return defaultValue;
   }
 };
 
-// Delete specific data from visitor's quote data
+// Delete specific data from visitor's quote data (subcollection approach)
 export const deleteTemporaryData = async (key: string): Promise<void> => {
   try {
     if (!db) {
@@ -193,23 +202,17 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
     }
     
     const visitorId = getVisitorId();
-    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
-    const visitorDoc = await getDoc(visitorDocRef);
+    const subcollectionName = getSubcollectionName(key);
     
-    if (visitorDoc.exists()) {
-      const visitorData = visitorDoc.data() as VisitorData;
-      
-      // Remove the specific quote data
-      if (visitorData.quoteData && visitorData.quoteData[key]) {
-        delete visitorData.quoteData[key];
-        
-        // Update the document
-        await setDoc(visitorDocRef, visitorData);
-        console.log(`🗑️ Deleted temporary data: ${key} for visitor: ${visitorId}`);
-      }
-    }
+    // Reference to the specific data document in subcollection
+    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+    const subcollectionRef = collection(visitorDocRef, subcollectionName);
+    const dataDocRef = doc(subcollectionRef, key);
+    
+    await deleteDoc(dataDocRef);
+    console.log(`🗑️ Deleted data from subcollection: ${subcollectionName}/${key} for visitor: ${visitorId}`);
   } catch (error) {
-    console.error(`❌ Error deleting temporary data for ${key}:`, error);
+    console.error(`❌ Error deleting data for ${key}:`, error);
     // Fallback to localStorage cleanup
     if (typeof window !== 'undefined') {
       localStorage.removeItem(key);
@@ -217,7 +220,7 @@ export const deleteTemporaryData = async (key: string): Promise<void> => {
   }
 };
 
-// Clean up all data for current visitor
+// Clean up all data for current visitor (including all subcollections)
 export const cleanupVisitorData = async (): Promise<void> => {
   try {
     if (!db) {
@@ -231,6 +234,7 @@ export const cleanupVisitorData = async (): Promise<void> => {
     const visitorId = getVisitorId();
     const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
     
+    // Delete the entire visitor document (this will cascade delete all subcollections)
     await deleteDoc(visitorDocRef);
     console.log(`🗑️ Cleaned up all temporary data for visitor: ${visitorId}`);
     
