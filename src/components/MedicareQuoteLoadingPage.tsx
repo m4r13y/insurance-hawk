@@ -7,18 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { 
   MagnifyingGlassIcon, 
-  LockClosedIcon, 
-  TokensIcon, 
-  FileTextIcon,
   CheckCircledIcon,
-  ReloadIcon,
-  StarIcon,
-  HeartIcon,
-  GearIcon,
-  ClipboardIcon,
-  FileIcon,
-  IdCardIcon,
-  PlusIcon
+  ReloadIcon
 } from "@radix-ui/react-icons";
 
 interface MedicareQuoteLoadingPageProps {
@@ -41,10 +31,10 @@ interface MedicareQuoteLoadingPageProps {
 }
 
 const loadingSteps = [
-  { id: 1, text: "Finding Plan F Quotes", icon: StarIcon, duration: 2000 },
-  { id: 2, text: "Finding Plan G Quotes", icon: LockClosedIcon, duration: 2000 },
-  { id: 3, text: "Finding Plan N Quotes", icon: HeartIcon, duration: 2000 },
-  { id: 4, text: "Finding Medicare Advantage Quotes", icon: HeartIcon, duration: 2000 }
+  { id: 1, text: "Finding Plan F Quotes", icon: MagnifyingGlassIcon, duration: 2000 },
+  { id: 2, text: "Finding Plan G Quotes", icon: MagnifyingGlassIcon, duration: 2000 },
+  { id: 3, text: "Finding Plan N Quotes", icon: MagnifyingGlassIcon, duration: 2000 },
+  { id: 4, text: "Finding Medicare Advantage Quotes", icon: MagnifyingGlassIcon, duration: 2000 }
 ];
 
 const tips = [
@@ -176,43 +166,43 @@ export default function MedicareQuoteLoadingPage({
       
       if (item.includes('Plan F')) {
         stepText = "Finding Plan F Quotes";
-        stepIcon = StarIcon; // Premium comprehensive plan
+        stepIcon = MagnifyingGlassIcon; // Premium comprehensive plan
       } else if (item.includes('Plan G')) {
         stepText = "Finding Plan G Quotes";
-        stepIcon = LockClosedIcon; // Most popular, protective
+        stepIcon = MagnifyingGlassIcon; // Most popular, protective
       } else if (item.includes('Plan N')) {
         stepText = "Finding Plan N Quotes";
-        stepIcon = HeartIcon; // Cost-effective, caring choice
+        stepIcon = MagnifyingGlassIcon; // Cost-effective, caring choice
       } else if (item.includes('Plan A')) {
         stepText = "Finding Plan A Quotes";
-        stepIcon = IdCardIcon; // Basic coverage
+        stepIcon = MagnifyingGlassIcon; // Basic coverage
       } else if (item.includes('Plan B')) {
         stepText = "Finding Plan B Quotes";
-        stepIcon = PlusIcon; // Additional benefits
+        stepIcon = MagnifyingGlassIcon; // Additional benefits
       } else if (item.includes('Plan C')) {
         stepText = "Finding Plan C Quotes";
-        stepIcon = ClipboardIcon; // Comprehensive coverage
+        stepIcon = MagnifyingGlassIcon; // Comprehensive coverage
       } else if (item.includes('Plan D')) {
         stepText = "Finding Plan D Quotes";
-        stepIcon = FileIcon; // Documentation/paperwork
+        stepIcon = MagnifyingGlassIcon; // Documentation/paperwork
       } else if (item.includes('Plan K')) {
         stepText = "Finding Plan K Quotes";
-        stepIcon = TokensIcon; // Lower premium option
+        stepIcon = MagnifyingGlassIcon; // Lower premium option
       } else if (item.includes('Plan L')) {
         stepText = "Finding Plan L Quotes";
-        stepIcon = GearIcon; // Flexible option
+        stepIcon = MagnifyingGlassIcon; // Flexible option
       } else if (item.includes('Plan M')) {
         stepText = "Finding Plan M Quotes";
-        stepIcon = LockClosedIcon; // Secure option
+        stepIcon = MagnifyingGlassIcon; // Secure option
       } else if (item === 'Medicare Advantage Plans' || item.includes('Medicare Advantage')) {
         stepText = "Finding Medicare Advantage Quotes";
-        stepIcon = HeartIcon; // Healthcare focus
+        stepIcon = MagnifyingGlassIcon; // Healthcare focus
       } else if (item === 'Supplement Plans') {
         stepText = "Finding Supplement Quotes";
-        stepIcon = LockClosedIcon; // Protection/supplement coverage
+        stepIcon = MagnifyingGlassIcon; // Protection/supplement coverage
       } else if (item === 'Drug Plans') {
         stepText = "Finding Drug Plan Quotes";
-        stepIcon = TokensIcon; // Prescription/cost savings
+        stepIcon = MagnifyingGlassIcon; // Prescription/cost savings
       } else {
         // Generic step for any other item
         stepText = `Finding ${item}`;

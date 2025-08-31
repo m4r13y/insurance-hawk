@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Umbrella, Calendar, DollarSign } from "lucide-react";
+import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface FinalExpenseQuote {
   id?: string;
@@ -51,22 +52,7 @@ export default function FinalExpenseShopContent({
   onSelectPlan 
 }: FinalExpenseShopContentProps) {
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />;
   }
 
   if (!quotes || quotes.length === 0) {

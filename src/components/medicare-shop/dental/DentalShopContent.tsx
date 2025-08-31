@@ -11,6 +11,7 @@ import {
   groupQuotesByPlan,
   sortQuotesByPremium
 } from "@/lib/dental-quote-optimizer";
+import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface DentalShopContentProps {
   quotes: OptimizedDentalQuote[];
@@ -51,19 +52,7 @@ export default function DentalShopContent({
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <PlanCardsSkeleton count={5} title="Dental Insurance Plans" />;
   }
 
   if (!quotes || quotes.length === 0) {

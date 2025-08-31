@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, SortAsc, Star, DollarSign, Pill, Shield, Phone, ExternalLink } from 'lucide-react';
+import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface DrugPlanQuote {
   id: string;
@@ -100,14 +101,7 @@ export default function DrugPlanShopContent({
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading drug plan quotes...</p>
-        </div>
-      </div>
-    );
+    return <PlanCardsSkeleton count={4} title="Prescription Drug Plans" />;
   }
 
   if (error) {

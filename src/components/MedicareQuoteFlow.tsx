@@ -66,30 +66,33 @@ const medigapPlanTypes = [
 ]
 
 // Additional options for selection
-const additionalOptions = [
+type AdditionalOption = {
+  id: string;
+  name: string;
+  description: string;
+  features?: string[];
+};
+
+const additionalOptions: AdditionalOption[] = [
   {
     id: "dental",
     name: "Dental Insurance",
     description: "Routine cleanings, fillings, and major dental work",
-    features: ["Preventive care", "Basic procedures", "Major services"]
   },
   {
     id: "cancer",
     name: "Cancer Insurance", 
     description: "Critical illness coverage for cancer, heart attack, and stroke",
-    features: ["Lump sum benefits", "Treatment support", "Recovery assistance"]
   },
   {
     id: "hospital",
     name: "Hospital Indemnity",
     description: "Cash benefits for hospital stays and medical events",
-    features: ["Daily hospital benefits", "Emergency room coverage", "Outpatient surgery"]
   },
   {
     id: "final-expense",
     name: "Final Expense Life Insurance",
-    description: "Life insurance to cover end-of-life expenses",
-    features: ["Guaranteed acceptance", "No medical exam", "Burial and funeral costs"]
+    description: "Life insurance to cover end-of-life expenses"
   }
 ]
 
@@ -837,8 +840,8 @@ export default function MedicareQuoteFlow({ onComplete, onCancel, mode = 'guided
                         </div>
                         <div className="text-sm opacity-70">{option.description}</div>
                         <div className="space-y-1">
-                          {option.features.map((feature, index) => (
-                            <div key={index} className="text-xs opacity-60 flex items-center gap-1">
+                          {option.features && option.features.map((feature, index) => (
+                            <div key={index} className="text-xs opacity-60 flex items-center gap-2">
                               <span className="w-1 h-1 bg-current rounded-full"></span>
                               {feature}
                             </div>

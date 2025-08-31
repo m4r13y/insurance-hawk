@@ -14,6 +14,7 @@ export interface CategoryActions {
   setActiveCategory: React.Dispatch<React.SetStateAction<string>>;
   setSelectedFlowCategories: React.Dispatch<React.SetStateAction<string[]>>;
   handleCategoryToggle: (category: CategoryType, loadQuotesCallback?: (category: string) => Promise<void>) => Promise<void>;
+  handleCategoryToggleAutomatic: (category: CategoryType, loadQuotesCallback?: (category: string) => Promise<void>) => Promise<void>;
   handleCategorySelect: (categoryId: string) => void;
 }
 
@@ -45,7 +46,7 @@ export const useCategoryManagement = () => {
       localStorage.setItem('activeCategory', category);
     }
     
-    // Update URL without waiting (non-blocking)
+    // Update URL without waiting (non-blocking) - ONLY for manual selections
     const params = new URLSearchParams(searchParams.toString());
     params.set('category', category);
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
@@ -60,6 +61,38 @@ export const useCategoryManagement = () => {
       }, 0);
     }
   }, [router, pathname, searchParams, activeCategory]);
+
+  // New function for automatic category updates (when quotes load) - doesn't update URL
+  const handleCategoryToggleAutomatic = useCallback(async (
+    category: CategoryType, 
+    loadQuotesCallback?: (category: string) => Promise<void>
+  ) => {
+    // Only update state if category actually changed
+    if (category === activeCategory) {
+      return;
+    }
+
+    // Set the new category immediately for UI responsiveness
+    setActiveCategory(category);
+    setSelectedCategory(category);
+    
+    // Save UI state to localStorage immediately
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeCategory', category);
+    }
+    
+    // DO NOT update URL for automatic category changes
+    
+    // Load quotes in background without blocking UI
+    if (loadQuotesCallback) {
+      // Use setTimeout to allow UI to update first
+      setTimeout(() => {
+        loadQuotesCallback(category).catch(error => {
+          console.error(`Error loading quotes for category ${category}:`, error);
+        });
+      }, 0);
+    }
+  }, [activeCategory]);
 
   const handleCategorySelect = useCallback((categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -76,6 +109,7 @@ export const useCategoryManagement = () => {
     setActiveCategory,
     setSelectedFlowCategories,
     handleCategoryToggle,
+    handleCategoryToggleAutomatic,
     handleCategorySelect,
   };
 

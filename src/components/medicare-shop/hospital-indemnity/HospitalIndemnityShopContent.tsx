@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Building2, Calendar, DollarSign, ShieldCheck } from "lucide-react";
 import { OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
+import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface HospitalIndemnityShopContentProps {
   quotes: OptimizedHospitalIndemnityQuote[];
@@ -19,22 +20,7 @@ export default function HospitalIndemnityShopContent({
   onSelectPlan 
 }: HospitalIndemnityShopContentProps) {
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <PlanCardsSkeleton count={4} title="Hospital Indemnity Plans" />;
   }
 
   if (!quotes || quotes.length === 0) {
