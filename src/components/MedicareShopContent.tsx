@@ -25,6 +25,7 @@ import { optimizeHospitalIndemnityQuotes, OptimizedHospitalIndemnityQuote } from
 import { saveDentalQuotesToStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
+import { cancelAllRequests } from "@/lib/services/temporary-storage";
 import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
 
@@ -53,7 +54,8 @@ import {
   HOSPITAL_INDEMNITY_QUOTES_KEY,
   FINAL_EXPENSE_QUOTES_KEY,
   CANCER_INSURANCE_QUOTES_KEY,
-  PlanCardsSkeleton
+  PlanCardsSkeleton,
+  hasQuotes
 } from "@/components/medicare-shop/shared";
 
 import {
@@ -289,8 +291,11 @@ function MedicareShopContent() {
 
   // Initialize component with async storage loading
   useEffect(() => {
+    let isComponentMounted = true;
+    
     const initializeComponent = async () => {
       try {
+        
         // Migrate legacy localStorage data if it exists
         await migrateLegacyStorage();
         
@@ -299,16 +304,16 @@ function MedicareShopContent() {
         const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
         const hasActiveCategory = localStorage.getItem('activeCategory');
         
-        // Check if we have any saved quotes
-        const hasExistingQuotes = await Promise.all([
-          loadFromStorage(REAL_QUOTES_KEY, []),
-          loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
-          loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
-          loadFromStorage(DENTAL_QUOTES_KEY, []),
-          loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []),
-          loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []),
-          loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, [])
-        ]).then(quotesArrays => quotesArrays.some(quotes => quotes && quotes.length > 0));
+        // Check if we have any saved quotes using lightweight localStorage check first
+        const hasExistingQuotes = (() => {
+          // Quick check using localStorage for UI state indicators
+          const hasFormCompleted = localStorage.getItem('medicare_quote_form_completed') === 'true';
+          const hasQuoteSession = localStorage.getItem('medicare_quote_session_active') === 'true';
+          
+          // Only return true if we have clear indicators of an active quote session
+          // This prevents eager loading of all quote categories
+          return hasFormCompleted && hasQuoteSession;
+        })();
         
         // If we have all required keys, this is a page refresh with existing session
         // We don't need to check hasQuoteFormCompleted as it might not be set reliably
@@ -349,10 +354,15 @@ function MedicareShopContent() {
           setQuoteFormCompleted(true);
           medicareState.setShowMedicareFlow(false);
           
-          // Load quotes for all selected categories
-          if (savedCategories && Array.isArray(savedCategories)) {
-            console.log('Loading quotes for categories:', savedCategories);
-            await Promise.all(savedCategories.map(category => loadQuotesForCategory(category)));
+          // Load quotes for selected categories - but do it lazily, one at a time
+          if (savedCategories && Array.isArray(savedCategories) && savedCategories.length > 0) {
+            console.log('Existing quote session found, will load first category:', savedCategories[0]);
+            // Only load the first/active category immediately
+            const primaryCategory = savedCategories[0];
+            if (primaryCategory) {
+              await loadQuotesForCategory(primaryCategory);
+            }
+            // Other categories will be loaded when user switches to them
           }
           
           // Reset recovery mode after quotes are loaded
@@ -370,15 +380,32 @@ function MedicareShopContent() {
         
         setActiveCategory(initialCategory);
         setSelectedCategory(initialCategory);
-        setIsInitializing(false);
+        
+        // Check if component is still mounted before setting initialization state
+        if (isComponentMounted) {
+          setIsInitializing(false);
+        }
       } catch (error) {
-        console.error('Error initializing component:', error);
-        setIsInitializing(false);
+        console.error('❌ Error during component initialization:', error);
+        if (isComponentMounted) {
+          setIsInitializing(false);
+        }
       }
     };
-
+    
+    // Only run initialization once per component mount
+    if (!isInitializing) {
+      return;
+    }
+    
     initializeComponent();
-  }, [searchParams]);
+
+    return () => {
+      isComponentMounted = false;
+      // Cancel all pending requests on unmount
+      cancelAllRequests();
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   const hasQuotesForPlan = (planType: string) => {
     return realQuotes?.some(quote => quote?.plan === planType) || false;
@@ -555,6 +582,22 @@ function MedicareShopContent() {
       return () => clearTimeout(failsafeTimer);
     }
   }, [showQuoteLoading]);
+
+  // Cleanup effect: Cancel all pending requests when component unmounts or category changes
+  useEffect(() => {
+    return () => {
+      // Cancel all pending Firestore requests to prevent race conditions
+      cancelAllRequests();
+    };
+  }, [activeCategory]); // Cancel when category changes
+
+  // Component unmount cleanup
+  useEffect(() => {
+    return () => {
+      // Cancel all pending requests on unmount
+      cancelAllRequests();
+    };
+  }, []);
 
   // Handle quote form submission
   const handleQuoteFormSubmit = async () => {
@@ -805,7 +848,6 @@ function MedicareShopContent() {
           const optimizationResult = optimizeDentalQuotes(response);
           
           if (optimizationResult.success) {
-            console.log('✅ Dental quotes optimization successful!');
             setDentalQuotes(optimizationResult.quotes);
             
             // Save optimized dental quotes using Firebase storage (same as other quotes)
@@ -1029,6 +1071,10 @@ function MedicareShopContent() {
       
       // Mark form as completed
       setQuoteFormCompleted(true);
+      
+      // Set session indicators for lightweight checking
+      localStorage.setItem('medicare_quote_form_completed', 'true');
+      localStorage.setItem('medicare_quote_session_active', 'true');
       
       // Immediately save the completion status to Firestore to ensure persistence
       await saveToStorage(QUOTE_FORM_COMPLETED_KEY, true);
@@ -1546,6 +1592,10 @@ function MedicareShopContent() {
       // Loading will be hidden automatically by useEffect when quotes are ready
       
       setQuoteFormCompleted(true);
+      
+      // Set session indicators for lightweight checking
+      localStorage.setItem('medicare_quote_form_completed', 'true');
+      localStorage.setItem('medicare_quote_session_active', 'true');
     } catch (error) {
       console.error('Error processing flow data:', error);
       setQuotesError('Failed to fetch quotes. Please try again.');

@@ -58,13 +58,10 @@ const MedicareLoadingStates: React.FC<MedicareLoadingStatesProps> = ({
         currentQuoteType={currentQuoteType || undefined}
         totalExpectedQuotes={totalExpectedQuotes}
         onComplete={() => {
-          console.log('Loading page onComplete triggered', { quotesReady, hasQuotes: hasQuotes() });
-          
           if (quotesReady || hasQuotes()) {
             onLoadingComplete();
           } else {
             // Fallback: hide loading after 2 seconds even if quotes aren't marked as ready
-            console.warn('Forcing loading page to close - quotes may not be properly synced');
             setTimeout(() => {
               onLoadingComplete();
             }, 2000);

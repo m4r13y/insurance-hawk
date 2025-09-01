@@ -13,7 +13,18 @@ interface CacheEntry<T> {
   ttl: number; // Time to live in milliseconds
 }
 
+// Request cancellation system
+interface PendingRequest {
+  controller: AbortController;
+  promise: Promise<any>;
+  requestId: string;
+}
+
+// Track the latest request ID per category
+const latestRequestIds = new Map<string, string>();
+
 const cache = new Map<string, CacheEntry<any>>();
+const pendingRequests = new Map<string, PendingRequest>();
 const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const QUOTE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes for quote data
 
@@ -50,6 +61,66 @@ const setCache = <T>(key: string, data: T, ttl: number = DEFAULT_CACHE_TTL): voi
 const clearCache = (key: string): void => {
   cache.delete(key);
   console.log(`🗑️ Cleared cache for ${key}`);
+};
+
+// Helper to cancel pending requests
+const cancelPendingRequest = (key: string): void => {
+  const pending = pendingRequests.get(key);
+  if (pending) {
+    pending.controller.abort();
+    pendingRequests.delete(key);
+    console.log(`❌ Cancelled pending request for ${key}`);
+  }
+};
+
+// Helper to get category from key
+const getCategoryFromKey = (key: string): string => {
+  if (key.includes('medicare_real_quotes') || key.includes('medigap')) return 'medigap';
+  if (key.includes('advantage')) return 'advantage';
+  if (key.includes('drug_plan') || key.includes('drug-plan')) return 'drug-plan';
+  if (key.includes('dental')) return 'dental';
+  if (key.includes('cancer')) return 'cancer';
+  if (key.includes('hospital_indemnity') || key.includes('hospital-indemnity')) return 'hospital-indemnity';
+  if (key.includes('final_expense') || key.includes('final-expense')) return 'final-expense';
+  
+  // Don't track non-quote data with request IDs
+  if (key.includes('form_data') || key.includes('form_completed') || key.includes('filter_state') || 
+      key.includes('selected_categories') || key.includes('current_flow_step') || 
+      key.includes('activeCategory') || key.includes('selectedCategory')) {
+    return 'ui-state';
+  }
+  
+  return 'other';
+};
+
+// Helper to generate unique request ID
+const generateRequestId = (): string => {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// Helper to cancel all requests for a category
+export const cancelCategoryRequests = (category: string): void => {
+  // Clear the latest request ID so all pending requests for this category become stale
+  latestRequestIds.delete(category);
+  
+  const categoryKeys = Array.from(pendingRequests.keys()).filter(key => 
+    key.includes(`${category}_quotes`) || 
+    key.includes(`${category}Quotes`) ||
+    (category === 'medigap' && key.includes('medicare_real_quotes'))
+  );
+  
+  categoryKeys.forEach(key => cancelPendingRequest(key));
+  console.log(`🧹 Cancelled ${categoryKeys.length} pending requests for category: ${category}`);
+};
+
+// Helper to cancel ALL pending requests
+export const cancelAllRequests = (): void => {
+  // Clear all latest request IDs
+  latestRequestIds.clear();
+  
+  const allKeys = Array.from(pendingRequests.keys());
+  allKeys.forEach(key => cancelPendingRequest(key));
+  console.log(`🧹 Cancelled ${allKeys.length} pending requests`);
 };
 
 // Generate unique visitor ID and store it
@@ -429,6 +500,23 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       return cached;
     }
     
+    // Cancel any existing request for this key
+    cancelPendingRequest(key);
+    
+    // Generate unique request ID only for quote data
+    const category = getCategoryFromKey(key);
+    let requestId = '';
+    
+    // Only use request ID tracking for actual quote categories
+    const isQuoteCategory = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'].includes(category);
+    
+    if (isQuoteCategory) {
+      requestId = generateRequestId();
+      // Set this as the latest request for this category
+      latestRequestIds.set(category, requestId);
+      console.log(`🆕 Starting request ${requestId} for category ${category}, key: ${key}`);
+    }
+    
     // Check if this is UI state - if so, load from localStorage only
     const isUIState = key.includes('activeCategory') || key.includes('selectedCategory') || 
                      key.includes('selected_categories') || key.includes('current_flow_step') ||
@@ -453,161 +541,263 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       return defaultValue;
     }
     
-    try {
-    if (!db) {
-      console.warn('Firestore not available, falling back to localStorage');
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem(key);
-        const result = stored ? JSON.parse(stored) : defaultValue;
-        // Cache localStorage fallback data
-        setCache(key, result, DEFAULT_CACHE_TTL);
-        return result;
-      }
-      return defaultValue;
-    }
-
-    console.log(`🔍 Loading from Firestore: ${key}`);
-    const visitorId = getVisitorId();
-    const subcollectionName = getSubcollectionName(key);
-    
-    // Reference to the subcollection
-    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
-    const subcollectionRef = collection(visitorDocRef, subcollectionName);
-    
-    // First try to load as a single document with timeout
-    const dataDocRef = doc(subcollectionRef, key);
+    // Create abort controller for this request
+    const controller = new AbortController();
+    const signal = controller.signal;
     
     try {
-      const dataDoc = await Promise.race([
-        getDoc(dataDocRef),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 10000) // 10 second timeout
-        )
-      ]) as any;
-      
-      if (dataDoc.exists()) {
-        const documentData = dataDoc.data() as QuoteDataDocument;
+      // Create cancellable promise wrapper
+      const requestPromise = (async () => {
+        // Only check request validity for quote categories
+        const isLatestRequest = () => !isQuoteCategory || latestRequestIds.get(category) === requestId;
         
-        // Check if data has expired
-        const now = new Date();
-        const expiresAt = documentData.expiresAt.toDate();
+        if (isQuoteCategory && !isLatestRequest()) {
+          console.log(`🚫 Request ${requestId} superseded by newer request`);
+          throw new Error('Request superseded');
+        }
         
-        if (now > expiresAt) {
-          await deleteDoc(dataDocRef);
-          setCache(key, defaultValue, QUOTE_CACHE_TTL);
+        if (!db) {
+          console.warn('Firestore not available, falling back to localStorage');
+          if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem(key);
+            const result = stored ? JSON.parse(stored) : defaultValue;
+            // Cache localStorage fallback data
+            setCache(key, result, DEFAULT_CACHE_TTL);
+            return result;
+          }
           return defaultValue;
         }
+
+        if (isQuoteCategory) {
+          console.log(`🔍 Loading from Firestore: ${key} (request ${requestId})`);
+        } else {
+          console.log(`🔍 Loading from Firestore: ${key}`);
+        }
+        const visitorId = getVisitorId();
+        const subcollectionName = getSubcollectionName(key);
         
-        console.log(`✅ Loaded from Firestore: ${key}`);
-        // Cache the result with longer TTL for quote data
-        const ttl = key.includes('quotes') ? QUOTE_CACHE_TTL : DEFAULT_CACHE_TTL;
-        setCache(key, documentData.data as T, ttl);
-        return documentData.data as T;
-      }
-    } catch (timeoutError) {
-      // Try chunked approach if single document times out
-    }
-    
-    // If single document doesn't exist or timed out, try to load chunked data
-    if (key.includes('quotes')) {
-      
-      try {
-        // Query for chunk documents with timeout
-        const chunkedQuery = query(
-          subcollectionRef,
-          where('originalKey', '==', key)
-        );
+        // Reference to the subcollection
+        const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+        const subcollectionRef = collection(visitorDocRef, subcollectionName);
         
-        const querySnapshot = await Promise.race([
-          getDocs(chunkedQuery),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Query timeout')), 15000) // 15 second timeout
-          )
-        ]) as any;
+        // First try to load as a single document with timeout
+        const dataDocRef = doc(subcollectionRef, key);
         
-        if (!querySnapshot.empty) {
-          
-          // Sort chunks by index and combine them
-          const chunks: { index: number; data: any[] }[] = [];
-          let expired = false;
-          
-          for (const doc of querySnapshot.docs) {
-            const chunkData = doc.data() as QuoteDataDocument;
-            
-            // Check if chunk has expired
-            const now = new Date();
-            const expiresAt = chunkData.expiresAt.toDate();
-            
-            if (now > expiresAt) {
-              // Clean up expired chunks in background (don't await to avoid blocking)
-              deleteDoc(doc.ref).catch(() => {
-                // Silently handle cleanup errors
-              });
-              expired = true;
-              continue;
+        // Check for cancellation before proceeding
+        if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+          throw new Error('Request cancelled');
+        }
+        
+        try {
+          // Create a proper abort promise that resolves immediately if already aborted
+          const abortPromise = new Promise<never>((_, reject) => {
+            if (signal.aborted) {
+              reject(new Error('Request cancelled'));
+              return;
             }
-            
-            if (chunkData.chunkIndex !== undefined) {
-              chunks.push({
-                index: chunkData.chunkIndex,
-                data: chunkData.data
-              });
-            }
-          }
-          
-          if (expired && chunks.length === 0) {
-            setCache(key, defaultValue, QUOTE_CACHE_TTL);
-            return defaultValue;
-          }
-          
-          // Sort chunks by index and combine data
-          chunks.sort((a, b) => a.index - b.index);
-          const combinedData: any[] = [];
-          chunks.forEach(chunk => {
-            combinedData.push(...chunk.data);
+            signal.addEventListener('abort', () => reject(new Error('Request cancelled')));
           });
           
-          console.log(`✅ Loaded chunked data from Firestore: ${key}`);
-          // Cache the result with longer TTL for quote data
-          setCache(key, combinedData as T, QUOTE_CACHE_TTL);
-          return combinedData as T;
+          const dataDoc = await Promise.race([
+            getDoc(dataDocRef),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), 10000) // 10 second timeout
+            ),
+            abortPromise
+          ]) as any;
+          
+          // Check for cancellation after doc fetch
+          if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+            throw new Error('Request cancelled');
+          }
+          
+          if (dataDoc.exists()) {
+            const documentData = dataDoc.data() as QuoteDataDocument;
+            
+            // Check if data has expired
+            const now = new Date();
+            const expiresAt = documentData.expiresAt.toDate();
+            
+            if (now > expiresAt) {
+              await deleteDoc(dataDocRef);
+              setCache(key, defaultValue, QUOTE_CACHE_TTL);
+              return defaultValue;
+            }
+            
+            if (isQuoteCategory) {
+              console.log(`✅ Loaded from Firestore: ${key} (request ${requestId})`);
+            } else {
+              console.log(`✅ Loaded from Firestore: ${key}`);
+            }
+            // Cache the result with longer TTL for quote data
+            const ttl = key.includes('quotes') ? QUOTE_CACHE_TTL : DEFAULT_CACHE_TTL;
+            setCache(key, documentData.data as T, ttl);
+            return documentData.data as T;
+          }
+        } catch (timeoutError) {
+          // Check for cancellation before trying chunked approach
+          if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+            throw new Error('Request cancelled');
+          }
+          // Try chunked approach if single document times out
         }
-      } catch (queryError) {
-        console.warn(`⚠️ Query error for ${key}:`, queryError);
-        // Fallback to localStorage if available
-        if (typeof window !== 'undefined') {
+        
+        // If single document doesn't exist or timed out, try to load chunked data
+        if (key.includes('quotes')) {
+          
+          try {
+            // Query for chunk documents with timeout
+            const chunkedQuery = query(
+              subcollectionRef,
+              where('originalKey', '==', key)
+            );
+            
+            // Check for cancellation before query
+            if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+              throw new Error('Request cancelled');
+            }
+            
+            // Create a proper abort promise for the query
+            const queryAbortPromise = new Promise<never>((_, reject) => {
+              if (signal.aborted) {
+                reject(new Error('Request cancelled'));
+                return;
+              }
+              signal.addEventListener('abort', () => reject(new Error('Request cancelled')));
+            });
+            
+            const querySnapshot = await Promise.race([
+              getDocs(chunkedQuery),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Query timeout')), 15000) // 15 second timeout
+              ),
+              queryAbortPromise
+            ]) as any;
+            
+            // Check for cancellation after query
+            if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+              throw new Error('Request cancelled');
+            }
+            
+            if (!querySnapshot.empty) {
+              
+              // Sort chunks by index and combine them
+              const chunks: { index: number; data: any[] }[] = [];
+              let expired = false;
+              
+              for (const doc of querySnapshot.docs) {
+                // Check for cancellation during processing
+                if (signal.aborted || (isQuoteCategory && !isLatestRequest())) {
+                  throw new Error('Request cancelled');
+                }
+                
+                const chunkData = doc.data() as QuoteDataDocument;
+                
+                // Check if chunk has expired
+                const now = new Date();
+                const expiresAt = chunkData.expiresAt.toDate();
+                
+                if (now > expiresAt) {
+                  // Clean up expired chunks in background (don't await to avoid blocking)
+                  deleteDoc(doc.ref).catch(() => {
+                    // Silently handle cleanup errors
+                  });
+                  expired = true;
+                  continue;
+                }
+                
+                if (chunkData.chunkIndex !== undefined) {
+                  chunks.push({
+                    index: chunkData.chunkIndex,
+                    data: chunkData.data
+                  });
+                }
+              }
+              
+              if (expired && chunks.length === 0) {
+                setCache(key, defaultValue, QUOTE_CACHE_TTL);
+                return defaultValue;
+              }
+              
+              // Sort chunks by index and combine data
+              chunks.sort((a, b) => a.index - b.index);
+              const combinedData: any[] = [];
+              chunks.forEach(chunk => {
+                combinedData.push(...chunk.data);
+              });
+              
+              if (isQuoteCategory) {
+                console.log(`✅ Loaded chunked data from Firestore: ${key} (request ${requestId})`);
+              } else {
+                console.log(`✅ Loaded chunked data from Firestore: ${key}`);
+              }
+              // Cache the result with longer TTL for quote data
+              setCache(key, combinedData as T, QUOTE_CACHE_TTL);
+              return combinedData as T;
+            }
+          } catch (queryError: any) {
+            // Check if this was a cancellation
+            if (signal.aborted || !isLatestRequest() || queryError?.message === 'Request cancelled' || queryError?.message === 'Request superseded') {
+              throw new Error('Request cancelled');
+            }
+            console.warn(`⚠️ Query error for ${key}:`, queryError);
+            // Fallback to localStorage if available
+            if (typeof window !== 'undefined') {
+              const stored = localStorage.getItem(key);
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                setCache(key, parsed, DEFAULT_CACHE_TTL);
+                return parsed;
+              }
+            }
+          }
+        }
+
+        console.log(`📭 No data found for ${key}, returning default`);
+        setCache(key, defaultValue, DEFAULT_CACHE_TTL);
+        return defaultValue;
+      })();
+      
+      // Store the pending request
+      pendingRequests.set(key, { controller, promise: requestPromise, requestId });
+      
+      // Execute the request
+      const result = await requestPromise;
+      
+      // Clean up completed request
+      pendingRequests.delete(key);
+      
+      return result;
+      
+    } catch (error: any) {
+      // Clean up on error
+      pendingRequests.delete(key);
+      
+      // Check if this was a cancellation
+      if (error?.message === 'Request cancelled' || error?.message === 'Request superseded' || signal.aborted || latestRequestIds.get(category) !== requestId) {
+        console.log(`🚫 Request ${requestId} cancelled for ${key}`);
+        // Return cached data if available, otherwise default
+        const cached = getFromCache<T>(key);
+        return cached !== null ? cached : defaultValue;
+      }
+      
+      console.error(`❌ Error loading data for ${key}:`, error);
+      // Enhanced fallback to localStorage
+      if (typeof window !== 'undefined') {
+        try {
           const stored = localStorage.getItem(key);
           if (stored) {
             const parsed = JSON.parse(stored);
             setCache(key, parsed, DEFAULT_CACHE_TTL);
             return parsed;
           }
+        } catch (localError) {
+          // Silently handle localStorage parsing errors
         }
       }
+      setCache(key, defaultValue, DEFAULT_CACHE_TTL);
+      return defaultValue;
     }
-
-    console.log(`📭 No data found for ${key}, returning default`);
-    setCache(key, defaultValue, DEFAULT_CACHE_TTL);
-    return defaultValue;
-    
-  } catch (error) {
-    console.error(`❌ Error loading data for ${key}:`, error);
-    // Enhanced fallback to localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(key);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setCache(key, parsed, DEFAULT_CACHE_TTL);
-          return parsed;
-        }
-      } catch (localError) {
-        // Silently handle localStorage parsing errors
-      }
-    }
-    setCache(key, defaultValue, DEFAULT_CACHE_TTL);
-    return defaultValue;
-  }
   });
 };
 

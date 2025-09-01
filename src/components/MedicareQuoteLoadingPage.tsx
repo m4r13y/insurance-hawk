@@ -103,11 +103,6 @@ export default function MedicareQuoteLoadingPage({
       return false;
     });
 
-    // Debug logging to help troubleshoot
-    if (stepText.includes('Supplement') || stepText.includes('Drug Plan')) {
-      console.log(`🔍 Debug - Step: "${stepText}", Started Types:`, startedQuoteTypes, 'Matching:', matchingQuoteType);
-    }
-
     const isCompleted = completedQuoteTypes.some(completed => {
       const stepTextLower = stepText.toLowerCase();
       const completedLower = completed.toLowerCase();

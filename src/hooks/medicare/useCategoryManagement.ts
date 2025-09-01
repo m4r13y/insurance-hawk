@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { cancelCategoryRequests } from '@/lib/services/temporary-storage';
 
 export type CategoryType = 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense';
 
@@ -53,6 +54,11 @@ export const useCategoryManagement = () => {
       manualTimeoutRef.current = null;
     }
 
+    // Cancel all pending Firestore requests for any categories
+    // This prevents race conditions when user switches tabs quickly
+    const allCategories = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
+    allCategories.forEach(cat => cancelCategoryRequests(cat));
+
     // Set the new category immediately for UI responsiveness
     setActiveCategory(category);
     setSelectedCategory(category);
@@ -100,6 +106,10 @@ export const useCategoryManagement = () => {
       clearTimeout(automaticTimeoutRef.current);
       automaticTimeoutRef.current = null;
     }
+
+    // Cancel requests for OTHER categories, but not the one we're switching to
+    const allCategories = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
+    allCategories.filter(cat => cat !== category).forEach(cat => cancelCategoryRequests(cat));
 
     // Set the new category immediately for UI responsiveness
     setActiveCategory(category);

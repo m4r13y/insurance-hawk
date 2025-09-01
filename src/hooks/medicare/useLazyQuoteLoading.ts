@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { 
-  loadFromStorage,
   REAL_QUOTES_KEY,
   ADVANTAGE_QUOTES_KEY,
   DRUG_PLAN_QUOTES_KEY,
@@ -9,6 +8,7 @@ import {
   FINAL_EXPENSE_QUOTES_KEY,
   CANCER_INSURANCE_QUOTES_KEY
 } from '@/components/medicare-shop/shared';
+import { cancelCategoryRequests, loadTemporaryData } from '@/lib/services/temporary-storage';
 import { optimizeHospitalIndemnityQuotes } from '@/lib/hospital-indemnity-quote-optimizer';
 import type { QuoteActions } from './useQuoteManagement';
 
@@ -25,36 +25,44 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
 
   const loadQuotesForCategory = useCallback(async (category: string) => {
     try {
+      console.log(`🔄 Loading quotes for category: ${category}`);
+      
+      // Cancel requests for OTHER categories to prevent race conditions
+      const allCategories = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
+      allCategories.filter(cat => cat !== category).forEach(cat => {
+        cancelCategoryRequests(cat);
+      });
+      
       switch (category) {
         case 'medigap':
-          const savedQuotes = await loadFromStorage(REAL_QUOTES_KEY, []);
+          const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
           if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
             setRealQuotes(savedQuotes);
           }
           break;
         case 'advantage':
-          const savedAdvantageQuotes = await loadFromStorage(ADVANTAGE_QUOTES_KEY, []);
+          const savedAdvantageQuotes = await loadTemporaryData(ADVANTAGE_QUOTES_KEY, []);
           if (savedAdvantageQuotes && Array.isArray(savedAdvantageQuotes) && savedAdvantageQuotes.length > 0) {
             setAdvantageQuotes(savedAdvantageQuotes);
           }
           break;
         case 'drug-plan':
-          const savedDrugPlanQuotes = await loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
+          const savedDrugPlanQuotes = await loadTemporaryData(DRUG_PLAN_QUOTES_KEY, []);
           if (savedDrugPlanQuotes && Array.isArray(savedDrugPlanQuotes) && savedDrugPlanQuotes.length > 0) {
             setDrugPlanQuotes(savedDrugPlanQuotes);
           }
           break;
         case 'dental':
-          const savedDentalQuotes = await loadFromStorage(DENTAL_QUOTES_KEY, []);
+          const savedDentalQuotes = await loadTemporaryData(DENTAL_QUOTES_KEY, []);
           if (savedDentalQuotes && Array.isArray(savedDentalQuotes) && savedDentalQuotes.length > 0) {
             setDentalQuotes(savedDentalQuotes);
           }
           break;
         case 'hospital-indemnity':
-          const savedHospitalQuotes = await loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
+          const savedHospitalQuotes = await loadTemporaryData(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
           if (savedHospitalQuotes && Array.isArray(savedHospitalQuotes) && savedHospitalQuotes.length > 0) {
             // Check if optimization is needed
-            const firstQuote = savedHospitalQuotes[0];
+            const firstQuote = savedHospitalQuotes[0] as any;
             if (firstQuote?.planName) {
               setHospitalIndemnityQuotes(savedHospitalQuotes);
             } else if (firstQuote?.plan_name) {
@@ -64,13 +72,13 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
           }
           break;
         case 'final-expense':
-          const savedFinalExpenseQuotes = await loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
+          const savedFinalExpenseQuotes = await loadTemporaryData(FINAL_EXPENSE_QUOTES_KEY, []);
           if (savedFinalExpenseQuotes && Array.isArray(savedFinalExpenseQuotes) && savedFinalExpenseQuotes.length > 0) {
             setFinalExpenseQuotes(savedFinalExpenseQuotes);
           }
           break;
         case 'cancer':
-          const savedCancerQuotes = await loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
+          const savedCancerQuotes = await loadTemporaryData(CANCER_INSURANCE_QUOTES_KEY, []);
           if (savedCancerQuotes && Array.isArray(savedCancerQuotes) && savedCancerQuotes.length > 0) {
             setCancerInsuranceQuotes(savedCancerQuotes);
           }

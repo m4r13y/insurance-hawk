@@ -210,8 +210,22 @@ export const saveToStorageSync = (key: string, value: any): Promise<void> => {
   return saveToStorage(key, value);
 };
 
-// Check if quotes exist (async version for Firestore)
-export const hasQuotes = async (): Promise<boolean> => {
+// Check if quotes exist (lightweight localStorage version to prevent eager loading)
+export const hasQuotes = (): boolean => {
+  try {
+    // Check localStorage for indicators of active quote session
+    const hasFormCompleted = localStorage.getItem('medicare_quote_form_completed') === 'true';
+    const hasQuoteSession = localStorage.getItem('medicare_quote_session_active') === 'true';
+    
+    return hasFormCompleted && hasQuoteSession;
+  } catch (error) {
+    console.error('Error checking quotes:', error);
+    return false;
+  }
+};
+
+// Async version that actually checks Firestore (use sparingly)
+export const hasQuotesAsync = async (): Promise<boolean> => {
   try {
     const [
       realQuotes,
@@ -301,7 +315,12 @@ export const clearAllQuotes = async () => {
       localStorage.removeItem(SELECTED_CATEGORIES_KEY);
       localStorage.removeItem(CURRENT_FLOW_STEP_KEY);
       localStorage.removeItem(UI_STATE_KEY);
-      console.log('✅ Cleared UI state from localStorage');
+      
+      // Clear session indicators
+      localStorage.removeItem('medicare_quote_form_completed');
+      localStorage.removeItem('medicare_quote_session_active');
+      
+      console.log('✅ Cleared UI state and session indicators from localStorage');
     }
     
     console.log('✅ All quotes and UI state cleared');
