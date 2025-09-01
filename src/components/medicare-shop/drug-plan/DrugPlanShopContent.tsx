@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MagnifyingGlassIcon, MixerHorizontalIcon, TriangleUpIcon, StarIcon, PersonIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, MixerHorizontalIcon, TriangleUpIcon, StarFilledIcon, PersonIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface DrugPlanQuote {
@@ -153,7 +153,7 @@ export default function DrugPlanShopContent({
                     </div>
                     {quote.rating && (
                       <div className="flex items-center">
-                        <StarIcon className="h-4 w-4 text-yellow-400 fill-current" />
+                        <StarFilledIcon className="h-4 w-4 text-yellow-400 fill-current" />
                         <span className="ml-1 text-sm font-medium">{quote.rating}</span>
                       </div>
                     )}

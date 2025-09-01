@@ -14,7 +14,7 @@ import {
   MixerHorizontalIcon as Filter, 
   TokensIcon as DollarSign, 
   ArchiveIcon as Pill, 
-  StarIcon as Star, 
+  StarFilledIcon as Star, 
   UpdateIcon as RefreshCw,
   InfoCircledIcon as Info,
   CheckCircledIcon as Shield
@@ -214,7 +214,7 @@ export default function DrugPlanSidebar({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center">
-            <Star className="h-4 w-4 mr-2" />
+            <Star className="h-4 w-4 mr-2 text-yellow-400 fill-current" />
             Minimum Star Rating
           </CardTitle>
         </CardHeader>

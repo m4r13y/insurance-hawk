@@ -942,14 +942,17 @@ function MedicareShopContent() {
         
         setCurrentQuoteType('Cancer Insurance');
         
-        // Convert formData to CancerInsuranceQuoteParams format - using minimal required parameters
+        // Convert formData to CancerInsuranceQuoteParams format - using actual form data
+        const validCancerStates = ['TX', 'GA'] as const;
+        const cancerState = validCancerStates.includes(formData.state as any) ? formData.state as 'TX' | 'GA' : 'TX';
+        
         const cancerParams = {
-          state: 'TX' as const, // Cancer insurance is only available in Texas
+          state: cancerState,
           age: getSafeAge(formData.age),
-          familyType: 'Applicant Only' as const, // Use default for broader coverage
+          familyType: formData.familyType === 'family' ? 'Applicant and Spouse' as const : 'Applicant Only' as const,
           tobaccoStatus: formData.tobaccoUse ? 'Tobacco' as const : 'Non-Tobacco' as const,
-          premiumMode: 'Monthly Bank Draft' as const, // Use most common payment mode
-          carcinomaInSitu: '25%' as const, // Use default conservative option
+          premiumMode: formData.premiumMode === 'annual' ? 'Annual' as const : 'Monthly Bank Draft' as const,
+          carcinomaInSitu: formData.carcinomaInSitu ? '100%' as const : '25%' as const,
           benefitAmount: 25000 // Use standard benefit amount
         };
         
@@ -1638,6 +1641,9 @@ function MedicareShopContent() {
     setInitialLoadComplete(false); // Reset initial load flag to allow auto-switching for new submissions
     setCurrentQuoteType(null);
     setTotalExpectedQuotes(0);
+    
+    // Reset URL to clean Medicare shop page
+    router.push('/medicare?section=shop');
   };
 
   const clearFilters = () => {
@@ -1792,6 +1798,55 @@ function MedicareShopContent() {
 
   const { paginatedData, paginationInfo } = paginationData;
 
+  // Handler for generating quotes from the additional options dropdown
+  const handleGenerateQuotesForCategory = useCallback(async (category: string, formData: QuoteFormData) => {
+    try {
+      // Update form data state with any new information
+      setQuoteFormData(formData);
+      
+      // Add category to selected flow categories if not already present
+      if (!selectedFlowCategories.includes(category)) {
+        const updatedCategories = [...selectedFlowCategories, category];
+        setSelectedFlowCategories(updatedCategories);
+        saveSelectedCategories(updatedCategories);
+      }
+      
+      // Generate quotes for the specific category
+      await handleQuoteFormSubmitWithData(formData, category);
+      
+      // Switch to the new category after quotes are generated
+      await handleCategoryToggle(category as 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense');
+      
+    } catch (error) {
+      console.error('Error generating quotes for category:', category, error);
+      setQuotesError(`Failed to generate quotes for ${category}. Please try again.`);
+    }
+  }, [selectedFlowCategories, setSelectedFlowCategories, handleQuoteFormSubmitWithData, handleCategoryToggle, setQuoteFormData, setQuotesError]);
+
+  // Get currently loading categories for the additional options UI
+  const getLoadingCategories = useCallback((): string[] => {
+    const loading: string[] = [];
+    if (isLoadingQuotes) {
+      // Map the current quote type to category ID
+      if (currentQuoteType?.includes('Supplement') || currentQuoteType?.includes('Plan')) {
+        loading.push('medigap');
+      } else if (currentQuoteType?.includes('Advantage')) {
+        loading.push('advantage');
+      } else if (currentQuoteType?.includes('Drug')) {
+        loading.push('drug-plan');
+      } else if (currentQuoteType?.includes('Dental')) {
+        loading.push('dental');
+      } else if (currentQuoteType?.includes('Cancer')) {
+        loading.push('cancer');
+      } else if (currentQuoteType?.includes('Hospital')) {
+        loading.push('hospital-indemnity');
+      } else if (currentQuoteType?.includes('Final Expense')) {
+        loading.push('final-expense');
+      }
+    }
+    return loading;
+  }, [isLoadingQuotes, currentQuoteType]);
+
   return (
     <MedicareShopLayout
       hasQuotes={hasQuotes()}
@@ -1803,6 +1858,10 @@ function MedicareShopContent() {
       onCategoryToggle={handleManualCategoryToggle}
       onCategorySelect={handleManualCategorySelect}
       onReset={clearStorageAndReset}
+      quoteFormData={quoteFormData}
+      onGenerateQuotes={handleGenerateQuotesForCategory}
+      loadingCategories={getLoadingCategories()}
+      completedQuoteTypes={completedQuoteTypes}
     >
       {/* Loading States Component */}
       <MedicareLoadingStates

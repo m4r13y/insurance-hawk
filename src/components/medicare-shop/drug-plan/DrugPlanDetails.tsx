@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
-  StarIcon as Star, 
+  StarFilledIcon as Star, 
   TokensIcon as DollarSign, 
   ArchiveIcon as Pill, 
   CheckCircledIcon as Shield, 

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarIcon, PersonIcon, HeartIcon } from "@radix-ui/react-icons";
+import { PersonIcon, HeartIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface CancerInsuranceQuote {

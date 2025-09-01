@@ -269,7 +269,7 @@ export default function MedicareShopSidebar({
                     className="justify-start text-xs"
                     onClick={() => setSortBy('popularity')}
                   >
-                    <StarIcon className="w-3 h-3 mr-2" />
+                    <StarFilledIcon className="w-3 h-3 mr-2 text-yellow-400 fill-current" />
                     Most Popular
                   </Button>
                   <Button 

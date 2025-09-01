@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarIcon, CalendarIcon } from "@radix-ui/react-icons";
+import { StarFilledIcon, CalendarIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
 interface FinalExpenseQuote {
@@ -79,7 +79,7 @@ export default function FinalExpenseShopContent({
                     <h4 className="font-semibold text-lg">{quote.plan_name || 'Final Expense Life Insurance'}</h4>
                     {quote.am_best_rating && (
                       <div className="flex items-center gap-1">
-                        <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <StarFilledIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm text-gray-600">{quote.am_best_rating}</span>
                       </div>
                     )}

@@ -42,7 +42,6 @@
     --overlay: 0 0% 0% / 0.8;
     --error: 0 84% 60%;
     --error-foreground: 355 7% 97%;
-  }
 
   .dark {
     --background: 222.2 84% 4.9%;
@@ -88,28 +87,24 @@
     @apply border-border;
   }
   
-  /* Prevent layout shift when scrollbar is hidden by modals */
-  html {
-    /* Modern solution: Reserve space for scrollbar */
-    scrollbar-gutter: stable;
-  }
-  
+  /* SIMPLE SOLUTION: Always show scrollbar to prevent layout shift */
   body {
     @apply bg-background text-foreground;
-    /* Fallback for older browsers: Always show scrollbar */
+    /* Force scrollbar to always be present */
     overflow-y: scroll;
   }
   
-  /* When modal is open and scroll is locked, maintain scrollbar space */
-  body[style*="overflow: hidden"] {
-    overflow: hidden !important;
-    padding-right: var(--scrollbar-width, 0px);
+  /* Modern browsers: Use scrollbar-gutter for cleaner approach */
+  @supports (scrollbar-gutter: stable) {
+    html {
+      scrollbar-gutter: stable;
+    }
+    
+    body {
+      overflow-y: auto;
+    }
   }
-  
-  /* For Radix UI modals specifically */
-  body[data-scroll-locked] {
-    padding-right: var(--scrollbar-width, 0px);
-  }
+}
 }
 
 /* Glass morphism utilities */

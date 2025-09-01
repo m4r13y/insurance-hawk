@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarIcon, HomeIcon, CalendarIcon, CheckCircledIcon, TokensIcon as DollarSign } from "@radix-ui/react-icons";
+import { StarFilledIcon, HomeIcon, CalendarIcon, CheckCircledIcon, TokensIcon as DollarSign } from "@radix-ui/react-icons";
 import { OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 
@@ -68,7 +68,7 @@ export default function HospitalIndemnityShopContent({
                       <h4 className="font-semibold text-lg">{quote.planName}</h4>
                       {quote.ambest?.rating && (
                         <Badge variant="outline" className="flex items-center gap-1">
-                          <StarIcon className="h-3 w-3" />
+                          <StarFilledIcon className="h-3 w-3 text-yellow-400 fill-current" />
                           {quote.ambest.rating}
                         </Badge>
                       )}
