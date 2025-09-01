@@ -43,6 +43,7 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
                   src={logoUrl}
                   alt={quoteData.company_base.name}
                   fill
+                  sizes="24px"
                   className="object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

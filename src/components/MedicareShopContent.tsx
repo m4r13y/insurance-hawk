@@ -435,10 +435,14 @@ function MedicareShopContent() {
     setLoadingPlanButton(planType);
     
     try {
-      // Use stored form data if not provided
-      const dataToUse = formData || loadFromStorage(QUOTE_FORM_DATA_KEY, null);
+      // Use provided form data, current state, or stored form data as fallback
+      const dataToUse = formData || quoteFormData || loadFromStorage(QUOTE_FORM_DATA_KEY, null);
+      
+      console.log('🔍 fetchIndividualPlanQuotes - dataToUse:', dataToUse);
+      console.log('🔍 fetchIndividualPlanQuotes - planType:', planType);
       
       if (!dataToUse) {
+        console.error('❌ No form data found for individual plan quotes');
         return [];
       }
 
@@ -459,30 +463,92 @@ function MedicareShopContent() {
 
       // Handle individual medigap plan letters (F, G, N)
       if (['F', 'G', 'N'].includes(planType)) {
-        // Set loading items for individual plan
-        setLoadingItems([`Plan ${planType}`]);
+        console.log(`🔥 Fetching individual plan ${planType}...`);
         
+        // Set expected quote type for loading detection
+        const planDisplayName = `Plan ${planType}`;
+        setExpectedQuoteTypes(prev => {
+          if (!prev.includes(planDisplayName)) {
+            return [...prev, planDisplayName];
+          }
+          return prev;
+        });
+        
+        // Convert form data to API format for getMedigapQuotes
         const quoteParams = {
           zipCode: dataToUse.zipCode,
           age: getSafeAge(dataToUse.age).toString(),
           gender: dataToUse.gender === 'male' ? 'M' as const : 'F' as const,
           tobacco: dataToUse.tobaccoUse ? "1" as const : "0" as const,
-          plans: [planType], // Only fetch for this specific plan
+          plans: [planType], // Just this single plan
         };
+
+        console.log('Fetching individual plan with params:', quoteParams);
         
-        const result = await getMedigapQuotes(quoteParams);
+        const response = await getMedigapQuotes(quoteParams);
         
-        if (result?.quotes && result.quotes.length > 0) {
-          // Add the new quotes to existing quotes (merge, don't replace)
-          setRealQuotes(prev => [...prev, ...result.quotes || []]);
+        if (response?.quotes && response.quotes.length > 0) {
+          console.log(`✅ Got ${response.quotes.length} quotes for plan ${planType}`);
           
-          // Add the plan to selected plans if not already included
-          setSelectedQuotePlans(prev => 
-            prev.includes(planType) ? prev : [...prev, planType]
-          );
+          // Preload carrier logos
+          await preloadCarrierLogos(response.quotes);
           
-          await preloadCarrierLogos(result.quotes);
-          return result.quotes;
+          // Add to existing quotes instead of replacing them
+          const existingQuotes = realQuotes || [];
+          console.log(`🔍 Before adding ${planType}:`, {
+            existingQuotes: existingQuotes.length,
+            existingPlans: existingQuotes.map(q => q?.plan).filter(Boolean),
+            planTypeBeingAdded: planType
+          });
+          
+          const planQuotes = response.quotes.filter(quote => quote?.plan === planType);
+          console.log(`🔍 New quotes for ${planType}:`, planQuotes.length, planQuotes.map(q => q?.plan));
+          
+          // Remove any existing quotes for this plan type to avoid duplicates
+          const otherQuotes = existingQuotes.filter(quote => quote?.plan !== planType);
+          console.log(`🔍 Other quotes after filtering:`, {
+            otherQuotesCount: otherQuotes.length,
+            otherPlans: otherQuotes.map(q => q?.plan).filter(Boolean)
+          });
+          
+          const updatedQuotes = [...otherQuotes, ...planQuotes];
+          console.log(`🔍 Final updated quotes:`, {
+            totalCount: updatedQuotes.length,
+            allPlans: updatedQuotes.map(q => q?.plan).filter(Boolean)
+          });
+          
+          // Update the quotes state
+          setRealQuotes(updatedQuotes);
+          
+          // Save to storage
+          await saveToStorage(REAL_QUOTES_KEY, updatedQuotes);
+          
+          // Add this plan to selected plans if not already there
+          if (!selectedQuotePlans.includes(planType)) {
+            const newSelectedPlans = [...selectedQuotePlans, planType];
+            setSelectedQuotePlans(newSelectedPlans);
+            // Note: selectedQuotePlans will be automatically saved via useEffect
+          }
+          
+          // Mark this individual plan as completed
+          const planDisplayName = `Plan ${planType}`;
+          setCompletedQuoteTypes(prev => {
+            if (!prev.includes(planDisplayName)) {
+              return [...prev, planDisplayName];
+            }
+            return prev;
+          });
+          
+          console.log(`✅ Added plan ${planType} to quote collection`);
+          return updatedQuotes;
+        } else {
+          console.error(`❌ No quotes returned for plan ${planType}`);
+          
+          // Clean up expected quote types when no quotes returned
+          const planDisplayName = `Plan ${planType}`;
+          setExpectedQuoteTypes(prev => prev.filter(type => type !== planDisplayName));
+          
+          return [];
         }
       } 
       // Handle quote type categories (supplement, advantage)
@@ -538,12 +604,19 @@ function MedicareShopContent() {
       return [];
     } catch (error) {
       console.error(`Error fetching ${planType} quotes:`, error);
+      
+      // Clean up expected quote types for individual plans that failed
+      if (['F', 'G', 'N'].includes(planType)) {
+        const planDisplayName = `Plan ${planType}`;
+        setExpectedQuoteTypes(prev => prev.filter(type => type !== planDisplayName));
+      }
+      
       return [];
     } finally {
       setLoadingPlanButton(null);
       setLoadingItems([]); // Clear loading items when individual fetch is complete
     }
-  }, [preloadCarrierLogos]);
+  }, [preloadCarrierLogos, quoteFormData]);
 
   // Memoized wrapper function for component compatibility
   const handleFetchQuotes = useCallback((planType: string) => {
@@ -654,11 +727,12 @@ function MedicareShopContent() {
   // Handle quote form submission
   const handleQuoteFormSubmit = async () => {
     // Use the conditional validation by calling handleQuoteFormSubmitWithData
-    await handleQuoteFormSubmitWithData(quoteFormData, selectedCategory);
+    // Force refresh when user explicitly submits the form
+    await handleQuoteFormSubmitWithData(quoteFormData, selectedCategory, undefined, true, true);
   };
 
   // Handle quote form submission with specific form data (for async state issues)
-  const handleQuoteFormSubmitWithData = async (formData: QuoteFormData, category?: string, plansList?: string[], manageLoadingState: boolean = true) => {
+  const handleQuoteFormSubmitWithData = async (formData: QuoteFormData, category?: string, plansList?: string[], manageLoadingState: boolean = true, forceRefresh: boolean = false) => {
     const targetCategory = category || selectedCategory;
     
     // Helper function to safely convert age
@@ -711,52 +785,112 @@ function MedicareShopContent() {
     setQuotesReady(false); // Reset quotes ready state when starting new request
     setQuotesError(null);
     
-    // Set specific loading items based on what's being requested (only if managing state)
+    // Set expected quote types for category-specific loading indicators (always do this)
+    let categoryQuoteTypes: string[] = [];
+    if (targetCategory === 'medigap') {
+      const plansToFetch = plansList || selectedQuotePlans;
+      categoryQuoteTypes = plansToFetch.length > 1 
+        ? ['Supplement Plans'] 
+        : plansToFetch.map(plan => {
+            const planLetter = plan.replace('plan-', '').toUpperCase();
+            return `Plan ${planLetter}`;
+          });
+    } else if (targetCategory === 'advantage') {
+      categoryQuoteTypes = ['Medicare Advantage Plans'];
+    } else if (targetCategory === 'drug-plan') {
+      categoryQuoteTypes = ['Drug Plans'];
+    } else if (targetCategory === 'dental') {
+      categoryQuoteTypes = ['Dental Insurance'];
+    } else if (targetCategory === 'cancer') {
+      categoryQuoteTypes = ['Cancer Insurance'];
+    } else if (targetCategory === 'hospital-indemnity') {
+      categoryQuoteTypes = ['Hospital Indemnity'];
+    } else if (targetCategory === 'final-expense') {
+      categoryQuoteTypes = ['Final Expense Life'];
+    }
+
+    // Set expected quote types for category loading detection
+    setExpectedQuoteTypes(prev => [...new Set([...prev, ...categoryQuoteTypes])]);
+    
+    // Set global loading items only if managing global state
     if (manageLoadingState) {
-      if (targetCategory === 'medigap') {
-        const plansToFetch = plansList || selectedQuotePlans;
-        const planNames = plansToFetch.length > 1 
-          ? ['Supplement Plans'] 
-          : plansToFetch.map(plan => {
-              const planLetter = plan.replace('plan-', '').toUpperCase();
-              return `Plan ${planLetter}`;
-            });
-        setLoadingItems(planNames);
-      } else if (targetCategory === 'advantage') {
-        setLoadingItems(['Medicare Advantage Plans']);
-      } else if (targetCategory === 'drug-plan') {
-        setLoadingItems(['Drug Plans']);
-      } else if (targetCategory === 'dental') {
-        setLoadingItems(['Dental Insurance']);
-      } else if (targetCategory === 'cancer') {
-        setLoadingItems(['Cancer Insurance']);
-      } else if (targetCategory === 'hospital-indemnity') {
-        setLoadingItems(['Hospital Indemnity']);
-      } else if (targetCategory === 'final-expense') {
-        setLoadingItems(['Final Expense Life']);
-      }
+      setLoadingItems(categoryQuoteTypes);
     }
     
-    // Clear quotes for the specific category (only in non-parallel mode)
+    // Clear quotes for the specific category only if we're going to fetch new ones
+    // Don't clear if quotes already exist and we're just switching categories
     if (manageLoadingState) {
-      if (targetCategory === 'medigap') {
-        setRealQuotes([]);
-      } else if (targetCategory === 'advantage') {
-        setAdvantageQuotes([]);
-      } else if (targetCategory === 'drug-plan') {
-        setDrugPlanQuotes([]);
-      } else if (targetCategory === 'dental') {
-        setDentalQuotes([]);
-      } else if (targetCategory === 'cancer') {
-        setCancerInsuranceQuotes([]);
-      } else if (targetCategory === 'hospital-indemnity') {
-        setHospitalIndemnityQuotes([]);
-      } else if (targetCategory === 'final-expense') {
-        setFinalExpenseQuotes([]);
+      // Check if we should preserve existing quotes
+      const shouldClearQuotes = forceRefresh || (() => {
+        // Check if we already have quotes for this category
+        switch (targetCategory) {
+          case 'medigap': return realQuotes.length === 0;
+          case 'advantage': return advantageQuotes.length === 0;
+          case 'drug-plan': return drugPlanQuotes.length === 0;
+          case 'dental': return dentalQuotes.length === 0;
+          case 'cancer': return cancerInsuranceQuotes.length === 0;
+          case 'hospital-indemnity': return hospitalIndemnityQuotes.length === 0;
+          case 'final-expense': return finalExpenseQuotes.length === 0;
+          default: return true;
+        }
+      })();
+      
+      if (shouldClearQuotes) {
+        if (targetCategory === 'medigap') {
+          setRealQuotes([]);
+        } else if (targetCategory === 'advantage') {
+          setAdvantageQuotes([]);
+        } else if (targetCategory === 'drug-plan') {
+          setDrugPlanQuotes([]);
+        } else if (targetCategory === 'dental') {
+          setDentalQuotes([]);
+        } else if (targetCategory === 'cancer') {
+          setCancerInsuranceQuotes([]);
+        } else if (targetCategory === 'hospital-indemnity') {
+          setHospitalIndemnityQuotes([]);
+        } else if (targetCategory === 'final-expense') {
+          setFinalExpenseQuotes([]);
+        }
+      } else {
+        console.log(`🔄 Preserving existing ${targetCategory} quotes (${
+          targetCategory === 'medigap' ? realQuotes.length :
+          targetCategory === 'advantage' ? advantageQuotes.length :
+          targetCategory === 'drug-plan' ? drugPlanQuotes.length :
+          targetCategory === 'dental' ? dentalQuotes.length :
+          targetCategory === 'cancer' ? cancerInsuranceQuotes.length :
+          targetCategory === 'hospital-indemnity' ? hospitalIndemnityQuotes.length :
+          targetCategory === 'final-expense' ? finalExpenseQuotes.length : 0
+        } quotes)`);
       }
     }
     
     try {
+      // Check if we should skip fetching and just return existing quotes
+      const hasExistingQuotes = (() => {
+        switch (targetCategory) {
+          case 'medigap': return realQuotes.length > 0;
+          case 'advantage': return advantageQuotes.length > 0;
+          case 'drug-plan': return drugPlanQuotes.length > 0;
+          case 'dental': return dentalQuotes.length > 0;
+          case 'cancer': return cancerInsuranceQuotes.length > 0;
+          case 'hospital-indemnity': return hospitalIndemnityQuotes.length > 0;
+          case 'final-expense': return finalExpenseQuotes.length > 0;
+          default: return false;
+        }
+      })();
+      
+      if (hasExistingQuotes && !forceRefresh) {
+        console.log(`✅ Using existing ${targetCategory} quotes, skipping API call`);
+        // Mark as completed and ready
+        setQuoteFormCompleted(true);
+        setQuotesReady(true);
+        if (manageLoadingState) {
+          setIsLoadingQuotes(false);
+          setLoadingItems([]);
+        }
+        return; // Exit early with existing quotes
+      }
+      
       // Only get quotes for the specified category
       if (targetCategory === 'medigap') {
         console.log('🔥 Category is medigap, proceeding with API call...');
@@ -767,8 +901,10 @@ function MedicareShopContent() {
         if (plansToFetch.length > 1) {
           setCurrentQuoteType('Supplement Plans');
         } else {
-          // Convert plan-x format to Plan X format for single plan
-          const planLetter = plansToFetch[0].replace('plan-', '').toUpperCase();
+          // Handle both old format (plan-x) and new format (X) for single plan
+          const planLetter = plansToFetch[0].includes('plan-') 
+            ? plansToFetch[0].replace('plan-', '').toUpperCase()
+            : plansToFetch[0].toUpperCase();
           setCurrentQuoteType(`Plan ${planLetter}`);
         }
         
@@ -778,7 +914,9 @@ function MedicareShopContent() {
           age: getSafeAge(formData.age).toString(),
           gender: formData.gender === 'male' ? 'M' as const : 'F' as const,
           tobacco: formData.tobaccoUse ? "1" as const : "0" as const,
-          plans: plansToFetch.length > 0 ? plansToFetch : ['F', 'G', 'N'], // Use selected plans from parameter or state
+          plans: plansToFetch.length > 0 
+            ? plansToFetch.map(plan => plan.includes('plan-') ? plan.replace('plan-', '').toUpperCase() : plan.toUpperCase())
+            : ['F', 'G', 'N'], // Use selected plans from parameter or state, converting format if needed
         };
 
         console.log('Fetching Medigap quotes with params:', quoteParams);
@@ -1146,9 +1284,16 @@ function MedicareShopContent() {
         // Handle Firebase function errors specifically
         const firebaseError = error as any; // Firebase errors have non-standard typing
         
-        if (firebaseError.code === 'functions/internal') {
-          errorMessage = `Service temporarily unavailable for ${targetCategory} quotes. Please try again in a few moments.`;
-          console.error(`🔥 Firebase function internal error for ${targetCategory}:`, error);
+        if (firebaseError.code === 'functions/deadline-exceeded' || 
+            firebaseError.message?.includes('deadline-exceeded') ||
+            firebaseError.message?.includes('timeout')) {
+          errorMessage = `Quote request timed out for ${targetCategory} plans. The service is experiencing high load. Please try again in a few minutes or select fewer plans at once.`;
+          console.error(`⏱️ Timeout error for ${targetCategory}:`, error);
+        } else if (firebaseError.code === 'functions/internal' || 
+                   firebaseError.message?.includes('Memory limit') ||
+                   firebaseError.message?.includes('memory')) {
+          errorMessage = `Quote service is experiencing high load for ${targetCategory} plans. Please try again in a few minutes or select fewer plans at once.`;
+          console.error(`🧠 Memory limit error for ${targetCategory}:`, error);
         } else if (firebaseError.code?.startsWith('functions/')) {
           errorMessage = `Quote service error for ${targetCategory}. Please try again later.`;
           console.error(`🔥 Firebase function error for ${targetCategory}:`, firebaseError.code, error);
@@ -1414,15 +1559,17 @@ function MedicareShopContent() {
       let expectedIndividualQuotes: string[] = [];
       
       if (hasMedigap) {
-        const selectedPlans = data.selectedQuotePlans && data.selectedQuotePlans.length > 0 
-          ? data.selectedQuotePlans 
-          : ['plan-f', 'plan-g', 'plan-n'];
+        const selectedPlans = data.selectedMedigapPlans && data.selectedMedigapPlans.length > 0 
+          ? data.selectedMedigapPlans    // This is already ["F", "G", "N"] format from MedicareQuoteFlow
+          : ['F', 'G', 'N'];              // Default fallback also in correct format
+        
+        // No conversion needed - selectedPlans is already in display format ["F", "G", "N"]
+        setSelectedQuotePlans(selectedPlans);
+        
         const planNames = selectedPlans.length > 1 
           ? ['Supplement Plans'] 
-          : selectedPlans.map((plan: string) => {
-              const planLetter = plan.replace('plan-', '').toUpperCase();
-              return `Plan ${planLetter}`;
-            });
+          : selectedPlans.map((plan: string) => `Plan ${plan}`);
+        
         expectedIndividualQuotes.push(...planNames);
         totalQuotes += planNames.length;
       }
@@ -1464,26 +1611,22 @@ function MedicareShopContent() {
       const loadingItemsList = [];
       
       if (hasMedigap) {
-        const selectedPlans = data.selectedQuotePlans && data.selectedQuotePlans.length > 0 
-          ? data.selectedQuotePlans 
-          : ['plan-f', 'plan-g', 'plan-n'];
+        const selectedPlans = data.selectedMedigapPlans && data.selectedMedigapPlans.length > 0 
+          ? data.selectedMedigapPlans    // This is already ["F", "G", "N"] format from MedicareQuoteFlow  
+          : ['F', 'G', 'N'];              // Default fallback also in correct format
         
-        // Convert storage format to display format and set single state
-        const convertedQuotePlans = selectedPlans.map((plan: string) => plan.replace('plan-', '').toUpperCase());
-        setSelectedQuotePlans(convertedQuotePlans);
+        // No conversion needed - selectedPlans is already in display format ["F", "G", "N"]
+        setSelectedQuotePlans(selectedPlans);
         
         const planNames = selectedPlans.length > 1 
           ? ['Supplement Plans'] 
-          : selectedPlans.map((plan: string) => {
-              const planLetter = plan.replace('plan-', '').toUpperCase();
-              return `Plan ${planLetter}`;
-            });
+          : selectedPlans.map((plan: string) => `Plan ${plan}`);
         
         loadingItemsList.push(...planNames);
         executionPlan.push({
           category: 'medigap',
-          plans: selectedPlans,
-          displayName: planNames.length > 1 ? 'Supplement Plans' : `Plan ${selectedPlans[0].replace('plan-', '').toUpperCase()}`
+          plans: selectedPlans, // Use selectedPlans directly - already in correct format
+          displayName: planNames.length > 1 ? 'Supplement Plans' : `Plan ${selectedPlans[0]}`
         });
       }
       
@@ -1870,41 +2013,34 @@ function MedicareShopContent() {
         saveSelectedCategories(updatedCategories);
       }
       
-      // Generate quotes for the specific category
-      await handleQuoteFormSubmitWithData(formData, category);
+      // Generate quotes for the specific category WITHOUT affecting global loading state
+      await handleQuoteFormSubmitWithData(formData, category, undefined, false, true);
       
-      // Switch to the new category after quotes are generated
-      await handleCategoryToggle(category as 'medigap' | 'advantage' | 'drug-plan' | 'dental' | 'cancer' | 'hospital-indemnity' | 'final-expense');
+      // DON'T switch to the new category immediately - let user manually switch when ready
+      // This preserves the current user experience while quotes load in background
+      console.log(`✅ Background quote generation completed for ${category}`);
       
     } catch (error) {
       console.error('Error generating quotes for category:', category, error);
       setQuotesError(`Failed to generate quotes for ${category}. Please try again.`);
     }
-  }, [selectedFlowCategories, setSelectedFlowCategories, handleQuoteFormSubmitWithData, handleCategoryToggle, setQuoteFormData, setQuotesError]);
+  }, [selectedFlowCategories, setSelectedFlowCategories, handleQuoteFormSubmitWithData, setQuoteFormData, setQuotesError]);
 
   // Get currently loading categories for the additional options UI
   const getLoadingCategories = useCallback((): string[] => {
     const loading: string[] = [];
-    if (isLoadingQuotes) {
-      // Map the current quote type to category ID
-      if (currentQuoteType?.includes('Supplement') || currentQuoteType?.includes('Plan')) {
-        loading.push('medigap');
-      } else if (currentQuoteType?.includes('Advantage')) {
-        loading.push('advantage');
-      } else if (currentQuoteType?.includes('Drug')) {
-        loading.push('drug-plan');
-      } else if (currentQuoteType?.includes('Dental')) {
-        loading.push('dental');
-      } else if (currentQuoteType?.includes('Cancer')) {
-        loading.push('cancer');
-      } else if (currentQuoteType?.includes('Hospital')) {
-        loading.push('hospital-indemnity');
-      } else if (currentQuoteType?.includes('Final Expense')) {
-        loading.push('final-expense');
+    
+    // Check each category individually using isCategoryLoading
+    const categories = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
+    
+    categories.forEach(category => {
+      if (isCategoryLoading(category)) {
+        loading.push(category);
       }
-    }
+    });
+    
     return loading;
-  }, [isLoadingQuotes, currentQuoteType]);
+  }, [isCategoryLoading]);
 
   return (
     <MedicareShopLayout
@@ -2041,22 +2177,30 @@ function MedicareShopContent() {
                   </div>
 
                     {/* Product Grid - Show loading or display plans based on category */}
-                    {selectedCategory === 'medigap' && isLoadingQuotes ? (
+                    {selectedCategory === 'medigap' && (
+                      // Only show loading screen for full category loads (Supplement Plans), not individual plan loads
+                      expectedQuoteTypes.includes('Supplement Plans') && 
+                      !completedQuoteTypes.includes('Supplement Plans') && 
+                      !loadingPlanButton // Don't show loading screen when individual button is loading
+                    ) ? (
                       /* Loading Screen for Medigap Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Medigap Quotes"
                         message="Searching for Medicare Supplement plans in your area..."
                       />
-                    ) : selectedCategory === 'medigap' && realQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'medigap' && realQuotes.length === 0 && (
+                      // Show skeleton only when no quotes and not loading individual plans
+                      !expectedQuoteTypes.includes('Supplement Plans') && !loadingPlanButton
+                    ) ? (
                       /* Skeleton for Medigap */
                       <PlanCardsSkeleton count={6} title="Medicare Supplement Plans" />
-                    ) : selectedCategory === 'drug-plan' && isLoadingQuotes ? (
+                    ) : selectedCategory === 'drug-plan' && isCategoryLoading('drug-plan') ? (
                       /* Loading Screen for Drug Plan Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Drug Plan Quotes"
                         message="Searching for Drug Plan (PDP) coverage in your area..."
                       />
-                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && !isCategoryLoading('drug-plan') ? (
                       /* Skeleton for Drug Plans */
                       <PlanCardsSkeleton count={4} title="Prescription Drug Plans" />
                     ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length > 0 ? (
@@ -2065,13 +2209,13 @@ function MedicareShopContent() {
                         quotes={transformDrugPlanData(drugPlanQuotes)} 
                         loading={false} 
                       />
-                    ) : selectedCategory === 'dental' && isLoadingQuotes ? (
+                    ) : selectedCategory === 'dental' && isCategoryLoading('dental') ? (
                       /* Loading Screen for Dental Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Dental Insurance Quotes"
                         message="Searching for dental insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && !isCategoryLoading('dental') ? (
                       /* Skeleton for Dental */
                       <PlanCardsSkeleton count={5} title="Dental Insurance Plans" />
                     ) : selectedCategory === 'dental' && dentalQuotes.length > 0 ? (
@@ -2080,13 +2224,13 @@ function MedicareShopContent() {
                         quotes={dentalQuotes} 
                         isLoading={false} 
                       />
-                    ) : selectedCategory === 'cancer' && isLoadingQuotes ? (
+                    ) : selectedCategory === 'cancer' && isCategoryLoading('cancer') ? (
                       /* Loading Screen for Cancer Insurance Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Cancer Insurance Quotes"
                         message="Searching for cancer insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && !isCategoryLoading('cancer') ? (
                       /* Skeleton for Cancer Insurance */
                       <PlanCardsSkeleton count={4} title="Cancer Insurance Plans" />
                     ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length > 0 ? (
@@ -2095,13 +2239,13 @@ function MedicareShopContent() {
                         quotes={cancerInsuranceQuotes} 
                         isLoading={false} 
                       />
-                    ) : selectedCategory === 'hospital-indemnity' && isLoadingQuotes ? (
+                    ) : selectedCategory === 'hospital-indemnity' && isCategoryLoading('hospital-indemnity') ? (
                       /* Loading Screen for Hospital Indemnity Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Hospital Indemnity Quotes"
                         message="Searching for hospital indemnity insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && !isCategoryLoading('hospital-indemnity') ? (
                       /* Skeleton for Hospital Indemnity */
                       <PlanCardsSkeleton count={4} title="Hospital Indemnity Plans" />
                     ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length > 0 ? (
@@ -2110,13 +2254,13 @@ function MedicareShopContent() {
                         quotes={hospitalIndemnityQuotes} 
                         isLoading={false} 
                       />
-                    ) : selectedCategory === 'final-expense' && isLoadingQuotes ? (
+                    ) : selectedCategory === 'final-expense' && isCategoryLoading('final-expense') ? (
                       /* Loading Screen for Final Expense Quotes */
                       <GenericQuoteLoading 
                         title="Getting Your Final Expense Life Insurance Quotes"
                         message="Searching for final expense life insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && !isLoadingQuotes ? (
+                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && !isCategoryLoading('final-expense') ? (
                       /* Skeleton for Final Expense */
                       <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />
                     ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length > 0 ? (

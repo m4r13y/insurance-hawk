@@ -74,7 +74,15 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           plan: plan
         }
         
-        const result = await getMedigapQuotesFn(functionParams)
+        console.log(`🔍 Fetching quotes for plan ${plan}...`)
+        
+        // Add timeout and retry logic for memory/performance issues
+        const result = await Promise.race([
+          getMedigapQuotesFn(functionParams),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout after 45 seconds')), 45000)
+          )
+        ]) as any
         
         // Handle the response format (matching hawknest client portal exactly)
         // The CSG API returns data in various formats, need to handle all cases
@@ -161,6 +169,23 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
         
       } catch (planError) {
         console.error(`Error fetching quotes for plan ${plan}:`, planError)
+        
+        // Handle specific Firebase function errors
+        if (planError && typeof planError === 'object' && 'code' in planError) {
+          const errorCode = (planError as Record<string, unknown>).code as string
+          const errorMessage = (planError as Record<string, unknown>).message as string
+          
+          if (errorCode === 'functions/deadline-exceeded' || errorMessage?.includes('deadline-exceeded')) {
+            console.warn(`⏱️ Plan ${plan} request timed out - Firebase function memory limit exceeded`)
+          } else if (errorMessage?.includes('Memory limit') || errorMessage?.includes('memory')) {
+            console.warn(`🧠 Plan ${plan} request failed - Firebase function memory limit exceeded`)
+          } else if (errorCode === 'functions/internal') {
+            console.warn(`⚠️ Plan ${plan} request failed - Firebase function internal error`)
+          }
+        } else if (planError instanceof Error && planError.message.includes('timeout')) {
+          console.warn(`⏱️ Plan ${plan} request timed out after 45 seconds`)
+        }
+        
         // Continue with other plans even if one fails
       }
     }
@@ -223,15 +248,24 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
     let errorMessage = 'Unable to fetch quotes at this time. Please try again later.'
     
     if (error && typeof error === 'object' && 'code' in error) {
-      if ((error as Record<string, unknown>).code === 'functions/unauthenticated') {
+      const errorCode = (error as Record<string, unknown>).code as string
+      const errorMsg = (error as Record<string, unknown>).message as string
+      
+      if (errorCode === 'functions/unauthenticated') {
         errorMessage = 'Authentication required to fetch quotes.'
-      } else if ((error as Record<string, unknown>).code === 'functions/permission-denied') {
+      } else if (errorCode === 'functions/permission-denied') {
         errorMessage = 'Permission denied. Please check your access level.'
-      } else if ((error as Record<string, unknown>).code === 'functions/unavailable') {
+      } else if (errorCode === 'functions/unavailable') {
         errorMessage = 'Quote service temporarily unavailable. Please try again in a few minutes.'
+      } else if (errorCode === 'functions/deadline-exceeded' || errorMsg?.includes('deadline-exceeded')) {
+        errorMessage = 'Quote request timed out due to high server load. Please try again in a few minutes or select fewer plans at once.'
+      } else if (errorCode === 'functions/internal' || errorMsg?.includes('Memory limit')) {
+        errorMessage = 'Quote service is experiencing high load. Please try again in a few minutes or select fewer plans at once.'
       } else if ('message' in error && typeof (error as Record<string, unknown>).message === 'string') {
         errorMessage = (error as Record<string, unknown>).message as string
       }
+    } else if (error instanceof Error && error.message.includes('timeout')) {
+      errorMessage = 'Quote request timed out. Please try again in a few minutes or select fewer plans at once.'
     }
     
     return { error: errorMessage }
