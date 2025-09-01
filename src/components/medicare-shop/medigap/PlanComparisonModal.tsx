@@ -61,7 +61,7 @@ export default function PlanComparisonModal({
                   {selectedPlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✓ Covered</td>}
                 </tr>
                 <tr>
-                  <td className="border border-border p-3 font-medium">Part B Deductible ($240/yr)</td>
+                  <td className="border border-border p-3 font-medium">Part B Deductible ($257/yr)</td>
                   {selectedPlans.includes('F') && <td className="border border-border p-3 text-center bg-blue-50/50 dark:bg-blue-950/20">✓ Covered</td>}
                   {selectedPlans.includes('G') && <td className="border border-border p-3 text-center bg-green-50/50 dark:bg-green-950/20">✗ You Pay</td>}
                   {selectedPlans.includes('N') && <td className="border border-border p-3 text-center bg-purple-50/50 dark:bg-purple-950/20">✗ You Pay</td>}

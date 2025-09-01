@@ -1,18 +1,65 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import MedicareShopContent from "@/components/MedicareShopContent";
-import MedicareLearnContent from "@/components/MedicareLearnContent";
-import MedicareResourcesContent from "@/components/MedicareResourcesContent";
+import { useRouter } from "next/navigation";
+import nextDynamic from "next/dynamic";
+
+// Dynamically import components with no SSR to prevent useSearchParams issues during build
+const MedicareShopContent = nextDynamic(() => import("@/components/MedicareShopContent"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse p-8">Loading shop content...</div>
+});
+
+const MedicareLearnContent = nextDynamic(() => import("@/components/MedicareLearnContent"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse p-8">Loading learn content...</div>
+});
+
+const MedicareResourcesContent = nextDynamic(() => import("@/components/MedicareResourcesContent"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse p-8">Loading resources content...</div>
+});
+
+// Wrapper components with individual Suspense boundaries
+function MedicareShopWrapper() {
+  return (
+    <Suspense fallback={<div className="animate-pulse p-8">Loading shop content...</div>}>
+      <MedicareShopContent />
+    </Suspense>
+  );
+}
+
+function MedicareLearnWrapper() {
+  return (
+    <Suspense fallback={<div className="animate-pulse p-8">Loading learn content...</div>}>
+      <MedicareLearnContent />
+    </Suspense>
+  );
+}
+
+function MedicareResourcesWrapper() {
+  return (
+    <Suspense fallback={<div className="animate-pulse p-8">Loading resources content...</div>}>
+      <MedicareResourcesContent />
+    </Suspense>
+  );
+}
 
 function MedicarePageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [section, setSection] = useState('shop');
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Initialize section from URL
+    // Mark as client-side after mount
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return; // Only run on client side
+    
+    // Get search params safely on client side
+    const searchParams = new URLSearchParams(window.location.search);
     const urlSection = searchParams.get('section') || 'shop';
     setSection(urlSection);
 
@@ -32,17 +79,22 @@ function MedicarePageContent() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [searchParams]);
+  }, [isClient]);
+
+  // Don't render child components until we're on the client side
+  if (!isClient) {
+    return <div className="animate-pulse p-8">Loading Medicare information...</div>;
+  }
 
   const renderContent = () => {
     switch (section) {
       case 'learn':
-        return <MedicareLearnContent />;
+        return <MedicareLearnWrapper />;
       case 'resources':
-        return <MedicareResourcesContent />;
+        return <MedicareResourcesWrapper />;
       case 'shop':
       default:
-        return <MedicareShopContent />;
+        return <MedicareShopWrapper />;
     }
   };
 

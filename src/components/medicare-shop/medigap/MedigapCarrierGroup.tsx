@@ -191,7 +191,7 @@ export default function MedigapCarrierGroup({
                     {/* Plan type description */}
                     <div className="text-sm text-muted-foreground mb-2">
                       {planType === 'F' ? 'Only available if eligible for Medicare before Jan 1, 2020. Covers all gaps.' :
-                       planType === 'G' ? 'Covers all gaps except Part B deductible ($240/yr)' :
+                       planType === 'G' ? 'Covers all gaps except Part B deductible ($257/yr)' :
                        planType === 'N' ? 'Lower cost with small copays for office visits & ER' :
                        'Medicare Supplement coverage'}
                     </div>

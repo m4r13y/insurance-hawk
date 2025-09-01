@@ -222,21 +222,24 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
     // Apply NAIC filtering AFTER all processing is complete
     let finalQuotes = enhancedQuotes
     
-    // Filter by appointed carriers if specified, otherwise filter by valid NAIC codes
+    // TEMPORARILY DISABLED: Filter by appointed carriers if specified, otherwise filter by valid NAIC codes
     if (params.appointedNaicCodes && params.appointedNaicCodes.length > 0) {
       finalQuotes = enhancedQuotes.filter(quote => {
         if (!quote.naic) return false
         return params.appointedNaicCodes!.includes(quote.naic)
       })
     } else {
-      // Default filtering: only show quotes from carriers in our NAIC database
-      finalQuotes = enhancedQuotes.filter(quote => {
-        if (!quote.naic) return false
-        // Normalize NAIC code for comparison (trim whitespace, ensure string)
-        const normalizedNaic = String(quote.naic).trim()
-        const carrier = getCarrierByNaicCode(normalizedNaic)
-        return !!carrier
-      })
+      // TEMPORARILY DISABLED: Default filtering - showing ALL quotes without NAIC filtering
+      finalQuotes = enhancedQuotes
+      
+      // Original filtering code (temporarily disabled):
+      // finalQuotes = enhancedQuotes.filter(quote => {
+      //   if (!quote.naic) return false
+      //   // Normalize NAIC code for comparison (trim whitespace, ensure string)
+      //   const normalizedNaic = String(quote.naic).trim()
+      //   const carrier = getCarrierByNaicCode(normalizedNaic)
+      //   return !!carrier
+      // })
     }
     
     return { quotes: finalQuotes }

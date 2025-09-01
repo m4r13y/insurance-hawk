@@ -156,12 +156,7 @@ export default function MedicareShopLayout({
     }
     
     if (isCompleted) {
-      return (
-        <div className="flex items-center gap-2">
-          <CheckIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
-          <span>{displayName}</span>
-        </div>
-      );
+      return displayName;
     }
     
     return displayName;
