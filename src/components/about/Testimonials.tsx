@@ -1,7 +1,7 @@
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { StarIcon, QuoteIcon } from "@radix-ui/react-icons"
+import { StarFilledIcon, QuoteIcon } from "@radix-ui/react-icons"
 import { staggerContainer, staggerItem } from "@/components/motion-wrapper"
 
 interface Testimonial {
@@ -49,7 +49,7 @@ export default function Testimonials({ title, description, testimonials }: Testi
                   </div>
                   <div className="flex space-x-1">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <StarIcon key={i} className="h-4 w-4 text-warning fill-current" />
+                      <StarFilledIcon key={i} className="h-4 w-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
                 </div>

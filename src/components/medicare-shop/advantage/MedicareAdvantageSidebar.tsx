@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
   MixerHorizontalIcon, 
-  StarIcon, 
+  StarFilledIcon, 
   HeartIcon,
   EyeOpenIcon,
   ComponentInstanceIcon,
@@ -216,7 +216,7 @@ export default function MedicareAdvantageSidebar({
           {/* Star Rating */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2">
-              <StarIcon className="w-4 h-4" />
+              <StarFilledIcon className="w-4 h-4 text-yellow-400 fill-current" />
               Minimum Star Rating
             </Label>
             <div className="space-y-2">
@@ -234,7 +234,7 @@ export default function MedicareAdvantageSidebar({
                   />
                   <label htmlFor={`rating-${rating}`} className="flex items-center gap-1 text-sm cursor-pointer">
                     {[...Array(rating)].map((_, i) => (
-                      <StarIcon key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <StarFilledIcon key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                     ))}
                     <span className="text-muted-foreground">& up</span>
                   </label>

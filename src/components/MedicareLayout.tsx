@@ -11,7 +11,7 @@ import {
   HeartIcon,
   ActivityLogIcon,
   TokensIcon,
-  StarIcon
+  StarFilledIcon
 } from '@radix-ui/react-icons';
 
 interface NavigationTab {
@@ -55,7 +55,7 @@ const navigationTabs: NavigationTab[] = [
 const quickStats = [
   { label: "Available Plans", value: "500+", icon: TokensIcon },
   { label: "States Covered", value: "50", icon: ActivityLogIcon },
-  { label: "Customer Rating", value: "4.9", icon: StarIcon },
+  { label: "Customer Rating", value: "4.9", icon: StarFilledIcon },
   { label: "Years Experience", value: "15+", icon: HeartIcon }
 ];
 
