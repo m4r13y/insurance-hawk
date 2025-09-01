@@ -201,6 +201,10 @@ function MedicareShopContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
 
+  // Test state for raw API responses
+  const [rawApiResponse, setRawApiResponse] = useState<any>(null);
+  const [showRawResponse, setShowRawResponse] = useState(false);
+
   // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
   const handleManualCategorySelect = useCallback((categoryId: string) => {
     // Mark initial load as complete to prevent future auto-switching
