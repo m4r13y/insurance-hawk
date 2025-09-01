@@ -196,6 +196,8 @@ function MedicareShopContent() {
   const [selectedCoverageLevel, setSelectedCoverageLevel] = useState('all');
   // Single source of truth for plan selections - always use this format
   const [selectedQuotePlans, setSelectedQuotePlans] = useState(['F', 'G', 'N']);
+  // Track which plans have quotes available (for checkbox display logic)
+  const [availableMedigapPlans, setAvailableMedigapPlans] = useState<Record<string, boolean>>({});
   const [applyDiscounts, setApplyDiscounts] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
@@ -428,8 +430,31 @@ function MedicareShopContent() {
   }, []); // Empty dependency array - only run once on mount
 
   const hasQuotesForPlan = (planType: string) => {
-    return realQuotes?.some(quote => quote?.plan === planType) || false;
+    // Use tracking array for UI consistency, fallback to actual quotes if needed
+    return availableMedigapPlans[planType] || realQuotes?.some(quote => quote?.plan === planType) || false;
   };
+
+  // Utility function to update plan availability tracking
+  const updatePlanAvailability = useCallback((quotes: any[]) => {
+    if (!quotes || quotes.length === 0) {
+      setAvailableMedigapPlans({});
+      return;
+    }
+    
+    const planTypes = [...new Set(quotes.map(quote => quote?.plan).filter(Boolean))];
+    const newAvailability: Record<string, boolean> = {};
+    planTypes.forEach(planType => {
+      newAvailability[planType] = true;
+    });
+    
+    console.log('📊 Updating plan availability:', newAvailability);
+    setAvailableMedigapPlans(prev => ({...prev, ...newAvailability}));
+  }, []);
+
+  // Sync plan availability tracking with realQuotes whenever quotes change
+  useEffect(() => {
+    updatePlanAvailability(realQuotes);
+  }, [realQuotes, updatePlanAvailability]);
 
   const fetchIndividualPlanQuotes = useCallback(async (planType: string, formData?: any) => {
     setLoadingPlanButton(planType);
@@ -520,6 +545,9 @@ function MedicareShopContent() {
           // Update the quotes state
           setRealQuotes(updatedQuotes);
           
+          // Update plan availability tracking
+          updatePlanAvailability(updatedQuotes);
+          
           // Save to storage
           await saveToStorage(REAL_QUOTES_KEY, updatedQuotes);
           
@@ -568,6 +596,10 @@ function MedicareShopContent() {
         if (result?.quotes && result.quotes.length > 0) {
           await preloadCarrierLogos(result.quotes);
           setRealQuotes(result.quotes);
+          
+          // Update plan availability tracking
+          updatePlanAvailability(result.quotes);
+          
           // Save Medigap quotes to Firebase storage
           await saveToStorage(REAL_QUOTES_KEY, result.quotes);
           // Removed auto-switching - only update quotes, let user manually switch tabs
@@ -838,6 +870,7 @@ function MedicareShopContent() {
       if (shouldClearQuotes) {
         if (targetCategory === 'medigap') {
           setRealQuotes([]);
+          setAvailableMedigapPlans({}); // Clear tracking when clearing quotes
         } else if (targetCategory === 'advantage') {
           setAdvantageQuotes([]);
         } else if (targetCategory === 'drug-plan') {
@@ -931,6 +964,9 @@ function MedicareShopContent() {
         } else if (response.quotes && Array.isArray(response.quotes)) {
           console.log('🔥 Success! Received quotes:', response.quotes.length);
           setRealQuotes(response.quotes);
+          
+          // Update plan availability tracking
+          updatePlanAvailability(response.quotes);
           
           // Save Medigap quotes to Firebase storage
           try {
@@ -1819,6 +1855,7 @@ function MedicareShopContent() {
     setSelectedFlowCategories([]);
     saveSelectedCategories([]); // Clear UI state as well
     setRealQuotes([]);
+    setAvailableMedigapPlans({}); // Clear tracking when clearing quotes
     setAdvantageQuotes([]);
     setDrugPlanQuotes([]);
     setDentalQuotes([]);
@@ -1896,7 +1933,12 @@ function MedicareShopContent() {
     if (selectedCategory === 'medigap' && realQuotes?.length > 0) {
       // Group by carrier for medigap
       const filteredQuotes = realQuotes.filter(quote => {
-        const matchesPlan = selectedQuotePlans?.includes(quote?.plan || '') || false;
+        const planType = quote?.plan || '';
+        // Plan must be both available (has quotes) AND selected by user
+        const isAvailable = availableMedigapPlans[planType] || false;
+        const isSelected = selectedQuotePlans?.includes(planType) || false;
+        const matchesPlan = isAvailable && isSelected;
+        
         if (searchQuery && matchesPlan) {
           const carrierId = quote?.carrier?.naic || quote?.company_base?.naic || quote?.naic || 'unknown';
           const carrierName = quote?.carrier?.name || 
@@ -1974,7 +2016,7 @@ function MedicareShopContent() {
       type: 'individual' as const,
       data: []
     };
-  }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery]);
+  }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans]);
 
   // Memoized pagination calculations to prevent unnecessary re-computations
   const paginationData = React.useMemo(() => {

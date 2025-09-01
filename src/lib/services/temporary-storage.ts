@@ -184,6 +184,7 @@ export interface QuoteDataDocument {
   chunkIndex?: number;
   totalChunks?: number;
   originalKey?: string;
+  planTypes?: string[];
 }
 
 // Legacy interface for backward compatibility
@@ -400,18 +401,52 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
         chunks.push(data.slice(i, i + chunkSize));
       }
       
+      // For medigap quotes, determine plan types for targeted deletion
+      let planTypes: string[] = [];
+      if (key === 'medicare_real_quotes' && Array.isArray(data)) {
+        planTypes = [...new Set(data.map((quote: any) => quote?.plan).filter(Boolean))];
+        console.log('🎯 Saving medigap quotes for plan types:', planTypes);
+      }
+      
       // Instead of deleting and recreating, update existing chunks where possible
       const subcollectionRef = collection(visitorDocRef, subcollectionName);
       try {
-        const existingQuery = query(
-          subcollectionRef,
-          where('originalKey', '==', key)
-        );
+        let existingQuery;
+        if (planTypes.length > 0) {
+          // For medigap: only delete chunks for the specific plan types being saved
+          existingQuery = query(
+            subcollectionRef,
+            where('originalKey', '==', key)
+          );
+        } else {
+          // For other quote types: delete all existing chunks for this key
+          existingQuery = query(
+            subcollectionRef,
+            where('originalKey', '==', key)
+          );
+        }
+        
         const existingDocs = await getDocs(existingQuery);
         
         // Delete existing chunks in smaller batches to avoid timeout
         if (!existingDocs.empty) {
-          const deletePromises = existingDocs.docs.map(doc => deleteDoc(doc.ref));
+          let docsToDelete = existingDocs.docs;
+          
+          // For medigap: filter to only delete chunks containing the plan types we're updating
+          if (planTypes.length > 0) {
+            docsToDelete = existingDocs.docs.filter(docSnapshot => {
+              const chunkData = docSnapshot.data();
+              if (chunkData.data && Array.isArray(chunkData.data)) {
+                // Check if this chunk contains any of the plan types we're updating
+                const chunkPlanTypes = chunkData.data.map((quote: any) => quote?.plan).filter(Boolean);
+                return planTypes.some(planType => chunkPlanTypes.includes(planType));
+              }
+              return true; // Delete if we can't determine plan types
+            });
+            console.log(`🗑️ Deleting ${docsToDelete.length} existing chunks for plan types: ${planTypes.join(', ')}`);
+          }
+          
+          const deletePromises = docsToDelete.map(doc => deleteDoc(doc.ref));
           // Process deletes in batches of 10 to avoid overwhelming Firestore
           for (let i = 0; i < deletePromises.length; i += 10) {
             const batch = deletePromises.slice(i, i + 10);
@@ -429,15 +464,27 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       // Save chunks sequentially to avoid DEADLINE_EXCEEDED
       for (let index = 0; index < chunks.length; index++) {
         const chunk = chunks[index];
-        const chunkDocRef = doc(subcollectionRef, `${key}_chunk_${index}`);
+        
+        // Create plan-specific chunk names for medigap quotes
+        let chunkDocId;
+        if (planTypes.length > 0) {
+          // Include plan types in chunk ID for better organization
+          const planTypesStr = planTypes.sort().join('_');
+          chunkDocId = `${key}_${planTypesStr}_chunk_${index}`;
+        } else {
+          chunkDocId = `${key}_chunk_${index}`;
+        }
+        
+        const chunkDocRef = doc(subcollectionRef, chunkDocId);
         const chunkDocument: QuoteDataDocument = {
-          key: `${key}_chunk_${index}`,
+          key: chunkDocId,
           data: chunk,
           savedAt: now,
           expiresAt,
           chunkIndex: index,
           totalChunks: chunks.length,
-          originalKey: key
+          originalKey: key,
+          ...(planTypes.length > 0 && { planTypes }) // Add plan types to document for future reference
         };
         
         try {
