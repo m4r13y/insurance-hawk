@@ -25,7 +25,6 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
 
   const loadQuotesForCategory = useCallback(async (category: string) => {
     try {
-      console.log(`🔄 Loading quotes for category: ${category}`);
       
       // Cancel requests for OTHER categories to prevent race conditions
       const allCategories = ['medigap', 'advantage', 'drug-plan', 'dental', 'cancer', 'hospital-indemnity', 'final-expense'];
@@ -36,8 +35,18 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
       switch (category) {
         case 'medigap':
           const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+          console.log('🔍 Raw Firestore data for medigap:', {
+            type: typeof savedQuotes,
+            isArray: Array.isArray(savedQuotes),
+            length: savedQuotes?.length,
+            firstItem: savedQuotes?.[0],
+            keys: savedQuotes?.[0] ? Object.keys(savedQuotes[0]) : 'no first item'
+          });
           if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
+            console.log('✅ Setting realQuotes with', savedQuotes.length, 'quotes');
             setRealQuotes(savedQuotes);
+          } else {
+            console.log('❌ No valid quotes to set - savedQuotes:', savedQuotes);
           }
           break;
         case 'advantage':

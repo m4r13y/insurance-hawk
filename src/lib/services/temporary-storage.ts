@@ -37,11 +37,9 @@ const isCacheValid = <T>(entry: CacheEntry<T>): boolean => {
 const getFromCache = <T>(key: string): T | null => {
   const entry = cache.get(key);
   if (entry && isCacheValid(entry)) {
-    console.log(`🎯 Cache hit for ${key}`);
     return entry.data;
   }
   if (entry) {
-    console.log(`⏰ Cache expired for ${key}`);
     cache.delete(key);
   }
   return null;
@@ -54,13 +52,11 @@ const setCache = <T>(key: string, data: T, ttl: number = DEFAULT_CACHE_TTL): voi
     timestamp: Date.now(),
     ttl
   });
-  console.log(`💾 Cached ${key} for ${ttl/1000}s`);
 };
 
 // Helper to clear cache for a key
 const clearCache = (key: string): void => {
   cache.delete(key);
-  console.log(`🗑️ Cleared cache for ${key}`);
 };
 
 // Helper to cancel pending requests
@@ -69,7 +65,6 @@ const cancelPendingRequest = (key: string): void => {
   if (pending) {
     pending.controller.abort();
     pendingRequests.delete(key);
-    console.log(`❌ Cancelled pending request for ${key}`);
   }
 };
 
@@ -110,7 +105,6 @@ export const cancelCategoryRequests = (category: string): void => {
   );
   
   categoryKeys.forEach(key => cancelPendingRequest(key));
-  console.log(`🧹 Cancelled ${categoryKeys.length} pending requests for category: ${category}`);
 };
 
 // Helper to cancel ALL pending requests
@@ -120,7 +114,6 @@ export const cancelAllRequests = (): void => {
   
   const allKeys = Array.from(pendingRequests.keys());
   allKeys.forEach(key => cancelPendingRequest(key));
-  console.log(`🧹 Cancelled ${allKeys.length} pending requests`);
 };
 
 // Generate unique visitor ID and store it
@@ -327,8 +320,6 @@ export const saveTemporaryData = async (key: string, data: any): Promise<void> =
       }
       return;
     }
-    
-      console.log(`💾 Saving to Firestore: ${key}`);
       const visitorId = getVisitorId();
       const now = Timestamp.now();
       const expiresAt = getExpirationTimestamp();
@@ -514,7 +505,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       requestId = generateRequestId();
       // Set this as the latest request for this category
       latestRequestIds.set(category, requestId);
-      console.log(`🆕 Starting request ${requestId} for category ${category}, key: ${key}`);
     }
     
     // Check if this is UI state - if so, load from localStorage only
@@ -552,7 +542,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
         const isLatestRequest = () => !isQuoteCategory || latestRequestIds.get(category) === requestId;
         
         if (isQuoteCategory && !isLatestRequest()) {
-          console.log(`🚫 Request ${requestId} superseded by newer request`);
           throw new Error('Request superseded');
         }
         
@@ -568,11 +557,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
           return defaultValue;
         }
 
-        if (isQuoteCategory) {
-          console.log(`🔍 Loading from Firestore: ${key} (request ${requestId})`);
-        } else {
-          console.log(`🔍 Loading from Firestore: ${key}`);
-        }
         const visitorId = getVisitorId();
         const subcollectionName = getSubcollectionName(key);
         
@@ -728,8 +712,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
               
               if (isQuoteCategory) {
                 console.log(`✅ Loaded chunked data from Firestore: ${key} (request ${requestId})`);
-              } else {
-                console.log(`✅ Loaded chunked data from Firestore: ${key}`);
               }
               // Cache the result with longer TTL for quote data
               setCache(key, combinedData as T, QUOTE_CACHE_TTL);
@@ -753,7 +735,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
           }
         }
 
-        console.log(`📭 No data found for ${key}, returning default`);
         setCache(key, defaultValue, DEFAULT_CACHE_TTL);
         return defaultValue;
       })();
@@ -775,7 +756,6 @@ export const loadTemporaryData = async <T = any>(key: string, defaultValue: T): 
       
       // Check if this was a cancellation
       if (error?.message === 'Request cancelled' || error?.message === 'Request superseded' || signal.aborted || latestRequestIds.get(category) !== requestId) {
-        console.log(`🚫 Request ${requestId} cancelled for ${key}`);
         // Return cached data if available, otherwise default
         const cached = getFromCache<T>(key);
         return cached !== null ? cached : defaultValue;

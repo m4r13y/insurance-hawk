@@ -242,6 +242,15 @@ export const naicCarriers: NAICCarrier[] = [
     logoUrl: "https://logo.clearbit.com/humana.com"
   },
   {
+    carrierId: "88595001", // Generated unique ID for Humana Insurance Company
+    carrierName: "Humana Insurance Company",
+    naicCode: "88595",
+    phone: "502-580-1000",
+    website: "https://www.humana.com",
+    shortName: "Humana",
+    logoUrl: "https://logo.clearbit.com/humana.com"
+  },
+  {
     carrierId: "da771dcace664d548a84b185a11f4568",
     carrierName: "Healthspring Insurance Company, Formerly Cigna Insurance Company",
     naicCode: "65269",
@@ -456,6 +465,15 @@ export const naicCarriers: NAICCarrier[] = [
     website: "https://www.firstcare.com",
     shortName: "SHA, L.L.C",
     logoUrl: "https://logo.clearbit.com/firstcare.com"
+  },
+    {
+    carrierId: "",
+    carrierName: "Nassau",
+    naicCode: "93734",
+    phone: "",
+    website: "https://salesnet.nfg.com/",
+    shortName: "Nassau",
+    logoUrl: "https://logo.clearbit.com/salesnet.nfg.com/"
   },
   {
     carrierId: "3c37002a94b541b5b72d100e661cda28",

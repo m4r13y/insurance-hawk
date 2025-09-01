@@ -34,7 +34,6 @@ export const saveUIState = (key: string, value: any) => {
   
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    console.log('💾 Saved UI state to localStorage:', key);
   } catch (error) {
     console.warn('Failed to save UI state:', key, error);
   }
@@ -83,16 +82,8 @@ export const loadFromStorage = async (key: string, defaultValue: any) => {
   if (typeof window === 'undefined') return defaultValue;
   
   try {
-    console.log('🔥 Loading from Firestore temp database:', key);
     const data = await loadFromFirestore(key, defaultValue);
-    
-    if (data !== defaultValue) {
-      console.log('✅ Successfully loaded from Firestore:', key);
-      return data;
-    } else {
-      console.log('📭 No data found in Firestore for:', key);
-      return defaultValue;
-    }
+    return data !== defaultValue ? data : defaultValue;
   } catch (error) {
     console.error('❌ Error loading from Firestore:', key, error);
     return defaultValue;
@@ -173,8 +164,6 @@ export const compressQuoteData = (quotes: any[]): any[] => {
 export const saveToStorage = async (key: string, value: any) => {
   if (typeof window === 'undefined') return;
   
-  console.log('🔥 Saving to Firestore temp database:', key);
-  
   try {
     let dataToSave = value;
     
@@ -186,15 +175,11 @@ export const saveToStorage = async (key: string, value: any) => {
       const compressed = JSON.stringify(dataToSave);
       
       const reduction = Math.round((1 - compressed.length / original.length) * 100);
-      console.log('🗜️ Compressed', value.length, 'quotes:', reduction + '% size reduction',
-        `(${Math.round(original.length/1024)}KB → ${Math.round(compressed.length/1024)}KB)`);
-    } else {
-      console.log('💾 Saving data without compression:', key);
+      console.log('🗜️ Compressed', value.length, 'quotes:', reduction + '% size reduction');
     }
     
     // Save to Firestore temp database
     await saveToFirestore(key, dataToSave);
-    console.log('✅ Successfully saved to Firestore temp database:', key);
     
   } catch (error) {
     console.error('❌ Firestore save error:', key, error);
@@ -210,14 +195,13 @@ export const saveToStorageSync = (key: string, value: any): Promise<void> => {
   return saveToStorage(key, value);
 };
 
-// Check if quotes exist (lightweight localStorage version to prevent eager loading)
+// Check if quotes exist by checking for visitor_id presence
+// visitor_id is only created when quotes are generated, so it's a reliable indicator
 export const hasQuotes = (): boolean => {
   try {
-    // Check localStorage for indicators of active quote session
-    const hasFormCompleted = localStorage.getItem('medicare_quote_form_completed') === 'true';
-    const hasQuoteSession = localStorage.getItem('medicare_quote_session_active') === 'true';
-    
-    return hasFormCompleted && hasQuoteSession;
+    // Check for visitor_id in localStorage - this is only set when quotes are created
+    const visitorId = localStorage.getItem('visitor_id');
+    return !!visitorId;
   } catch (error) {
     console.error('Error checking quotes:', error);
     return false;
@@ -294,11 +278,8 @@ export const getAllQuotesCount = async (): Promise<number> => {
 
 // Clear all quote data from Firestore AND UI state from localStorage
 export const clearAllQuotes = async () => {
-  console.log('🧹 Clearing all quotes from Firestore temp database and UI state...');
-  
   try {
     // Clear quote data from Firestore - Use sequential operations instead of Promise.all to prevent overwhelming Firestore
-    console.log('🔄 Clearing quote data sequentially to prevent rate limiting...');
     
     await saveToStorage(REAL_QUOTES_KEY, []);
     await saveToStorage(ADVANTAGE_QUOTES_KEY, []);
@@ -319,11 +300,8 @@ export const clearAllQuotes = async () => {
       // Clear session indicators
       localStorage.removeItem('medicare_quote_form_completed');
       localStorage.removeItem('medicare_quote_session_active');
-      
-      console.log('✅ Cleared UI state and session indicators from localStorage');
     }
     
-    console.log('✅ All quotes and UI state cleared');
   } catch (error) {
     console.error('❌ Error clearing quotes and UI state:', error);
   }
@@ -332,8 +310,6 @@ export const clearAllQuotes = async () => {
 // Get Firestore storage info (estimates)
 export const getFirestoreStorageInfo = async () => {
   try {
-    console.log('📊 Checking Firestore storage usage...');
-    
     const [
       formData,
       realQuotes,
@@ -405,7 +381,11 @@ export const getFirestoreStorageInfo = async () => {
 export const migrateLegacyStorage = async () => {
   if (typeof window === 'undefined') return;
   
-  console.log('🔄 Checking for legacy localStorage data to migrate...');
+  // Check if migration has already been completed for this visitor
+  const migrationCompleted = localStorage.getItem('migration_completed');
+  if (migrationCompleted === 'true') {
+    return; // Skip migration if already completed
+  }
   
   try {
     // Quote data keys - migrate to Firestore
@@ -440,7 +420,6 @@ export const migrateLegacyStorage = async () => {
           await saveToStorage(key, parsedData);
           localStorage.removeItem(key); // Remove after successful migration
           migratedCount++;
-          console.log('✅ Migrated quote data to Firestore:', key);
         } catch (error) {
           console.warn('Failed to migrate quote data:', key, error);
         }
@@ -457,7 +436,6 @@ export const migrateLegacyStorage = async () => {
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             saveSelectedCategories(parsedData);
             hasUIData = true;
-            console.log('✅ Migrated UI state to new format:', oldKey);
           }
           localStorage.removeItem(oldKey); // Clean up old key
         } catch (error) {
@@ -466,17 +444,8 @@ export const migrateLegacyStorage = async () => {
       }
     }
     
-    if (migratedCount > 0) {
-      console.log(`🎉 Successfully migrated ${migratedCount} quote items to Firestore`);
-    }
-    
-    if (hasUIData) {
-      console.log('🎉 Successfully migrated UI state to new format');
-    }
-    
-    if (migratedCount === 0 && !hasUIData) {
-      console.log('ℹ️ No legacy data found to migrate');
-    }
+    // Mark migration as completed to prevent repeated migrations
+    localStorage.setItem('migration_completed', 'true');
     
     return { quotesMigrated: migratedCount, uiMigrated: hasUIData };
   } catch (error) {

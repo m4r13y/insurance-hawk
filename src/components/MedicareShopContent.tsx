@@ -194,16 +194,12 @@ function MedicareShopContent() {
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'popularity'>('popularity');
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCoverageLevel, setSelectedCoverageLevel] = useState('all');
-  const [selectedMedigapPlans, setSelectedMedigapPlans] = useState(['plan-f', 'plan-g', 'plan-n']);
+  // Single source of truth for plan selections - always use this format
   const [selectedQuotePlans, setSelectedQuotePlans] = useState(['F', 'G', 'N']);
   const [applyDiscounts, setApplyDiscounts] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
-
-  // Test state for raw API responses
-  const [rawApiResponse, setRawApiResponse] = useState<any>(null);
-  const [showRawResponse, setShowRawResponse] = useState(false);
 
   // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
   const handleManualCategorySelect = useCallback((categoryId: string) => {
@@ -293,6 +289,24 @@ function MedicareShopContent() {
     }
   }, [carrierLogos]);
 
+  // Save selectedQuotePlans to storage whenever they change (single source of truth)
+  useEffect(() => {
+    const saveSelectedPlans = async () => {
+      if (selectedQuotePlans.length > 0) {
+        // Convert to storage format and save
+        const storageFormat = selectedQuotePlans.map(plan => `plan-${plan.toLowerCase()}`);
+        const currentData = await loadFromStorage(QUOTE_FORM_DATA_KEY, {});
+        const updatedData = {
+          ...currentData,
+          selectedQuotePlans: storageFormat
+        };
+        await saveToStorage(QUOTE_FORM_DATA_KEY, updatedData);
+      }
+    };
+    
+    saveSelectedPlans();
+  }, [selectedQuotePlans]);
+
   // Initialize component with async storage loading
   useEffect(() => {
     let isComponentMounted = true;
@@ -306,22 +320,15 @@ function MedicareShopContent() {
         // Check for existing quote session on page refresh
         const hasVisitorId = localStorage.getItem('visitor_id');
         const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
-        const hasActiveCategory = localStorage.getItem('activeCategory');
+        const hasActiveCategory = localStorage.getItem('medicare_current_flow_step');
         
-        // Check if we have any saved quotes using lightweight localStorage check first
-        const hasExistingQuotes = (() => {
-          // Quick check using localStorage for UI state indicators
-          const hasFormCompleted = localStorage.getItem('medicare_quote_form_completed') === 'true';
-          const hasQuoteSession = localStorage.getItem('medicare_quote_session_active') === 'true';
-          
-          // Only return true if we have clear indicators of an active quote session
-          // This prevents eager loading of all quote categories
-          return hasFormCompleted && hasQuoteSession;
-        })();
+        // Check if we have any saved quotes using visitor_id presence
+        // visitor_id is only created when quotes are generated, so it's a reliable indicator
+        const hasExistingQuotes = !!hasVisitorId;
         
         // If we have all required keys, this is a page refresh with existing session
-        // We don't need to check hasQuoteFormCompleted as it might not be set reliably
-        const isExistingSession = hasVisitorId && hasMedicareCategories && hasActiveCategory;
+        // Make session detection more forgiving - visitor_id + categories is sufficient
+        const isExistingSession = hasVisitorId && hasMedicareCategories;
         const hasExistingQuoteSession = isExistingSession && hasExistingQuotes;
         
         // Only load form data on initialization - quotes will be loaded lazily
@@ -337,7 +344,7 @@ function MedicareShopContent() {
                                 urlCategory === 'dental' || urlCategory === 'cancer' || urlCategory === 'hospital-indemnity' || 
                                 urlCategory === 'final-expense') 
           ? urlCategory 
-          : savedActiveCategory;
+          : savedActiveCategory || 'medigap'; // Default to 'medigap' if flow step is missing
 
         if (savedFormData) {
           setQuoteFormData(savedFormData);
@@ -348,23 +355,31 @@ function MedicareShopContent() {
         
         // For existing sessions with quotes, load all quotes and show results
         if (hasExistingQuoteSession) {
-          console.log('Detected existing quote session on page refresh, loading all quotes...');
-          console.log('Saved categories:', savedCategories);
-          console.log('Saved form data:', savedFormData);
-          console.log('Has existing quotes:', hasExistingQuotes);
           
           // Set recovery mode and form completed state FIRST
           setIsRecoveringSession(true);
           setQuoteFormCompleted(true);
           medicareState.setShowMedicareFlow(false);
           
+          // Ensure the current flow step is saved if missing
+          if (!hasActiveCategory && initialCategory) {
+            saveCurrentFlowStep(initialCategory);
+          }
+          
           // Load quotes for selected categories - but do it lazily, one at a time
           if (savedCategories && Array.isArray(savedCategories) && savedCategories.length > 0) {
-            console.log('Existing quote session found, will load first category:', savedCategories[0]);
+            // Set expected quote types based on saved categories to enable quotesReady detection
+            setExpectedQuoteTypes(savedCategories);
+            
             // Only load the first/active category immediately
             const primaryCategory = savedCategories[0];
             if (primaryCategory) {
+              // Set the active category BEFORE loading quotes
+              setActiveCategory(primaryCategory);
+              setSelectedCategory(primaryCategory);
+              
               await loadQuotesForCategory(primaryCategory);
+              // Don't set quotesReady here - let the existing useEffect handle it when state updates
             }
             // Other categories will be loaded when user switches to them
           }
@@ -373,17 +388,18 @@ function MedicareShopContent() {
           setIsRecoveringSession(false);
         } else if (isExistingSession && savedFormData) {
           // For existing sessions with form data but no quotes, they've completed the flow but need to regenerate quotes
-          console.log('Existing session with form data but no quotes, showing flow selection...');
           setQuoteFormCompleted(true);
           medicareState.setShowMedicareFlow(false); // This will show the flow selection page
         } else if (initialCategory) {
           // For new sessions or incomplete sessions, load quotes for active category only
-          console.log('New session or incomplete, loading single category:', initialCategory);
           await loadQuotesForCategory(initialCategory);
         }
         
-        setActiveCategory(initialCategory);
-        setSelectedCategory(initialCategory);
+        // Only set categories if we haven't already set them during session recovery
+        if (!hasExistingQuoteSession) {
+          setActiveCategory(initialCategory);
+          setSelectedCategory(initialCategory);
+        }
         
         // Check if component is still mounted before setting initialization state
         if (isComponentMounted) {
@@ -577,6 +593,23 @@ function MedicareShopContent() {
       setQuotesReady(true);
     }
   }, [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes, expectedQuoteTypes, quotesReady]);
+
+  // Debug render conditions
+  useEffect(() => {
+    console.log('🔍 Render Debug:', {
+      isInitializing,
+      showQuoteLoading,
+      selectedCategory,
+      activeCategory,
+      showMedicareFlow,
+      hasQuotes: hasQuotes(),
+      isRecoveringSession,
+      realQuotesLength: realQuotes.length,
+      quotesReady,
+      renderCondition: hasQuotes() || isRecoveringSession || realQuotes.length > 0,
+      realQuotesFirstItem: realQuotes[0]
+    });
+  }, [isInitializing, showQuoteLoading, selectedCategory, activeCategory, showMedicareFlow, isRecoveringSession, realQuotes.length, quotesReady, realQuotes]);
 
   // Auto-hide loading page when quotes are ready
   useEffect(() => {
@@ -1381,9 +1414,9 @@ function MedicareShopContent() {
       let expectedIndividualQuotes: string[] = [];
       
       if (hasMedigap) {
-        const selectedPlans = data.selectedMedigapPlans && data.selectedMedigapPlans.length > 0 
-          ? data.selectedMedigapPlans 
-          : ['F', 'G', 'N'];
+        const selectedPlans = data.selectedQuotePlans && data.selectedQuotePlans.length > 0 
+          ? data.selectedQuotePlans 
+          : ['plan-f', 'plan-g', 'plan-n'];
         const planNames = selectedPlans.length > 1 
           ? ['Supplement Plans'] 
           : selectedPlans.map((plan: string) => {
@@ -1431,10 +1464,13 @@ function MedicareShopContent() {
       const loadingItemsList = [];
       
       if (hasMedigap) {
-        const selectedPlans = data.selectedMedigapPlans && data.selectedMedigapPlans.length > 0 
-          ? data.selectedMedigapPlans 
-          : ['F', 'G', 'N'];
-        setSelectedQuotePlans(selectedPlans);
+        const selectedPlans = data.selectedQuotePlans && data.selectedQuotePlans.length > 0 
+          ? data.selectedQuotePlans 
+          : ['plan-f', 'plan-g', 'plan-n'];
+        
+        // Convert storage format to display format and set single state
+        const convertedQuotePlans = selectedPlans.map((plan: string) => plan.replace('plan-', '').toUpperCase());
+        setSelectedQuotePlans(convertedQuotePlans);
         
         const planNames = selectedPlans.length > 1 
           ? ['Supplement Plans'] 
@@ -1600,16 +1636,13 @@ function MedicareShopContent() {
       // Reset current quote type since all are done
       setCurrentQuoteType(null);
       
-      // Log storage usage after all quotes are saved
-      console.group('📊 Storage Status After Quote Completion');
+      // Simplified storage status logging
       try {
         const finalStorageInfo = await getFirestoreStorageInfo();
-        console.log('� Final Firestore storage usage:', finalStorageInfo.readable);
-        console.log('📦 Total quotes stored:', finalStorageInfo.totalQuotes);
+        console.log('📊 Storage:', finalStorageInfo.readable, '| Quotes:', finalStorageInfo.totalQuotes);
       } catch (error) {
         console.warn('Could not get storage info:', error);
       }
-      console.groupEnd();
       
       // Loading will be hidden automatically by useEffect when quotes are ready
       
@@ -1670,8 +1703,9 @@ function MedicareShopContent() {
     setPriceRange([0, 500]);
     setSelectedCoverageLevel('all');
     setSortBy('popularity');
-    setSelectedMedigapPlans(['plan-f', 'plan-g', 'plan-n']);
-    setSelectedQuotePlans(['F', 'G', 'N']);
+    // DON'T reset plan selections - these should persist from user's actual choices
+
+    // setSelectedQuotePlans(['F', 'G', 'N']);
     setApplyDiscounts(false);
     setPaymentMode('monthly');
   };
@@ -1679,6 +1713,12 @@ function MedicareShopContent() {
   const resetFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedQuotePlans(['F', 'G', 'N']);
+  }, []);
+
+  // Simplified plan selection handler - single source of truth
+  const handlePlanSelection = useCallback((plans: string[]) => {
+    // Update selectedQuotePlans directly (this triggers storage save via useEffect)
+    setSelectedQuotePlans(plans);
   }, []);
 
   // Transform drug plan API data to component format
@@ -1920,7 +1960,7 @@ function MedicareShopContent() {
                   onComplete={handleMedicareFlowComplete}
                   onCancel={() => setShowMedicareFlow(false)}
                 />
-              ) : hasQuotes() || isRecoveringSession ? (
+              ) : hasQuotes() || isRecoveringSession || realQuotes.length > 0 ? (
             /* Show Plans When There Are Quotes */
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Enhanced Sidebar with Combined Filters */}
@@ -1935,15 +1975,14 @@ function MedicareShopContent() {
                 setSelectedCoverageLevel={setSelectedCoverageLevel}
                 selectedCategory={selectedCategory}
                 onCategorySelect={handleManualCategorySelect}
-                selectedMedigapPlans={selectedMedigapPlans}
-                setSelectedMedigapPlans={setSelectedMedigapPlans}
+                selectedQuotePlans={selectedQuotePlans}
+                setSelectedQuotePlans={handlePlanSelection}
                 applyDiscounts={applyDiscounts}
                 setApplyDiscounts={setApplyDiscounts}
                 paymentMode={paymentMode}
                 setPaymentMode={setPaymentMode}
                 quoteFormData={quoteFormData}
                 realQuotes={realQuotes}
-                selectedQuotePlans={selectedQuotePlans}
                 onClearFilters={clearFilters}
               />
 
@@ -1993,7 +2032,7 @@ function MedicareShopContent() {
                     {selectedCategory === 'medigap' && realQuotes.length > 0 && (
                       <MedigapPlanTypeControls
                         selectedQuotePlans={selectedQuotePlans}
-                        setSelectedQuotePlans={setSelectedQuotePlans}
+                        setSelectedQuotePlans={handlePlanSelection}
                         hasQuotesForPlan={hasQuotesForPlan}
                         fetchIndividualPlanQuotes={handleFetchQuotes}
                         loadingPlanButton={loadingPlanButton}
@@ -2088,193 +2127,46 @@ function MedicareShopContent() {
                       />
                     ) : (
                       /* Display Medigap Plans */
-                      <div className={`grid gap-6 ${
-                        selectedQuotePlans.length === 1 
-                          ? 'grid-cols-1 sm:grid-cols-2' 
-                          : 'grid-cols-1'
-                      }`}>
-                        {displayData.type === 'grouped' && (
-                          // Grouped by carrier display (Medigap real quotes) - inline from backup
-                          paginatedData.map((carrierGroup: any) => {
-                            // Filter plans based on selected plan types
-                            const filteredQuotes = carrierGroup.quotes.filter((quote: any) => 
-                              selectedQuotePlans.includes(quote.plan)
-                            );
-                            
-                            // Skip carrier if no plans match selected types
-                            if (filteredQuotes.length === 0) return null;
-                            
-                            // Create filtered carrier group
-                            const filteredCarrierGroup = {
-                              ...carrierGroup,
-                              quotes: filteredQuotes
-                            };
-                            
-                            return (
-                              <Card key={`${carrierGroup.carrierId}-${selectedQuotePlans.join('-')}`} className="group hover:shadow-xl transition-all duration-300 hover:border-primary/20">
-                                <CardContent className="p-6">
-                                  {/* Carrier Header */}
-                                  <div className="mb-6 pb-4 border-b">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                        {/* Carrier Logo */}
-                                        <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                                          <Image
-                                            src={getCachedLogoUrl(carrierGroup.carrierName, carrierGroup.carrierId)}
-                                            alt={`${carrierGroup.carrierName} logo`}
-                                            width={48}
-                                            height={48}
-                                            className="w-full h-full object-contain"
-                                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                                              const target = e.currentTarget;
-                                              const parent = target.parentElement;
-                                              if (parent) {
-                                                target.style.display = 'none';
-                                                const initials = carrierGroup.carrierName
-                                                  .split(' ')
-                                                  .map((word: string) => word[0])
-                                                  .join('')
-                                                  .substring(0, 2)
-                                                  .toUpperCase();
-                                                parent.innerHTML = `<span class="text-sm font-semibold text-gray-600">${initials}</span>`;
-                                              }
-                                            }}
-                                          />
-                                        </div>
-                                        <div>
-                                          <h3 className="text-xl font-bold text-primary">{carrierGroup.carrierName}</h3>
-                                          <p className="text-sm text-muted-foreground">
-                                            {filteredQuotes.length} plan{filteredQuotes.length !== 1 ? 's' : ''} available
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => setShowPlanDifferencesModal(true)}
-                                        className="text-xs px-3 py-1"
-                                      >
-                                        {selectedQuotePlans.length === 1 ? "What's covered?" : "What's the difference?"}
-                                      </Button>
-                                    </div>
-                                  </div>
-
-                                  {/* Plans from this carrier - flexible layout that adjusts to content */}
-                                  <div className={`space-y-6 md:space-y-0 ${
-                                    selectedQuotePlans.length === 1 
-                                      ? 'md:grid md:grid-cols-1'
-                                      : selectedQuotePlans.length === 2
-                                      ? 'md:grid md:grid-cols-2 md:gap-6' 
-                                      : 'md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
-                                  } md:gap-4`}>
-                                    {(() => {
-                                      // Group quotes by plan type within this carrier (only for selected plan types)
-                                      const planGroups = filteredQuotes.reduce((groups: Record<string, any[]>, quote: any) => {
-                                        const planType = quote.plan || 'Unknown';
-                                        if (!groups[planType]) {
-                                          groups[planType] = [];
-                                        }
-                                        groups[planType].push(quote);
-                                        return groups;
-                                      }, {} as Record<string, any[]>);
-
-                                      return Object.entries(planGroups).map(([planType, quotes], index: number) => {
-                                        const quotesArray = quotes as any[];
-                                        // Calculate price range for this plan type
-                                        const premiums = quotesArray.map((q: any) => calculateDiscountedPrice(q));
-                                        const minPremium = Math.min(...premiums);
-                                        const maxPremium = Math.max(...premiums);
-                                        const hasMultipleVersions = quotesArray.length > 1;
-                                        
-                                        // Get the best quote for this plan type (lowest premium)
-                                        const bestQuote = quotesArray.find((q: any) => {
-                                          const premium = calculateDiscountedPrice(q);
-                                          return premium === minPremium;
-                                        }) || quotesArray[0];
-
-                                        return (
-                                          <div key={planType} className={`flex flex-col p-6 rounded-lg bg-card/50 transition-colors h-full min-h-[300px] ${
-                                            selectedQuotePlans.length > 1 ? (
-                                              planType === 'F' ? 'border border-blue-200 dark:border-blue-800' :
-                                              planType === 'G' ? 'border border-green-200 dark:border-green-800' :
-                                              planType === 'N' ? 'border border-purple-200 dark:border-purple-800' :
-                                              'bg-card'
-                                            ) : 'bg-card'
-                                          }`}>
-                                            {/* Plan Header - Price with type indicator */}
-                                            <div className="flex items-baseline gap-1 mb-4">
-                                              <div className={`font-bold text-primary ${
-                                                selectedQuotePlans.length === 2 
-                                                  ? 'text-2xl md:text-3xl' 
-                                                  : 'text-2xl md:text-2xl lg:text-3xl'
-                                              }`}>
-                                                {hasMultipleVersions ? 
-                                                  `$${Math.round(convertPriceByPaymentMode(minPremium))}-$${Math.round(convertPriceByPaymentMode(maxPremium))}` : 
-                                                  `$${Math.round(convertPriceByPaymentMode(minPremium))}`
-                                                }
-                                              </div>
-                                              <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
-                                            </div>
-                                            
-                                            {/* Plan Details - flex-grow to push button to bottom */}
-                                            <div className="flex-grow space-y-2 mb-4">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <h4 className="font-semibold text-lg">
-                                                  Plan {planType}
-                                                </h4>
-                                                {selectedQuotePlans.length > 1 && (
-                                                  <Badge 
-                                                    variant="outline" 
-                                                    className={`text-xs font-semibold ${
-                                                      selectedQuotePlans.length > 1 ? (
-                                                        planType === 'F' ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
-                                                        planType === 'G' ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' :
-                                                        planType === 'N' ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' :
-                                                        'bg-muted text-muted-foreground border-border'
-                                                      ) : 'bg-muted text-muted-foreground border-border'
-                                                    }`}
-                                                  >
-                                                    {planType === 'F' ? 'Premium Plan' :
-                                                     planType === 'G' ? 'Popular Choice' : 
-                                                     planType === 'N' ? 'Lower Premium' : 
-                                                     'Standard Plan'}
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                              <p className="text-sm text-muted-foreground">
-                                                {planType === 'F' ? 'Covers all gaps including Part B deductible' :
-                                                 planType === 'G' ? 'Covers all gaps except Part B deductible ($240/yr)' :
-                                                 planType === 'N' ? 'Lower cost with small copays for office visits & ER' :
-                                                 'Medicare supplement coverage'}
-                                              </p>
-                                              {hasMultipleVersions && (
-                                                <p className="text-xs text-muted-foreground">
-                                                  Multiple versions available
-                                                </p>
-                                              )}
-                                              <p className="text-xs text-muted-foreground">
-                                                Effective: {bestQuote.effectiveDate || '7/1/2025'}
-                                              </p>
-                                            </div>
-                                            
-                                            {/* Action Button - always at bottom */}
-                                            <Button 
-                                              className="w-full mt-auto bg-primary hover:bg-primary/90 text-primary-foreground"
-                                              onClick={() => openPlanModal(filteredCarrierGroup)}
-                                            >
-                                              Select Plan
-                                            </Button>
-                                          </div>
-                                        );
-                                      });
-                                    })()}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })
-                        )}
-                      </div>
+                      (() => {
+                        // Count actual unique plan types being displayed - this is bulletproof logic
+                        const actualPlanTypesShowing = new Set();
+                        paginatedData.forEach((carrierGroup: any) => {
+                          carrierGroup.quotes?.forEach((quote: any) => {
+                            if (quote.plan) {
+                              actualPlanTypesShowing.add(quote.plan);
+                            }
+                          });
+                        });
+                        const actualPlanCount = actualPlanTypesShowing.size;
+                        
+                        console.log('🎯 LAYOUT DEBUG - Actual plan types showing:', Array.from(actualPlanTypesShowing), 'Count:', actualPlanCount);
+                        
+                        return (
+                          <div className={`grid gap-6 ${
+                            actualPlanCount === 1 
+                              ? 'grid-cols-1 sm:grid-cols-2' 
+                              : 'grid-cols-1'
+                          }`}>
+                            {displayData.type === 'grouped' && (
+                              // Use the dedicated MedigapCarrierGroup component with dynamic layout
+                              paginatedData.map((carrierGroup: any) => (
+                                <MedigapCarrierGroup
+                                  key={`${carrierGroup.carrierId}-${Array.from(actualPlanTypesShowing).sort().join('-')}`}
+                                  carrierGroup={carrierGroup}
+                                  selectedQuotePlans={Array.from(actualPlanTypesShowing) as string[]}
+                                  paymentMode={paymentMode}
+                                  getCachedLogoUrl={getCachedLogoUrl}
+                                  calculateDiscountedPrice={calculateDiscountedPrice}
+                                  convertPriceByPaymentMode={convertPriceByPaymentMode}
+                                  getPaymentLabel={getPaymentLabel}
+                                  setShowPlanDifferencesModal={setShowPlanDifferencesModal}
+                                  openPlanModal={openPlanModal}
+                                />
+                              ))
+                            )}
+                          </div>
+                        );
+                      })()
                     )}
 
                     {/* Pagination Controls */}

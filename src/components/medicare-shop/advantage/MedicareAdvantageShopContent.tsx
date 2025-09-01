@@ -11,7 +11,7 @@ import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 import { 
-  StarIcon as Star, 
+  StarFilledIcon as Star, 
   PersonIcon,
   GlobeIcon as Globe, 
   ComponentInstanceIcon, 

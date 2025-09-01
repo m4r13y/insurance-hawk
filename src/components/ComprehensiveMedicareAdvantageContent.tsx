@@ -14,7 +14,7 @@ import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import GenericQuoteLoading from "@/components/GenericQuoteLoading";
 import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "@/components/medicare-shop/advantage/MedicareAdvantageSidebar";
 import { 
-  StarIcon as Star, 
+  StarFilledIcon as Star, 
   TokensIcon as DollarSign, 
   GlobeIcon as MapPin, 
   MobileIcon as Phone, 

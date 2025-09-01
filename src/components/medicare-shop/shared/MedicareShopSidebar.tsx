@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   MagnifyingGlassIcon,
   MixerHorizontalIcon,
-  StarIcon,
   StarFilledIcon,
   TokensIcon,
   HeartIcon
@@ -34,9 +33,9 @@ interface MedicareShopSidebarProps {
   selectedCategory: string;
   onCategorySelect: (categoryId: string) => void;
   
-  // Medigap plans
-  selectedMedigapPlans: string[];
-  setSelectedMedigapPlans: (plans: string[]) => void;
+  // Quote plans
+  selectedQuotePlans: string[];
+  setSelectedQuotePlans: (plans: string[]) => void;
   
   // Discounts and payment
   applyDiscounts: boolean;
@@ -49,7 +48,6 @@ interface MedicareShopSidebarProps {
   
   // Quotes data
   realQuotes: any[];
-  selectedQuotePlans: string[];
   
   // Clear filters function
   onClearFilters: () => void;
@@ -66,15 +64,14 @@ export default function MedicareShopSidebar({
   setSelectedCoverageLevel,
   selectedCategory,
   onCategorySelect,
-  selectedMedigapPlans,
-  setSelectedMedigapPlans,
+  selectedQuotePlans,
+  setSelectedQuotePlans,
   applyDiscounts,
   setApplyDiscounts,
   paymentMode,
   setPaymentMode,
   quoteFormData,
   realQuotes,
-  selectedQuotePlans,
   onClearFilters
 }: MedicareShopSidebarProps) {
   
@@ -209,16 +206,16 @@ export default function MedicareShopSidebar({
                     Medigap Plans
                   </label>
                   <div className="space-y-2">
-                    {/* Mock data: use selectedMedigapPlans state */}
+                    {/* Mock data: use selectedQuotePlans state */}
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="plan-f"
-                        checked={selectedMedigapPlans.includes('plan-f')}
+                        checked={selectedQuotePlans.includes('plan-f')}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-f']);
+                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-f']);
                           } else {
-                            setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-f'));
+                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-f'));
                           }
                         }}
                         className="border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
@@ -228,12 +225,12 @@ export default function MedicareShopSidebar({
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="plan-g"
-                        checked={selectedMedigapPlans.includes('plan-g')}
+                        checked={selectedQuotePlans.includes('plan-g')}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-g']);
+                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-g']);
                           } else {
-                            setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-g'));
+                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-g'));
                           }
                         }}
                         className="border-green-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
@@ -243,12 +240,12 @@ export default function MedicareShopSidebar({
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="plan-n"
-                        checked={selectedMedigapPlans.includes('plan-n')}
+                        checked={selectedQuotePlans.includes('plan-n')}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setSelectedMedigapPlans([...selectedMedigapPlans, 'plan-n']);
+                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-n']);
                           } else {
-                            setSelectedMedigapPlans(selectedMedigapPlans.filter(id => id !== 'plan-n'));
+                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-n'));
                           }
                         }}
                         className="border-purple-400 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"

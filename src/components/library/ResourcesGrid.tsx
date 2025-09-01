@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   ClockIcon, 
   ArrowRightIcon,
-  StarIcon,
   VideoIcon,
   FileTextIcon,
   ReaderIcon,

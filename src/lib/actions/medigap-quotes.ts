@@ -38,9 +38,6 @@ interface MedigapQuote {
 
 export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ quotes?: MedigapQuote[]; error?: string }> {
   try {
-    console.log('🔄 Medigap quote request:', params)
-    console.log('📋 Appointed NAIC codes filter:', params.appointedNaicCodes)
-    
     // Check if Firebase app is available
     if (!app) {
       console.error('❌ Firebase app not available')
@@ -60,14 +57,11 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       }
     }
     
-    console.log('✅ Firebase Functions initialized successfully')
-    
     // Collect all quotes from all selected plans
     const allQuotes: MedigapQuote[] = []
     
     // Call the Firebase function for each selected plan
     const getMedigapQuotesFn = httpsCallable(functions, 'getMedigapQuotes')
-    console.log('✅ Function callable created: getMedigapQuotes')
     
     for (const plan of params.plans) {
       try {
@@ -80,11 +74,7 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           plan: plan
         }
         
-        console.log(`Fetching quotes for plan ${plan}:`, functionParams)
-        
         const result = await getMedigapQuotesFn(functionParams)
-        
-        console.log(`Firebase function response for plan ${plan}:`, result.data)
         
         // Handle the response format (matching hawknest client portal exactly)
         // The CSG API returns data in various formats, need to handle all cases
@@ -128,8 +118,6 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
             }
           }
           
-          console.log(`Premium conversion: rate.month=${(quoteData.rate as any)?.month}, converted=${monthly_premium}`)
-          
           // Extract carrier information (prioritize company_base, fall back to carrier)
           const carrier = {
             name: (companyBase.name as string) || ((quoteData.carrier as Record<string, unknown>)?.name as string) || (quoteData.company as string) || 'Unknown Carrier',
@@ -147,8 +135,6 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
                         (companyBase.NAIC as string) ||
                         ((quoteData.carrier as Record<string, unknown>)?.naic as string) ||
                         ((quoteData.carrier as Record<string, unknown>)?.NAIC as string)
-          
-          console.log(`Quote NAIC extraction: company_base.naic=${companyBase.naic}, direct=${quoteData.naic}, final=${naicCode}`)
           
           const quote: MedigapQuote = {
             id,
@@ -179,8 +165,6 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       }
     }
     
-    console.log(`Total quotes found across all plans:`, allQuotes.length)
-    
     // First, enhance all quotes with NAIC carrier information (but don't filter yet)
     const enhancedQuotes = allQuotes.map(quote => {
       if (quote.naic) {
@@ -202,16 +186,10 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
               website: naicCarrier.website
             }
           }
-        } else {
-          console.log(`Quote has NAIC code ${quote.naic} not in our database`)
         }
-      } else {
-        console.log(`Quote has no NAIC code`)
       }
       return quote
     })
-    
-    console.log(`Enhanced quotes with NAIC data: ${enhancedQuotes.length}`)
     
     // Sort all quotes by monthly premium (lowest first) like in client portal
     enhancedQuotes.sort((a, b) => a.monthly_premium - b.monthly_premium)
@@ -221,34 +199,19 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
     
     // Filter by appointed carriers if specified, otherwise filter by valid NAIC codes
     if (params.appointedNaicCodes && params.appointedNaicCodes.length > 0) {
-      console.log(`Applying NAIC filter for appointed codes:`, params.appointedNaicCodes)
-      console.log(`Available quote NAIC codes:`, enhancedQuotes.map(q => q.naic).filter(Boolean))
       finalQuotes = enhancedQuotes.filter(quote => {
-        console.log(`Checking quote with NAIC: ${quote.naic} against appointed codes`)
-        if (!quote.naic) {
-          console.log(`Quote has no NAIC code, excluding`)
-          return false
-        }
-        const isIncluded = params.appointedNaicCodes!.includes(quote.naic)
-        console.log(`NAIC ${quote.naic} included: ${isIncluded}`)
-        return isIncluded
+        if (!quote.naic) return false
+        return params.appointedNaicCodes!.includes(quote.naic)
       })
-      console.log(`Filtered quotes count: ${finalQuotes.length} out of ${enhancedQuotes.length}`)
     } else {
       // Default filtering: only show quotes from carriers in our NAIC database
-      console.log(`Applying default NAIC filtering to show only known carriers`)
-      console.log(`Available quote NAIC codes:`, enhancedQuotes.map(q => q.naic).filter(Boolean))
       finalQuotes = enhancedQuotes.filter(quote => {
-        if (!quote.naic) {
-          console.log(`Quote has no NAIC code, excluding`)
-          return false
-        }
-        const carrier = getCarrierByNaicCode(quote.naic)
-        const isKnownCarrier = !!carrier
-        console.log(`NAIC ${quote.naic} is known carrier: ${isKnownCarrier}`)
-        return isKnownCarrier
+        if (!quote.naic) return false
+        // Normalize NAIC code for comparison (trim whitespace, ensure string)
+        const normalizedNaic = String(quote.naic).trim()
+        const carrier = getCarrierByNaicCode(normalizedNaic)
+        return !!carrier
       })
-      console.log(`Filtered quotes count: ${finalQuotes.length} out of ${enhancedQuotes.length} (showing only known carriers)`)
     }
     
     return { quotes: finalQuotes }

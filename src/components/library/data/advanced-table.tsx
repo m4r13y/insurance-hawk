@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeftIcon, ChevronRightIcon, EyeOpenIcon, ExternalLinkIcon, StarIcon, ChevronDownIcon } from '@radix-ui/react-icons';
+import { ChevronLeftIcon, ChevronRightIcon, EyeOpenIcon, ExternalLinkIcon, StarFilledIcon, ChevronDownIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 
 interface Column {
@@ -103,12 +103,12 @@ export function AdvancedTable({
       return (
         <div className="flex gap-x-1">
           {[...Array(5)].map((_, i) => (
-            <StarIcon
+            <StarFilledIcon
               key={i}
               className={cn(
                 "size-3",
                 i < Math.floor(value) 
-                  ? "text-primary fill-current dark:text-primary" 
+                  ? "text-yellow-500 fill-current dark:text-yellow-400" 
                   : "text-muted-foreground dark:text-neutral-700"
               )}
             />
