@@ -422,6 +422,21 @@ function MedicareShopContent() {
         return [];
       }
 
+      // Helper function to safely convert age
+      const getSafeAge = (age: number | ''): number => {
+        if (typeof age === 'number' && !isNaN(age)) {
+          return age;
+        }
+        if (typeof age === 'string' && age.trim() !== '') {
+          const parsedAge = parseInt(age);
+          if (!isNaN(parsedAge)) {
+            return parsedAge;
+          }
+        }
+        // Return default age if invalid
+        return 65;
+      };
+
       // Handle individual medigap plan letters (F, G, N)
       if (['F', 'G', 'N'].includes(planType)) {
         // Set loading items for individual plan
@@ -429,7 +444,7 @@ function MedicareShopContent() {
         
         const quoteParams = {
           zipCode: dataToUse.zipCode,
-          age: dataToUse.age.toString(),
+          age: getSafeAge(dataToUse.age).toString(),
           gender: dataToUse.gender === 'male' ? 'M' as const : 'F' as const,
           tobacco: dataToUse.tobaccoUse ? "1" as const : "0" as const,
           plans: [planType], // Only fetch for this specific plan
