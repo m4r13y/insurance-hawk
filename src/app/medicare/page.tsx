@@ -7,23 +7,23 @@ import nextDynamic from "next/dynamic";
 // Dynamically import components with no SSR to prevent useSearchParams issues during build
 const MedicareShopContent = nextDynamic(() => import("@/components/MedicareShopContent"), {
   ssr: false,
-  loading: () => <div className="animate-pulse p-8">Loading shop content...</div>
+  loading: () => null // Remove loading fallback to prevent flash
 });
 
 const MedicareLearnContent = nextDynamic(() => import("@/components/MedicareLearnContent"), {
   ssr: false,
-  loading: () => <div className="animate-pulse p-8">Loading learn content...</div>
+  loading: () => null // Remove loading fallback to prevent flash
 });
 
 const MedicareResourcesContent = nextDynamic(() => import("@/components/MedicareResourcesContent"), {
   ssr: false,
-  loading: () => <div className="animate-pulse p-8">Loading resources content...</div>
+  loading: () => null // Remove loading fallback to prevent flash
 });
 
 // Wrapper components with individual Suspense boundaries
 function MedicareShopWrapper() {
   return (
-    <Suspense fallback={<div className="animate-pulse p-8">Loading shop content...</div>}>
+    <Suspense fallback={null}>
       <MedicareShopContent />
     </Suspense>
   );
@@ -31,7 +31,7 @@ function MedicareShopWrapper() {
 
 function MedicareLearnWrapper() {
   return (
-    <Suspense fallback={<div className="animate-pulse p-8">Loading learn content...</div>}>
+    <Suspense fallback={null}>
       <MedicareLearnContent />
     </Suspense>
   );
@@ -39,7 +39,7 @@ function MedicareLearnWrapper() {
 
 function MedicareResourcesWrapper() {
   return (
-    <Suspense fallback={<div className="animate-pulse p-8">Loading resources content...</div>}>
+    <Suspense fallback={null}>
       <MedicareResourcesContent />
     </Suspense>
   );
@@ -83,7 +83,7 @@ function MedicarePageContent() {
 
   // Don't render child components until we're on the client side
   if (!isClient) {
-    return <div className="animate-pulse p-8">Loading Medicare information...</div>;
+    return null; // Minimal loading state to prevent flash
   }
 
   const renderContent = () => {
@@ -102,11 +102,7 @@ function MedicarePageContent() {
 }
 
 function MedicareFallback() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-pulse text-lg">Loading Medicare information...</div>
-    </div>
-  );
+  return null; // Minimal fallback to prevent flash
 }
 
 // Disable static generation since this page uses dynamic search params
