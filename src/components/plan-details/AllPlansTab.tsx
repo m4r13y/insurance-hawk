@@ -29,19 +29,35 @@ export const AllPlansTab: React.FC<AllPlansTabProps> = ({
   formatCurrency,
   calculateDiscountedRate
 }) => {
-  // Group quotes by plan
+  console.log('AllPlansTab Debug:', {
+    quoteData,
+    carrierQuotes,
+    carrierQuotesLength: carrierQuotes?.length
+  });
+
+  // Simple fallback if no data
+  if (!carrierQuotes || carrierQuotes.length === 0) {
+    return (
+      <TabsContent value="all-plans" className="space-y-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No plan options available for comparison.</p>
+        </div>
+      </TabsContent>
+    );
+  }
+
+  // Group quotes by plan type
   const planGroups = useMemo(() => {
     const groups: Record<string, QuoteData[]> = {}
     carrierQuotes.forEach(quote => {
-      const key = `${quote.company}-${quote.plan}`
-      if (!groups[key]) groups[key] = []
-      groups[key].push(quote)
+      const planType = quote.plan || 'Unknown'
+      if (!groups[planType]) groups[planType] = []
+      groups[planType].push(quote)
     })
-    console.log('Plan groups created:', groups)
     return groups
   }, [carrierQuotes])
 
-  // State for each plan's configuration
+  // State for configurations
   const [planConfigs, setPlanConfigs] = useState<Record<string, PlanConfiguration>>({})
 
   const updatePlanConfig = (planKey: string, update: Partial<PlanConfiguration>) => {
@@ -51,294 +67,205 @@ export const AllPlansTab: React.FC<AllPlansTabProps> = ({
     }))
   }
 
-  const calculateFinalRate = (baseQuote: QuoteData, config: PlanConfiguration) => {
-    let rate = baseQuote.rate?.month || 0
+  // Helper to get rate from quote (handle different formats)
+  const getQuoteRate = (quote: QuoteData) => {
+    if (quote.rate?.month) return quote.rate.month
+    if (quote.rate?.semi_annual) return quote.rate.semi_annual / 6
+    return 0
+  }
+
+  const getCurrentRate = (planKey: string, quotes: QuoteData[]) => {
+    const config = planConfigs[planKey] || { ratingClass: '', discounts: [] }
     
-    // Convert from cents to dollars if needed
-    if (rate > 1000) {
-      rate = rate / 100
-    }
-    
-    // Apply discounts
-    config.discounts.forEach(discountName => {
-      const discount = baseQuote.discounts?.find(d => d.name === discountName)
-      if (discount && discount.type === 'percent') {
-        rate = rate * (1 - discount.value)
-      }
+    // Find quote matching the configuration
+    const matchingQuote = quotes.find(quote => {
+      const ratingMatch = (quote.rating_class || '') === config.ratingClass
+      return ratingMatch
     })
-    
-    return rate
-  }
 
-  const getBaseRate = (quote: QuoteData) => {
-    const rawRate = quote.rate?.month || 0
-    const convertedRate = rawRate > 1000 ? rawRate / 100 : rawRate
-    console.log('getBaseRate - Raw:', rawRate, 'Converted:', convertedRate)
-    return convertedRate
-  }
-
-  const getAvailableOptions = (quotes: QuoteData[]) => {
-    const ratingClasses = new Set<string>()
-    const discounts = new Map<string, {name: string, value: number, type: string}>()
-    
-    quotes.forEach(quote => {
-      if (quote.rating_class && quote.rating_class.trim()) {
-        ratingClasses.add(quote.rating_class)
+    if (matchingQuote) {
+      let rate = getQuoteRate(matchingQuote)
+      // Apply discounts
+      if (config.discounts.length > 0 && matchingQuote.discounts) {
+        config.discounts.forEach(discountName => {
+          const discount = matchingQuote.discounts?.find(d => d.name === discountName)
+          if (discount) {
+            if (discount.type === 'percent') {
+              rate = rate * (1 - discount.value)
+            } else {
+              rate = Math.max(0, rate - discount.value)
+            }
+          }
+        })
       }
-      quote.discounts?.forEach(discount => {
-        discounts.set(discount.name, discount)
-      })
-    })
-    
-    return {
-      ratingClasses: Array.from(ratingClasses),
-      discounts: Array.from(discounts.values())
+      return rate
     }
-  }
 
-  const getBaseQuote = (quotes: QuoteData[], ratingClass?: string) => {
-    if (ratingClass) {
-      const found = quotes.find(q => q.rating_class === ratingClass) || quotes[0]
-      console.log('getBaseQuote with rating class:', ratingClass, 'found:', found)
-      return found
-    }
-    // Find the quote with no rating class or the first one
-    const found = quotes.find(q => !q.rating_class || q.rating_class.trim() === '') || quotes[0]
-    console.log('getBaseQuote without rating class, found:', found)
-    return found
-  }
-
-  if (Object.keys(planGroups).length === 0) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">No plan variations found.</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    // Fallback to first quote
+    return getQuoteRate(quotes[0])
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Plan Options from {quoteData.company_base?.name || 'Insurance Provider'}</CardTitle>
-          <p className="text-muted-foreground">
-            Choose the best plan option for your needs. Different options may include discounts, rating classes, or special programs.
+    <TabsContent value="all-plans" className="space-y-6">
+      <div className="space-y-6">
+        {/* Debug info */}
+        <div className="p-4 bg-blue-50 rounded-md">
+          <p className="text-sm">
+            <strong>Debug Info:</strong> Found {carrierQuotes.length} quotes for {quoteData.company_base?.name || 'Unknown Carrier'}
           </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {Object.entries(planGroups).map(([planKey, planQuotes], planIndex) => {
-            const [company, plan] = planKey.split('-')
-            const options = getAvailableOptions(planQuotes)
-            const config = planConfigs[planKey] || { ratingClass: '', discounts: [] }
-            const baseQuote = getBaseQuote(planQuotes, config.ratingClass)
-            const baseRate = getBaseRate(baseQuote)
-            const finalRate = calculateFinalRate(baseQuote, config)
-            const savings = baseRate - finalRate
-            
-            console.log('Plan calculations:', {
-              planKey,
-              baseQuoteRate: baseQuote.rate?.month,
-              baseRate,
-              finalRate,
-              savings,
-              config
-            })
+          <p className="text-sm">
+            Plan types: {Object.keys(planGroups).join(', ')}
+          </p>
+        </div>
 
-            return (
-              <div key={planKey} className="border rounded-lg p-6 space-y-4">
-                {/* Plan Header */}
+        {/* Plan Options */}
+        {Object.entries(planGroups).map(([planType, quotes]) => {
+          const planKey = `${quoteData.company}-${planType}`
+          const config = planConfigs[planKey] || { ratingClass: '', discounts: [] }
+          const currentRate = getCurrentRate(planKey, quotes)
+          const baseRate = getQuoteRate(quotes[0])
+          const savings = baseRate - currentRate
+
+          // Get available rating classes
+          const ratingClasses = Array.from(new Set(
+            quotes.map(q => q.rating_class || '').filter(Boolean)
+          )).sort()
+
+          // Get available discounts
+          const allDiscounts = new Set<string>()
+          quotes.forEach(quote => {
+            quote.discounts?.forEach(d => allDiscounts.add(d.name))
+          })
+          const availableDiscounts = Array.from(allDiscounts).sort()
+
+          return (
+            <Card key={planKey} className="overflow-hidden">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Badge variant={planIndex === 0 ? "default" : "outline"} className="text-sm">
-                      Plan {plan}
+                    <CardTitle className="text-xl">
+                      Plan {planType}
+                    </CardTitle>
+                    <Badge variant="outline">
+                      {quotes.length} option{quotes.length !== 1 ? 's' : ''} available
                     </Badge>
-                    {planIndex === 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        ⭐ Best Value
-                      </Badge>
-                    )}
-                    {savings > 0 && (
-                      <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
-                        Save ${savings.toFixed(0)}/mo ({Math.round((savings/baseRate)*100)}%)
-                      </Badge>
-                    )}
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">
-                      {formatCurrency(finalRate)}/mo
+                      {formatCurrency((currentRate >= 100 ? currentRate / 100 : currentRate))}/mo
                     </div>
                     {savings > 0 && (
                       <div className="text-sm text-green-600">
-                        Save {formatCurrency(savings)}/mo
+                        Save {formatCurrency((savings >= 100 ? savings / 100 : savings))}/mo
                       </div>
                     )}
                   </div>
                 </div>
-
                 <p className="text-sm text-muted-foreground">
-                  {options.ratingClasses.length + 1} rating options • {options.discounts.length} discount options available • attained age
+                  {quoteData.company_base?.name || 'Unknown Carrier'} • {
+                    planType === 'G' ? 'Covers all gaps except Part B deductible ($257/yr)' :
+                    planType === 'F' ? 'Covers all gaps (only available if eligible before 2020)' :
+                    planType === 'N' ? 'Lower cost with small copays for office visits & ER' :
+                    'Medicare Supplement coverage'
+                  }
                 </p>
+              </CardHeader>
 
+              <CardContent className="space-y-6">
                 {/* Rating Class Selection */}
-                {options.ratingClasses.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Choose Your Rating Class:</h4>
+                {ratingClasses.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3">Rating Class Options</h4>
                     <RadioGroup
                       value={config.ratingClass}
                       onValueChange={(value) => updatePlanConfig(planKey, { ratingClass: value })}
-                      className="space-y-3"
                     >
-                      {/* Standard option */}
-                      <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value="" id={`${planKey}-standard`} />
-                          <div>
-                            <Label htmlFor={`${planKey}-standard`} className="font-medium cursor-pointer">
-                              Standard
-                            </Label>
-                            <p className="text-sm text-gray-500">Standard plan option</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold">
-                            {formatCurrency(getBaseRate(getBaseQuote(planQuotes)))}/mo
-                          </div>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="" id={`${planKey}-standard`} />
+                        <Label htmlFor={`${planKey}-standard`} className="cursor-pointer">
+                          Standard
+                        </Label>
                       </div>
-
-                      {/* Other rating classes */}
-                      {options.ratingClasses.map((ratingClass) => {
-                        const quote = planQuotes.find(q => q.rating_class === ratingClass)
-                        if (!quote || !quote.rate) return null
-                        const rate = getBaseRate(quote)
-                        const standardRate = getBaseRate(getBaseQuote(planQuotes))
-                        const difference = rate - standardRate
-
-                        return (
-                          <div key={ratingClass} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="flex items-center space-x-3">
-                              <RadioGroupItem value={ratingClass} id={`${planKey}-${ratingClass}`} />
-                              <div>
-                                <Label htmlFor={`${planKey}-${ratingClass}`} className="font-medium cursor-pointer">
-                                  {ratingClass}
-                                </Label>
-                                <p className="text-sm text-gray-500">
-                                  {ratingClass.includes('Preferred') ? 'Better health rating' : 'Alternative rating option'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold">{formatCurrency(rate)}/mo</div>
-                              {difference !== 0 && (
-                                <div className={`text-sm ${difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {difference > 0 ? '+' : ''}{formatCurrency(Math.abs(difference))}/mo
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
+                      {ratingClasses.map(ratingClass => (
+                        <div key={ratingClass} className="flex items-center space-x-2">
+                          <RadioGroupItem value={ratingClass} id={`${planKey}-${ratingClass}`} />
+                          <Label htmlFor={`${planKey}-${ratingClass}`} className="cursor-pointer">
+                            {ratingClass}
+                          </Label>
+                        </div>
+                      ))}
                     </RadioGroup>
                   </div>
                 )}
 
-                {/* Discount Options */}
-                {options.discounts.length > 0 && (
-                  <>
-                    {options.ratingClasses.length > 0 && <Separator />}
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-sm">Available Discounts:</h4>
-                      <div className="space-y-3">
-                        {options.discounts.map((discount) => {
-                          const discountAmount = baseRate * discount.value
-                          const isSelected = config.discounts.includes(discount.name)
-
-                          return (
-                            <div key={discount.name} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                              <div className="flex items-center space-x-3">
-                                <Checkbox
-                                  id={`${planKey}-${discount.name}`}
-                                  checked={isSelected}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      updatePlanConfig(planKey, { 
-                                        discounts: [...config.discounts, discount.name] 
-                                      })
-                                    } else {
-                                      updatePlanConfig(planKey, { 
-                                        discounts: config.discounts.filter(d => d !== discount.name) 
-                                      })
-                                    }
-                                  }}
-                                />
-                                <div>
-                                  <Label htmlFor={`${planKey}-${discount.name}`} className="font-medium cursor-pointer capitalize">
-                                    {discount.name} Discount
-                                  </Label>
-                                  <p className="text-sm text-gray-500">
-                                    {Math.round(discount.value * 100)}% discount available
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm text-green-600 font-medium">
-                                  Save {formatCurrency(discountAmount)}/mo ({Math.round(discount.value * 100)}%)
-                                </div>
-                              </div>
+                {/* Discount Selection */}
+                {availableDiscounts.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3">Available Discounts</h4>
+                    <div className="space-y-2">
+                      {availableDiscounts.map(discountName => {
+                        const discount = quotes.find(q => 
+                          q.discounts?.some(d => d.name === discountName)
+                        )?.discounts?.find(d => d.name === discountName)
+                        
+                        return (
+                          <div key={discountName} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`${planKey}-${discountName}`}
+                                checked={config.discounts.includes(discountName)}
+                                onCheckedChange={(checked) => {
+                                  const newDiscounts = checked
+                                    ? [...config.discounts, discountName]
+                                    : config.discounts.filter(d => d !== discountName)
+                                  updatePlanConfig(planKey, { discounts: newDiscounts })
+                                }}
+                              />
+                              <Label htmlFor={`${planKey}-${discountName}`} className="cursor-pointer font-medium">
+                                {discountName}
+                              </Label>
                             </div>
-                          )
-                        })}
-                      </div>
+                            {discount && (
+                              <Badge variant="outline" className="text-green-600">
+                                {discount.type === 'percent' 
+                                  ? `${Math.round(discount.value * 100)}% off`
+                                  : `$${discount.value} off`
+                                }
+                              </Badge>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
-                  </>
+                  </div>
                 )}
 
-                {/* Final Price Summary */}
-                {(options.ratingClasses.length > 0 || options.discounts.length > 0) && (
-                  <>
-                    <Separator />
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Base Rate:</span>
-                        <span className="text-sm">{formatCurrency(baseRate)}/mo</span>
-                      </div>
-                      {config.discounts.length > 0 && (
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-green-600">Total Discounts:</span>
-                          <span className="text-sm text-green-600">-{formatCurrency(savings)}/mo</span>
-                        </div>
-                      )}
-                      <Separator className="my-2" />
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold">Final Rate:</span>
-                        <span className="font-bold text-lg">{formatCurrency(finalRate)}/mo</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <Separator />
 
-                {/* Action Button */}
-                <div className="pt-2">
-                  <Button 
-                    variant={planIndex === 0 ? "default" : "outline"} 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => {
-                      console.log('Selected plan:', planKey, 'config:', config, 'finalRate:', finalRate)
-                    }}
-                  >
-                    {planIndex === 0 ? "Select This Plan" : "Choose This Option"}
-                  </Button>
+                {/* Rate Summary */}
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div>
+                    <div className="font-semibold">Base Rate:</div>
+                    <div className="font-semibold">Your Rate:</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono">
+                      {formatCurrency((baseRate >= 100 ? baseRate / 100 : baseRate))}/mo
+                    </div>
+                    <div className="font-mono text-lg font-bold text-primary">
+                      {formatCurrency((currentRate >= 100 ? currentRate / 100 : currentRate))}/mo
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </CardContent>
-      </Card>
-    </div>
+
+                <Button className="w-full" size="lg">
+                  Select This Plan Configuration
+                </Button>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </TabsContent>
   )
 }

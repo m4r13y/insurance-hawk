@@ -62,6 +62,7 @@ export interface ConsolidatedPlan {
     name: string;
     displayName: string;
     logoUrl: string;
+    originalName: string;
   };
   baseRate: {
     annual: number;
@@ -91,6 +92,18 @@ export interface ConsolidatedPlan {
 function getBasePlanId(quote: any): string {
   const carrierName = quote.carrier?.name || quote.company_base?.name || 'Unknown';
   const plan = quote.plan || 'Unknown';
+  
+  // For UnitedHealthcare, create separate plans based on rating class and underwriting type
+  if (carrierName.includes('UnitedHealthcare') || carrierName.includes('AARP')) {
+    const ratingClass = quote.rating_class || 'Standard';
+    const selectUnderwriting = quote.select ? 'Select' : 'Standard';
+    
+    // Extract base rating class (remove /Household suffix for grouping)
+    const baseRatingClass = ratingClass.replace('/Household', '').replace('/Multi-Insured', '').replace('/Multi-Person', '');
+    
+    return `${carrierName}-${plan}-${baseRatingClass}-${selectUnderwriting}`;
+  }
+  
   return `${carrierName}-${plan}`;
 }
 
@@ -109,6 +122,138 @@ function isStandardQuote(quote: any): boolean {
                                  ratingClass.toLowerCase() === 'standard ii';
   
   return hasNoDiscounts && hasNoViewType && hasStandardRatingClass;
+}
+
+/**
+ * Extract the monthly rate from a quote
+ */
+function getRateFromQuote(quote: any): number {
+  if (quote.rate?.month) return quote.rate.month;
+  if (quote.rate?.semi_annual) return quote.rate.semi_annual / 6;
+  return quote.monthly_premium || quote.premium || 0;
+}
+
+/**
+ * Get option name based on quote characteristics
+ */
+function getOptionName(quote: any): string {
+  // Return just the rating class - badges will show discount info
+  return quote.rating_class || 'Standard';
+}
+
+/**
+ * Get option type based on quote characteristics
+ */
+function getOptionType(quote: any): PlanOption['type'] {
+  const hasHouseholdDiscount = quote.view_type && quote.view_type.includes('with_hhd');
+  const hasDiscounts = quote.discounts && quote.discounts.length > 0;
+  
+  if (hasHouseholdDiscount) return 'household_discount';
+  if (hasDiscounts) return 'discount';
+  return 'rating_class';
+}
+
+/**
+ * Get option description based on quote characteristics
+ */
+function getOptionDescription(quote: any): string {
+  const hasHouseholdDiscount = quote.view_type && quote.view_type.includes('with_hhd');
+  const hasDiscounts = quote.discounts && quote.discounts.length > 0;
+  const ratingClass = quote.rating_class || 'Standard';
+  
+  if (hasHouseholdDiscount) {
+    return `${ratingClass} rating class with household discount applied`;
+  }
+  
+  if (hasDiscounts) {
+    return `${ratingClass} rating class with discounts applied`;
+  }
+  
+  return `${ratingClass} rating class`;
+}
+
+/**
+ * Create rating options from quotes
+ */
+function createRatingOptions(planQuotes: any[]): RatingOption[] {
+  const ratingClassMap = new Map<string, any>();
+  
+  // Group quotes by rating class, keeping only the best (lowest) rate for each rating class
+  planQuotes.forEach(quote => {
+    const ratingClass = quote.rating_class || 'Standard';
+    const rate = getRateFromQuote(quote);
+    
+    if (!ratingClassMap.has(ratingClass) || rate < getRateFromQuote(ratingClassMap.get(ratingClass))) {
+      ratingClassMap.set(ratingClass, quote);
+    }
+  });
+  
+  return Array.from(ratingClassMap.values()).map(quote => {
+    const ratingClass = quote.rating_class || 'Standard';
+    const rate = getRateFromQuote(quote);
+    
+    return {
+      id: `rating-${ratingClass}`,
+      name: ratingClass,
+      ratingClass,
+      description: getRatingClassDescription(ratingClass),
+      rate: {
+        annual: rate * 12,
+        month: rate,
+        quarter: rate * 3,
+        semi_annual: rate * 6
+      },
+      originalQuote: quote
+    };
+  });
+}
+
+/**
+ * Create discount options from quotes
+ */
+function createDiscountOptions(planQuotes: any[]): DiscountOption[] {
+  const discountOptions: DiscountOption[] = [];
+  
+  planQuotes.forEach(quote => {
+    const hasHouseholdDiscount = quote.view_type && quote.view_type.includes('with_hhd');
+    const hasDiscounts = quote.discounts && quote.discounts.length > 0;
+    
+    if (hasHouseholdDiscount) {
+      const rate = getRateFromQuote(quote);
+      const convertedRate = rate >= 100 ? rate / 100 : rate;
+      
+      discountOptions.push({
+        id: `hhd-${quote.rating_class || 'standard'}`,
+        name: 'Household Discount',
+        type: 'household_discount',
+        description: 'Discount for multiple policies in the same household',
+        discountPercent: 0, // Will be calculated based on comparison
+        savings: 0, // Will be calculated
+        savingsPercent: 0, // Will be calculated
+        originalQuote: quote
+      });
+    }
+    
+    if (hasDiscounts) {
+      quote.discounts.forEach((discount: any) => {
+        // Convert discount value to percentage (0.07 → 7)
+        const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+        
+        discountOptions.push({
+          id: `discount-${discount.name || discount.type}`,
+          name: discount.name || discount.type || 'Discount',
+          type: 'other',
+          description: discount.description || 'Policy discount',
+          discountPercent: discountPercent,
+          savings: 0, // Will be calculated
+          savingsPercent: 0, // Will be calculated
+          originalQuote: quote
+        });
+      });
+    }
+  });
+  
+  return discountOptions;
 }
 
 /**
@@ -235,68 +380,68 @@ export function consolidateQuoteVariations(quotes: any[]): ConsolidatedPlan[] {
   for (const [basePlanId, planQuotes] of basePlans) {
     if (planQuotes.length === 0) continue;
     
-    // Find the standard/base quote (no discounts, no special rating class)
-    let baseQuote = planQuotes.find(isStandardQuote);
-    if (!baseQuote) {
-      // If no standard quote, use the one with the highest rate (least discounts)
-      baseQuote = planQuotes.reduce((prev, current) => {
-        const prevRate = prev.rate?.month || prev.monthly_premium || 0;
-        const currentRate = current.rate?.month || current.monthly_premium || 0;
-        return currentRate > prevRate ? current : prev;
-      });
-    }
+    // Use the first quote as the base for plan metadata
+    const baseQuote = planQuotes[0];
     
-    // Create options for all quote variations
-    const options = planQuotes.map(quote => createPlanOption(quote, planQuotes));
-    
-    // Sort options: lowest price first (best deals), then by type
-    options.sort((a, b) => {
-      // First sort by rate (lowest first)
-      const rateDiff = a.rate.month - b.rate.month;
-      if (rateDiff !== 0) return rateDiff;
+    // Convert each quote into a plan option - no calculation needed, just use the quote's rate
+    const options: PlanOption[] = planQuotes.map(quote => {
+      const monthlyRate = getRateFromQuote(quote);
+      // Keep rates in cents format for consistency with display functions
       
-      // Then by type priority: household_discount > discount > rating_class > standard
-      const typePriority = {
-        'household_discount': 1,
-        'discount': 2,
-        'rating_class': 3,
-        'standard': 4
+      return {
+        id: quote.key || `${quote.plan}-${quote.rating_class || 'standard'}-${quote.discounts?.length || 0}`,
+        name: getOptionName(quote),
+        type: getOptionType(quote),
+        description: getOptionDescription(quote),
+        rate: {
+          annual: monthlyRate * 12,
+          month: monthlyRate,
+          quarter: monthlyRate * 3,
+          semi_annual: monthlyRate * 6
+        },
+        discounts: quote.discounts || [],
+        rating_class: quote.rating_class || 'Standard',
+        view_type: quote.view_type || [],
+        originalQuote: quote
       };
-      return (typePriority[a.type] || 5) - (typePriority[b.type] || 5);
     });
     
-    // Mark the best option as recommended (lowest rate)
+    // Sort options by rate (lowest first)
+    options.sort((a, b) => a.rate.month - b.rate.month);
+    
+    // Mark the lowest rate option as recommended
     if (options.length > 0) {
       options[0].isRecommended = true;
     }
 
-    // Create separate rating and discount options
-    const { ratingOptions, discountOptions } = createRatingAndDiscountOptions(options);
+    // Create separate rating and discount options for easier filtering
+    const ratingOptions = createRatingOptions(planQuotes);
+    const discountOptions = createDiscountOptions(planQuotes);
     
     const carrierName = baseQuote.carrier?.name || baseQuote.company_base?.name || 'Unknown';
     
-    // Use the lowest rate option as the display base rate
-    const lowestRateOption = options[0];
-    const displayBaseRate = lowestRateOption?.rate.month || 0;
+    // Use the lowest rate option as the base display rate
+    const baseDisplayRate = options[0]?.rate.month || 0;
     
     const consolidatedPlan: ConsolidatedPlan = {
       id: basePlanId,
       plan: baseQuote.plan || 'Unknown',
       carrier: {
         name: carrierName,
+        originalName: carrierName, // Keep original name for carrier system lookup
         displayName: getCarrierDisplayName(carrierName, 'medicare-supplement'),
         logoUrl: getCarrierLogoUrl(carrierName)
       },
       baseRate: {
-        annual: displayBaseRate * 12,
-        month: displayBaseRate,
-        quarter: displayBaseRate * 3,
-        semi_annual: displayBaseRate * 6
+        annual: baseDisplayRate * 12,
+        month: baseDisplayRate,
+        quarter: baseDisplayRate * 3,
+        semi_annual: baseDisplayRate * 6
       },
       options,
       ratingOptions,
       discountOptions,
-      recommendedRatingId: ratingOptions.find(opt => opt.isRecommended)?.id || ratingOptions[0]?.id,
+      recommendedRatingId: ratingOptions.find((opt: any) => opt.isRecommended)?.id || ratingOptions[0]?.id,
       recommendedDiscountId: discountOptions.length > 0 ? discountOptions[0].id : undefined,
       recommendedOptionId: options.find(opt => opt.isRecommended)?.id || options[0]?.id || '',
       company_base: baseQuote.company_base,
@@ -377,12 +522,14 @@ function createRatingAndDiscountOptions(options: PlanOption[]): {
             ? (savings / baseOption.rate.month) * 100 
             : 0;
           
+          const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+          
           discountOptions.push({
             id: `discount-${discountKey.toLowerCase().replace(/\s+/g, '-')}`,
             name: discount.name || 'Household Discount',
             type: discount.type === 'household' ? 'household_discount' : 'other',
             description: getDiscountDescription(discount),
-            discountPercent: discount.percent || 0,
+            discountPercent: discountPercent,
             applicableToRating: option.rating_class,
             savings: Math.max(0, savings),
             savingsPercent: Math.max(0, savingsPercent),
@@ -417,15 +564,17 @@ function getRatingClassDescription(ratingClass: string): string {
  * Gets a user-friendly description for discounts
  */
 function getDiscountDescription(discount: any): string {
+  const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+  
   if (discount.type === 'household' || discount.name?.includes('Household')) {
-    return `${discount.percent || 0}% discount for household members`;
+    return `${discountPercent}% discount for household members`;
   }
   
   if (discount.name?.includes('Multi')) {
-    return `${discount.percent || 0}% discount for multiple policies`;
+    return `${discountPercent}% discount for multiple policies`;
   }
   
-  return discount.name || `${discount.percent || 0}% discount available`;
+  return discount.name || `${discountPercent}% discount available`;
 }
 
 /**

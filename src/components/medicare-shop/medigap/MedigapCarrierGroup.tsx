@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
 
 interface MedigapCarrierGroupProps {
   carrierGroup: any;
@@ -43,7 +44,16 @@ export default function MedigapCarrierGroup({
   
   // Helper function to get base rate without discounts
   const getBaseRate = (quote: any) => {
-    const rate = quote.rate?.month || quote.monthly_premium || quote.premium || 0;
+    // Handle different rate formats - some have monthly, others have semi_annual
+    let rate = 0;
+    if (quote.rate?.month) {
+      rate = quote.rate.month;
+    } else if (quote.rate?.semi_annual) {
+      rate = quote.rate.semi_annual / 6; // Convert semi-annual to monthly
+    } else {
+      rate = quote.monthly_premium || quote.premium || 0;
+    }
+    
     // Convert from cents to dollars (rates are stored in cents)
     return rate >= 100 ? rate / 100 : rate;
   };
@@ -123,7 +133,30 @@ export default function MedigapCarrierGroup({
               <div>
                 <h3 className="text-xl font-bold text-primary">{displayName}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {filteredQuotes.length} plan{filteredQuotes.length !== 1 ? 's' : ''} available
+                  {(() => {
+                    // Use the consolidation logic to get accurate rating class count
+                    const consolidated = consolidateQuoteVariations(filteredQuotes);
+                    if (consolidated.length === 0) return "No plans available";
+                    
+                    // Get the total number of unique rating options across all plans
+                    const totalRatingOptions = consolidated.reduce((total, plan) => {
+                      return total + plan.ratingOptions.length;
+                    }, 0);
+                    
+                    // If no rating options, count the total unique rating classes manually
+                    if (totalRatingOptions === 0) {
+                      const allRatingClasses = new Set<string>();
+                      filteredQuotes.forEach((quote: any) => {
+                        if (quote.rating_class && quote.rating_class.trim()) {
+                          allRatingClasses.add(quote.rating_class);
+                        }
+                      });
+                      const totalRatingClasses = allRatingClasses.size + 1; // +1 for standard
+                      return `${totalRatingClasses} rating class${totalRatingClasses !== 1 ? 'es' : ''} available`;
+                    }
+                    
+                    return `${totalRatingOptions} rating class${totalRatingOptions !== 1 ? 'es' : ''} available`;
+                  })()}
                 </p>
               </div>
             </div>

@@ -152,10 +152,20 @@ export const CARRIERS: CarrierInfo[] = [
     name: 'UnitedHealthcare Insurance Company',
     shortName: 'UnitedHealthcare',
     displayName: 'UnitedHealthcare',
-    namePatterns: ['United', 'UnitedHealthcare', 'United Healthcare'],
+    namePatterns: ['UnitedHealthcare', 'United Healthcare', 'UnitedHealth', 'AARP Medicare Supplement'],
     phone: '877-832-7734',
     website: 'https://www.uhc.com',
     logoUrl: 'https://logo.clearbit.com/unitedhealthcare.com'
+  },
+  {
+    id: 'united-american',
+    name: 'United American Insurance Company',
+    shortName: 'United American',
+    displayName: 'United American',
+    namePatterns: ['United Amer Ins Co', 'United American Insurance', 'United American'],
+    phone: '800-925-7355',
+    website: 'https://www.unitedamerican.com',
+    logoUrl: 'https://logo.clearbit.com/unitedamerican.com'
   },
   {
     id: 'united-national-life',
@@ -235,17 +245,26 @@ export function getCarrierDisplayName(carrierName: string, category: ProductCate
   const mockQuote = { carrier: { name: carrierName } };
   const preferredCarrier = findPreferredCarrier(mockQuote, category);
   
+  let displayName = carrierName;
+  
   if (preferredCarrier) {
     // Get the carrier info using the carrierId
     const carrierInfo = getCarrierById(preferredCarrier.carrierId);
     if (carrierInfo?.displayName) {
-      return carrierInfo.displayName;
+      displayName = carrierInfo.displayName;
     }
+  } else {
+    // Fall back to carrier short name
+    const carrier = findCarrierByName(carrierName);
+    displayName = carrier?.displayName || carrier?.shortName || carrierName;
   }
   
-  // Fall back to carrier short name
-  const carrier = findCarrierByName(carrierName);
-  return carrier?.displayName || carrier?.shortName || carrierName;
+  // For UnitedHealthcare plans that are AARP branded, add (AARP) suffix
+  if (displayName === 'UnitedHealthcare' && carrierName.includes('AARP')) {
+    displayName = 'UnitedHealthcare (AARP)';
+  }
+  
+  return displayName;
 }
 
 // ===== PREFERRED CARRIERS FUNCTIONS =====

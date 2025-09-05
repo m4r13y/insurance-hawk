@@ -1381,9 +1381,18 @@ function MedicareShopContent() {
   };
 
   const calculateDiscountedPrice = (quote: any) => {
-    // Get the base rate (convert from cents to dollars)
-    let price = quote.rate?.month || quote.monthly_premium || quote.premium || 0;
-    price = price >= 100 ? price / 100 : price; // Convert from cents if needed
+    // Get the base rate (handle different rate formats)
+    let price = 0;
+    if (quote.rate?.month) {
+      price = quote.rate.month;
+    } else if (quote.rate?.semi_annual) {
+      price = quote.rate.semi_annual / 6; // Convert semi-annual to monthly
+    } else {
+      price = quote.monthly_premium || quote.premium || 0;
+    }
+    
+    // Convert from cents to dollars
+    price = price >= 100 ? price / 100 : price;
     
     if (applyDiscounts && quote.discounts) {
       quote.discounts.forEach((discount: any) => {
