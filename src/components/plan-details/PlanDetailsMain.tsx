@@ -12,7 +12,7 @@ import {
   ExclamationTriangleIcon
 } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { getProperLogoUrl } from "@/lib/naic-carriers";
+import { getProperLogoUrl } from "@/lib/carrier-system";
 
 // Import types and components from relative paths
 import type { QuoteData } from './types';

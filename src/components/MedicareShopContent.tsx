@@ -26,7 +26,12 @@ import { saveDentalQuotesToStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
 import { cancelAllRequests } from "@/lib/services/temporary-storage";
-import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
+import { 
+  getCarrierByNaicCode, 
+  getProperLogoUrl, 
+  getCarrierDisplayName as getCarrierDisplayNameFromSystem,
+  filterPreferredCarriers 
+} from "@/lib/carrier-system";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
 
 // Import organized components
@@ -202,6 +207,7 @@ function MedicareShopContent() {
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
+  const [showPreferredOnly, setShowPreferredOnly] = useState(false);
 
   // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
   const handleManualCategorySelect = useCallback((categoryId: string) => {
@@ -1438,16 +1444,9 @@ function MedicareShopContent() {
     return logoUrl;
   };
 
-  // Get the display name for a carrier (prefer short name from NAIC data)
+  // Get the display name for a carrier (prefer short name from carrier system)
   const getCarrierDisplayName = (carrierName: string, carrierId: string): string => {
-    // Try to get the carrier from NAIC data using the carrierId (which should be the NAIC code)
-    const naicCarrier = getCarrierByNaicCode(carrierId);
-    if (naicCarrier?.shortName) {
-      return naicCarrier.shortName;
-    }
-    
-    // Fallback to the original carrier name
-    return carrierName;
+    return getCarrierDisplayNameFromSystem(carrierName, carrierId);
   };
 
   const openPlanModal = (carrierGroup: any) => {
@@ -1883,6 +1882,7 @@ function MedicareShopContent() {
     setPriceRange([0, 500]);
     setSelectedCoverageLevel('all');
     setSortBy('popularity');
+    setShowPreferredOnly(false);
     // DON'T reset plan selections - these should persist from user's actual choices
 
     // setSelectedQuotePlans(['F', 'G', 'N']);
@@ -1931,8 +1931,14 @@ function MedicareShopContent() {
   // Display data processing - handle both real quotes types
   const displayData = React.useMemo(() => {
     if (selectedCategory === 'medigap' && realQuotes?.length > 0) {
+      // Apply preferred carriers filter first if enabled
+      let quotesToProcess = realQuotes;
+      if (showPreferredOnly) {
+        quotesToProcess = filterPreferredCarriers(realQuotes, 'medicare-supplement');
+      }
+      
       // Group by carrier for medigap
-      const filteredQuotes = realQuotes.filter(quote => {
+      const filteredQuotes = quotesToProcess.filter(quote => {
         const planType = quote?.plan || '';
         // Plan must be both available (has quotes) AND selected by user
         const isAvailable = availableMedigapPlans[planType] || false;
@@ -2016,7 +2022,7 @@ function MedicareShopContent() {
       type: 'individual' as const,
       data: []
     };
-  }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans]);
+  }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans, showPreferredOnly]);
 
   // Memoized pagination calculations to prevent unnecessary re-computations
   const paginationData = React.useMemo(() => {
@@ -2152,7 +2158,6 @@ function MedicareShopContent() {
                 selectedCoverageLevel={selectedCoverageLevel}
                 setSelectedCoverageLevel={setSelectedCoverageLevel}
                 selectedCategory={selectedCategory}
-                onCategorySelect={handleManualCategorySelect}
                 selectedQuotePlans={selectedQuotePlans}
                 setSelectedQuotePlans={handlePlanSelection}
                 applyDiscounts={applyDiscounts}
@@ -2162,6 +2167,8 @@ function MedicareShopContent() {
                 quoteFormData={quoteFormData}
                 realQuotes={realQuotes}
                 onClearFilters={clearFilters}
+                showPreferredOnly={showPreferredOnly}
+                setShowPreferredOnly={setShowPreferredOnly}
               />
 
               {/* Main Product Grid */}
@@ -2342,6 +2349,7 @@ function MedicareShopContent() {
                                   selectedQuotePlans={Array.from(actualPlanTypesShowing) as string[]}
                                   paymentMode={paymentMode}
                                   getCachedLogoUrl={getCachedLogoUrl}
+                                  getCarrierDisplayName={getCarrierDisplayName}
                                   calculateDiscountedPrice={calculateDiscountedPrice}
                                   convertPriceByPaymentMode={convertPriceByPaymentMode}
                                   getPaymentLabel={getPaymentLabel}

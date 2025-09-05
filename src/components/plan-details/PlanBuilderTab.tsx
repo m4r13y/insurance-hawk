@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { getProperLogoUrl } from "@/lib/naic-carriers";
+import { getProperLogoUrl } from "@/lib/carrier-system";
 import { QuoteData } from './types.js';
 
 interface PlanBuilderTabProps {

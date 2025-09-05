@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,8 @@ import {
   HeartIcon
 } from "@radix-ui/react-icons";
 import { type QuoteFormData } from "./types";
-import { getCarrierByNaicCode } from "@/lib/naic-carriers";
+import PreferredCarriersFilter from "@/components/filters/PreferredCarriersFilter";
+import { filterPreferredCarriers } from "@/lib/carrier-system";
 
 interface MedicareShopSidebarProps {
   // Search and filters
@@ -29,28 +30,25 @@ interface MedicareShopSidebarProps {
   selectedCoverageLevel: string;
   setSelectedCoverageLevel: (level: string) => void;
   
-  // Category selection
+  // Category and plans
   selectedCategory: string;
-  onCategorySelect: (categoryId: string) => void;
-  
-  // Quote plans
   selectedQuotePlans: string[];
   setSelectedQuotePlans: (plans: string[]) => void;
   
-  // Discounts and payment
+  // Settings
   applyDiscounts: boolean;
   setApplyDiscounts: (apply: boolean) => void;
   paymentMode: 'monthly' | 'quarterly' | 'annually';
   setPaymentMode: (mode: 'monthly' | 'quarterly' | 'annually') => void;
   
-  // User data
+  // Data
   quoteFormData: QuoteFormData;
-  
-  // Quotes data
   realQuotes: any[];
   
-  // Clear filters function
+  // Actions
   onClearFilters: () => void;
+  showPreferredOnly: boolean;
+  setShowPreferredOnly: (show: boolean) => void;
 }
 
 export default function MedicareShopSidebar({
@@ -63,7 +61,6 @@ export default function MedicareShopSidebar({
   selectedCoverageLevel,
   setSelectedCoverageLevel,
   selectedCategory,
-  onCategorySelect,
   selectedQuotePlans,
   setSelectedQuotePlans,
   applyDiscounts,
@@ -72,8 +69,24 @@ export default function MedicareShopSidebar({
   setPaymentMode,
   quoteFormData,
   realQuotes,
-  onClearFilters
+  onClearFilters,
+  showPreferredOnly,
+  setShowPreferredOnly
 }: MedicareShopSidebarProps) {
+  
+  // Calculate preferred carriers counts for display
+  const preferredQuotes = useMemo(() => {
+    if (selectedCategory === 'medigap' && realQuotes.length > 0) {
+      return filterPreferredCarriers(realQuotes, 'medicare-supplement');
+    }
+    return [];
+  }, [realQuotes, selectedCategory]);
+
+  // Helper to check if we should show user info
+  const hasUserInfo = quoteFormData && (quoteFormData.age || quoteFormData.zipCode || quoteFormData.gender);
+  
+  // Helper to check if we should show medigap plan selection
+  const showMedigapPlans = selectedCategory === 'medigap' && realQuotes.length === 0;
   
   return (
     <aside className="lg:col-span-1">
@@ -100,59 +113,68 @@ export default function MedicareShopSidebar({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* User Details - moved from top right */}
-            {quoteFormData && (quoteFormData.age || quoteFormData.zipCode || quoteFormData.gender) && (
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-3">Your Information</h4>
-                <div className="space-y-2 text-sm">
-                  {quoteFormData.age && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Age:</span>
-                      <span className="font-medium">{quoteFormData.age}</span>
-                    </div>
-                  )}
-                  {quoteFormData.gender && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gender:</span>
-                      <span className="font-medium">{quoteFormData.gender === 'male' ? 'Male' : 'Female'}</span>
-                    </div>
-                  )}
-                  {quoteFormData.zipCode && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Zip Code:</span>
-                      <span className="font-medium">{quoteFormData.zipCode}</span>
-                    </div>
-                  )}
+            {/* User Information */}
+            {hasUserInfo && (
+              <>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-3">Your Information</h4>
+                  <div className="space-y-2 text-sm">
+                    {quoteFormData.age && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Age:</span>
+                        <span className="font-medium">{quoteFormData.age}</span>
+                      </div>
+                    )}
+                    {quoteFormData.gender && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gender:</span>
+                        <span className="font-medium">{quoteFormData.gender === 'male' ? 'Male' : 'Female'}</span>
+                      </div>
+                    )}
+                    {quoteFormData.zipCode && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Zip Code:</span>
+                        <span className="font-medium">{quoteFormData.zipCode}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+                <Separator />
+              </>
             )}
-
-            <Separator />
 
             {/* Filter Controls */}
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-foreground">Refine Results</h4>
               
-              {/* Apply Discounts Toggle */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Discounts</label>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="apply-discounts"
-                    checked={applyDiscounts}
-                    onCheckedChange={(checked) => setApplyDiscounts(checked as boolean)}
-                  />
-                  <label htmlFor="apply-discounts" className="text-sm">
-                    Apply Discounts
-                  </label>
-                </div>
+              {/* Preferred Carriers Filter */}
+              {selectedCategory === 'medigap' && realQuotes.length > 0 && (
+                <PreferredCarriersFilter
+                  isEnabled={showPreferredOnly}
+                  onToggle={setShowPreferredOnly}
+                  preferredCount={preferredQuotes.length}
+                  totalCount={realQuotes.length}
+                  category="medicare-supplement"
+                />
+              )}
+              
+              {/* Discounts */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="apply-discounts"
+                  checked={applyDiscounts}
+                  onCheckedChange={(checked) => setApplyDiscounts(checked as boolean)}
+                />
+                <label htmlFor="apply-discounts" className="text-sm font-medium">
+                  Apply Discounts
+                </label>
               </div>
               
               {/* Sort By */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Sort By</label>
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-full">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -186,7 +208,7 @@ export default function MedicareShopSidebar({
               <div>
                 <label className="text-sm font-medium mb-2 block">Coverage Level</label>
                 <Select value={selectedCoverageLevel} onValueChange={setSelectedCoverageLevel}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -199,80 +221,68 @@ export default function MedicareShopSidebar({
                 </Select>
               </div>
 
-              {/* Medigap Plan Selection - Only show for Medigap category */}
-              {selectedCategory === 'medigap' && realQuotes.length === 0 && (
+              {/* Payment Mode */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Payment Mode</label>
+                <Select value={paymentMode} onValueChange={setPaymentMode}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="annually">Annually</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Medigap Plan Selection */}
+              {showMedigapPlans && (
                 <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Medigap Plans
-                  </label>
+                  <label className="text-sm font-medium mb-2 block">Medigap Plans</label>
                   <div className="space-y-2">
-                    {/* Mock data: use selectedQuotePlans state */}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="plan-f"
-                        checked={selectedQuotePlans.includes('plan-f')}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-f']);
-                          } else {
-                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-f'));
-                          }
-                        }}
-                        className="border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                      />
-                      <label htmlFor="plan-f" className="text-sm">Plan F</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="plan-g"
-                        checked={selectedQuotePlans.includes('plan-g')}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-g']);
-                          } else {
-                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-g'));
-                          }
-                        }}
-                        className="border-green-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                      />
-                      <label htmlFor="plan-g" className="text-sm">Plan G</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="plan-n"
-                        checked={selectedQuotePlans.includes('plan-n')}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedQuotePlans([...selectedQuotePlans, 'plan-n']);
-                          } else {
-                            setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== 'plan-n'));
-                          }
-                        }}
-                        className="border-purple-400 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                      />
-                      <label htmlFor="plan-n" className="text-sm">Plan N</label>
-                    </div>
+                    {[
+                      { id: 'plan-f', label: 'Plan F', color: 'blue' },
+                      { id: 'plan-g', label: 'Plan G', color: 'green' },
+                      { id: 'plan-n', label: 'Plan N', color: 'purple' }
+                    ].map((plan) => (
+                      <div key={plan.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={plan.id}
+                          checked={selectedQuotePlans.includes(plan.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedQuotePlans([...selectedQuotePlans, plan.id]);
+                            } else {
+                              setSelectedQuotePlans(selectedQuotePlans.filter(id => id !== plan.id));
+                            }
+                          }}
+                          className={`border-${plan.color}-400 data-[state=checked]:bg-${plan.color}-600 data-[state=checked]:border-${plan.color}-600`}
+                        />
+                        <label htmlFor={plan.id} className="text-sm">{plan.label}</label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Quick Filter Buttons */}
+              {/* Quick Filters */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Quick Filters</label>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="justify-start text-xs"
+                    className="w-full justify-start text-xs"
                     onClick={() => setSortBy('popularity')}
                   >
-                    <StarFilledIcon className="w-3 h-3 mr-2 text-yellow-400 fill-current" />
+                    <StarFilledIcon className="w-3 h-3 mr-2 text-yellow-400" />
                     Most Popular
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="justify-start text-xs"
+                    className="w-full justify-start text-xs"
                     onClick={() => setSortBy('price')}
                   >
                     <TokensIcon className="w-3 h-3 mr-2" />
@@ -281,7 +291,7 @@ export default function MedicareShopSidebar({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="justify-start text-xs"
+                    className="w-full justify-start text-xs"
                     onClick={() => {
                       setSelectedCoverageLevel('Comprehensive');
                       setSortBy('rating');
@@ -293,26 +303,11 @@ export default function MedicareShopSidebar({
                 </div>
               </div>
 
-              {/* Payment Mode */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Mode</label>
-                <Select value={paymentMode} onValueChange={(value: 'monthly' | 'quarterly' | 'annually') => setPaymentMode(value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="annually">Annually</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Clear Filters */}
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="w-full text-xs"
+                className="w-full"
                 onClick={onClearFilters}
               >
                 Clear All Filters

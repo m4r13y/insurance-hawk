@@ -16,7 +16,7 @@ import MedicareQuoteFlow from "@/components/MedicareQuoteFlow";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import { quoteService } from "@/lib/services/quote-service";
 import { carrierService } from "@/lib/services/carrier-service-simple";
-import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/naic-carriers";
+import { getCarrierByNaicCode, getProperLogoUrl } from "@/lib/carrier-system";
 import Image from "next/image";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { 

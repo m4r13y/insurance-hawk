@@ -1,5 +1,5 @@
 import type { Plan, Document } from '@/types';
-import { naicCarriers, getCarrierByNaicCode, getCarrierLogoUrl } from './naic-carriers';
+import { naicCarriers, getCarrierByNaicCode, getProperLogoUrl as getCarrierLogoUrl } from './carrier-system';
 
 // Featured carriers for homepage display - using local logos
 export const featuredCarriers = [
@@ -162,7 +162,7 @@ export function getCarrierFromQuote(quote: { naicCode?: string; carrierName?: st
   const naicCarrier = getCarrierByNaicCode(quote.naicCode);
   if (naicCarrier) {
     return {
-      name: naicCarrier.shortName || naicCarrier.carrierName,
+      name: naicCarrier.shortName || naicCarrier.name,
       logoUrl: naicCarrier.logoUrl,
       website: naicCarrier.website,
       phone: naicCarrier.phone,

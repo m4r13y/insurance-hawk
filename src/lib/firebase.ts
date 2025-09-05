@@ -23,6 +23,7 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null; // Firestore enabled for temporary quote storage
+let hawknestDb: Firestore | null = null; // Firestore for hawknest-database (agents data)
 let storage: FirebaseStorage | null = null;
 let functions: Functions | null = null; // Re-enabled for quote functionality
 let dataConnect: DataConnect | null = null; // Add DataConnect
@@ -41,6 +42,7 @@ if (hasEssentialConfig) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     // auth = getAuth(app);
     db = getFirestore(app, 'temp'); // Connect to the 'temp' database for temporary quote storage
+    hawknestDb = getFirestore(app, 'hawknest-database'); // Connect to hawknest-database for agents data
     storage = getStorage(app);
     functions = getFunctions(app, 'us-central1'); // Re-enabled for quote functionality with region
     auth = getAuth(app); // Add auth for Firebase Functions
@@ -60,6 +62,7 @@ if (hasEssentialConfig) {
     app = null;
     // auth = null;
     db = null; // Reset Firestore on error
+    hawknestDb = null; // Reset hawknest database on error
     storage = null;
     functions = null;
     auth = null; // Reset auth on error
@@ -75,6 +78,7 @@ export {
   app as default,
   auth,
   db, // Firestore enabled for temporary quote storage
+  hawknestDb, // Firestore for hawknest-database (agents data)
   storage,
   functions, // Re-enabled for quote functionality
   dataConnect, // Add DataConnect export

@@ -2,7 +2,7 @@
 
 import { httpsCallable, getFunctions } from 'firebase/functions'
 import app from '@/lib/firebase'
-import { getCarrierByNaicCode } from '@/lib/naic-carriers'
+import { getCarrierByNaicCode } from '@/lib/carrier-system'
 
 interface MedigapQuoteParams {
   zipCode: string
@@ -200,15 +200,15 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
             ...quote,
             carrier: {
               ...quote.carrier,
-              name: quote.carrier?.name || naicCarrier.shortName || naicCarrier.carrierName,
-              full_name: quote.carrier?.full_name || naicCarrier.carrierName,
+              name: quote.carrier?.name || naicCarrier.shortName || naicCarrier.name,
+              full_name: quote.carrier?.full_name || naicCarrier.name,
               logo_url: quote.carrier?.logo_url || naicCarrier.logoUrl
             },
             // Add additional NAIC carrier info for reference
             naicCarrierInfo: {
-              carrierId: naicCarrier.carrierId,
-              phone: naicCarrier.phone,
-              website: naicCarrier.website
+              carrierId: naicCarrier.id,
+              phone: naicCarrier.phone || '',
+              website: naicCarrier.website || ''
             }
           }
         }

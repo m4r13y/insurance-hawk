@@ -11,6 +11,7 @@ interface MedigapCarrierGroupProps {
   selectedQuotePlans: string[];
   paymentMode: 'monthly' | 'quarterly' | 'annually';
   getCachedLogoUrl: (carrierName: string, carrierId: string) => string;
+  getCarrierDisplayName: (carrierName: string, carrierId: string) => string;
   calculateDiscountedPrice: (quote: any) => number;
   convertPriceByPaymentMode: (price: number) => number;
   getPaymentLabel: () => string;
@@ -23,6 +24,7 @@ export default function MedigapCarrierGroup({
   selectedQuotePlans,
   paymentMode,
   getCachedLogoUrl,
+  getCarrierDisplayName,
   calculateDiscountedPrice,
   convertPriceByPaymentMode,
   getPaymentLabel,
@@ -36,6 +38,9 @@ export default function MedigapCarrierGroup({
   
   // Skip carrier if no plans match selected types
   if (filteredQuotes.length === 0) return null;
+  
+  // Get the proper display name from NAIC data
+  const displayName = getCarrierDisplayName(carrierGroup.carrierName, carrierGroup.carrierId);
   
   // Create filtered carrier group
   const filteredCarrierGroup = {
@@ -54,7 +59,7 @@ export default function MedigapCarrierGroup({
               <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                 <Image
                   src={getCachedLogoUrl(carrierGroup.carrierName, carrierGroup.carrierId)}
-                  alt={`${carrierGroup.carrierName} logo`}
+                  alt={`${displayName} logo`}
                   width={48}
                   height={48}
                   className="w-full h-full object-contain"
@@ -63,7 +68,7 @@ export default function MedigapCarrierGroup({
                     const parent = target.parentElement;
                     if (parent) {
                       target.style.display = 'none';
-                      const initials = carrierGroup.carrierName
+                      const initials = displayName
                         .split(' ')
                         .map((word: string) => word[0])
                         .join('')
@@ -75,7 +80,7 @@ export default function MedigapCarrierGroup({
                 />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-primary">{carrierGroup.carrierName}</h3>
+                <h3 className="text-xl font-bold text-primary">{displayName}</h3>
                 <p className="text-sm text-muted-foreground">
                   {filteredQuotes.length} plan{filteredQuotes.length !== 1 ? 's' : ''} available
                 </p>
