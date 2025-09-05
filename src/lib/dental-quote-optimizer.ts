@@ -28,7 +28,6 @@ export interface RawDentalQuote {
     key: string;
     name: string;
     name_full: string;
-    naic: string;
     ambest_rating: string;
     ambest_outlook: string;
   };
@@ -43,7 +42,6 @@ export interface OptimizedDentalQuote {
   fullPlanName: string;
   companyName: string;
   companyFullName: string;
-  naic: string;
   annualMaximum: number;
   monthlyPremium: number;
   state: string;
@@ -185,7 +183,6 @@ function extractQuoteFields(rawQuote: any): OptimizedDentalQuote {
     fullPlanName: basePlan.name || '',
     companyName: rawQuote.company_base?.name || '',
     companyFullName: rawQuote.company_base?.name_full || '',
-    naic: rawQuote.company_base?.naic || '',
     annualMaximum: parseInt(mainBenefit.amount) || 0,
     monthlyPremium: mainBenefit.rate || 0,
     state: rawQuote.state || '',

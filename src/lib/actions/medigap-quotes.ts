@@ -2,7 +2,7 @@
 
 import { httpsCallable, getFunctions } from 'firebase/functions'
 import app from '@/lib/firebase'
-import { getCarrierByNaicCode } from '@/lib/carrier-system'
+import { getEnhancedCarrierInfo } from '@/lib/carrier-system'
 
 interface MedigapQuoteParams {
   zipCode: string
@@ -10,7 +10,6 @@ interface MedigapQuoteParams {
   gender: "M" | "F"
   tobacco: "0" | "1" 
   plans: string[]
-  appointedNaicCodes?: string[]
 }
 
 interface MedigapQuote {
@@ -19,7 +18,6 @@ interface MedigapQuote {
   carrier?: { name: string; full_name?: string; logo_url?: string | null } | null
   plan_name?: string
   plan?: string
-  naic?: string
   company?: string
   company_base?: { name?: string; full_name?: string; logo_url?: string | null }
   effective_date?: string
@@ -29,11 +27,6 @@ interface MedigapQuote {
   plan_type?: string
   am_best_rating?: string
   rate_type?: string
-  naicCarrierInfo?: {
-    carrierId: string
-    phone: string
-    website: string
-  }
 }
 
 export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ quotes?: MedigapQuote[]; error?: string }> {
@@ -136,21 +129,12 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           // Generate stable ID - include plan type for uniqueness across multiple plans
           const id = (quoteData.id as string) || `${(quoteData.plan_name as string) || 'plan'}-${carrier.name}-${plan}-${idx}`
           
-          // Extract NAIC code from various possible locations
-          let naicCode = (companyBase.naic as string) ||
-                        quoteData.naic as string || 
-                        quoteData.NAIC as string ||
-                        (companyBase.NAIC as string) ||
-                        ((quoteData.carrier as Record<string, unknown>)?.naic as string) ||
-                        ((quoteData.carrier as Record<string, unknown>)?.NAIC as string)
-          
           const quote: MedigapQuote = {
             id,
             monthly_premium,
             carrier,
             plan_name: (quoteData.plan_name as string) || `Medicare Supplement Plan ${plan}`,
             plan: (quoteData.plan as string) || plan,
-            naic: naicCode,
             company: (quoteData.company as string) || carrier.name,
             company_base: companyBase as { name?: string; full_name?: string; logo_url?: string | null },
             effective_date: quoteData.effective_date as string,
@@ -190,57 +174,28 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       }
     }
     
-    // First, enhance all quotes with NAIC carrier information (but don't filter yet)
+    // Enhance all quotes with carrier information using name-based matching
     const enhancedQuotes = allQuotes.map(quote => {
-      if (quote.naic) {
-        const naicCarrier = getCarrierByNaicCode(quote.naic)
-        if (naicCarrier) {
-          // Enhance the carrier information with NAIC data
-          return {
-            ...quote,
-            carrier: {
-              ...quote.carrier,
-              name: quote.carrier?.name || naicCarrier.shortName || naicCarrier.name,
-              full_name: quote.carrier?.full_name || naicCarrier.name,
-              logo_url: quote.carrier?.logo_url || naicCarrier.logoUrl
-            },
-            // Add additional NAIC carrier info for reference
-            naicCarrierInfo: {
-              carrierId: naicCarrier.id,
-              phone: naicCarrier.phone || '',
-              website: naicCarrier.website || ''
-            }
-          }
+      // Use enhanced carrier info to get proper display names from preferred carriers
+      const enhancedCarrierInfo = getEnhancedCarrierInfo(quote, 'medicare-supplement')
+      
+      // Enhance the carrier information with preferred carrier data
+      return {
+        ...quote,
+        carrier: {
+          ...quote.carrier,
+          name: enhancedCarrierInfo.displayName,
+          full_name: quote.carrier?.full_name || quote.company || enhancedCarrierInfo.displayName,
+          logo_url: enhancedCarrierInfo.logoUrl
         }
       }
-      return quote
     })
     
     // Sort all quotes by monthly premium (lowest first) like in client portal
     enhancedQuotes.sort((a, b) => a.monthly_premium - b.monthly_premium)
     
-    // Apply NAIC filtering AFTER all processing is complete
-    let finalQuotes = enhancedQuotes
-    
-    // TEMPORARILY DISABLED: Filter by appointed carriers if specified, otherwise filter by valid NAIC codes
-    if (params.appointedNaicCodes && params.appointedNaicCodes.length > 0) {
-      finalQuotes = enhancedQuotes.filter(quote => {
-        if (!quote.naic) return false
-        return params.appointedNaicCodes!.includes(quote.naic)
-      })
-    } else {
-      // TEMPORARILY DISABLED: Default filtering - showing ALL quotes without NAIC filtering
-      finalQuotes = enhancedQuotes
-      
-      // Original filtering code (temporarily disabled):
-      // finalQuotes = enhancedQuotes.filter(quote => {
-      //   if (!quote.naic) return false
-      //   // Normalize NAIC code for comparison (trim whitespace, ensure string)
-      //   const normalizedNaic = String(quote.naic).trim()
-      //   const carrier = getCarrierByNaicCode(normalizedNaic)
-      //   return !!carrier
-      // })
-    }
+    // Return all enhanced quotes (no NAIC filtering)
+    const finalQuotes = enhancedQuotes
     
     return { quotes: finalQuotes }
     

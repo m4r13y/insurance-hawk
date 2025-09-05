@@ -24,13 +24,13 @@ import { optimizeDentalQuotes, OptimizedDentalQuote, filter2025Quotes } from "@/
 import { optimizeHospitalIndemnityQuotes, OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
 import { saveDentalQuotesToStorage } from "@/lib/dental-storage";
 import { quoteService } from "@/lib/services/quote-service";
-import { carrierService } from "@/lib/services/carrier-service-simple";
 import { cancelAllRequests } from "@/lib/services/temporary-storage";
 import { 
-  getCarrierByNaicCode, 
-  getProperLogoUrl, 
+  getCarrierLogoUrl as getProperLogoUrl, 
   getCarrierDisplayName as getCarrierDisplayNameFromSystem,
-  filterPreferredCarriers 
+  getEnhancedCarrierInfo,
+  filterPreferredCarriers,
+  type ProductCategory
 } from "@/lib/carrier-system";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
 
@@ -1130,7 +1130,6 @@ function MedicareShopContent() {
                     fullPlanName: basePlan?.name || '',
                     companyName: quote.company_base?.name || '',
                     companyFullName: quote.company_base?.name_full || '',
-                    naic: quote.company_base?.naic || '',
                     annualMaximum: parseInt(mainBenefit?.amount || '0'),
                     monthlyPremium: mainBenefit?.rate || 0,
                     state: quote.state || '',
@@ -1417,8 +1416,10 @@ function MedicareShopContent() {
   };
 
   const getCachedLogoUrl = (carrierName: string, carrierId: string): string => {
-    // Use carrierId as the naicCode since that's what the API returns
-    const carrierKey = carrierId || carrierName;
+    console.log(`🔍 getCachedLogoUrl called with carrierName: "${carrierName}", carrierId: "${carrierId}"`);
+    
+    // Use carrierName as the key since we're no longer using NAIC codes
+    const carrierKey = carrierName;
     
     // Check if we have a cached logo URL
     if (carrierLogos[carrierKey]) {
@@ -1429,24 +1430,50 @@ function MedicareShopContent() {
       const isBadNaicUrl = /https:\/\/logo\.clearbit\.com\/\d{5}\.com$/i.test(cachedUrl);
       
       if (!isBadNaicUrl) {
-        console.log(`Using cached logo for ${carrierKey}:`, cachedUrl);
+        console.log(`✅ Using cached logo for ${carrierKey}:`, cachedUrl);
         return cachedUrl;
       } else {
-        console.log(`Ignoring bad cached NAIC-based logo URL for ${carrierKey}:`, cachedUrl);
+        console.log(`❌ Ignoring bad cached NAIC-based logo URL for ${carrierKey}:`, cachedUrl);
         // Remove the bad cached URL
         delete carrierLogos[carrierKey];
       }
     }
     
-    // Use the proper logo URL function from NAIC carriers
-    const logoUrl = getProperLogoUrl(carrierId, carrierName);
-    console.log(`Generated logo URL for NAIC ${carrierId}, carrier "${carrierName}":`, logoUrl);
+    // Use the enhanced carrier info system that checks preferred carriers first
+    const mockQuote = { carrier: { name: carrierName } };
+    const productCategory: ProductCategory = selectedCategory === 'medigap' ? 'medicare-supplement' 
+      : selectedCategory === 'advantage' ? 'medicare-advantage'
+      : selectedCategory === 'dental' ? 'dental'
+      : selectedCategory === 'final-expense' ? 'final-expense'
+      : selectedCategory === 'hospital-indemnity' ? 'hospital-indemnity'
+      : selectedCategory === 'cancer' ? 'cancer'
+      : selectedCategory === 'drug-plan' ? 'drug-plan'
+      : 'medicare-supplement';
+    
+    console.log(`🎯 Looking up carrier "${carrierName}" for category "${productCategory}"`);
+    const enhancedInfo = getEnhancedCarrierInfo(mockQuote, productCategory);
+    const logoUrl = enhancedInfo.logoUrl;
+    console.log(`📸 Enhanced logo URL for carrier "${carrierName}":`, logoUrl);
+    console.log(`📋 Enhanced info:`, enhancedInfo);
+    
+    // Don't update state during render - this will be cached by the preloadCarrierLogos function instead
+    
     return logoUrl;
   };
 
-  // Get the display name for a carrier (prefer short name from carrier system)
+  // Get the display name for a carrier (prefer preferred carrier display name, then short name from carrier system)
   const getCarrierDisplayName = (carrierName: string, carrierId: string): string => {
-    return getCarrierDisplayNameFromSystem(carrierName, carrierId);
+    // Map the selectedCategory to ProductCategory
+    const productCategory: ProductCategory = selectedCategory === 'medigap' ? 'medicare-supplement' 
+      : selectedCategory === 'advantage' ? 'medicare-advantage'
+      : selectedCategory === 'dental' ? 'dental'
+      : selectedCategory === 'final-expense' ? 'final-expense'
+      : selectedCategory === 'hospital-indemnity' ? 'hospital-indemnity'
+      : selectedCategory === 'cancer' ? 'cancer'
+      : selectedCategory === 'drug-plan' ? 'drug-plan'
+      : 'medicare-supplement';
+    
+    return getCarrierDisplayNameFromSystem(carrierName, productCategory);
   };
 
   const openPlanModal = (carrierGroup: any) => {
@@ -1946,12 +1973,11 @@ function MedicareShopContent() {
         const matchesPlan = isAvailable && isSelected;
         
         if (searchQuery && matchesPlan) {
-          const carrierId = quote?.carrier?.naic || quote?.company_base?.naic || quote?.naic || 'unknown';
           const carrierName = quote?.carrier?.name || 
                              quote?.company_base?.name ||
                              quote?.company ||
                              'Unknown Carrier';
-          const displayName = getCarrierDisplayName(carrierName, carrierId);
+          const displayName = getCarrierDisplayName(carrierName, '');
           
           // Search against both original name and short name
           return carrierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1961,19 +1987,20 @@ function MedicareShopContent() {
       });
 
       const groupedByCarrier = filteredQuotes.reduce((groups: Record<string, any>, quote: any) => {
-        const carrierId = quote.carrier?.naic || quote.company_base?.naic || quote.naic || 'unknown';
         const carrierName = quote.carrier?.name || quote.company_base?.name || quote.company || 'Unknown Carrier';
-        const displayName = getCarrierDisplayName(carrierName, carrierId);
+        const displayName = getCarrierDisplayName(carrierName, '');
+        // Use carrier name as the key since we're no longer using NAIC codes
+        const carrierKey = carrierName;
         
-        if (!groups[carrierId]) {
-          groups[carrierId] = {
-            carrierId,
+        if (!groups[carrierKey]) {
+          groups[carrierKey] = {
+            carrierId: carrierKey,
             carrierName: displayName, // Use the display name (short name when available)
             originalCarrierName: carrierName, // Keep original name for fallback
             quotes: []
           };
         }
-        groups[carrierId].quotes.push(quote);
+        groups[carrierKey].quotes.push(quote);
         return groups;
       }, {});
 

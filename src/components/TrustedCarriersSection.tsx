@@ -1,6 +1,6 @@
 "use client"
 
-import { featuredCarriers } from "@/lib/carriers"
+import { featuredCarriers } from "@/lib/carrier-system"
 
 export default function TrustedCarriersSection() {
   return (

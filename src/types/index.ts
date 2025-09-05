@@ -31,7 +31,7 @@ export interface ProviderService {
 export interface NAICCarrier {
   carrierId: string;
   carrierName: string;
-  naicCode: string;
+  naicCode: string; // Kept for backward compatibility (empty string)
   phone: string;
   website: string;
   shortName: string;

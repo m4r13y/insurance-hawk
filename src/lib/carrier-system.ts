@@ -1,15 +1,9 @@
 /**
  * Simplified Carrier System
  * 
- * This module combines NAIC carrier data with preferred carriers configuration
+ * This module provides carrier data with preferred carriers configuration
  * in a clean, extensible way that's ready for future product categories.
  */
-
-import type { NAICCarrier } from '@/types';
-
-// Import Firebase for fetching agent preferred carriers
-import { hawknestDb } from './firebase';
-import { doc, getDoc, collection } from 'firebase/firestore';
 
 // ===== TYPES =====
 
@@ -26,74 +20,69 @@ export interface CarrierInfo {
   id: string;
   name: string;
   shortName: string;
-  naicCode: string;
+  displayName: string;
+  namePatterns: string[];
   phone?: string;
   website?: string;
   logoUrl?: string;
 }
 
 export interface PreferredCarrier {
-  id: string;
-  displayName: string;
+  carrierId: string;  // References CarrierInfo.id
   category: ProductCategory;
   priority: number;
-  naicCodes: string[];
-  namePatterns: string[];
-  website?: string;
-  phone?: string;
-  logoUrl?: string;
   isActive: boolean;
 }
 
 // ===== CORE CARRIER DATA =====
 
+// Featured carriers for homepage display - using local logos
+export const featuredCarriers = [
+  { "id": "unitedhealth", "name": "UnitedHealth Group", "logoUrl": "/carrier-logos/1.png", "website": "https://uhc.com" },
+  { "id": "elevance", "name": "Elevance Health (Anthem)", "logoUrl": "/carrier-logos/2.png", "website": "https://anthem.com" },
+  { "id": "humana", "name": "Humana", "logoUrl": "/carrier-logos/3.png", "website": "https://humana.com" },
+  { "id": "cvs_aetna", "name": "CVS Health (Aetna)", "logoUrl": "/carrier-logos/4.png", "website": "https://aetna.com" },
+  { "id": "kaiser", "name": "Kaiser Permanente", "logoUrl": "/carrier-logos/5.png", "website": "https://kaiserpermanente.org" },
+  { "id": "cigna", "name": "Cigna", "logoUrl": "/carrier-logos/6.png", "website": "https://cigna.com" },
+  { "id": "molina", "name": "Molina Healthcare", "logoUrl": "/carrier-logos/7.png", "website": "https://molinahealthcare.com" },
+  { "id": "bcbsm", "name": "Blue Cross Blue Shield", "logoUrl": "/carrier-logos/8.png", "website": "https://bcbsm.com" },
+  { "id": "oscar", "name": "Oscar Health", "logoUrl": "/carrier-logos/9.png", "website": "https://oscar.com" },
+  { "id": "aflac", "name": "Aflac", "logoUrl": "/carrier-logos/10.png", "website": "https://aflac.com" }
+];
+
 /**
- * Essential carrier information with NAIC codes
+ * Essential carrier information
  * This is the single source of truth for carrier data
+ * Only includes carriers we actually support/prefer
  */
 export const CARRIERS: CarrierInfo[] = [
-  // Medicare Supplement carriers
+  // Medicare Supplement preferred carriers
   {
-    id: 'bankers-fidelity-61239',
+    id: 'bankers-fidelity',
     name: 'Bankers Fidelity Life Insurance Company',
     shortName: 'Bankers Fidelity',
-    naicCode: '61239',
+    displayName: 'Bankers Fidelity',
+    namePatterns: ['Bankers Fidelity', 'Atlantic Capital Life Assur Co', 'Atlantic Capital Life Assurance Company'],
     phone: '800-241-1439',
     website: 'https://www.bankersfidelitylife.com',
-    logoUrl: 'https://logo.clearbit.com/bankersfidelitylife.com'
+    logoUrl: 'https://logo.clearbit.com/bankersfidelity.com'
   },
   {
-    id: 'bankers-fidelity-71919',
-    name: 'Bankers Fidelity Assurance Company',
-    shortName: 'Bankers Fidelity',
-    naicCode: '71919',
-    phone: '800-241-1439',
-    website: 'https://www.bankersfidelitylife.com',
-    logoUrl: 'https://logo.clearbit.com/bankersfidelitylife.com'
-  },
-  {
-    id: 'insurance-company-north-america',
+    id: 'insurance-co-n-america',
     name: 'Insurance Company of North America',
     shortName: 'Chubb',
-    naicCode: '19445',
+    displayName: 'Insurance Co. of North America',
+    namePatterns: ['Insurance Co of N Amer', 'Insurance Co. of N. America', 'Insurance Co. of North America', 'Chubb'],
     phone: '215-640-1000',
     website: 'https://www.chubb.com',
     logoUrl: 'https://logo.clearbit.com/chubb.com'
   },
   {
-    id: 'cigna-65269',
-    name: 'Healthspring Insurance Company, Formerly Cigna Insurance Company',
+    id: 'cigna',
+    name: 'Cigna Health and Life Insurance Company',
     shortName: 'Cigna',
-    naicCode: '65269',
-    phone: '512-451-2224',
-    website: 'https://www.cigna.com',
-    logoUrl: 'https://logo.clearbit.com/cigna.com'
-  },
-  {
-    id: 'cigna-61727',
-    name: 'Healthspring National Health Insurance Company, Formerly Cigna National Health Insurance Company',
-    shortName: 'Cigna',
-    naicCode: '61727',
+    displayName: 'Cigna',
+    namePatterns: ['Cigna', 'Cigna Ins Co', 'Healthspring Insurance Company'],
     phone: '512-451-2224',
     website: 'https://www.cigna.com',
     logoUrl: 'https://logo.clearbit.com/cigna.com'
@@ -102,138 +91,91 @@ export const CARRIERS: CarrierInfo[] = [
     id: 'aflac',
     name: 'American Family Life Assurance Company of Columbus (AFLAC)',
     shortName: 'Aflac',
-    naicCode: '60380',
+    displayName: 'Aflac',
+    namePatterns: ['Aflac', 'American Family Life'],
     phone: '800-992-3522',
-    website: 'https://aflac.com',
+    website: 'https://www.aflac.com',
     logoUrl: 'https://logo.clearbit.com/aflac.com'
   },
   {
-    id: 'mutual-of-omaha',
-    name: 'Mutual of Omaha Insurance Company',
-    shortName: 'Mutual of Omaha',
-    naicCode: '71412',
-    phone: '402-342-7600',
-    website: 'https://www.mutualofomaha.com',
-    logoUrl: 'https://logo.clearbit.com/mutualofomaha.com'
-  },
-  {
-    id: 'aetna-72052',
-    name: 'Aetna Health Insurance Company',
-    shortName: 'Aetna',
-    naicCode: '72052',
-    phone: '800-872-3862',
-    website: 'https://www.aetna.com',
-    logoUrl: 'https://logo.clearbit.com/aetna.com'
-  },
-  {
-    id: 'nassau-life',
-    name: 'Nassau Life Insurance Company',
-    shortName: 'Nassau Life',
-    naicCode: '93734',
-    phone: '516-394-2000',
-    website: 'https://www.nassaulife.com',
-    logoUrl: 'https://logo.clearbit.com/nassaulife.com'
-  },
-  {
-    id: 'united-healthcare-84549',
-    name: 'UnitedHealthcare Insurance Company of America',
-    shortName: 'UnitedHealthcare',
-    naicCode: '84549',
-    phone: '224-231-1451',
-    website: 'https://www.uhc.com',
-    logoUrl: 'https://logo.clearbit.com/uhc.com'
-  },
-  {
-    id: 'united-healthcare-79413',
-    name: 'UnitedHealthcare Insurance Company',
-    shortName: 'UnitedHealthcare',
-    naicCode: '79413',
-    phone: '877-832-7734',
-    website: 'https://www.uhc.com',
-    logoUrl: 'https://logo.clearbit.com/uhc.com'
-  },
-  {
-    id: 'humana-60219',
-    name: 'Humana Insurance Company of Kentucky',
-    shortName: 'Humana',
-    naicCode: '60219',
-    phone: '502-580-1000',
-    website: 'https://www.humana.com',
-    logoUrl: 'https://logo.clearbit.com/humana.com'
-  },
-  {
-    id: 'humana-73288',
-    name: 'Humana Insurance Company',
-    shortName: 'Humana',
-    naicCode: '73288',
-    phone: '920-336-1100',
-    website: 'https://www.humana.com',
-    logoUrl: 'https://logo.clearbit.com/humana.com'
-  },
-  {
-    id: 'humana-88595',
-    name: 'Humana Insurance Company',
-    shortName: 'Humana',
-    naicCode: '88595',
-    phone: '502-580-1000',
-    website: 'https://www.humana.com',
-    logoUrl: 'https://logo.clearbit.com/humana.com'
-  },
-  // Add more carriers as needed for other product categories
-  {
-    id: 'united-national-life',
-    name: 'United National Life Insurance Company of America',
-    shortName: 'United National Life',
-    naicCode: '92703',
-    phone: '800-207-8050',
-    website: 'https://www.unlinsurance.com',
-    logoUrl: 'https://logo.clearbit.com/unlinsurance.com'
-  },
-  // Missing carriers from quote data
-  {
-    id: 'medmutual-protect',
-    name: 'MedMutual Protect',
-    shortName: 'MedMutual Protect',
-    naicCode: '62375',
-    phone: '800-962-1688',
-    website: 'https://www.medmutualprotect.com',
-    logoUrl: 'https://logo.clearbit.com/medmutual.com'
-  },
-  {
-    id: 'atlantic-capital-life',
-    name: 'Atlantic Capital Life Assurance Company',
-    shortName: 'Atlantic Capital Life',
-    naicCode: '17393',
-    phone: '800-241-1439',
-    website: 'https://www.bankersfidelitylife.com',
-    logoUrl: 'https://logo.clearbit.com/bankersfidelitylife.com'
-  },
-  {
-    id: 'medico-life-health',
-    name: 'Medico Life and Health Insurance Company',
-    shortName: 'Medico',
-    naicCode: '31119',
-    phone: '800-445-6100',
-    website: 'https://www.medico.com',
-    logoUrl: 'https://logo.clearbit.com/medico.com'
-  },
-  {
-    id: 'bcbs-hcsc',
-    name: 'Blue Cross Blue Shield (HCSC)',
+    id: 'bcbs',
+    name: 'Blue Cross Blue Shield',
     shortName: 'Blue Cross Blue Shield',
-    naicCode: '65269',
+    displayName: 'BCBS',
+    namePatterns: ['Blue Cross', 'BCBS', 'HCSC'],
     phone: '877-774-2267',
     website: 'https://www.bcbs.com',
     logoUrl: 'https://logo.clearbit.com/bcbs.com'
   },
   {
-    id: 'members-health',
-    name: 'Members Health Insurance Company',
-    shortName: 'Members Health',
-    naicCode: '70024',
-    phone: '800-633-4227',
-    website: 'https://www.membershealth.com',
-    logoUrl: '/images/carrier-placeholder.svg'
+    id: 'mutual-of-omaha',
+    name: 'Mutual of Omaha Insurance Company',
+    shortName: 'Mutual of Omaha',
+    displayName: 'Mutual of Omaha',
+    namePatterns: ['Mutual of Omaha', 'United of Omaha'],
+    phone: '402-342-7600',
+    website: 'https://www.mutualofomaha.com',
+    logoUrl: 'https://logo.clearbit.com/mutualofomaha.com'
+  },
+  {
+    id: 'aetna',
+    name: 'Aetna Health Insurance Company',
+    shortName: 'Aetna',
+    displayName: 'Aetna',
+    namePatterns: ['Aetna'],
+    phone: '800-872-3862',
+    website: 'https://www.aetna.com',
+    logoUrl: 'https://logo.clearbit.com/aetna.com'
+  },
+  {
+    id: 'nassau',
+    name: 'Nassau Life Insurance Company',
+    shortName: 'Nassau Life',
+    displayName: 'Nassau',
+    namePatterns: ['Nassau', 'Nassau Life Insurance Company'],
+    phone: '516-394-2000',
+    website: 'https://www.nassaulife.com',
+    logoUrl: 'https://logo.clearbit.com/nfg.com'
+  },
+  {
+    id: 'humana',
+    name: 'Humana Insurance Company',
+    shortName: 'Humana',
+    displayName: 'Humana',
+    namePatterns: ['Humana', 'Humana Insurance'],
+    phone: '502-580-1000',
+    website: 'https://www.humana.com',
+    logoUrl: 'https://logo.clearbit.com/humana.com'
+  },
+  {
+    id: 'united-healthcare',
+    name: 'UnitedHealthcare Insurance Company',
+    shortName: 'UnitedHealthcare',
+    displayName: 'UnitedHealthcare',
+    namePatterns: ['United', 'UnitedHealthcare', 'United Healthcare'],
+    phone: '877-832-7734',
+    website: 'https://www.uhc.com',
+    logoUrl: 'https://logo.clearbit.com/unitedhealthcare.com'
+  },
+  {
+    id: 'united-national-life',
+    name: 'United National Life Insurance Company of America',
+    shortName: 'United National Life',
+    displayName: 'United National Life',
+    namePatterns: ['United National Life', 'UNL'],
+    phone: '800-207-8050',
+    website: 'https://www.unlinsurance.com',
+    logoUrl: 'https://logo.clearbit.com/unl.com'
+  },
+  {
+    id: 'manhattan-life',
+    name: 'Manhattan Life Insurance Company',
+    shortName: 'Manhattan Life',
+    displayName: 'Manhattan Life',
+    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance'],
+    phone: '800-622-9525',
+    website: 'https://www.manhattanlife.com',
+    logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
   }
 ];
 
@@ -242,15 +184,7 @@ export const CARRIERS: CarrierInfo[] = [
 /**
  * Create lookup maps for efficient searches
  */
-const carriersByNaicCode = new Map(CARRIERS.map(c => [c.naicCode, c]));
 const carriersById = new Map(CARRIERS.map(c => [c.id, c]));
-
-/**
- * Get carrier information by NAIC code
- */
-export function getCarrierByNaicCode(naicCode: string): CarrierInfo | undefined {
-  return carriersByNaicCode.get(naicCode);
-}
 
 /**
  * Get carrier information by ID
@@ -260,10 +194,31 @@ export function getCarrierById(id: string): CarrierInfo | undefined {
 }
 
 /**
+ * Find carrier by name patterns
+ */
+export function findCarrierByName(carrierName: string): CarrierInfo | undefined {
+  console.log(`🔍 findCarrierByName called with: "${carrierName}"`);
+  
+  const result = CARRIERS.find(carrier => 
+    carrier.namePatterns.some(pattern => {
+      const matches = carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
+                     pattern.toLowerCase().includes(carrierName.toLowerCase());
+      if (matches) {
+        console.log(`✅ Matched pattern "${pattern}" for carrier "${carrier.displayName}"`);
+      }
+      return matches;
+    })
+  );
+  
+  console.log(`🎯 findCarrierByName result for "${carrierName}":`, result ? `${result.displayName} (${result.id})` : 'NOT FOUND');
+  return result;
+}
+
+/**
  * Get proper logo URL for a carrier
  */
-export function getCarrierLogoUrl(naicCode: string, carrierName: string): string {
-  const carrier = getCarrierByNaicCode(naicCode);
+export function getCarrierLogoUrl(carrierName: string): string {
+  const carrier = findCarrierByName(carrierName);
   if (carrier?.logoUrl) {
     return carrier.logoUrl;
   }
@@ -273,11 +228,24 @@ export function getCarrierLogoUrl(naicCode: string, carrierName: string): string
 }
 
 /**
- * Get display name for a carrier (prefer short name from carrier data)
+ * Get display name for a carrier (prefer preferred carrier display name, then short name from carrier data)
  */
-export function getCarrierDisplayName(carrierName: string, naicCode: string): string {
-  const carrier = getCarrierByNaicCode(naicCode);
-  return carrier?.shortName || carrierName;
+export function getCarrierDisplayName(carrierName: string, category: ProductCategory = 'medicare-supplement'): string {
+  // First check if this is a preferred carrier
+  const mockQuote = { carrier: { name: carrierName } };
+  const preferredCarrier = findPreferredCarrier(mockQuote, category);
+  
+  if (preferredCarrier) {
+    // Get the carrier info using the carrierId
+    const carrierInfo = getCarrierById(preferredCarrier.carrierId);
+    if (carrierInfo?.displayName) {
+      return carrierInfo.displayName;
+    }
+  }
+  
+  // Fall back to carrier short name
+  const carrier = findCarrierByName(carrierName);
+  return carrier?.displayName || carrier?.shortName || carrierName;
 }
 
 // ===== PREFERRED CARRIERS FUNCTIONS =====
@@ -286,40 +254,57 @@ export function getCarrierDisplayName(carrierName: string, naicCode: string): st
  * Find preferred carrier match for a quote
  */
 /**
- * Find carrier by NAIC code
- */
-export function findCarrierByNAIC(naicCode: string): CarrierInfo | null {
-  return CARRIERS.find(carrier => carrier.naicCode === naicCode) || null;
-}
-
-/**
- * Find preferred carrier by name and NAIC (requires agent ID for dynamic lookup)
- * @deprecated Use findAgentPreferredCarrier instead for agent-specific results
+ * Find preferred carrier by name (simplified without NAIC)
  */
 export function findPreferredCarrierByParams(
   carrierName: string, 
-  naicCode?: string,
   category: ProductCategory = 'medicare-supplement'
 ): PreferredCarrier | null {
-  // This function is deprecated - all preferred carrier lookups should be agent-specific
-  console.warn('findPreferredCarrierByParams is deprecated. Use findAgentPreferredCarrier with agentId instead.');
+  const preferredCarriers = getPreferredCarriers(category);
+  
+  for (const preferredCarrier of preferredCarriers) {
+    // Get the actual carrier info
+    const carrierInfo = getCarrierById(preferredCarrier.carrierId);
+    if (carrierInfo) {
+      // Check name patterns from carrier info
+      for (const pattern of carrierInfo.namePatterns) {
+        if (carrierName.toLowerCase().includes(pattern.toLowerCase())) {
+          return preferredCarrier;
+        }
+      }
+    }
+  }
+  
   return null;
 }
 
-/**
- * @deprecated Use findAgentPreferredCarrier instead for agent-specific results
- */
 export function findPreferredCarrier(quote: any, category: ProductCategory): PreferredCarrier | null {
-  console.warn('findPreferredCarrier is deprecated. Use findAgentPreferredCarrier with agentId instead.');
+  const carrierName = quote.carrier?.name || quote.company_base?.name || '';
+  
+  const preferredCarriers = getPreferredCarriers(category);
+  
+  for (const preferredCarrier of preferredCarriers) {
+    // Get the actual carrier info
+    const carrierInfo = getCarrierById(preferredCarrier.carrierId);
+    if (carrierInfo) {
+      // Check name patterns from carrier info
+      for (const pattern of carrierInfo.namePatterns) {
+        if (carrierName.toLowerCase().includes(pattern.toLowerCase())) {
+          return preferredCarrier;
+        }
+      }
+    }
+  }
+  
   return null;
 }
 
 /**
- * @deprecated Use agent-specific preferred carrier checking instead
+ * Check if a quote is from a preferred carrier
  */
 export function isPreferredCarrier(quote: any, category: ProductCategory): boolean {
-  console.warn('isPreferredCarrier is deprecated. Use agent-specific preferred carrier checking instead.');
-  return false;
+  const preferredCarrier = findPreferredCarrier(quote, category);
+  return preferredCarrier !== null;
 }
 
 /**
@@ -359,22 +344,42 @@ export function sortByPreferredCarrierPriority(quotes: any[], category: ProductC
  * Get enhanced carrier display information for a quote
  */
 export function getEnhancedCarrierInfo(quote: any, category: ProductCategory) {
-  const naicCode = quote.naic || '';
   const carrierName = quote.carrier?.name || quote.company_base?.name || '';
+  console.log(`🔍 getEnhancedCarrierInfo called with carrierName: "${carrierName}", category: "${category}"`);
   
-  // Get basic carrier info
-  const carrierInfo = getCarrierByNaicCode(naicCode);
+  // Get basic carrier info by name pattern matching
+  const carrierInfo = findCarrierByName(carrierName);
+  console.log(`📋 Basic carrier info:`, carrierInfo ? `${carrierInfo.displayName} (logoUrl: ${carrierInfo.logoUrl})` : 'NOT FOUND');
   
   // Get preferred carrier info
   const preferredCarrier = findPreferredCarrier(quote, category);
+  console.log(`⭐ Preferred carrier:`, preferredCarrier ? `${preferredCarrier.carrierId} (priority: ${preferredCarrier.priority})` : 'NOT PREFERRED');
   
+  if (preferredCarrier) {
+    // Get the full carrier info for the preferred carrier
+    const preferredCarrierInfo = getCarrierById(preferredCarrier.carrierId);
+    if (preferredCarrierInfo) {
+      console.log(`✅ Using preferred carrier info for "${carrierName}": ${preferredCarrierInfo.displayName} (logoUrl: ${preferredCarrierInfo.logoUrl})`);
+      return {
+        displayName: preferredCarrierInfo.displayName,
+        logoUrl: preferredCarrierInfo.logoUrl || '/images/carrier-placeholder.svg',
+        website: preferredCarrierInfo.website,
+        phone: preferredCarrierInfo.phone,
+        isPreferred: true,
+        priority: preferredCarrier.priority
+      };
+    }
+  }
+  
+  // Fallback to basic carrier info
+  console.log(`⬇️ Using fallback carrier info for "${carrierName}": ${carrierInfo?.displayName || 'Unknown'} (logoUrl: ${carrierInfo?.logoUrl || '/images/carrier-placeholder.svg'})`);
   return {
-    displayName: preferredCarrier?.displayName || carrierInfo?.shortName || carrierName,
-    logoUrl: preferredCarrier?.logoUrl || carrierInfo?.logoUrl || '/images/carrier-placeholder.svg',
-    website: preferredCarrier?.website || carrierInfo?.website,
-    phone: preferredCarrier?.phone || carrierInfo?.phone,
-    isPreferred: !!preferredCarrier,
-    priority: preferredCarrier?.priority
+    displayName: carrierInfo?.displayName || carrierInfo?.shortName || carrierName,
+    logoUrl: carrierInfo?.logoUrl || '/images/carrier-placeholder.svg',
+    website: carrierInfo?.website,
+    phone: carrierInfo?.phone,
+    isPreferred: false,
+    priority: undefined
   };
 }
 
@@ -385,129 +390,57 @@ export function getEnhancedCarrierInfo(quote: any, category: ProductCategory) {
  */
 export { getCarrierLogoUrl as getProperLogoUrl };
 
-// Export legacy NAIC carrier format for compatibility
-export const naicCarriers: NAICCarrier[] = CARRIERS.map(carrier => ({
-  carrierId: carrier.id,
-  carrierName: carrier.name,
-  naicCode: carrier.naicCode,
-  phone: carrier.phone || '',
-  website: carrier.website || '',
-  shortName: carrier.shortName,
-  logoUrl: carrier.logoUrl || '/images/carrier-placeholder.svg'
-}));
-
-// ===== AGENT PREFERRED CARRIERS (FIRESTORE) =====
-
-interface AgentAppointment {
-  carrierId: string; // NAIC code
-  // Add other appointment fields as needed
-}
-
-interface AgentBusinessInfo {
-  appointments: AgentAppointment[];
-}
-
-interface AgentBusiness {
-  businessInfo: AgentBusinessInfo;
-}
-
-interface AgentSettings {
-  business: AgentBusiness;
-}
+// ===== PREFERRED CARRIERS =====
 
 /**
- * Fetches an agent's preferred carriers from Firestore based on their appointments
+ * Curated list of preferred carriers by product category
+ * Based on agent requirements and product category specifications
+ * References carrier IDs from the CARRIERS array
  */
-export async function getAgentPreferredCarriers(
-  agentId: string, 
-  category: ProductCategory = 'medicare-supplement'
-): Promise<PreferredCarrier[]> {
-  try {
-    if (!hawknestDb) {
-      console.warn('Hawknest database not initialized, returning empty preferred carriers');
-      return [];
-    }
-
-    // Get agent's settings document
-    const settingsDocRef = doc(hawknestDb, 'agents', agentId, 'preferences', 'settings');
-    const settingsDoc = await getDoc(settingsDocRef);
-
-    if (!settingsDoc.exists()) {
-      console.warn(`No settings found for agent ${agentId}, returning empty preferred carriers`);
-      return [];
-    }
-
-    const settings = settingsDoc.data() as AgentSettings;
-    const appointments = settings?.business?.businessInfo?.appointments || [];
-
-    if (appointments.length === 0) {
-      console.warn(`No appointments found for agent ${agentId}, returning empty preferred carriers`);
-      return [];
-    }
-
-    // Convert NAIC codes to preferred carriers
-    const agentPreferredCarriers: PreferredCarrier[] = [];
-    
-    for (const appointment of appointments) {
-      const carrier = findCarrierByNAIC(appointment.carrierId);
-      if (carrier) {
-        agentPreferredCarriers.push({
-          id: carrier.id,
-          displayName: carrier.shortName || carrier.name,
-          category: category,
-          priority: agentPreferredCarriers.length + 1, // Assign priority based on order
-          naicCodes: [carrier.naicCode],
-          namePatterns: [carrier.name, carrier.shortName].filter(Boolean),
-          website: carrier.website,
-          phone: carrier.phone,
-          logoUrl: carrier.logoUrl,
-          isActive: true
-        });
-      }
-    }
-
-    return agentPreferredCarriers;
-  } catch (error) {
-    console.error(`Error fetching agent preferred carriers for ${agentId}:`, error);
-    return [];
-  }
-}
+export const PREFERRED_CARRIERS: Record<ProductCategory, PreferredCarrier[]> = {
+  'medicare-supplement': [
+    { carrierId: 'bankers-fidelity', category: 'medicare-supplement', priority: 1, isActive: true },
+    { carrierId: 'insurance-co-n-america', category: 'medicare-supplement', priority: 2, isActive: true },
+    { carrierId: 'cigna', category: 'medicare-supplement', priority: 3, isActive: true },
+    { carrierId: 'aflac', category: 'medicare-supplement', priority: 4, isActive: true },
+    { carrierId: 'bcbs', category: 'medicare-supplement', priority: 5, isActive: true },
+    { carrierId: 'mutual-of-omaha', category: 'medicare-supplement', priority: 6, isActive: true },
+    { carrierId: 'aetna', category: 'medicare-supplement', priority: 7, isActive: true },
+    { carrierId: 'nassau', category: 'medicare-supplement', priority: 8, isActive: true },
+    { carrierId: 'humana', category: 'medicare-supplement', priority: 9, isActive: true }
+  ],
+  'medicare-advantage': [
+    { carrierId: 'humana', category: 'medicare-advantage', priority: 1, isActive: true },
+    { carrierId: 'cigna', category: 'medicare-advantage', priority: 2, isActive: true },
+    { carrierId: 'united-healthcare', category: 'medicare-advantage', priority: 3, isActive: true },
+    { carrierId: 'aetna', category: 'medicare-advantage', priority: 4, isActive: true }
+  ],
+  'dental': [
+    { carrierId: 'united-national-life', category: 'dental', priority: 1, isActive: true },
+    { carrierId: 'cigna', category: 'dental', priority: 2, isActive: true },
+    { carrierId: 'mutual-of-omaha', category: 'dental', priority: 3, isActive: true },
+    { carrierId: 'aetna', category: 'dental', priority: 4, isActive: true },
+    { carrierId: 'manhattan-life', category: 'dental', priority: 5, isActive: true }
+  ],
+  'final-expense': [
+    { carrierId: 'bankers-fidelity', category: 'final-expense', priority: 1, isActive: true },
+    { carrierId: 'cigna', category: 'final-expense', priority: 2, isActive: true },
+    { carrierId: 'mutual-of-omaha', category: 'final-expense', priority: 3, isActive: true },
+    { carrierId: 'aetna', category: 'final-expense', priority: 4, isActive: true }
+  ],
+  'hospital-indemnity': [
+    { carrierId: 'bankers-fidelity', category: 'hospital-indemnity', priority: 1, isActive: true },
+    { carrierId: 'united-national-life', category: 'hospital-indemnity', priority: 2, isActive: true },
+    { carrierId: 'manhattan-life', category: 'hospital-indemnity', priority: 3, isActive: true },
+    { carrierId: 'aetna', category: 'hospital-indemnity', priority: 4, isActive: true }
+  ],
+  'cancer': [],
+  'drug-plan': []
+};
 
 /**
- * Finds preferred carrier by name or NAIC, with priority on agent's appointments
+ * Get preferred carriers for a specific product category
  */
-export async function findAgentPreferredCarrier(
-  agentId: string,
-  carrierName: string, 
-  naicCode?: string,
-  category: ProductCategory = 'medicare-supplement'
-): Promise<PreferredCarrier | null> {
-  try {
-    // Get agent's preferred carriers
-    const agentPreferredCarriers = await getAgentPreferredCarriers(agentId, category);
-    
-    // First try to match with agent's preferred carriers
-    const agentMatch = agentPreferredCarriers.find(carrier => {
-      // Check name patterns first (prioritized)
-      const nameMatch = carrier.namePatterns?.some(pattern => 
-        carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
-        pattern.toLowerCase().includes(carrierName.toLowerCase())
-      );
-      
-      // Check NAIC codes as fallback
-      const naicMatch = naicCode && carrier.naicCodes?.includes(naicCode);
-      
-      return nameMatch || naicMatch;
-    });
-
-    if (agentMatch) {
-      return agentMatch;
-    }
-
-    // No static fallback - agent must have appointments for preferred carriers
-    return null;
-  } catch (error) {
-    console.error(`Error finding agent preferred carrier:`, error);
-    return null;
-  }
+export function getPreferredCarriers(category: ProductCategory): PreferredCarrier[] {
+  return PREFERRED_CARRIERS[category] || [];
 }

@@ -12,7 +12,6 @@ export interface OptimizedHospitalIndemnityQuote {
   planName: string;
   companyName: string;
   companyFullName: string;
-  naic: string;
   age: number;
   gender: string;
   state: string;
@@ -68,7 +67,6 @@ export function extractQuoteFields(quote: HospitalIndemnityQuote): OptimizedHosp
     planName: quote.plan_name,
     companyName: quote.company_base.name,
     companyFullName: quote.company_base.name_full,
-    naic: quote.company_base.naic,
     age: quote.age,
     gender: quote.gender,
     state: quote.state,

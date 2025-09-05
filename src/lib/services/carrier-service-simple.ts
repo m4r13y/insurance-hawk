@@ -9,9 +9,9 @@ const CARRIER_WEBSITES: Record<string, string> = {
   'united health': 'uhc.com',
   'aetna': 'aetna.com',
   'anthem': 'anthem.com',
+  'cigna': 'cigna.com',  // Move cigna before blue cross to prioritize exact matches
   'blue cross': 'bcbs.com',
   'bcbs': 'bcbs.com',
-  'cigna': 'cigna.com',
   'kaiser': 'kp.org',
   'wellcare': 'wellcare.com',
   'molina': 'molinahealthcare.com',
@@ -48,10 +48,25 @@ class CarrierService {
     const lowerIdentifier = identifier.toLowerCase();
     let foundWebsite: string | undefined;
 
-    for (const [key, website] of Object.entries(CARRIER_WEBSITES)) {
-      if (lowerIdentifier.includes(key)) {
+    // First try exact matches, then substring matches
+    // Sort by length descending to match longer strings first (more specific matches)
+    const sortedCarriers = Object.entries(CARRIER_WEBSITES).sort((a, b) => b[0].length - a[0].length);
+    
+    // Try exact match first
+    for (const [key, website] of sortedCarriers) {
+      if (lowerIdentifier === key) {
         foundWebsite = website;
         break;
+      }
+    }
+    
+    // If no exact match, try substring matches with length priority
+    if (!foundWebsite) {
+      for (const [key, website] of sortedCarriers) {
+        if (lowerIdentifier.includes(key)) {
+          foundWebsite = website;
+          break;
+        }
       }
     }
 

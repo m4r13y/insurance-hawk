@@ -3,44 +3,38 @@
  * 
  * This shows how to integrate the PreferredCarriersFilter component
  * into your existing filter sidebar and use it with quote data.
- * Now uses agent-specific preferred carriers from Firestore.
+ * Uses static preferred carriers configuration.
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
 import PreferredCarriersFilter from '@/components/filters/PreferredCarriersFilter';
-import { getAgentPreferredCarriers, type PreferredCarrier } from '@/lib/carrier-system';
+import { getPreferredCarriers, filterPreferredCarriers, type PreferredCarrier } from '@/lib/carrier-system';
 
 // Example usage in a quotes component
 export function QuotesWithPreferredCarrierFilter({ 
   quotes, 
-  agentId 
+  category = 'medicare-supplement'
 }: { 
   quotes: any[]; 
-  agentId: string;
+  category?: 'medicare-supplement' | 'medicare-advantage' | 'dental' | 'final-expense' | 'hospital-indemnity' | 'cancer' | 'drug-plan';
 }) {
   const [showPreferredOnly, setShowPreferredOnly] = useState(false);
   const [preferredCarriers, setPreferredCarriers] = useState<PreferredCarrier[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Load agent's preferred carriers
+  // Load preferred carriers for the specified category
   useEffect(() => {
-    async function loadPreferredCarriers() {
-      try {
-        setLoading(true);
-        const carriers = await getAgentPreferredCarriers(agentId, 'medicare-supplement');
-        setPreferredCarriers(carriers);
-      } catch (error) {
-        console.error('Failed to load preferred carriers:', error);
-        setPreferredCarriers([]);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      const carriers = getPreferredCarriers(category);
+      setPreferredCarriers(carriers);
+    } catch (error) {
+      console.error('Failed to load preferred carriers:', error);
+      setPreferredCarriers([]);
+    } finally {
+      setLoading(false);
     }
-    
-    if (agentId) {
-      loadPreferredCarriers();
-    }
-  }, [agentId]);
+  }, [category]);
   
   // Filter quotes based on preferred carrier setting
   const filteredQuotes = useMemo(() => {
@@ -48,43 +42,15 @@ export function QuotesWithPreferredCarrierFilter({
       return quotes;
     }
     
-    return quotes.filter(quote => {
-      const carrierName = quote.carrier?.name || quote.company_base?.name || '';
-      const naicCode = quote.naic || '';
-      
-      return preferredCarriers.some(carrier => {
-        // Check name patterns
-        const nameMatch = carrier.namePatterns?.some(pattern => 
-          carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
-          pattern.toLowerCase().includes(carrierName.toLowerCase())
-        );
-        
-        // Check NAIC codes
-        const naicMatch = naicCode && carrier.naicCodes?.includes(naicCode);
-        
-        return nameMatch || naicMatch;
-      });
-    });
-  }, [quotes, showPreferredOnly, preferredCarriers, loading]);
+    return filterPreferredCarriers(quotes, category);
+  }, [quotes, showPreferredOnly, loading, category]);
   
   // Count preferred vs total quotes
   const preferredQuotes = useMemo(() => {
     if (loading) return [];
     
-    return quotes.filter(quote => {
-      const carrierName = quote.carrier?.name || quote.company_base?.name || '';
-      const naicCode = quote.naic || '';
-      
-      return preferredCarriers.some(carrier => {
-        const nameMatch = carrier.namePatterns?.some(pattern => 
-          carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
-          pattern.toLowerCase().includes(carrierName.toLowerCase())
-        );
-        const naicMatch = naicCode && carrier.naicCodes?.includes(naicCode);
-        return nameMatch || naicMatch;
-      });
-    });
-  }, [quotes, preferredCarriers, loading]);
+    return filterPreferredCarriers(quotes, category);
+  }, [quotes, loading, category]);
   
   const preferredCount = preferredQuotes.length;
   const totalCount = quotes.length;
@@ -101,7 +67,7 @@ export function QuotesWithPreferredCarrierFilter({
           onToggle={setShowPreferredOnly}
           preferredCount={preferredCount}
           totalCount={totalCount}
-          category="medicare-supplement"
+          category={category as "medicare-supplement" | "medicare-advantage" | "dental" | "final-expense" | "hospital-indemnity"}
         />
         
         {/* Other filters would go here */}
