@@ -17,6 +17,7 @@ interface MedigapCarrierGroupProps {
   getPaymentLabel: () => string;
   setShowPlanDifferencesModal: (show: boolean) => void;
   openPlanModal: (carrierGroup: any) => void;
+  applyDiscounts?: boolean;
 }
 
 export default function MedigapCarrierGroup({
@@ -29,7 +30,8 @@ export default function MedigapCarrierGroup({
   convertPriceByPaymentMode,
   getPaymentLabel,
   setShowPlanDifferencesModal,
-  openPlanModal
+  openPlanModal,
+  applyDiscounts = false
 }: MedigapCarrierGroupProps) {
   // Filter plans based on selected plan types
   const filteredQuotes = carrierGroup.quotes.filter((quote: any) => 
@@ -38,6 +40,44 @@ export default function MedigapCarrierGroup({
   
   // Skip carrier if no plans match selected types
   if (filteredQuotes.length === 0) return null;
+  
+  // Helper function to get base rate without discounts
+  const getBaseRate = (quote: any) => {
+    const rate = quote.rate?.month || quote.monthly_premium || quote.premium || 0;
+    return rate > 1000 ? rate / 100 : rate; // Convert from cents if needed
+  };
+  
+  // Helper function to calculate price range based on rating classes only
+  const calculateRatingClassRange = (quotes: any[]) => {
+    const baseRates = quotes.map(getBaseRate);
+    return {
+      min: Math.min(...baseRates),
+      max: Math.max(...baseRates)
+    };
+  };
+  
+  // Helper function to calculate price range including discounts
+  const calculateDiscountedRange = (quotes: any[]) => {
+    const discountedRates = quotes.map(calculateDiscountedPrice);
+    return {
+      min: Math.min(...discountedRates),
+      max: Math.max(...discountedRates)
+    };
+  };
+  
+  // Helper function to get rating class information
+  const getRatingClassInfo = (quotes: any[]) => {
+    const ratingClasses = new Set<string>();
+    quotes.forEach(quote => {
+      if (quote.rating_class && quote.rating_class.trim()) {
+        ratingClasses.add(quote.rating_class);
+      }
+    });
+    return {
+      count: ratingClasses.size + 1, // +1 for standard
+      classes: Array.from(ratingClasses)
+    };
+  };
   
   // Get the proper display name from NAIC data
   const displayName = getCarrierDisplayName(carrierGroup.carrierName, carrierGroup.carrierId);
@@ -131,16 +171,20 @@ export default function MedigapCarrierGroup({
 
             return Object.entries(planGroups).map(([planType, quotes], index: number) => {
               const quotesArray = quotes as any[];
-              // Calculate price range for this plan type
-              const premiums = quotesArray.map((q: any) => calculateDiscountedPrice(q));
-              const minPremium = Math.min(...premiums);
-              const maxPremium = Math.max(...premiums);
-              const hasMultipleVersions = quotesArray.length > 1;
               
-              // Get the best quote for this plan type (lowest premium)
+              // Calculate price ranges
+              const ratingClassRange = calculateRatingClassRange(quotesArray);
+              const discountedRange = calculateDiscountedRange(quotesArray);
+              const ratingInfo = getRatingClassInfo(quotesArray);
+              
+              // Use appropriate range based on applyDiscounts setting
+              const priceRange = applyDiscounts ? discountedRange : ratingClassRange;
+              const hasRange = priceRange.min !== priceRange.max;
+              
+              // Get the best quote for this plan type (lowest base rate)
               const bestQuote = quotesArray.find((q: any) => {
-                const premium = calculateDiscountedPrice(q);
-                return premium === minPremium;
+                const baseRate = getBaseRate(q);
+                return baseRate === ratingClassRange.min;
               }) || quotesArray[0];
 
               return (
@@ -159,9 +203,9 @@ export default function MedigapCarrierGroup({
                         ? 'text-2xl md:text-3xl' 
                         : 'text-2xl md:text-2xl lg:text-3xl'
                     }`}>
-                      {hasMultipleVersions ? 
-                        `$${Math.round(convertPriceByPaymentMode(minPremium))}-$${Math.round(convertPriceByPaymentMode(maxPremium))}` : 
-                        `$${Math.round(convertPriceByPaymentMode(minPremium))}`
+                      {hasRange ? 
+                        `$${Math.round(convertPriceByPaymentMode(priceRange.min))}-$${Math.round(convertPriceByPaymentMode(priceRange.max))}` : 
+                        `$${Math.round(convertPriceByPaymentMode(priceRange.min))}`
                       }
                     </div>
                     <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
@@ -201,12 +245,21 @@ export default function MedigapCarrierGroup({
                        'Medicare Supplement coverage'}
                     </div>
                     
-                    {hasMultipleVersions && (
+                    {ratingInfo.count > 1 && (
                       <p className="text-sm text-muted-foreground">
-                        Multiple versions available
+                        {ratingInfo.count} rating classes available
                       </p>
                     )}
-                    {bestQuote.discounts && bestQuote.discounts.length > 0 && (
+                    {applyDiscounts && bestQuote.discounts && bestQuote.discounts.length > 0 && (
+                      <p className="text-xs text-green-600">
+                        {applyDiscounts ? 'Discounts applied: ' : 'Available discounts: '}{bestQuote.discounts.map((d: any) => {
+                          const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);
+                          const value = d.type === 'percent' ? `${Math.round(d.value * 100)}%` : `$${d.value}`;
+                          return `${name} (${value})`;
+                        }).join(', ')}
+                      </p>
+                    )}
+                    {!applyDiscounts && bestQuote.discounts && bestQuote.discounts.length > 0 && (
                       <p className="text-xs text-blue-600">
                         Available discounts: {bestQuote.discounts.map((d: any) => {
                           const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { getProperLogoUrl } from "@/lib/carrier-system";
+import { getCarrierLogoUrl } from "@/lib/carrier-system";
 import { QuoteData } from './types.js';
 
 interface PlanBuilderTabProps {
@@ -261,7 +261,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
               <CardTitle className="text-base flex items-center space-x-2">
                 <div className="w-6 h-6 relative">
                   <Image
-                    src={getProperLogoUrl(quoteData.company_base.naic, quoteData.company_base.name)}
+                    src={getCarrierLogoUrl(quoteData.company_base.name)}
                     alt={quoteData.company_base.name}
                     fill
                     className="object-contain"

@@ -196,7 +196,6 @@ function MedicareShopContent() {
 
   // Filter and display state
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'popularity'>('popularity');
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCoverageLevel, setSelectedCoverageLevel] = useState('all');
   // Single source of truth for plan selections - always use this format
@@ -207,7 +206,7 @@ function MedicareShopContent() {
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
-  const [showPreferredOnly, setShowPreferredOnly] = useState(false);
+  const [showPreferredOnly, setShowPreferredOnly] = useState(true);
 
   // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
   const handleManualCategorySelect = useCallback((categoryId: string) => {
@@ -1908,8 +1907,7 @@ function MedicareShopContent() {
     setSearchQuery('');
     setPriceRange([0, 500]);
     setSelectedCoverageLevel('all');
-    setSortBy('popularity');
-    setShowPreferredOnly(false);
+    setShowPreferredOnly(true);
     // DON'T reset plan selections - these should persist from user's actual choices
 
     // setSelectedQuotePlans(['F', 'G', 'N']);
@@ -2178,8 +2176,6 @@ function MedicareShopContent() {
               <MedicareShopSidebar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
                 selectedCoverageLevel={selectedCoverageLevel}
@@ -2382,6 +2378,7 @@ function MedicareShopContent() {
                                   getPaymentLabel={getPaymentLabel}
                                   setShowPlanDifferencesModal={setShowPlanDifferencesModal}
                                   openPlanModal={openPlanModal}
+                                  applyDiscounts={applyDiscounts}
                                 />
                               ))
                             )}

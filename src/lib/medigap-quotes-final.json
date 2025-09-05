@@ -1,0 +1,6191 @@
+[
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArIG3y9oKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.032476746
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUiAsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUiAsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "n/a",
+      "ambest_rating": "n/a",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-04-24T13:38:58.082944",
+      "naic": "62375",
+      "name": "MedMutual Protect",
+      "name_full": "MedMutual Protect",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMC1uwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMC1uwoMogEIbWVkX3N1cHA",
+        "code": "730",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:28.829252",
+        "name": "MEDICAL MUT OF OH GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2024-09-30T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 15
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:38:30.262446",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArNXavvsLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 152232,
+      "month": 12686,
+      "quarter": 38058,
+      "semi_annual": 76116
+    },
+    "rate_increases": [],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArNXavvsLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2024-09-30T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-01-31T16:39:32.795499",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOT7kNAJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0199784847
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICU8LSbggoMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICU8LSbggoMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A-",
+      "business_type": "Life Accident and Health",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.181224",
+      "naic": "17393",
+      "name": "Atlantic Capital Life Assur Co",
+      "name_full": "Bankers Fidelity, underwritten by Atlantic Capital Life Assurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDjQgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDjQgMogEIbWVkX3N1cHA",
+        "code": "587",
+        "established_year": 1983,
+        "last_modified": "2025-04-24T13:34:19.128750",
+        "name": "ATLANTIC AMER GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-08-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-29T14:28:04.333662",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnNjj_8sIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 156168,
+      "month": 13014,
+      "quarter": 39042,
+      "semi_annual": 78084
+    },
+    "rate_increases": [
+      {
+        "date": "2025-08-01T00:00:00",
+        "rate_increase": 0.0489812551
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Preferred",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnNjj_8sIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-08-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-07-29T14:27:29.035326",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnMKa3swIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049460432
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T20:46:02.350755",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJL_saoIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 160188,
+      "month": 13344,
+      "quarter": 42450,
+      "semi_annual": 83298
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.0770103903
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "w/ 20% HHD",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJL_saoIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T20:45:12.108823",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnPa4l48KDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050154045
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T16:53:22.117862",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMb70cwLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 167484,
+      "month": 13957,
+      "quarter": 41871,
+      "semi_annual": 83742
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Preferred",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMb70cwLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T16:53:01.056077",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA5Lqjgt8IDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0493939606
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDX2ggMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDX2ggMogEIbWVkX3N1cHA",
+      "ambest_outlook": "n/a",
+      "ambest_rating": "n/a",
+      "business_type": "Life Accident and Health",
+      "established_year": 2016,
+      "last_modified": "2025-04-24T13:39:42.222211",
+      "naic": "94587",
+      "name": "Members Hlth Ins Co",
+      "name_full": "Farm Bureau Health Plans ΓÇô MemberΓÇÖs Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDksQsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDksQsMogEIbWVkX3N1cHA",
+        "code": "4677",
+        "established_year": 2012,
+        "last_modified": "2025-04-24T13:34:24.438863",
+        "name": "Tennessee Rural Hlth Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2022-06-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:28:06.222233",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA5PrWyZAIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 171276,
+      "month": 14273,
+      "quarter": 42819,
+      "semi_annual": 85638
+    },
+    "rate_increases": [],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA5PrWyZAIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2022-06-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2023-06-08T14:42:05.317755",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7I6gorEJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0563468353
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:46:03.592036",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7JbL9NoLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 172716,
+      "month": 14393,
+      "quarter": 43779,
+      "semi_annual": 87558
+    },
+    "rate_increases": [
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0217251368
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0106102977
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0564010743
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0708782743
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1025179856
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1174551387
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard/Household",
+    "related_data": {},
+    "riders": [],
+    "select": true,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7JbL9NoLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T21:23:52.505273",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArIrtyOwJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0200994613,
+      0.0199742704
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMCc5wgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMCc5wgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2004,
+      "last_modified": "2025-04-24T13:39:36.744120",
+      "naic": "88595",
+      "name": "Humana Insurance Company",
+      "name_full": "Humana Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCrhgoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCrhgoMogEIbWVkX3N1cHA",
+        "code": "119",
+        "established_year": 2004,
+        "last_modified": "2025-04-24T13:34:28.516408",
+        "name": "HUMANA GRP"
+      },
+      "sp_rating": "A",
+      "state_marketing_data": [
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "AL"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "DE"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "GA"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "IL"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "MS"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "MT"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "NH"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "SD"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "TX"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "WI"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "WY"
+        }
+      ],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-03-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:34:01.678669",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArML3mJ0JDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 173741,
+      "month": 14478,
+      "quarter": 43435,
+      "semi_annual": 86870
+    },
+    "rate_increases": [
+      {
+        "date": "2024-03-01T00:00:00",
+        "rate_increase": 0.0851185376
+      },
+      {
+        "date": "2025-03-01T00:00:00",
+        "rate_increase": 0.1052250592
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Household",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArML3mJ0JDKIBCG1lZF9zdXBw",
+      "county": [
+        "ANDERSON",
+        "ANGELINA",
+        "ARCHER",
+        "ARMSTRONG",
+        "ATASCOSA",
+        "BANDERA",
+        "BASTROP",
+        "BAYLOR",
+        "BELL",
+        "BEXAR",
+        "BLANCO",
+        "BOSQUE",
+        "BOWIE",
+        "BRAZOS",
+        "BREWSTER",
+        "BRISCOE",
+        "BROWN",
+        "BURLESON",
+        "BURNET",
+        "CALDWELL",
+        "CALLAHAN",
+        "CAMERON",
+        "CARSON",
+        "CASS",
+        "CASTRO",
+        "CHEROKEE",
+        "CHILDRESS",
+        "COCHRAN",
+        "COKE",
+        "COLEMAN",
+        "COLLINGSWORTH",
+        "COMANCHE",
+        "CONCHO",
+        "CORYELL",
+        "COTTLE",
+        "CROCKETT",
+        "CROSBY",
+        "CULBERSON",
+        "DALLAM",
+        "DAWSON",
+        "DEAF SMITH",
+        "DICKENS",
+        "DIMMIT",
+        "DONLEY",
+        "EASTLAND",
+        "EDWARDS",
+        "EL PASO",
+        "ERATH",
+        "FALLS",
+        "FAYETTE",
+        "FISHER",
+        "FLOYD",
+        "FOARD",
+        "FREESTONE",
+        "FRIO",
+        "GAINES",
+        "GARZA",
+        "GILLESPIE",
+        "GOLIAD",
+        "GONZALES",
+        "GRAY",
+        "GREGG",
+        "GRIMES",
+        "HALE",
+        "HALL",
+        "HAMILTON",
+        "HANSFORD",
+        "HARDEMAN",
+        "HARRISON",
+        "HARTLEY",
+        "HASKELL",
+        "HAYS",
+        "HEMPHILL",
+        "HENDERSON",
+        "HIDALGO",
+        "HILL",
+        "HOCKLEY",
+        "HOOD",
+        "HOUSTON",
+        "HUDSPETH",
+        "HUTCHINSON",
+        "IRION",
+        "JACK",
+        "JASPER",
+        "JOHNSON",
+        "JONES",
+        "KENDALL",
+        "KENT",
+        "KERR",
+        "KIMBLE",
+        "KING",
+        "KINNEY",
+        "KNOX",
+        "LA SALLE",
+        "LAMB",
+        "LAMPASAS",
+        "LEE",
+        "LEON",
+        "LIMESTONE",
+        "LIPSCOMB",
+        "LIVE OAK",
+        "LLANO",
+        "LUBBOCK",
+        "LYNN",
+        "MADISON",
+        "MARION",
+        "MASON",
+        "MAVERICK",
+        "MCCULLOCH",
+        "MCLENNAN",
+        "MCMULLEN",
+        "MEDINA",
+        "MENARD",
+        "MILAM",
+        "MILLS",
+        "MITCHELL",
+        "MOORE",
+        "MORRIS",
+        "MOTLEY",
+        "NACOGDOCHES",
+        "NEWTON",
+        "NOLAN",
+        "OCHILTREE",
+        "OLDHAM",
+        "PALO PINTO",
+        "PANOLA",
+        "PARKER",
+        "PARMER",
+        "POLK",
+        "POTTER",
+        "PRESIDIO",
+        "RANDALL",
+        "REAGAN",
+        "REAL",
+        "ROBERTS",
+        "ROBERTSON",
+        "RUNNELS",
+        "RUSK",
+        "SABINE",
+        "SAN AUGUSTINE",
+        "SAN SABA",
+        "SCHLEICHER",
+        "SCURRY",
+        "SHACKELFORD",
+        "SHELBY",
+        "SHERMAN",
+        "SMITH",
+        "SOMERVELL",
+        "STARR",
+        "STEPHENS",
+        "STERLING",
+        "STONEWALL",
+        "SUTTON",
+        "SWISHER",
+        "TARRANT",
+        "TAYLOR",
+        "TERRELL",
+        "TERRY",
+        "THROCKMORTON",
+        "TOM GREEN",
+        "TRAVIS",
+        "TRINITY",
+        "TYLER",
+        "UPSHUR",
+        "UVALDE",
+        "VAL VERDE",
+        "WEBB",
+        "WHEELER",
+        "WICHITA",
+        "WILBARGER",
+        "WILLACY",
+        "WILLIAMSON",
+        "WISE",
+        "YOAKUM",
+        "YOUNG",
+        "ZAPATA",
+        "ZAVALA"
+      ],
+      "effective_date": "2025-03-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-12-27T21:06:31.214462",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnNb5xIYJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0380874092
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Property and Casualty",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.379632",
+      "naic": "17414",
+      "name": "Physicians Mutual (PSIC)",
+      "name_full": "Physicians Mutual (PSIC)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+        "code": "367",
+        "established_year": 1978,
+        "last_modified": "2025-04-24T13:34:21.042364",
+        "name": "PHYSICIANS MUT GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-29T17:41:00.775074",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnI75wMAKDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 175176,
+      "month": 14598,
+      "quarter": 43794,
+      "semi_annual": 87588
+    },
+    "rate_increases": [
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.1099734547
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1699692518
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Innovative/Household",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnI75wMAKDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-29T17:40:47.234538",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArKjEpbsLDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049814028
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICA5QkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICA5QkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "N/A",
+      "ambest_rating": "N/A",
+      "business_type": "Fraternal",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:38:46.337103",
+      "naic": "58181",
+      "name": "Royal Arcanum",
+      "name_full": "Royal Arcanum",
+      "parent_company": null,
+      "parent_company_base": null,
+      "sp_rating": "N/A",
+      "state_marketing_data": [],
+      "type": "FRATERNAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-02-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:41:10.619785",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKjzsa8IDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 180674,
+      "month": 15056,
+      "quarter": 45169,
+      "semi_annual": 90337
+    },
+    "rate_increases": [
+      {
+        "date": "2025-02-01T00:00:00",
+        "rate_increase": 0.150065703
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKjzsa8IDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-02-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-12-06T16:37:14.295446",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAjJP_188IDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0224484469
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu-AsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu-AsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "B++",
+      "business_type": "Life Accident and Health",
+      "established_year": 1980,
+      "last_modified": "2025-04-24T13:39:10.065237",
+      "naic": "67814",
+      "name": "Nassau Life Insurance Company",
+      "name_full": "Nassau Life Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgOCVwwgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgOCVwwgMogEIbWVkX3N1cHA",
+        "code": "4736",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:24.241165",
+        "name": "GGC Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2024-10-01T00:00:00",
+    "expires_date": "2025-09-30T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:28:32.930420",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAjOOi2fgJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 183962,
+      "month": 15324,
+      "quarter": 45990,
+      "semi_annual": 91981
+    },
+    "rate_increases": [
+      {
+        "date": "2021-09-01T00:00:00",
+        "rate_increase": -0.085021682
+      },
+      {
+        "date": "2022-09-01T00:00:00",
+        "rate_increase": 0.0199673685
+      },
+      {
+        "date": "2023-09-01T00:00:00",
+        "rate_increase": 0.0400670323
+      },
+      {
+        "date": "2024-10-01T00:00:00",
+        "rate_increase": 0.0999707046
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAjOOi2fgJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2024-10-01T00:00:00",
+      "expires_date": "2025-09-30T00:00:00",
+      "last_modified": "2025-06-27T01:53:55.330296",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnKa6__ILDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050153065
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T17:02:01.365223",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnPr2jPMJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 184236,
+      "month": 15353,
+      "quarter": 46059,
+      "semi_annual": 92118
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard I",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnPr2jPMJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T17:01:40.858088",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7OPY7YIIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0372533749,
+      0.0359779752
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:41:14.486073",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7NPI_u8IDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 187296,
+      "month": 15408,
+      "quarter": 47424,
+      "semi_annual": 94848
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0205819254
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": -0.1586415293
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1330418488
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1695148842
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard/Household/Multi-Insured",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7NPI_u8IDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:39:23.691242",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7Pvm8NUJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0171618852
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDShQgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDShQgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "B++",
+      "business_type": "Life Accident and Health",
+      "established_year": 2022,
+      "last_modified": "2025-04-24T13:40:02.330665",
+      "naic": "99724",
+      "name": "LifeShield Natl Ins Co",
+      "name_full": "LifeShield National Insurance Co.",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICAkAsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICAkAsMogEIbWVkX3N1cHA",
+        "code": "2858",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:29.753513",
+        "name": "Homeshield Capital Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:36:07.259562",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7JupvLsJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 187397,
+      "month": 15616,
+      "quarter": 46849,
+      "semi_annual": 93699
+    },
+    "rate_increases": [
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.0599765717
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1300375746
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7JupvLsJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-11T16:42:52.091663",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnJLRwpYIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049748071
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T20:36:29.415590",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMK4ooIIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 188221,
+      "month": 15679,
+      "quarter": 49879,
+      "semi_annual": 97875
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.0769859553
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "w/ 6% HHD",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMK4ooIIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T20:35:35.371784",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7JGMjJEKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0523071056,
+      0.0495258803,
+      0.0472463601,
+      0.0450049456
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMC17wsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMC17wsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1966,
+      "last_modified": "2025-04-24T13:39:17.746977",
+      "naic": "70670",
+      "name": "BCBS IL/TX/NM/OK",
+      "name_full": "BCBS IL/TX/NM/OK",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "MUTUAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:32:06.717580",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7IGVv8sLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 188808,
+      "month": 15734,
+      "quarter": 47202,
+      "semi_annual": 94404
+    },
+    "rate_increases": [
+      {
+        "date": "2013-03-01T00:00:00",
+        "rate_increase": 0.0416666667
+      },
+      {
+        "date": "2015-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2016-04-01T00:00:00",
+        "rate_increase": 0.0466666667
+      },
+      {
+        "date": "2017-04-01T00:00:00",
+        "rate_increase": 0.050955414
+      },
+      {
+        "date": "2018-05-01T00:00:00",
+        "rate_increase": 0.0363636364
+      },
+      {
+        "date": "2019-05-01T00:00:00",
+        "rate_increase": 0.0643274854
+      },
+      {
+        "date": "2021-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2021-05-01T00:00:00",
+        "rate_increase": -0.0993956044
+      },
+      {
+        "date": "2022-05-01T00:00:00",
+        "rate_increase": 0.0305045452
+      },
+      {
+        "date": "2023-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0699188917
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.0799026118
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.099764296
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": true,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7IGVv8sLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-30T20:58:08.825364",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOqPv4wJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0503069038,
+      0.054102904,
+      0.0532693187,
+      0.0526372911
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS6QkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS6QkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 1992,
+      "last_modified": "2025-07-23T12:40:08.323303",
+      "naic": "70319",
+      "name": "Washington Natl Ins Co",
+      "name_full": "Bankers Life (Underwritten by Washington National Insurance Company)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCOsQkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCOsQkMogEIbWVkX3N1cHA",
+        "code": "233",
+        "established_year": 1979,
+        "last_modified": "2025-04-24T13:34:18.126742",
+        "name": "CNO Financial Grp"
+      },
+      "sp_rating": "B+",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-18T19:49:24.354687",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJrI7pELDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 182955,
+      "month": 15803,
+      "quarter": 48126,
+      "semi_annual": 94322
+    },
+    "rate_increases": [
+      {
+        "date": "2023-06-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2024-06-01T00:00:00",
+        "rate_increase": 0.0447500661
+      },
+      {
+        "date": "2025-06-01T00:00:00",
+        "rate_increase": 0.0348843097
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJrI7pELDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-18T19:48:45.846923",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOHQkb0LDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDktwgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDktwgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A++",
+      "business_type": "Property and Casualty",
+      "established_year": 2025,
+      "last_modified": "2025-04-24T13:37:24.008147",
+      "naic": "22713",
+      "name": "Insurance Co of N Amer",
+      "name_full": "INSURANCE COMPANY OF NORTH AMERICA",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCS_woMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCS_woMogEIbWVkX3N1cHA",
+        "code": "626",
+        "established_year": 1988,
+        "last_modified": "2025-04-24T13:34:20.475242",
+        "name": "Chubb Limited"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": null,
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-09-03T16:21:26.967889",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKGx3PYLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 190500,
+      "month": 15875,
+      "quarter": 47625,
+      "semi_annual": 95250
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": -0.0002535015
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKGx3PYLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-09-03T16:20:50.360495",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7NOzlsIIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.021911598,
+      0.0211953173,
+      0.0427778448,
+      0.0302609501
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIC5pAsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIC5pAsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "n/a",
+      "ambest_rating": "n/a",
+      "business_type": "Health",
+      "established_year": 2015,
+      "last_modified": "2025-04-24T13:38:34.637687",
+      "naic": "47098",
+      "name": "Moda Hlth Plan Inc",
+      "name_full": "MODA HEALTH PLAN, INC.",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDD1QsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDD1QsMogEIbWVkX3N1cHA",
+        "code": "1313",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:10.368560",
+        "name": "OREGON DENTAL GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.05
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-02-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:42:42.970431",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OOE8pgIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 190584,
+      "month": 15882,
+      "quarter": 47646,
+      "semi_annual": 95292
+    },
+    "rate_increases": [],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OOE8pgIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-02-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T18:51:42.404644",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnKbJ1rUIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049638706
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.123
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T16:52:40.972843",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKbKq78KDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 190980,
+      "month": 15915,
+      "quarter": 47745,
+      "semi_annual": 95490
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.140260833
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Preferred",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKbKq78KDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T16:52:15.430481",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7Pq0trkJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0498004298
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:39:04.236710",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7KbBmp0IDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 195420,
+      "month": 16285,
+      "quarter": 49455,
+      "semi_annual": 98910
+    },
+    "rate_increases": [
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0216636473
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0379600339
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0563443098
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0707198649
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1023922187
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1173244307
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard",
+    "related_data": {},
+    "riders": [],
+    "select": true,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7KbBmp0IDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T20:39:19.532947",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7N3kuYoLDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0862311312,
+      0.0559243839,
+      0.0516304348,
+      0.0490956072
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDk9wsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDk9wsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Negative",
+      "ambest_rating": "A++",
+      "business_type": "Property and Casualty",
+      "established_year": 1981,
+      "last_modified": "2025-04-24T13:37:33.526385",
+      "naic": "25178",
+      "name": "State Farm Mut Auto Ins Co",
+      "name_full": "State Farm Mutual Automobile Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDX7AsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDX7AsMogEIbWVkX3N1cHA",
+        "code": "176",
+        "established_year": 1981,
+        "last_modified": "2025-04-24T13:34:24.376856",
+        "name": "STATE FARM GRP"
+      },
+      "sp_rating": "AA",
+      "state_marketing_data": [],
+      "type": "MUTUAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-06-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:37:13.863614",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7N3r1OALDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 192500,
+      "month": 16363,
+      "quarter": 50050,
+      "semi_annual": 98175
+    },
+    "rate_increases": [
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": 0.0370051635
+      },
+      {
+        "date": "2021-02-01T00:00:00",
+        "rate_increase": -0.0999755919
+      },
+      {
+        "date": "2022-02-01T00:00:00",
+        "rate_increase": 0.0511471498
+      },
+      {
+        "date": "2023-03-01T00:00:00",
+        "rate_increase": 0.0298245614
+      },
+      {
+        "date": "2024-05-01T00:00:00",
+        "rate_increase": -0.0191401944
+      },
+      {
+        "date": "2025-06-01T00:00:00",
+        "rate_increase": 0.1350122599
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7N3r1OALDKIBCG1lZF9zdXBw",
+      "county": [
+        "ARANSAS",
+        "BASTROP",
+        "BEE",
+        "BEXAR",
+        "CALDWELL",
+        "CALHOUN",
+        "COLLIN",
+        "COLORADO",
+        "COMAL",
+        "DALLAS",
+        "DE WITT",
+        "DENTON",
+        "ELLIS",
+        "FAYETTE",
+        "GOLIAD",
+        "GONZALES",
+        "GUADALUPE",
+        "HAYS",
+        "HOOD",
+        "JACKSON",
+        "JOHNSON",
+        "KARNES",
+        "KAUFMAN",
+        "LAVACA",
+        "NUECES",
+        "PARKER",
+        "REFUGIO",
+        "ROCKWALL",
+        "SAN PATRICIO",
+        "SOMERVELL",
+        "TARRANT",
+        "TRAVIS",
+        "VICTORIA",
+        "WILSON",
+        "WISE"
+      ],
+      "effective_date": "2025-06-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-05-29T16:09:49.830956",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnKadrssJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0380563843
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Property and Casualty",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.379632",
+      "naic": "17414",
+      "name": "Physicians Mutual (PSIC)",
+      "name_full": "Physicians Mutual (PSIC)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+        "code": "367",
+        "established_year": 1978,
+        "last_modified": "2025-04-24T13:34:21.042364",
+        "name": "PHYSICIANS MUT GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-29T17:38:05.668222",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnM7gjNgLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 197076,
+      "month": 16423,
+      "quarter": 49269,
+      "semi_annual": 98538
+    },
+    "rate_increases": [
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.1099780887
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1699946853
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Innovative",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnM7gjNgLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-29T17:37:51.466439",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnLTAtYQIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0199695586
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICU8LSbggoMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICU8LSbggoMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A-",
+      "business_type": "Life Accident and Health",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.181224",
+      "naic": "17393",
+      "name": "Atlantic Capital Life Assur Co",
+      "name_full": "Bankers Fidelity, underwritten by Atlantic Capital Life Assurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDjQgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDjQgMogEIbWVkX3N1cHA",
+        "code": "587",
+        "established_year": 1983,
+        "last_modified": "2025-04-24T13:34:19.128750",
+        "name": "ATLANTIC AMER GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-08-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-29T14:39:44.778317",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKjKjZ4LDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 197100,
+      "month": 16425,
+      "quarter": 49275,
+      "semi_annual": 98550
+    },
+    "rate_increases": [
+      {
+        "date": "2025-08-01T00:00:00",
+        "rate_increase": 0.0490310078
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKjKjZ4LDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-08-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-07-29T14:38:45.744570",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArNyeoswLDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0200242718,
+      0.0199881023
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMCc5wgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMCc5wgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2004,
+      "last_modified": "2025-04-24T13:39:36.744120",
+      "naic": "88595",
+      "name": "Humana Insurance Company",
+      "name_full": "Humana Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCrhgoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCrhgoMogEIbWVkX3N1cHA",
+        "code": "119",
+        "established_year": 2004,
+        "last_modified": "2025-04-24T13:34:28.516408",
+        "name": "HUMANA GRP"
+      },
+      "sp_rating": "A",
+      "state_marketing_data": [
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "AL"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "DE"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "GA"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "IL"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "MS"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "MT"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "NH"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "SD"
+        },
+        {
+          "marketing_name": "Humana (Emphesys Insurance Company)",
+          "state": "TX"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "WI"
+        },
+        {
+          "marketing_name": "Humana Achieve (Emphesys Insurance Company)",
+          "state": "WY"
+        }
+      ],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.12
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-03-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:33:48.412890",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArNyHzsAKDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 197760,
+      "month": 16480,
+      "quarter": 49440,
+      "semi_annual": 98880
+    },
+    "rate_increases": [
+      {
+        "date": "2024-03-01T00:00:00",
+        "rate_increase": 0.085000941
+      },
+      {
+        "date": "2025-03-01T00:00:00",
+        "rate_increase": 0.1050531915
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArNyHzsAKDKIBCG1lZF9zdXBw",
+      "county": [
+        "ANDERSON",
+        "ANGELINA",
+        "ARCHER",
+        "ARMSTRONG",
+        "ATASCOSA",
+        "BANDERA",
+        "BASTROP",
+        "BAYLOR",
+        "BELL",
+        "BEXAR",
+        "BLANCO",
+        "BOSQUE",
+        "BOWIE",
+        "BRAZOS",
+        "BREWSTER",
+        "BRISCOE",
+        "BROWN",
+        "BURLESON",
+        "BURNET",
+        "CALDWELL",
+        "CALLAHAN",
+        "CAMERON",
+        "CARSON",
+        "CASS",
+        "CASTRO",
+        "CHEROKEE",
+        "CHILDRESS",
+        "COCHRAN",
+        "COKE",
+        "COLEMAN",
+        "COLLINGSWORTH",
+        "COMANCHE",
+        "CONCHO",
+        "CORYELL",
+        "COTTLE",
+        "CROCKETT",
+        "CROSBY",
+        "CULBERSON",
+        "DALLAM",
+        "DAWSON",
+        "DEAF SMITH",
+        "DICKENS",
+        "DIMMIT",
+        "DONLEY",
+        "EASTLAND",
+        "EDWARDS",
+        "EL PASO",
+        "ERATH",
+        "FALLS",
+        "FAYETTE",
+        "FISHER",
+        "FLOYD",
+        "FOARD",
+        "FREESTONE",
+        "FRIO",
+        "GAINES",
+        "GARZA",
+        "GILLESPIE",
+        "GOLIAD",
+        "GONZALES",
+        "GRAY",
+        "GREGG",
+        "GRIMES",
+        "HALE",
+        "HALL",
+        "HAMILTON",
+        "HANSFORD",
+        "HARDEMAN",
+        "HARRISON",
+        "HARTLEY",
+        "HASKELL",
+        "HAYS",
+        "HEMPHILL",
+        "HENDERSON",
+        "HIDALGO",
+        "HILL",
+        "HOCKLEY",
+        "HOOD",
+        "HOUSTON",
+        "HUDSPETH",
+        "HUTCHINSON",
+        "IRION",
+        "JACK",
+        "JASPER",
+        "JOHNSON",
+        "JONES",
+        "KENDALL",
+        "KENT",
+        "KERR",
+        "KIMBLE",
+        "KING",
+        "KINNEY",
+        "KNOX",
+        "LA SALLE",
+        "LAMB",
+        "LAMPASAS",
+        "LEE",
+        "LEON",
+        "LIMESTONE",
+        "LIPSCOMB",
+        "LIVE OAK",
+        "LLANO",
+        "LUBBOCK",
+        "LYNN",
+        "MADISON",
+        "MARION",
+        "MASON",
+        "MAVERICK",
+        "MCCULLOCH",
+        "MCLENNAN",
+        "MCMULLEN",
+        "MEDINA",
+        "MENARD",
+        "MILAM",
+        "MILLS",
+        "MITCHELL",
+        "MOORE",
+        "MORRIS",
+        "MOTLEY",
+        "NACOGDOCHES",
+        "NEWTON",
+        "NOLAN",
+        "OCHILTREE",
+        "OLDHAM",
+        "PALO PINTO",
+        "PANOLA",
+        "PARKER",
+        "PARMER",
+        "POLK",
+        "POTTER",
+        "PRESIDIO",
+        "RANDALL",
+        "REAGAN",
+        "REAL",
+        "ROBERTS",
+        "ROBERTSON",
+        "RUNNELS",
+        "RUSK",
+        "SABINE",
+        "SAN AUGUSTINE",
+        "SAN SABA",
+        "SCHLEICHER",
+        "SCURRY",
+        "SHACKELFORD",
+        "SHELBY",
+        "SHERMAN",
+        "SMITH",
+        "SOMERVELL",
+        "STARR",
+        "STEPHENS",
+        "STERLING",
+        "STONEWALL",
+        "SUTTON",
+        "SWISHER",
+        "TARRANT",
+        "TAYLOR",
+        "TERRELL",
+        "TERRY",
+        "THROCKMORTON",
+        "TOM GREEN",
+        "TRAVIS",
+        "TRINITY",
+        "TYLER",
+        "UPSHUR",
+        "UVALDE",
+        "VAL VERDE",
+        "WEBB",
+        "WHEELER",
+        "WICHITA",
+        "WILBARGER",
+        "WILLACY",
+        "WILLIAMSON",
+        "WISE",
+        "YOAKUM",
+        "YOUNG",
+        "ZAPATA",
+        "ZAVALA"
+      ],
+      "effective_date": "2025-03-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-12-27T20:58:39.107376",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArPruvucIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0209891435
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDE3wsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDE3wsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "-",
+      "ambest_rating": "n/a",
+      "business_type": "Life Accident and Health",
+      "established_year": 1995,
+      "last_modified": "2025-04-24T13:39:08.738458",
+      "naic": "67326",
+      "name": "Old Surety Life Ins Co",
+      "name_full": "OLD SURETY LIFE INS CO",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICwn5Cy9AgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICwn5Cy9AgMogEIbWVkX3N1cHA",
+        "code": "4922",
+        "established_year": 2019,
+        "last_modified": "2025-04-24T13:34:16.206496",
+        "name": "Enterprise Investments Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-01-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 20
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:27:15.437138",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArIb2qIIIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 198961,
+      "month": 16580,
+      "quarter": 49740,
+      "semi_annual": 99481
+    },
+    "rate_increases": [
+      {
+        "date": "2018-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2018-05-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": 0.0299517726
+      },
+      {
+        "date": "2020-09-01T00:00:00",
+        "rate_increase": 0.0299843917
+      },
+      {
+        "date": "2021-09-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2022-04-01T00:00:00",
+        "rate_increase": 0.0500079758
+      },
+      {
+        "date": "2022-09-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2023-10-01T00:00:00",
+        "rate_increase": 0.0800607672
+      },
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.0999367044
+      }
+    ],
+    "rate_type": "issue age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArIb2qIIIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-01-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-01-07T20:49:15.402822",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOKG6ugKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049760192
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.06
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T20:26:50.419401",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJKZ4tsLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 200236,
+      "month": 16680,
+      "quarter": 53062,
+      "semi_annual": 104122
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.0769768092
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJKZ4tsLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T20:26:01.512969",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAjI37kdUIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0276544087
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDuxAsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDuxAsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "n/a",
+      "ambest_rating": "n/a",
+      "business_type": "Life Accident and Health",
+      "established_year": 2010,
+      "last_modified": "2025-04-24T13:39:18.416668",
+      "naic": "70122",
+      "name": "Universal Fidelity Life Ins Co",
+      "name_full": "UNIVERSAL FIDELITY LIFE INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgIC4w_epxAsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgIC4w_epxAsMogEIbWVkX3N1cHA",
+        "code": "4989",
+        "established_year": 2021,
+        "last_modified": "2025-04-24T13:34:22.920639",
+        "name": "Seneca Intl Ltd Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2024-08-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:26:00.374149",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAjLmO2I4JDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 198666,
+      "month": 16887,
+      "quarter": 52150,
+      "semi_annual": 102313
+    },
+    "rate_increases": [
+      {
+        "date": "2021-08-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2022-08-01T00:00:00",
+        "rate_increase": 0.1000152929
+      },
+      {
+        "date": "2023-08-01T00:00:00",
+        "rate_increase": 0.1000278048
+      },
+      {
+        "date": "2024-08-01T00:00:00",
+        "rate_increase": 0.0999684044
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Direct to Consumer",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAjLmO2I4JDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2024-08-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-07-18T18:28:54.691840",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7JnsneoKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.034034034,
+      0.0329138432,
+      0.0328022493,
+      0.0335753176
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDuxAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDuxAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A++",
+      "business_type": "Life Accident and Health",
+      "established_year": 1992,
+      "last_modified": "2025-04-24T13:39:15.843430",
+      "naic": "69663",
+      "name": "USAA Life Ins Co",
+      "name_full": "USAA LIFE INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICAkAgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICAkAgMogEIbWVkX3N1cHA",
+        "code": "200",
+        "established_year": 1992,
+        "last_modified": "2025-04-24T13:34:17.720698",
+        "name": "UNITED SERV AUTOMOBILE ASSN GRP"
+      },
+      "sp_rating": "AA+",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.05
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-05-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:29:31.908882",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OnX-NAIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": null,
+      "month": 16983,
+      "quarter": 51948,
+      "semi_annual": null
+    },
+    "rate_increases": [
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2019-09-01T00:00:00",
+        "rate_increase": -0.0451807229
+      },
+      {
+        "date": "2020-09-01T00:00:00",
+        "rate_increase": -0.0304942166
+      },
+      {
+        "date": "2021-09-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2022-09-10T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2023-05-01T00:00:00",
+        "rate_increase": 0.0997830803
+      },
+      {
+        "date": "2024-05-01T00:00:00",
+        "rate_increase": 0.1104536489
+      },
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.1296625222
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OnX-NAIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-05-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-05-15T15:47:44.544599",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArJmi7d4KDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0107426979,
+      0.0223486154
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICA4QkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICA4QkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 2022,
+      "last_modified": "2025-04-24T13:38:51.263107",
+      "naic": "60380",
+      "name": "American Family Life Assur Co of Col",
+      "name_full": "Aflac, underwritten by Tier One Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDXwgoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDXwgoMogEIbWVkX3N1cHA",
+        "code": "370",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:18.981780",
+        "name": "AFLAC Grp"
+      },
+      "sp_rating": "A",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-03-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 20
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:22:19.819780",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKn2p8MLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 206734,
+      "month": 17221,
+      "quarter": 54784,
+      "semi_annual": 107502
+    },
+    "rate_increases": [
+      {
+        "date": "2022-08-11T00:00:00",
+        "rate_increase": 0.0806734759
+      },
+      {
+        "date": "2024-03-01T00:00:00",
+        "rate_increase": 0.0996086539
+      },
+      {
+        "date": "2025-03-01T00:00:00",
+        "rate_increase": 0.1410153102
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKn2p8MLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-03-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-02-04T17:25:26.757454",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7MOb-fwLDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0371606075,
+      0.0358846367
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:41:36.458423",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MObjs8IDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 211008,
+      "month": 17384,
+      "quarter": 53352,
+      "semi_annual": 106704
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0206399038
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": -0.0537303665
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.132581783
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1690278456
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard/Household/Multi-Person",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MObjs8IDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:56:39.610692",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOan08AJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049865306
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T17:13:44.906658",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKaNvckLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 209364,
+      "month": 17447,
+      "quarter": 52341,
+      "semi_annual": 104682
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard II",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKaNvckLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T17:13:05.382409",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnLb59p4KDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050268479
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.123
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T17:01:20.923681",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnPrZypQIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 210072,
+      "month": 17506,
+      "quarter": 52518,
+      "semi_annual": 105036
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1402891456
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard I",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnPrZypQIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T17:00:57.412148",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAtKmNm_cJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0507521998,
+      0.0508941596,
+      0.0513598273,
+      0.0498777506
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMD1tggMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMD1tggMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2005,
+      "last_modified": "2025-04-24T13:39:35.005414",
+      "naic": "86231",
+      "name": "Transamerica Life Ins Co",
+      "name_full": "TRANSAMERICA LIFE INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODazQgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODazQgMogEIbWVkX3N1cHA",
+        "code": "468",
+        "established_year": 2005,
+        "last_modified": "2025-04-24T13:34:22.529442",
+        "name": "Aegon US Holding Grp"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2024-06-01T00:00:00",
+    "expires_date": "2025-09-30T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-13T21:00:39.701384",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAtMnH6I0JDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 211374,
+      "month": 17615,
+      "quarter": 52844,
+      "semi_annual": 105687
+    },
+    "rate_increases": [
+      {
+        "date": "2019-01-01T00:00:00",
+        "rate_increase": 0.0599559379
+      },
+      {
+        "date": "2024-06-01T00:00:00",
+        "rate_increase": 0.0950165784
+      }
+    ],
+    "rate_type": "issue age",
+    "rating_class": "Direct",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAtMnH6I0JDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2024-06-01T00:00:00",
+      "expires_date": "2025-09-30T00:00:00",
+      "last_modified": "2025-08-13T20:35:17.133497",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnJLwgPkJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSyQsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSyQsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A-",
+      "business_type": "Life Accident and Health",
+      "established_year": 2021,
+      "last_modified": "2025-04-24T13:39:05.910698",
+      "naic": "66001",
+      "name": "American Benefit Life Ins Co",
+      "name_full": "AMERICAN BENEFIT LIFE INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDf7woMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDf7woMogEIbWVkX3N1cHA",
+        "code": "3436",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:20.007792",
+        "name": "Liberty Bankers Ins Grp"
+      },
+      "sp_rating": "",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-06T19:14:49.950734",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnIKoxJwJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 213339,
+      "month": 17771,
+      "quarter": 56535,
+      "semi_annual": 110937
+    },
+    "rate_increases": [
+      {
+        "date": "2023-08-01T00:00:00",
+        "rate_increase": 0.0299595783
+      },
+      {
+        "date": "2024-09-01T00:00:00",
+        "rate_increase": 0.1080415544
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1684144732
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnIKoxJwJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-06T19:13:43.481953",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7OH38awLDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0521700274,
+      0.049742528,
+      0.0472337413,
+      0.0451999227
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMC17wsMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgMC17wsMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1966,
+      "last_modified": "2025-04-24T13:39:17.746977",
+      "naic": "70670",
+      "name": "BCBS IL/TX/NM/OK",
+      "name_full": "BCBS IL/TX/NM/OK",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "MUTUAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:32:17.129749",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MH7h-ULDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 214836,
+      "month": 17903,
+      "quarter": 53709,
+      "semi_annual": 107418
+    },
+    "rate_increases": [
+      {
+        "date": "2013-03-01T00:00:00",
+        "rate_increase": 0.0333333333
+      },
+      {
+        "date": "2015-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2016-04-01T00:00:00",
+        "rate_increase": 0.0430107527
+      },
+      {
+        "date": "2017-04-01T00:00:00",
+        "rate_increase": 0.0515463918
+      },
+      {
+        "date": "2018-05-01T00:00:00",
+        "rate_increase": 0.0392156863
+      },
+      {
+        "date": "2019-05-01T00:00:00",
+        "rate_increase": 0.0613207547
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": -0.1621777778
+      },
+      {
+        "date": "2020-05-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2021-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2021-05-01T00:00:00",
+        "rate_increase": -0.0448782558
+      },
+      {
+        "date": "2022-05-01T00:00:00",
+        "rate_increase": 0.0306026104
+      },
+      {
+        "date": "2023-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0698965294
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.0798871707
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1390923084
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MH7h-ULDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-30T21:10:54.179648",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7MaNyK4LDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0562067426
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:45:26.434364",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7LbZ_o0KDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 214992,
+      "month": 17916,
+      "quarter": 54348,
+      "semi_annual": 108696
+    },
+    "rate_increases": [
+      {
+        "date": "2018-07-01T00:00:00",
+        "rate_increase": 0.0228728271
+      },
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": -0.0509279964
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": -0.1364198622
+      },
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0210081168
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0102417613
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0555172414
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0710878798
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1292624901
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.150875108
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard/Household",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7LbZ_o0KDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T21:18:06.672014",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnI63_K8JDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.037964145
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Property and Casualty",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.379632",
+      "naic": "17414",
+      "name": "Physicians Mutual (PSIC)",
+      "name_full": "Physicians Mutual (PSIC)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+        "code": "367",
+        "established_year": 1978,
+        "last_modified": "2025-04-24T13:34:21.042364",
+        "name": "PHYSICIANS MUT GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-29T17:34:45.816210",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKbY65sIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 216204,
+      "month": 18017,
+      "quarter": 54051,
+      "semi_annual": 108102
+    },
+    "rate_increases": [
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.109993087
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1700228358
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Household",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKbY65sIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-29T17:33:53.987197",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArOmo4PYKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0582010582,
+      0.05,
+      0.0428571429,
+      0.0502283105
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKCZzQgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKCZzQgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 1966,
+      "last_modified": "2025-07-22T13:09:08.311953",
+      "naic": "92916",
+      "name": "United Amer Ins Co",
+      "name_full": "UNITED AMERICAN INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODB3AgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODB3AgMogEIbWVkX3N1cHA",
+        "code": "290",
+        "established_year": 1966,
+        "last_modified": "2025-04-24T13:34:23.935122",
+        "name": "Globe Life Inc."
+      },
+      "sp_rating": "A+",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-04-15T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:44:35.256569",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKGJqdMKDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 226700,
+      "month": 18900,
+      "quarter": 56700,
+      "semi_annual": 113400
+    },
+    "rate_increases": [
+      {
+        "date": "2016-01-15T00:00:00",
+        "rate_increase": 0.020746888
+      },
+      {
+        "date": "2016-06-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2017-01-01T00:00:00",
+        "rate_increase": 0.0203252033
+      },
+      {
+        "date": "2019-01-01T00:00:00",
+        "rate_increase": -0.0916334661
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2020-03-15T00:00:00",
+        "rate_increase": -0.1798245614
+      },
+      {
+        "date": "2021-04-15T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2022-04-15T00:00:00",
+        "rate_increase": 0.0374331551
+      },
+      {
+        "date": "2023-04-15T00:00:00",
+        "rate_increase": 0.0515463918
+      },
+      {
+        "date": "2024-04-15T00:00:00",
+        "rate_increase": 0.0882352941
+      },
+      {
+        "date": "2025-04-15T00:00:00",
+        "rate_increase": 0.0945945946
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArKGJqdMKDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-04-15T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-01-24T18:19:13.539475",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAzJaDwoUKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0356293281,
+      0.0343525088,
+      0.0394788788,
+      0.0379794911
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSuAoMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSuAoMogEIbWVkX3N1cHA",
+      "ambest_outlook": "-",
+      "ambest_rating": "n/a",
+      "business_type": "Health",
+      "established_year": 1984,
+      "last_modified": "2025-04-24T13:38:38.655239",
+      "naic": "53139",
+      "name": "Wisconsin Physicians Serv Ins Corp",
+      "name_full": "WPS-A Health Solutions Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIC5hAkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIC5hAkMogEIbWVkX3N1cHA",
+        "code": "68",
+        "established_year": 1984,
+        "last_modified": "2025-04-24T13:34:14.370864",
+        "name": "WISCONSIN PHYSICIANS SERV INS GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "OTHER",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-01-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:34:26.532237",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzLaSjPYIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 227016,
+      "month": 18917,
+      "quarter": 56754,
+      "semi_annual": 113508
+    },
+    "rate_increases": [
+      {
+        "date": "2019-01-01T00:00:00",
+        "rate_increase": 0.0313778193
+      },
+      {
+        "date": "2021-01-01T00:00:00",
+        "rate_increase": -0.000056654
+      },
+      {
+        "date": "2022-01-01T00:00:00",
+        "rate_increase": -0.02
+      },
+      {
+        "date": "2023-01-01T00:00:00",
+        "rate_increase": 0.0204081633
+      },
+      {
+        "date": "2024-01-01T00:00:00",
+        "rate_increase": 0.08
+      },
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.106022453
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzLaSjPYIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-01-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-10-03T17:29:12.118794",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7OPUkf4LDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0370867769,
+      0.0358103397
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured / Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:38:34.568340",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MP4tagLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 234720,
+      "month": 19360,
+      "quarter": 59280,
+      "semi_annual": 118560
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0205114544
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0512920908
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1322160149
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1686403509
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MP4tagLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:27:32.034004",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnMqvnpwIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0503951555,
+      0.0541332812,
+      0.0534390063,
+      0.0526200009
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS6QkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS6QkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 1992,
+      "last_modified": "2025-07-23T12:40:08.323303",
+      "naic": "70319",
+      "name": "Washington Natl Ins Co",
+      "name_full": "Bankers Life (Underwritten by Washington National Insurance Company)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCOsQkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCOsQkMogEIbWVkX3N1cHA",
+        "code": "233",
+        "established_year": 1979,
+        "last_modified": "2025-04-24T13:34:18.126742",
+        "name": "CNO Financial Grp"
+      },
+      "sp_rating": "B+",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-18T19:57:44.067393",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnLqxm7oLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 225860,
+      "month": 19486,
+      "quarter": 59388,
+      "semi_annual": 116418
+    },
+    "rate_increases": [
+      {
+        "date": "2023-06-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2024-06-01T00:00:00",
+        "rate_increase": 0.0448190084
+      },
+      {
+        "date": "2025-06-01T00:00:00",
+        "rate_increase": 0.0348507861
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Substandard",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnLqxm7oLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-18T19:57:06.254970",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnM7-g_sJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.014920859,
+      0.0148505016
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUuAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUuAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1966,
+      "last_modified": "2025-04-24T13:39:20.233559",
+      "naic": "71412",
+      "name": "Mutual Of Omaha Ins Co",
+      "name_full": "MUTUAL OF OMAHA INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCI4wkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMCI4wkMogEIbWVkX3N1cHA",
+        "code": "261",
+        "established_year": 1966,
+        "last_modified": "2025-04-24T13:34:22.839021",
+        "name": "MUTUAL OF OMAHA GRP"
+      },
+      "sp_rating": "A+",
+      "state_marketing_data": [],
+      "type": "MUTUAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.12
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": true,
+    "last_modified": "2025-08-27T19:53:49.623597",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnI7rnPYKDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 238060,
+      "month": 19838,
+      "quarter": 59515,
+      "semi_annual": 119030
+    },
+    "rate_increases": [
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0500183083
+      },
+      {
+        "date": "2024-04-15T00:00:00",
+        "rate_increase": 0.1249825638
+      },
+      {
+        "date": "2025-06-15T00:00:00",
+        "rate_increase": 0.2500309981
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnI7rnPYKDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T19:53:14.635238",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnJb1w6EKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050268939
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAsQkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2017,
+      "last_modified": "2025-04-24T13:39:04.267100",
+      "naic": "65641",
+      "name": "Medico Life and Health Ins Co",
+      "name_full": "Medico Life and Health Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMDfrwkMogEIbWVkX3N1cHA",
+        "code": "3527",
+        "established_year": 1980,
+        "last_modified": "2025-04-24T13:34:20.941875",
+        "name": "Wellabe"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.123
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-27T17:12:27.189465",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnOaoprwJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 238716,
+      "month": 19893,
+      "quarter": 59679,
+      "semi_annual": 119358
+    },
+    "rate_increases": [
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1402127087
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard II",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnOaoprwJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-27T17:11:42.801370",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnKKuqOYKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0049960032
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T21:14:22.060472",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKL-ouILDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 240283,
+      "month": 20016,
+      "quarter": 63675,
+      "semi_annual": 124947
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.0770126317
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard II w/ 20% HHD",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKL-ouILDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T21:13:32.329273",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7PrT9MALDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0496915865
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:39:43.561976",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7LaX1c8JDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 243180,
+      "month": 20265,
+      "quarter": 61395,
+      "semi_annual": 122790
+    },
+    "rate_increases": [
+      {
+        "date": "2018-07-01T00:00:00",
+        "rate_increase": 0.0228871334
+      },
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": -0.0509389051
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": -0.1290825995
+      },
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0209906566
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0375212446
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0555065524
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0709723632
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1291383346
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1507478158
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Standard",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7LaX1c8JDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T20:33:21.467280",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnPbR4rIKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0379890473
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgIDk3c7y5wkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Property and Casualty",
+      "established_year": 2023,
+      "last_modified": "2025-04-24T13:36:56.379632",
+      "naic": "17414",
+      "name": "Physicians Mutual (PSIC)",
+      "name_full": "Physicians Mutual (PSIC)",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgICA6AkMogEIbWVkX3N1cHA",
+        "code": "367",
+        "established_year": 1978,
+        "last_modified": "2025-04-24T13:34:21.042364",
+        "name": "PHYSICIANS MUT GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-29T17:26:36.149259",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMbSgoEJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 243228,
+      "month": 20269,
+      "quarter": 60807,
+      "semi_annual": 121614
+    },
+    "rate_increases": [
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.1099959033
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0.1700190687
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnMbSgoEJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-29T17:25:38.072184",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICArPCbq8MKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.0109421112,
+      0.02209647
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKCZ9AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKCZ9AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2018,
+      "last_modified": "2025-04-24T13:39:21.671434",
+      "naic": "72052",
+      "name": "Aetna Hlth Ins Co",
+      "name_full": "AETNA HEALTH INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDlQsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDlQsMogEIbWVkX3N1cHA",
+        "code": "1",
+        "established_year": 1992,
+        "last_modified": "2025-04-24T13:34:28.927896",
+        "name": "AETNA GRP"
+      },
+      "sp_rating": "",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-02-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 20
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:25:39.566209",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArIjS5_IIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 264400,
+      "month": 22025,
+      "quarter": 70066,
+      "semi_annual": 137488
+    },
+    "rate_increases": [
+      {
+        "date": "2020-02-01T00:00:00",
+        "rate_increase": 0.0200766411
+      },
+      {
+        "date": "2021-02-01T00:00:00",
+        "rate_increase": 0.0802776644
+      },
+      {
+        "date": "2022-02-01T00:00:00",
+        "rate_increase": 0.0799818567
+      },
+      {
+        "date": "2023-02-01T00:00:00",
+        "rate_increase": 0.1201175976
+      },
+      {
+        "date": "2024-02-01T00:00:00",
+        "rate_increase": 0.1499187602
+      },
+      {
+        "date": "2025-02-01T00:00:00",
+        "rate_increase": 0.1801532525
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICArIjS5_IIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-02-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-12-04T18:40:48.627771",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnJLarvEKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050174335
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T21:04:53.499286",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKLtmtwIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 282332,
+      "month": 23518,
+      "quarter": 74818,
+      "semi_annual": 146813
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.077037404
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard II w/ 6% HHD",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnKLtmtwIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T21:04:04.309044",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAnOL61u0IDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0.0050361725
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICUyAkMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2024,
+      "last_modified": "2025-08-19T19:08:14.152614",
+      "naic": "65269",
+      "name": "Cigna Ins Co",
+      "name_full": "Cigna Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgMD6kwsMogEIbWVkX3N1cHA",
+        "code": "917",
+        "established_year": 2013,
+        "last_modified": "2025-04-24T13:34:27.199757",
+        "name": "HCSC GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.06
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-09-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-08-07T20:55:36.981760",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJKxqpgJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 300353,
+      "month": 25019,
+      "quarter": 79594,
+      "semi_annual": 156184
+    },
+    "rate_increases": [
+      {
+        "date": "2025-05-01T00:00:00",
+        "rate_increase": 0.0769768092
+      },
+      {
+        "date": "2025-09-01T00:00:00",
+        "rate_increase": 0
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Standard II",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAnJKxqpgJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-09-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-08-07T20:54:43.800609",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAzMWLvqkJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0.0100202791,
+      0.0116924531,
+      0.0200015565
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSyQgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDSyQgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 1984,
+      "last_modified": "2025-04-24T13:39:01.245220",
+      "naic": "64211",
+      "name": "Guarantee Trust Life Ins Co",
+      "name_full": "Guarantee Trust Life Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDkmQsMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDkmQsMogEIbWVkX3N1cHA",
+        "code": "687",
+        "established_year": 1984,
+        "last_modified": "2025-04-24T13:34:23.849514",
+        "name": "GUARANTEE TRUST GRP"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "MUTUAL",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-01-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:32:46.180017",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzOnV460LDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 301801,
+      "month": 25149,
+      "quarter": 75450,
+      "semi_annual": 150901
+    },
+    "rate_increases": [
+      {
+        "date": "2019-01-01T00:00:00",
+        "rate_increase": 0.0400595928
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": 0.1089447716
+      },
+      {
+        "date": "2021-01-01T00:00:00",
+        "rate_increase": 0.1240043057
+      },
+      {
+        "date": "2022-01-01T00:00:00",
+        "rate_increase": 0.119006576
+      },
+      {
+        "date": "2023-01-01T00:00:00",
+        "rate_increase": 0.1400125521
+      },
+      {
+        "date": "2024-01-01T00:00:00",
+        "rate_increase": 0.1240178169
+      },
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.1229796518
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzOnV460LDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-01-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-10-22T19:59:06.343661",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAzNy_osIIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0.0492125984,
+      0.0450281426,
+      0.0430879713,
+      0.0413080895
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS-QoMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgKDS-QoMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 1981,
+      "last_modified": "2025-04-24T13:39:38.934522",
+      "naic": "91472",
+      "name": "Globe Life & Accident Ins Co",
+      "name_full": "GLOBE LIFE AND ACCIDENT INSURANCE COMPANY",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODB3AgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgODB3AgMogEIbWVkX3N1cHA",
+        "code": "290",
+        "established_year": 1966,
+        "last_modified": "2025-04-24T13:34:23.935122",
+        "name": "Globe Life Inc."
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-01-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2024-09-09T19:30:10.841117",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzKzSppEKDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 291100,
+      "month": 25400,
+      "quarter": 75700,
+      "semi_annual": 148500
+    },
+    "rate_increases": [
+      {
+        "date": "2020-06-01T00:00:00",
+        "rate_increase": 0.0953346856
+      },
+      {
+        "date": "2022-01-01T00:00:00",
+        "rate_increase": 0.0907407407
+      },
+      {
+        "date": "2023-01-01T00:00:00",
+        "rate_increase": 0.0899830221
+      },
+      {
+        "date": "2024-01-01T00:00:00",
+        "rate_increase": 0.0716510903
+      },
+      {
+        "date": "2025-01-01T00:00:00",
+        "rate_increase": 0.0901162791
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "Direct to Consumer",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzKzSppEKDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-01-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-09-09T19:29:58.128611",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICAzOL3q-YIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0.004958845,
+      0.0399113826
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAiQgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICAiQgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "B++",
+      "business_type": "Life Accident and Health",
+      "established_year": 2010,
+      "last_modified": "2025-04-24T13:39:07.688013",
+      "naic": "67059",
+      "name": "GPM Health and Life Ins Co",
+      "name_full": "GPM Health and Life Insurance Company",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDvQgMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgIDDvQgMogEIbWVkX3N1cHA",
+        "code": "4712",
+        "established_year": 2010,
+        "last_modified": "2025-04-24T13:34:29.687254",
+        "name": "GPM Life Grp"
+      },
+      "sp_rating": "n/a",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2024-10-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [
+      {
+        "name": "policy",
+        "type": "fixed",
+        "value": 25
+      }
+    ],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:24:42.618523",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzJzhoagLDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 355730,
+      "month": 29644,
+      "quarter": 88933,
+      "semi_annual": 177865
+    },
+    "rate_increases": [
+      {
+        "date": "2018-09-01T00:00:00",
+        "rate_increase": 0.0300528402
+      },
+      {
+        "date": "2019-09-01T00:00:00",
+        "rate_increase": 0.1499679384
+      },
+      {
+        "date": "2020-09-01T00:00:00",
+        "rate_increase": 0.1500662159
+      },
+      {
+        "date": "2021-09-01T00:00:00",
+        "rate_increase": 0.15
+      },
+      {
+        "date": "2022-10-01T00:00:00",
+        "rate_increase": 0.1799736495
+      },
+      {
+        "date": "2023-10-01T00:00:00",
+        "rate_increase": 0.1580169719
+      },
+      {
+        "date": "2024-10-01T00:00:00",
+        "rate_increase": 0.1549676026
+      }
+    ],
+    "rate_type": "attained age",
+    "rating_class": "",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICAzJzhoagLDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2024-10-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2024-09-17T18:42:05.060566",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7Pq5oqYKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:44:53.927640",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7IbIysoIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 630948,
+      "month": 52579,
+      "quarter": 158337,
+      "semi_annual": 316674
+    },
+    "rate_increases": [
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0214957869
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0156510261
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0558839001
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0701286522
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1016266842
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1165137843
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2/Household",
+    "related_data": {},
+    "riders": [],
+    "select": true,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7IbIysoIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T21:22:08.132966",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7OOcm8kJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:42:25.169821",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MPJiIcJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 670164,
+      "month": 55647,
+      "quarter": 168141,
+      "semi_annual": 336282
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0202198853
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": -0.1595370848
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1304493255
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1666091331
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2/Household/Multi-Insured",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7MPJiIcJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:33:28.224996",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7NaMofEIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:43:07.952099",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7I6-prEIDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 678624,
+      "month": 56552,
+      "quarter": 170256,
+      "semi_annual": 340512
+    },
+    "rate_increases": [
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0214661215
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0376063274
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0558607795
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0700956221
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1015784114
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1164779293
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2",
+    "related_data": {},
+    "riders": [],
+    "select": true,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7I6-prEIDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T20:37:36.145665",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7NrevoEIDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:45:15.494598",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7KbTzbgJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 694008,
+      "month": 57834,
+      "quarter": 174102,
+      "semi_annual": 348204
+    },
+    "rate_increases": [
+      {
+        "date": "2018-07-01T00:00:00",
+        "rate_increase": 0.0227921121
+      },
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": 0.0392042668
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0208536118
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0153030486
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.055156658
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0705227343
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1283654225
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.149983705
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2/Household",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7KbTzbgJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T21:05:07.906946",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7JbM4s8LDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgIDu1AgMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Stable",
+      "ambest_rating": "A+",
+      "business_type": "Life Accident and Health",
+      "established_year": 1998,
+      "last_modified": "2025-04-24T13:39:28.245016",
+      "naic": "79413",
+      "name": "UnitedHealthcare Ins Co",
+      "name_full": "AARP Medicare Supplement Plans, insured by UnitedHealthcare",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.07
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:43:20.745282",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7Mbu-84IDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 746436,
+      "month": 62203,
+      "quarter": 187209,
+      "semi_annual": 374418
+    },
+    "rate_increases": [
+      {
+        "date": "2018-07-01T00:00:00",
+        "rate_increase": 0.0227766695
+      },
+      {
+        "date": "2019-07-01T00:00:00",
+        "rate_increase": 0.0391825803
+      },
+      {
+        "date": "2020-01-01T00:00:00",
+        "rate_increase": 0
+      },
+      {
+        "date": "2020-07-01T00:00:00",
+        "rate_increase": -0.0208415037
+      },
+      {
+        "date": "2021-07-01T00:00:00",
+        "rate_increase": 0.0372489558
+      },
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0551357017
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.0705005882
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1283209611
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1499339927
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7Mbu-84IDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-04-24T20:18:41.496535",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7P2d5oEKDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Roommate",
+    "discounts": [],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:42:46.568310",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OO23pIJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 754236,
+      "month": 62653,
+      "quarter": 189159,
+      "semi_annual": 378318
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0201933405
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": -0.0545144007
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1302863082
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1664112444
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2/Household/Multi-Person",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "with_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OO23pIJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:50:47.891185",
+      "state": "TX",
+      "zip3": []
+    }
+  },
+  {
+    "key": "agZjc2dhcGlyEgsSBVF1b3RlGICA7OPe97UJDKIBCG1lZF9zdXBw",
+    "age": 65,
+    "age_increases": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "archive": null,
+    "company": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+    "company_base": {
+      "key": "agZjc2dhcGlyFAsSB0NvbXBhbnkYgICAgICj0goMogEIbWVkX3N1cHA",
+      "ambest_outlook": "Positive",
+      "ambest_rating": "A",
+      "business_type": "Life Accident and Health",
+      "established_year": 2020,
+      "last_modified": "2025-04-24T13:39:33.677825",
+      "naic": "84549",
+      "name": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "name_full": "AARP Medicare Supplement Insurance Plans, insured by United Healthcare Insurance Company of America",
+      "parent_company": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+      "parent_company_base": {
+        "key": "agZjc2dhcGlyGgsSDVBhcmVudENvbXBhbnkYgICAgKCSnwoMogEIbWVkX3N1cHA",
+        "code": "707",
+        "established_year": 1998,
+        "last_modified": "2025-04-24T13:34:29.601856",
+        "name": "UNITEDHEALTH GRP"
+      },
+      "sp_rating": "AA-",
+      "state_marketing_data": [],
+      "type": "STOCK",
+      "underwriting_data": []
+    },
+    "contextual_data": {},
+    "discount_category": "Multi-Insured / Roommate",
+    "discounts": [
+      {
+        "name": "household",
+        "rule": null,
+        "type": "percent",
+        "value": 0.1
+      }
+    ],
+    "e_app_link": "",
+    "effective_date": "2025-07-01T00:00:00",
+    "expires_date": "2099-12-31T00:00:00",
+    "fees": [],
+    "gender": "M",
+    "has_brochure": false,
+    "has_pdf_app": false,
+    "last_modified": "2025-07-24T20:40:21.963911",
+    "legacy_id": null,
+    "location": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OO_nsUJDKIBCG1lZF9zdXBw",
+    "note": null,
+    "plan": "G",
+    "rate": {
+      "annual": 838308,
+      "month": 69659,
+      "quarter": 210177,
+      "semi_annual": 420354
+    },
+    "rate_increases": [
+      {
+        "date": "2022-07-01T00:00:00",
+        "rate_increase": 0.0201716738
+      },
+      {
+        "date": "2023-07-01T00:00:00",
+        "rate_increase": 0.050460431
+      },
+      {
+        "date": "2024-07-01T00:00:00",
+        "rate_increase": 0.1301590833
+      },
+      {
+        "date": "2025-07-01T00:00:00",
+        "rate_increase": 0.1662958953
+      }
+    ],
+    "rate_type": "community rated",
+    "rating_class": "Level 2",
+    "related_data": {},
+    "riders": [],
+    "select": false,
+    "tobacco": false,
+    "view_type": [
+      "sans_hhd"
+    ],
+    "location_base": {
+      "key": "agZjc2dhcGlyFQsSCExvY2F0aW9uGICA7OO_nsUJDKIBCG1lZF9zdXBw",
+      "county": [],
+      "effective_date": "2025-07-01T00:00:00",
+      "expires_date": "2099-12-31T00:00:00",
+      "last_modified": "2025-06-03T15:15:02.988426",
+      "state": "TX",
+      "zip3": []
+    }
+  }
+]

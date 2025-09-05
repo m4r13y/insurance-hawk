@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { getProperLogoUrl } from "@/lib/carrier-system";
+import { getCarrierLogoUrl } from "@/lib/carrier-system";
 import { QuoteData } from './types.js';
 
 interface PlanDetailsHeaderProps {
@@ -19,7 +19,7 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
   calculateDiscountedRate,
   formatCurrency
 }) => {
-  const logoUrl = getProperLogoUrl(quoteData.company_base.naic, quoteData.company_base.name);
+  const logoUrl = getCarrierLogoUrl(quoteData.company_base.name);
 
   return (
     <div className="sticky top-20 z-40 backdrop-blur-sm">

@@ -1,0 +1,26 @@
+[
+  {
+    "company": "test-company-1",
+    "plan": "G",
+    "rating_class": "",
+    "discounts": [{"name": "household", "value": 0.07, "type": "percent"}],
+    "rate": {"month": 12686},
+    "view_type": []
+  },
+  {
+    "company": "test-company-1", 
+    "plan": "G",
+    "rating_class": "Preferred",
+    "discounts": [{"name": "household", "value": 0.07, "type": "percent"}],
+    "rate": {"month": 13014},
+    "view_type": []
+  },
+  {
+    "company": "test-company-1",
+    "plan": "G", 
+    "rating_class": "w/ 20% HHD",
+    "discounts": [],
+    "rate": {"month": 13344},
+    "view_type": ["with_hhd"]
+  }
+]
