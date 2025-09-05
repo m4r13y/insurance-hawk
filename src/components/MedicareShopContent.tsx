@@ -1381,8 +1381,10 @@ function MedicareShopContent() {
   };
 
   const calculateDiscountedPrice = (quote: any) => {
-    // Implementation from backup
-    let price = quote.monthly_premium || quote.premium || 0;
+    // Get the base rate (convert from cents to dollars)
+    let price = quote.rate?.month || quote.monthly_premium || quote.premium || 0;
+    price = price >= 100 ? price / 100 : price; // Convert from cents if needed
+    
     if (applyDiscounts && quote.discounts) {
       quote.discounts.forEach((discount: any) => {
         if (discount.type === 'percent') {

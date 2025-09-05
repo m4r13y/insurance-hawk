@@ -44,7 +44,8 @@ export default function MedigapCarrierGroup({
   // Helper function to get base rate without discounts
   const getBaseRate = (quote: any) => {
     const rate = quote.rate?.month || quote.monthly_premium || quote.premium || 0;
-    return rate > 1000 ? rate / 100 : rate; // Convert from cents if needed
+    // Convert from cents to dollars (rates are stored in cents)
+    return rate >= 100 ? rate / 100 : rate;
   };
   
   // Helper function to calculate price range based on rating classes only
