@@ -23,10 +23,18 @@ import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-o
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
 import { Timestamp } from 'firebase/firestore';
 
+interface PlanConfiguration {
+  ratingClass: string;
+  discounts: string[];
+}
+
 interface PlanBuilderTabProps {
   quoteData: QuoteData;
   formatCurrency: (amount: number) => string;
   calculateDiscountedRate: (rate: number, discounts: any[]) => number;
+  currentSelection?: PlanConfiguration;
+  getCurrentRate?: () => number;
+  onSelectionChange?: (selection: PlanConfiguration) => void;
 }
 
 // Helper function for rating colors
@@ -54,7 +62,10 @@ const getRatingColor = (rating: string) => {
 export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   quoteData,
   formatCurrency,
-  calculateDiscountedRate
+  calculateDiscountedRate,
+  currentSelection,
+  getCurrentRate,
+  onSelectionChange
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
@@ -76,6 +87,22 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [drugPlanQuotes, setDrugPlanQuotes] = useState<any[]>([]);
   const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
   const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
+
+  // Notify parent component of selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange({
+        ratingClass: '', // PlanBuilderTab doesn't currently track specific rating classes
+        discounts: applyDiscounts ? ['household'] : [] // Simplified discount tracking
+      });
+    }
+  }, [applyDiscounts, onSelectionChange]);
+
+  // Calculate the current selection rate with applied discounts
+  const getCurrentSelectionRate = () => {
+    // Use the parent's rate calculation function if available, otherwise fallback to base rate
+    return getCurrentRate ? getCurrentRate() : quoteData.rate.month;
+  };
   
   // Selected additional coverage plans
   const [selectedDrugPlan, setSelectedDrugPlan] = useState<any>(null);
@@ -604,7 +631,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const savePlanBuilderState = async () => {
     try {
       const totalMonthlyCost = 
-        quoteData.rate.month + 
+        getCurrentSelectionRate() + 
         (selectedDrugPlan ? ((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100) : 0) +
         (selectedDentalPlan ? selectedDentalPlan.monthlyPremium : 0) +
         (selectedCancerPlan ? (selectedCancerPlan.monthly_premium || 0) : 0);
@@ -620,7 +647,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         medigapPlan: {
           plan: quoteData.plan,
           carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
-          monthlyRate: quoteData.rate.month,
+          monthlyRate: getCurrentSelectionRate(),
           selected: true
         },
         medicareAB: {
@@ -782,7 +809,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-semibold text-primary">
-                      {formatCurrency(quoteData.rate.month)}/mo
+                      {formatCurrency(getCurrentSelectionRate())}/mo
                     </div>
                     <Badge variant="outline">Current Selection</Badge>
                   </div>
@@ -863,7 +890,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             ? 'text-blue-900' 
                             : 'text-gray-500'
                         }`}>
-                          {formatCurrency(quoteData.rate.month)}/mo
+                          {formatCurrency(getCurrentSelectionRate())}/mo
                         </div>
                       </div>
                     </div>
@@ -1246,19 +1273,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                 <div className="text-sm text-gray-600 mb-1">Total Monthly Premium</div>
                 <div className="text-2xl font-bold">
                   ${(() => {
-                    const baseRate = (quoteData.rate.month || 0) / 100; // Convert from cents to dollars
+                    const baseRate = getCurrentSelectionRate() / 100; // Convert from cents to dollars and use discounted rate
                     const drugRate = selectedDrugPlan ? ((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100) : 0;
                     const dentalRate = selectedDentalPlan ? ((selectedDentalPlan as any).monthlyPremium || 0) : 0;
                     const cancerRate = selectedCancerPlan ? ((selectedCancerPlan.monthly_premium || 0)) : 0;
-                    
-                    // Debug log (remove in production)
-                    console.log('Plan Summary Calculation:', {
-                      baseRate,
-                      drugRate,
-                      dentalRate,
-                      cancerRate,
-                      total: baseRate + drugRate + dentalRate + cancerRate
-                    });
                     
                     return (baseRate + drugRate + dentalRate + cancerRate).toFixed(2);
                   })()}
@@ -1276,7 +1294,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       <div className="text-sm font-medium">Plan {quoteData.plan}</div>
                       <div className="text-xs text-gray-600">{getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}</div>
                     </div>
-                    <span className="font-medium">{formatCurrency(quoteData.rate.month)}</span>
+                    <span className="font-medium">{formatCurrency(getCurrentSelectionRate())}</span>
                   </div>
                   
                   {/* Selected Additional Plans */}

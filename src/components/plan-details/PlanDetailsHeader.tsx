@@ -10,6 +10,7 @@ interface PlanDetailsHeaderProps {
   quoteData: QuoteData;
   onGoBack: () => void;
   calculateDiscountedRate: (rate: number, discounts: any[]) => number;
+  getCurrentRate: () => number;
   formatCurrency: (amount: number) => string;
 }
 
@@ -17,14 +18,15 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
   quoteData,
   onGoBack,
   calculateDiscountedRate,
+  getCurrentRate,
   formatCurrency
 }) => {
   const logoUrl = getCarrierLogoUrl(quoteData.company_base.name);
 
   return (
-    <div className="sticky top-20 z-40 backdrop-blur-sm">
+    <div className="sticky top-20 z-40 backdrop-blur-sm pt-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="pt-10 flex items-center justify-between h-14">
+        <div className="bg-card/50 px-10 py-5 flex rounded-2xl items-center justify-between h-20">
           {/* Left side - Back button and company info */}
           <div className="flex items-center space-x-3">
             <Button 
@@ -62,7 +64,7 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
             <div className="text-right">
               <div className="text-sm text-muted-foreground">Plan {quoteData.plan}</div>
               <div className="font-semibold text-primary">
-                {formatCurrency(calculateDiscountedRate(quoteData.rate.month, quoteData.discounts))}/mo
+                {formatCurrency(getCurrentRate())}/mo
               </div>
             </div>
           </div>

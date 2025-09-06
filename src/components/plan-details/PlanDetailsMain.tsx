@@ -29,6 +29,11 @@ interface PlanDetailsMainProps {
   // Props will be passed via URL params or state
 }
 
+interface PlanConfiguration {
+  ratingClass: string;
+  discounts: string[];
+}
+
 const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -37,6 +42,12 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   const [carrierQuotes, setCarrierQuotes] = React.useState<QuoteData[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [showGenerateQuote, setShowGenerateQuote] = React.useState(false);
+  
+  // Current selection state for header rate calculation
+  const [currentSelection, setCurrentSelection] = React.useState<PlanConfiguration>({
+    ratingClass: '',
+    discounts: []
+  });
 
   // Load existing medigap quotes from Firestore/localStorage
   const loadExistingQuotes = async (): Promise<QuoteData[]> => {
@@ -231,6 +242,41 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     return Math.round(discountedRate);
   };
 
+  // Calculate current rate based on user selections
+  const getCurrentSelectionRate = () => {
+    if (!carrierQuotes || carrierQuotes.length === 0 || !quoteData) {
+      return quoteData?.rate.month || 0;
+    }
+
+    // Find quote matching current selection
+    const matchingQuote = carrierQuotes.find(quote => {
+      const ratingMatch = (quote.rating_class || '') === currentSelection.ratingClass;
+      return ratingMatch && quote.plan === quoteData.plan;
+    });
+
+    if (matchingQuote) {
+      let rate = matchingQuote.rate?.month || 0;
+      
+      // Apply selected discounts
+      if (currentSelection.discounts.length > 0 && matchingQuote.discounts) {
+        currentSelection.discounts.forEach(discountName => {
+          const discount = matchingQuote.discounts?.find(d => d.name === discountName);
+          if (discount) {
+            if (discount.type === 'percent') {
+              rate = rate * (1 - discount.value);
+            } else {
+              rate = Math.max(0, rate - discount.value);
+            }
+          }
+        });
+      }
+      return Math.round(rate);
+    }
+
+    // Fallback to base quote with discounts
+    return calculateDiscountedRate(quoteData.rate.month, quoteData.discounts);
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -279,11 +325,12 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
         quoteData={quoteData}
         onGoBack={handleGoBack}
         calculateDiscountedRate={calculateDiscountedRate}
+        getCurrentRate={getCurrentSelectionRate}
         formatCurrency={formatCurrency}
       />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         <Tabs defaultValue="builder" className="space-y-6">
           <div className="overflow-x-auto">
             <TabsList className="grid w-full grid-cols-3 min-w-[300px] sm:min-w-0">
@@ -297,6 +344,9 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
             quoteData={quoteData}
             formatCurrency={formatCurrency}
             calculateDiscountedRate={calculateDiscountedRate}
+            currentSelection={currentSelection}
+            getCurrentRate={getCurrentSelectionRate}
+            onSelectionChange={setCurrentSelection}
           />
 
           <PlanDetailsTab 
