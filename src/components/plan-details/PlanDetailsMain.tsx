@@ -15,6 +15,8 @@ import Image from 'next/image';
 import { getProperLogoUrl } from "@/lib/carrier-system";
 import { loadTemporaryData } from "@/lib/services/temporary-storage";
 import { REAL_QUOTES_KEY } from "@/components/medicare-shop/shared/storage";
+import { getBaseRate } from "@/lib/medigap-utils";
+import { useDiscountState } from "@/lib/services/discount-state";
 
 // Import types and components from relative paths
 import type { QuoteData } from './types';
@@ -42,6 +44,9 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   const [carrierQuotes, setCarrierQuotes] = React.useState<QuoteData[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [showGenerateQuote, setShowGenerateQuote] = React.useState(false);
+  
+  // Use unified discount state
+  const [applyDiscounts] = useDiscountState();
   
   // Current selection state for header rate calculation
   const [currentSelection, setCurrentSelection] = React.useState<PlanConfiguration>({
@@ -126,6 +131,12 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
           console.log('Plan Details - parsed data:', planDetailsData);
           
           const { carrierGroup } = planDetailsData;
+          console.log('Plan Details - using unified discount state');
+          
+          setCurrentSelection({
+            ratingClass: '', // Will be set based on available quotes
+            discounts: [] // Managed by unified discount state
+          });
           
           if (carrierGroup && carrierGroup.quotes && carrierGroup.quotes.length > 0) {
             console.log('Plan Details - carrierGroup found with quotes:', carrierGroup.quotes.length);
@@ -242,10 +253,17 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     return Math.round(discountedRate);
   };
 
-  // Calculate current rate based on user selections
+  // Calculate current rate based on user selections using shared utilities
   const getCurrentSelectionRate = () => {
+    console.log('PlanDetailsMain - getCurrentSelectionRate called');
+    console.log('currentSelection:', currentSelection);
+    console.log('carrierQuotes length:', carrierQuotes?.length || 0);
+    console.log('quoteData:', quoteData?.rate?.month);
+    
     if (!carrierQuotes || carrierQuotes.length === 0 || !quoteData) {
-      return quoteData?.rate.month || 0;
+      const fallbackRate = quoteData?.rate.month || 0;
+      console.log('No carrier quotes, returning fallback rate:', fallbackRate);
+      return fallbackRate;
     }
 
     // Find quote matching current selection
@@ -254,27 +272,19 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       return ratingMatch && quote.plan === quoteData.plan;
     });
 
+    console.log('Matching quote found:', !!matchingQuote);
+
     if (matchingQuote) {
-      let rate = matchingQuote.rate?.month || 0;
-      
-      // Apply selected discounts
-      if (currentSelection.discounts.length > 0 && matchingQuote.discounts) {
-        currentSelection.discounts.forEach(discountName => {
-          const discount = matchingQuote.discounts?.find(d => d.name === discountName);
-          if (discount) {
-            if (discount.type === 'percent') {
-              rate = rate * (1 - discount.value);
-            } else {
-              rate = Math.max(0, rate - discount.value);
-            }
-          }
-        });
-      }
+      // Use the unified discount state for rate calculation
+      const rate = getBaseRate(matchingQuote, applyDiscounts);
+      console.log('Rate from shared getBaseRate function:', rate, 'applyDiscounts:', applyDiscounts);
       return Math.round(rate);
     }
 
     // Fallback to base quote with discounts
-    return calculateDiscountedRate(quoteData.rate.month, quoteData.discounts);
+    const fallbackRate = calculateDiscountedRate(quoteData.rate.month, quoteData.discounts);
+    console.log('Using fallback discounted rate:', fallbackRate);
+    return fallbackRate;
   };
 
   const formatCurrency = (amount: number) => {
@@ -342,6 +352,7 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
 
           <PlanBuilderTab 
             quoteData={quoteData}
+            carrierQuotes={carrierQuotes}
             formatCurrency={formatCurrency}
             calculateDiscountedRate={calculateDiscountedRate}
             currentSelection={currentSelection}

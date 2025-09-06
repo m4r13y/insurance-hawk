@@ -52,6 +52,7 @@ export interface QuoteData {
   rating_class: string;
   riders: any[];
   tobacco: boolean;
+  view_type?: string;
   location_base: {
     state: string;
     zip5: string[];

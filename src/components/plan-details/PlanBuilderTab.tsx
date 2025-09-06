@@ -22,6 +22,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
 import { Timestamp } from 'firebase/firestore';
+import { processOptionsForDisplay } from "@/lib/medigap-utils";
+import { useDiscountState } from "@/lib/services/discount-state";
 
 interface PlanConfiguration {
   ratingClass: string;
@@ -30,6 +32,7 @@ interface PlanConfiguration {
 
 interface PlanBuilderTabProps {
   quoteData: QuoteData;
+  carrierQuotes?: QuoteData[];
   formatCurrency: (amount: number) => string;
   calculateDiscountedRate: (rate: number, discounts: any[]) => number;
   currentSelection?: PlanConfiguration;
@@ -61,6 +64,7 @@ const getRatingColor = (rating: string) => {
 
 export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   quoteData,
+  carrierQuotes,
   formatCurrency,
   calculateDiscountedRate,
   currentSelection,
@@ -69,7 +73,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
-  const [applyDiscounts, setApplyDiscounts] = useState<boolean>(false);
+  const [applyDiscounts, setApplyDiscounts] = useDiscountState();
   const [loading, setLoading] = useState(false);
   const [realQuotes, setRealQuotes] = useState<QuoteData[]>([]);
   const [generatingQuote, setGeneratingQuote] = useState<string | null>(null);
@@ -97,6 +101,11 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       });
     }
   }, [applyDiscounts, onSelectionChange]);
+
+  // Debug: Watch applyDiscounts state changes
+  useEffect(() => {
+    console.log('applyDiscounts state changed in PlanBuilderTab:', applyDiscounts);
+  }, [applyDiscounts]);
 
   // Calculate the current selection rate with applied discounts
   const getCurrentSelectionRate = () => {
@@ -673,77 +682,48 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     }
   };
 
-  const processOptionsForDisplay = (plan: any) => {
-    // Check if this plan has pre-calculated discounts
-    const hasWithHHD = plan.options?.some((opt: any) => opt.view_type?.includes('with_hhd'));
-    const hasSansHHD = plan.options?.some((opt: any) => opt.view_type?.includes('sans_hhd'));
-    const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
-
-    if (hasPreCalculatedDiscounts) {
-      // For pre-calculated discounts, just filter based on toggle
-      if (applyDiscounts) {
-        // Show with_hhd options (discounted versions)
-        return plan.options.filter((opt: any) => opt.view_type?.includes('with_hhd'));
-      } else {
-        // Show sans_hhd options (non-discounted versions)
-        return plan.options.filter((opt: any) => opt.view_type?.includes('sans_hhd'));
-      }
-    } else {
-      // For plans without pre-calculated discounts, show all options
-      // and apply calculated discounts if enabled
-      return plan.options.map((option: any) => {
-        if (applyDiscounts && option.discounts && option.discounts.length > 0) {
-          // Calculate the discounted rate
-          let discountedRate = option.rate?.month || 0;
-          option.discounts.forEach((discount: any) => {
-            if (discount.type === 'percent') {
-              discountedRate *= (1 - discount.value);
-            } else {
-              discountedRate -= discount.value;
-            }
-          });
-          
-          return {
-            ...option,
-            rate: {
-              ...option.rate,
-              month: discountedRate
-            },
-            savings: (option.rate?.month || 0) - discountedRate,
-            isCalculatedDiscount: true
-          };
-        }
-        return option;
-      });
-    }
-  };
-
   const handleViewPlanOptions = async (plan: any) => {
     if (!plan) return;
+    
+    console.log('handleViewPlanOptions called with plan:', plan);
+    console.log('Plan options available:', plan.options?.length || 0);
+    console.log('Carrier quotes available:', carrierQuotes?.length || 0);
+    console.log('Sample option data:', plan.options?.[0]);
     
     setLoading(true);
     setSelectedPlanData(null);
     setShowOptionsModal(true);
 
     try {
+      // Use carrierQuotes if available, otherwise fallback to plan.options
+      const availableOptions = plan.options || [];
+      console.log('Using options:', availableOptions.length);
+      console.log('Full option details:', availableOptions);
+      
       // Create a mock carrier group structure for the modal
       const carrierGroup = {
         carrierName: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
         originalCarrierName: quoteData.company_base?.name || quoteData.company || '',
-        minPrice: plan.options ? Math.min(...plan.options.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
-        maxPrice: plan.options ? Math.max(...plan.options.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
-        quotes: plan.options || []
+        minPrice: availableOptions.length > 0 ? Math.min(...availableOptions.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
+        maxPrice: availableOptions.length > 0 ? Math.max(...availableOptions.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
+        quotes: availableOptions
       };
 
       const consolidatedPlans = [{
         plan: plan.plan || quoteData.plan,
-        options: plan.options || []
+        options: availableOptions
       }];
+
+      console.log('Setting modal data:', {
+        carrierGroup,
+        consolidatedPlans,
+        quotesCount: availableOptions.length
+      });
 
       setSelectedPlanData({
         carrierGroup,
         consolidatedPlans,
-        quotes: plan.options || []
+        quotes: availableOptions
       });
     } catch (error) {
       console.error('Error preparing plan options:', error);
@@ -818,15 +798,24 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleViewPlanOptions({
-                      plan: quoteData.plan,
-                      options: [{
-                        name: 'Current Plan',
-                        rate: quoteData.rate,
-                        view_type: ['standard'],
-                        rating_class: 'Standard'
-                      }]
-                    })}
+                    onClick={() => {
+                      // Filter carrier quotes to only include quotes for the same plan
+                      const planSpecificQuotes = carrierQuotes?.filter(quote => 
+                        quote.plan === quoteData.plan
+                      ) || [];
+                      
+                      console.log('Plan specific quotes:', planSpecificQuotes.length);
+                      
+                      handleViewPlanOptions({
+                        plan: quoteData.plan,
+                        options: planSpecificQuotes.length > 0 ? planSpecificQuotes : [{
+                          name: 'Current Plan',
+                          rate: quoteData.rate,
+                          view_type: ['standard'],
+                          rating_class: 'Standard'
+                        }]
+                      });
+                    }}
                   >
                     View Plan Options
                   </Button>
@@ -1362,7 +1351,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
             <Checkbox 
               id="apply-discounts-modal"
               checked={applyDiscounts}
-              onCheckedChange={(checked) => setApplyDiscounts(checked as boolean)}
+              onCheckedChange={(checked) => {
+                console.log('Modal discount toggle changed:', checked);
+                setApplyDiscounts(checked as boolean);
+              }}
             />
             <label htmlFor="apply-discounts-modal" className="text-sm font-medium">
               Apply available discounts
@@ -1414,7 +1406,20 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
               <div className="space-y-4">
                 <h4 className="font-semibold">Available Plans:</h4>
                 {selectedPlanData.consolidatedPlans.map((plan: any, index: number) => {
-                  const displayOptions = processOptionsForDisplay(plan);
+                  console.log('Rendering plan in modal:', { 
+                    planType: plan.plan, 
+                    applyDiscounts, 
+                    optionsLength: plan.options?.length || 0 
+                  });
+                  
+                  const displayOptions = processOptionsForDisplay(plan, applyDiscounts);
+                  console.log('After processOptionsForDisplay:', {
+                    planType: plan.plan,
+                    originalOptionsCount: plan.options?.length || 0,
+                    displayOptionsCount: displayOptions.length,
+                    applyDiscounts
+                  });
+                  
                   const rates = displayOptions.map((opt: any) => (opt.rate?.month || 0) / 100);
                   const minRate = Math.min(...rates);
                   const maxRate = Math.max(...rates);
@@ -1423,7 +1428,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     `${formatRate(minRate)} - ${formatRate(maxRate)}/mo`;
 
                   return (
-                    <div key={index} className="border rounded-lg p-4 space-y-4">
+                    <div key={`${index}-${applyDiscounts}`} className="border rounded-lg p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <h5 className="font-semibold">Plan {plan.plan}</h5>
@@ -1457,10 +1462,15 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             const hasSansHHD = option.view_type?.includes('sans_hhd');
                             
                             return (
-                              <div key={i} className="text-sm p-3 border rounded flex justify-between items-center">
+                              <div key={`${i}-${applyDiscounts}`} className="text-sm p-3 border rounded flex justify-between items-center">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium">{option.name}</span>
+                                    <span className="font-medium">
+                                      {option.name || 
+                                       (option.rating_class ? `${option.rating_class} Class` : '') ||
+                                       (option.discount_category ? `${option.discount_category} Rate` : '') ||
+                                       `Plan ${quoteData.plan} Option ${i + 1}`}
+                                    </span>
                                     {option.isRecommended && <Badge className="text-xs">Recommended</Badge>}
                                     {option.isCalculatedDiscount && (
                                       <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
@@ -1478,17 +1488,44 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                       </Badge>
                                     )}
                                   </div>
+                                  
+                                  {/* Rating Class */}
+                                  {option.rating_class && (
+                                    <div className="text-xs text-blue-600 mb-1">
+                                      Rating Class: {option.rating_class}
+                                    </div>
+                                  )}
+                                  
+                                  {/* Description */}
                                   {option.description && (
                                     <div className="text-xs text-muted-foreground mb-1">{option.description}</div>
                                   )}
+                                  
+                                  {/* Discount Category */}
+                                  {option.discount_category && (
+                                    <div className="text-xs text-purple-600 mb-1">
+                                      Category: {option.discount_category}
+                                    </div>
+                                  )}
+                                  
+                                  {/* View Types */}
                                   {option.view_type && option.view_type.length > 0 && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 mb-1">
                                       View types: {option.view_type.join(', ')}
                                     </div>
                                   )}
+                                  
+                                  {/* Available Discounts */}
                                   {option.discounts && option.discounts.length > 0 && (
-                                    <div className="text-xs text-green-600">
+                                    <div className="text-xs text-green-600 mb-1">
                                       Discounts: {option.discounts.map((d: any) => d.name || d.type).join(', ')}
+                                    </div>
+                                  )}
+                                  
+                                  {/* Company Rating */}
+                                  {option.company_base?.ambest_rating && option.company_base.ambest_rating !== 'n/a' && (
+                                    <div className="text-xs text-gray-600">
+                                      AM Best Rating: {option.company_base.ambest_rating}
                                     </div>
                                   )}
                                 </div>

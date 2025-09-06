@@ -34,6 +34,7 @@ import {
 } from "@/lib/carrier-system";
 import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
+import { useDiscountState } from "@/lib/services/discount-state";
 
 // Import organized components
 import {
@@ -204,7 +205,7 @@ function MedicareShopContent() {
   const [selectedQuotePlans, setSelectedQuotePlans] = useState(['F', 'G', 'N']);
   // Track which plans have quotes available (for checkbox display logic)
   const [availableMedigapPlans, setAvailableMedigapPlans] = useState<Record<string, boolean>>({});
-  const [applyDiscounts, setApplyDiscounts] = useState(false);
+  const [applyDiscounts, setApplyDiscounts] = useDiscountState();
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
@@ -1513,11 +1514,13 @@ function MedicareShopContent() {
 
   const openPlanModal = (carrierGroup: any) => {
     console.log('Opening plan modal for:', carrierGroup);
+    console.log('Current discount state:', applyDiscounts);
     
     try {
       // Store the data for plan details page
       const planDetailsData = {
-        carrierGroup: carrierGroup
+        carrierGroup: carrierGroup,
+        discountState: applyDiscounts // Include the current discount toggle state
       };
       
       // Store in localStorage for plan details page to access
