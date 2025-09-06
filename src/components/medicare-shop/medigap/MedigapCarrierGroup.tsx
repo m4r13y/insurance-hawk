@@ -275,9 +275,9 @@ export default function MedigapCarrierGroup({
               const minRate = rates.length > 0 ? Math.min(...rates) : 0;
               const maxRate = rates.length > 0 ? Math.max(...rates) : 0;
               
-              // Convert rates for display (handle cents to dollars conversion)
-              const displayMinRate = minRate >= 100 ? minRate / 100 : minRate;
-              const displayMaxRate = maxRate >= 100 ? maxRate / 100 : maxRate;
+              // Rates are already in dollars, no conversion needed
+              const displayMinRate = minRate;
+              const displayMaxRate = maxRate;
               
               const priceRange = { min: displayMinRate, max: displayMaxRate };
               const hasRange = priceRange.min !== priceRange.max && rates.length > 1;

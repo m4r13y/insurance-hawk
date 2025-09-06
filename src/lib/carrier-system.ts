@@ -207,20 +207,20 @@ export function getCarrierById(id: string): CarrierInfo | undefined {
  * Find carrier by name patterns
  */
 export function findCarrierByName(carrierName: string): CarrierInfo | undefined {
-  console.log(`🔍 findCarrierByName called with: "${carrierName}"`);
+  // console.log(`🔍 findCarrierByName called with: "${carrierName}"`);
   
   const result = CARRIERS.find(carrier => 
     carrier.namePatterns.some(pattern => {
       const matches = carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
                      pattern.toLowerCase().includes(carrierName.toLowerCase());
-      if (matches) {
-        console.log(`✅ Matched pattern "${pattern}" for carrier "${carrier.displayName}"`);
-      }
+      // if (matches) {
+      //   console.log(`✅ Matched pattern "${pattern}" for carrier "${carrier.displayName}"`);
+      // }
       return matches;
     })
   );
   
-  console.log(`🎯 findCarrierByName result for "${carrierName}":`, result ? `${result.displayName} (${result.id})` : 'NOT FOUND');
+  // console.log(`🎯 findCarrierByName result for "${carrierName}":`, result ? `${result.displayName} (${result.id})` : 'NOT FOUND');
   return result;
 }
 
@@ -364,21 +364,21 @@ export function sortByPreferredCarrierPriority(quotes: any[], category: ProductC
  */
 export function getEnhancedCarrierInfo(quote: any, category: ProductCategory) {
   const carrierName = quote.carrier?.name || quote.company_base?.name || '';
-  console.log(`🔍 getEnhancedCarrierInfo called with carrierName: "${carrierName}", category: "${category}"`);
+  // console.log(`🔍 getEnhancedCarrierInfo called with carrierName: "${carrierName}", category: "${category}"`);
   
   // Get basic carrier info by name pattern matching
   const carrierInfo = findCarrierByName(carrierName);
-  console.log(`📋 Basic carrier info:`, carrierInfo ? `${carrierInfo.displayName} (logoUrl: ${carrierInfo.logoUrl})` : 'NOT FOUND');
+  // console.log(`📋 Basic carrier info:`, carrierInfo ? `${carrierInfo.displayName} (logoUrl: ${carrierInfo.logoUrl})` : 'NOT FOUND');
   
   // Get preferred carrier info
   const preferredCarrier = findPreferredCarrier(quote, category);
-  console.log(`⭐ Preferred carrier:`, preferredCarrier ? `${preferredCarrier.carrierId} (priority: ${preferredCarrier.priority})` : 'NOT PREFERRED');
+  // console.log(`⭐ Preferred carrier:`, preferredCarrier ? `${preferredCarrier.carrierId} (priority: ${preferredCarrier.priority})` : 'NOT PREFERRED');
   
   if (preferredCarrier) {
     // Get the full carrier info for the preferred carrier
     const preferredCarrierInfo = getCarrierById(preferredCarrier.carrierId);
     if (preferredCarrierInfo) {
-      console.log(`✅ Using preferred carrier info for "${carrierName}": ${preferredCarrierInfo.displayName} (logoUrl: ${preferredCarrierInfo.logoUrl})`);
+      // console.log(`✅ Using preferred carrier info for "${carrierName}": ${preferredCarrierInfo.displayName} (logoUrl: ${preferredCarrierInfo.logoUrl})`);
       return {
         displayName: preferredCarrierInfo.displayName,
         logoUrl: preferredCarrierInfo.logoUrl || '/images/carrier-placeholder.svg',
@@ -391,7 +391,7 @@ export function getEnhancedCarrierInfo(quote: any, category: ProductCategory) {
   }
   
   // Fallback to basic carrier info
-  console.log(`⬇️ Using fallback carrier info for "${carrierName}": ${carrierInfo?.displayName || 'Unknown'} (logoUrl: ${carrierInfo?.logoUrl || '/images/carrier-placeholder.svg'})`);
+  // console.log(`⬇️ Using fallback carrier info for "${carrierName}": ${carrierInfo?.displayName || 'Unknown'} (logoUrl: ${carrierInfo?.logoUrl || '/images/carrier-placeholder.svg'})`);
   return {
     displayName: carrierInfo?.displayName || carrierInfo?.shortName || carrierName,
     logoUrl: carrierInfo?.logoUrl || '/images/carrier-placeholder.svg',

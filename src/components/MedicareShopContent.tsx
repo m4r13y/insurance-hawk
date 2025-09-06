@@ -32,6 +32,7 @@ import {
   filterPreferredCarriers,
   type ProductCategory
 } from "@/lib/carrier-system";
+import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
 import { CrossCircledIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
 
 // Import organized components
@@ -2013,9 +2014,84 @@ function MedicareShopContent() {
         return groups;
       }, {});
 
+      console.log('🏗️ Created carrier groups:', Object.keys(groupedByCarrier).length, 'carriers');
+
+      // Sort carrier groups by lowest price - simplified approach
+      console.log('🎯 Calculating min rates for sorting (applyDiscounts=' + applyDiscounts + ')...');
+      
+      // Helper function to process options for display - exact copy from test-multi-plan
+      const processOptionsForDisplay = (plan: any) => {
+        const hasWithHHD = plan.options?.some((opt: any) => opt.view_type?.includes('with_hhd'));
+        const hasSansHHD = plan.options?.some((opt: any) => opt.view_type?.includes('sans_hhd'));
+        const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
+
+        if (hasPreCalculatedDiscounts) {
+          if (applyDiscounts) {
+            return plan.options.filter((opt: any) => opt.view_type?.includes('with_hhd'));
+          } else {
+            return plan.options.filter((opt: any) => opt.view_type?.includes('sans_hhd'));
+          }
+        } else {
+          if (applyDiscounts) {
+            return plan.options?.map((opt: any) => {
+              const hasDiscounts = opt.discounts && opt.discounts.length > 0;
+              if (hasDiscounts) {
+                let discountedRate = opt.rate.month;
+                opt.discounts.forEach((discount: any) => {
+                  const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+                  discountedRate = discountedRate * (1 - discountPercent / 100);
+                });
+                return { ...opt, rate: { ...opt.rate, month: discountedRate }, isCalculatedDiscount: true };
+              }
+              return opt;
+            }) || [];
+          } else {
+            return plan.options || [];
+          }
+        }
+      };
+
+      // Calculate min rate for each carrier once
+      const carriersWithMinRates = Object.values(groupedByCarrier).map((carrierGroup: any) => {
+        console.log('🔍 Processing carrier:', carrierGroup.carrierName, '- quotes:', carrierGroup.quotes?.length || 0);
+        const plans = consolidateQuoteVariations(carrierGroup.quotes || []);
+        console.log('  📋 Consolidated plans:', plans.length);
+        let minRate = Infinity;
+        
+        plans.forEach((plan, planIndex) => {
+          console.log('    📋 Plan', planIndex, 'for', carrierGroup.carrierName, '- type:', plan.plan);
+          const displayOptions = processOptionsForDisplay(plan);
+          console.log('    📊 Found', displayOptions.length, 'valid options for', carrierGroup.carrierName);
+          
+          displayOptions.forEach((opt: any, optIndex: number) => {
+            const rate = opt.rate?.month || 0;
+            // Check if rate needs conversion from cents to dollars
+            const displayRate = rate > 1000 ? rate / 100 : rate;
+            console.log('      � Option', optIndex, '- raw rate:', rate, 'display rate:', displayRate, 'view_type:', opt.view_type, 'type:', opt.type);
+            if (displayRate > 0 && displayRate < minRate) {
+              console.log('        🎯 NEW MIN for', carrierGroup.carrierName, ':', displayRate);
+              minRate = displayRate;
+            }
+          });
+        });
+        
+        const finalMinRate = minRate === Infinity ? 0 : minRate;
+        console.log('💰', carrierGroup.carrierName, 'sorting with min rate:', finalMinRate);
+        
+        return {
+          ...carrierGroup,
+          minRate: finalMinRate
+        };
+      });
+
+      // Sort by minimum rate
+      const sortedCarrierGroups = carriersWithMinRates.sort((a, b) => a.minRate - b.minRate);
+      
+      console.log('📋 Final sorted order:', sortedCarrierGroups.map(c => `${c.carrierName} ($${c.minRate})`));
+
       return {
         type: 'grouped' as const,
-        data: Object.values(groupedByCarrier)
+        data: sortedCarrierGroups
       };
     } else if (selectedCategory === 'advantage' && advantageQuotes?.length > 0) {
       // Handle advantage quotes (could be individual or grouped depending on structure)
@@ -2058,7 +2134,7 @@ function MedicareShopContent() {
       type: 'individual' as const,
       data: []
     };
-  }, [selectedCategory, realQuotes, advantageQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans, showPreferredOnly]);
+  }, [selectedCategory, realQuotes, advantageQuotes, drugPlanQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans, showPreferredOnly, applyDiscounts]);
 
   // Memoized pagination calculations to prevent unnecessary re-computations
   const paginationData = React.useMemo(() => {

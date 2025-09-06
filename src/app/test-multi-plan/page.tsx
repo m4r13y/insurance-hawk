@@ -259,7 +259,7 @@ export default function TestMultiPlanPage() {
 
   const formatRate = (rate: any) => {
     if (typeof rate === 'number') {
-      return rate >= 100 ? `$${(rate / 100).toFixed(2)}` : `$${rate.toFixed(2)}`;
+      return `$${rate.toFixed(2)}`;
     }
     return 'N/A';
   };
@@ -332,87 +332,6 @@ export default function TestMultiPlanPage() {
   return (
     <div className="container mx-auto px-4 py-8 mt-16">
       <h1 className="text-3xl font-bold mb-8">Multi-Plan Consolidation Test</h1>
-      
-      {/* DEBUG: API Response Capture */}
-      <Card className="mb-6 bg-gray-50 border-2 border-dashed border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-lg">🔍 Debug: Raw API Response</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Copy this JSON to analyze the data structure from the real API
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div><strong>F Quotes:</strong> {planQuotes.F?.length || 0}</div>
-              <div><strong>G Quotes:</strong> {planQuotes.G?.length || 0}</div>
-              <div><strong>N Quotes:</strong> {planQuotes.N?.length || 0}</div>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Plan F Complete Data */}
-              {planQuotes.F && planQuotes.F.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-blue-600">Plan F - Complete API Response (All Quotes):</h4>
-                  <textarea
-                    className="w-full h-96 p-3 text-xs font-mono bg-white border rounded resize-y"
-                    value={JSON.stringify(planQuotes.F, null, 2)}
-                    readOnly
-                    onClick={(e) => e.currentTarget.select()}
-                    placeholder="Click to select all data for copying..."
-                  />
-                </div>
-              )}
-              
-              {/* Plan G Complete Data */}
-              {planQuotes.G && planQuotes.G.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-green-600">Plan G - Complete API Response (All Quotes):</h4>
-                  <textarea
-                    className="w-full h-96 p-3 text-xs font-mono bg-white border rounded resize-y"
-                    value={JSON.stringify(planQuotes.G, null, 2)}
-                    readOnly
-                    onClick={(e) => e.currentTarget.select()}
-                    placeholder="Click to select all data for copying..."
-                  />
-                </div>
-              )}
-              
-              {/* Plan N Complete Data */}
-              {planQuotes.N && planQuotes.N.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-purple-600">Plan N - Complete API Response (All Quotes):</h4>
-                  <textarea
-                    className="w-full h-96 p-3 text-xs font-mono bg-white border rounded resize-y"
-                    value={JSON.stringify(planQuotes.N, null, 2)}
-                    readOnly
-                    onClick={(e) => e.currentTarget.select()}
-                    placeholder="Click to select all data for copying..."
-                  />
-                </div>
-              )}
-              
-              {/* Consolidated Sample for reference */}
-              {getVisibleConsolidatedPlans().length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-orange-600">Consolidated Plan Sample (First Carrier Group):</h4>
-                  <textarea
-                    className="w-full h-48 p-3 text-xs font-mono bg-gray-50 border rounded resize-y"
-                    value={JSON.stringify(getVisibleConsolidatedPlans()[0], null, 2)}
-                    readOnly
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-              )}
-            </div>
-            
-            <p className="text-xs text-muted-foreground bg-yellow-50 p-3 rounded border">
-              💡 <strong>Data Analysis Helper:</strong> Click any textarea to select all data, then copy to analyze the complete API response structure. 
-              Each section shows the full array of quotes for that plan type. Use these to understand real API data structure differences from sample data.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
       
       {/* Plan Quote Buttons */}
       <Card className="mb-6">
@@ -639,7 +558,7 @@ export default function TestMultiPlanPage() {
                 <div className="space-y-6">
                   {visibleConsolidatedPlans.map((plan, index) => {
                     const displayOptions = processOptionsForDisplay(plan);
-                    const rates = displayOptions.map((opt: any) => opt.rate?.month || 0);
+                    const rates = displayOptions.map((opt: any) => (opt.rate?.month || 0) / 100); // Convert from cents to dollars
                     const minRate = Math.min(...rates);
                     const maxRate = Math.max(...rates);
                     const priceRange = minRate === maxRate ? 
@@ -932,7 +851,7 @@ export default function TestMultiPlanPage() {
                 <h4 className="font-semibold">Available Plans:</h4>
                 {selectedPlanData.consolidatedPlans.map((plan: any, index: number) => {
                   const displayOptions = processOptionsForDisplay(plan);
-                  const rates = displayOptions.map((opt: any) => opt.rate?.month || 0);
+                  const rates = displayOptions.map((opt: any) => (opt.rate?.month || 0) / 100); // Convert from cents to dollars
                   const minRate = Math.min(...rates);
                   const maxRate = Math.max(...rates);
                   const priceRange = minRate === maxRate ? 
@@ -1022,7 +941,7 @@ export default function TestMultiPlanPage() {
                                   )}
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-medium">{formatRate(option.rate?.month || 0)}/mo</div>
+                                  <div className="font-medium">${((option.rate?.month || 0) / 100).toFixed(2)}/mo</div>
                                   {option.rate?.annual && (
                                     <div className="text-xs text-muted-foreground">
                                       ${Math.round((option.rate.annual || 0) / 100)}/year
@@ -1030,7 +949,7 @@ export default function TestMultiPlanPage() {
                                   )}
                                   {option.savings && (
                                     <div className="text-xs text-green-600">
-                                      Save {formatRate(option.savings)}/mo
+                                      Save ${((option.savings || 0) / 100).toFixed(2)}/mo
                                     </div>
                                   )}
                                 </div>
