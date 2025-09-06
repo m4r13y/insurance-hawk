@@ -27,6 +27,23 @@ interface MedigapQuote {
   plan_type?: string
   am_best_rating?: string
   rate_type?: string
+  // Add missing fields from real API data
+  options?: Array<{
+    id?: string
+    name?: string
+    view_type?: string[]
+    monthly_premium?: number
+    originalQuote?: {
+      id?: string
+      monthly_premium?: number
+      discounts?: Array<{ type: string; value: number }>
+      [key: string]: any
+    }
+    [key: string]: any
+  }>
+  ratingOptions?: Array<any>
+  // Allow any additional fields from the API to be preserved
+  [key: string]: any
 }
 
 export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ quotes?: MedigapQuote[]; error?: string }> {
@@ -130,6 +147,7 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
           const id = (quoteData.id as string) || `${(quoteData.plan_name as string) || 'plan'}-${carrier.name}-${plan}-${idx}`
           
           const quote: MedigapQuote = {
+            // Core transformed fields
             id,
             monthly_premium,
             carrier,
@@ -143,7 +161,9 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
             rate: quoteData.rate as { month?: number },
             plan_type: quoteData.plan_type as string,
             am_best_rating: quoteData.am_best_rating as string,
-            rate_type: quoteData.rate_type as string
+            rate_type: quoteData.rate_type as string,
+            // Preserve ALL original data from API to avoid losing options, ratingOptions, etc.
+            ...quoteData
           }
           
           return quote

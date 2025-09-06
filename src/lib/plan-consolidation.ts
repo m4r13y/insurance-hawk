@@ -358,6 +358,31 @@ function createPlanOption(quote: any, allQuotes: any[]): PlanOption {
 }
 
 /**
+ * Consolidate quotes by carrier and plan type - for multi-plan scenarios
+ */
+export function consolidateQuotesByCarrierAndPlan(quotes: any[]): Record<string, ConsolidatedPlan[]> {
+  // First group by carrier
+  const carrierGroups = quotes.reduce((groups: Record<string, any[]>, quote: any) => {
+    const carrierName = quote.carrier?.name || quote.company_base?.name || 'Unknown';
+    
+    if (!groups[carrierName]) {
+      groups[carrierName] = [];
+    }
+    groups[carrierName].push(quote);
+    return groups;
+  }, {});
+  
+  // Then consolidate each carrier's quotes by plan type
+  const result: Record<string, ConsolidatedPlan[]> = {};
+  
+  Object.entries(carrierGroups).forEach(([carrierName, carrierQuotes]) => {
+    result[carrierName] = consolidateQuoteVariations(carrierQuotes);
+  });
+  
+  return result;
+}
+
+/**
  * Consolidate multiple quote variations into a single plan with options
  */
 export function consolidateQuoteVariations(quotes: any[]): ConsolidatedPlan[] {

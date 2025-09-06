@@ -41,6 +41,61 @@ export default function MedigapCarrierGroup({
   
   // Skip carrier if no plans match selected types
   if (filteredQuotes.length === 0) return null;
+
+  // Function to process options based on discount toggle - copied from test-quote-processor
+  const processOptionsForDisplay = (plan: any) => {
+    // Check if this plan has pre-calculated discounts
+    const hasWithHHD = plan.options.some((opt: any) => opt.view_type?.includes('with_hhd'));
+    const hasSansHHD = plan.options.some((opt: any) => opt.view_type?.includes('sans_hhd'));
+    const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
+
+    if (hasPreCalculatedDiscounts) {
+      // For pre-calculated discounts, just filter based on toggle
+      if (applyDiscounts) {
+        // Show with_hhd options (discounted versions)
+        return plan.options.filter((opt: any) => opt.view_type?.includes('with_hhd'));
+      } else {
+        // Show sans_hhd options (non-discounted versions)
+        return plan.options.filter((opt: any) => opt.view_type?.includes('sans_hhd'));
+      }
+    } else {
+      // For non-pre-calculated discounts, we need to calculate
+      if (applyDiscounts) {
+        // Apply discounts to base options
+        return plan.options.map((opt: any) => {
+          // Check if this option has discounts available
+          const hasDiscounts = opt.discounts && opt.discounts.length > 0;
+          
+          if (hasDiscounts) {
+            // Calculate discounted price
+            let discountedRate = opt.rate.month;
+            opt.discounts.forEach((discount: any) => {
+              const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+              discountedRate = discountedRate * (1 - discountPercent / 100);
+            });
+            
+            return {
+              ...opt,
+              rate: {
+                ...opt.rate,
+                month: discountedRate,
+                annual: discountedRate * 12,
+                quarter: discountedRate * 3,
+                semi_annual: discountedRate * 6
+              },
+              name: `${opt.name} (Calculated Discount)`,
+              isCalculatedDiscount: true
+            };
+          }
+          
+          return opt;
+        });
+      } else {
+        // Show base options without discounts
+        return plan.options;
+      }
+    }
+  };
   
   // Helper function to get base rate without discounts
   const getBaseRate = (quote: any) => {
@@ -90,6 +145,14 @@ export default function MedigapCarrierGroup({
     };
   };
   
+  // Add formatRate function to match test-quote-processor precision
+  const formatRate = (rate: any) => {
+    if (typeof rate === 'number') {
+      return rate >= 100 ? `$${(rate / 100).toFixed(2)}` : `$${rate.toFixed(2)}`;
+    }
+    return 'N/A';
+  };
+
   // Get the proper display name from NAIC data
   const displayName = getCarrierDisplayName(carrierGroup.carrierName, carrierGroup.carrierId);
   
@@ -138,24 +201,18 @@ export default function MedigapCarrierGroup({
                     const consolidated = consolidateQuoteVariations(filteredQuotes);
                     if (consolidated.length === 0) return "No plans available";
                     
-                    // Get the total number of unique rating options across all plans
-                    const totalRatingOptions = consolidated.reduce((total, plan) => {
-                      return total + plan.ratingOptions.length;
+                    // Get the total number of processed options across all plans
+                    const totalProcessedOptions = consolidated.reduce((total, plan) => {
+                      const processedOptions = processOptionsForDisplay(plan);
+                      return total + processedOptions.length;
                     }, 0);
                     
-                    // If no rating options, count the total unique rating classes manually
-                    if (totalRatingOptions === 0) {
-                      const allRatingClasses = new Set<string>();
-                      filteredQuotes.forEach((quote: any) => {
-                        if (quote.rating_class && quote.rating_class.trim()) {
-                          allRatingClasses.add(quote.rating_class);
-                        }
-                      });
-                      const totalRatingClasses = allRatingClasses.size + 1; // +1 for standard
-                      return `${totalRatingClasses} rating class${totalRatingClasses !== 1 ? 'es' : ''} available`;
+                    // If no processed options, show 0
+                    if (totalProcessedOptions === 0) {
+                      return "No options available";
                     }
                     
-                    return `${totalRatingOptions} rating class${totalRatingOptions !== 1 ? 'es' : ''} available`;
+                    return `${totalProcessedOptions} option${totalProcessedOptions !== 1 ? 's' : ''} available`;
                   })()}
                 </p>
               </div>
@@ -206,20 +263,42 @@ export default function MedigapCarrierGroup({
             return Object.entries(planGroups).map(([planType, quotes], index: number) => {
               const quotesArray = quotes as any[];
               
-              // Calculate price ranges
-              const ratingClassRange = calculateRatingClassRange(quotesArray);
-              const discountedRange = calculateDiscountedRange(quotesArray);
-              const ratingInfo = getRatingClassInfo(quotesArray);
+              // Get consolidated plan for this plan type
+              const consolidatedPlans = consolidateQuoteVariations(quotesArray);
+              const plan = consolidatedPlans[0]; // Should only be one plan per plan type
               
-              // Use appropriate range based on applyDiscounts setting
-              const priceRange = applyDiscounts ? discountedRange : ratingClassRange;
-              const hasRange = priceRange.min !== priceRange.max;
+              // Process options using our discount filtering logic
+              const displayOptions = plan ? processOptionsForDisplay(plan) : [];
               
-              // Get the best quote for this plan type (lowest base rate)
-              const bestQuote = quotesArray.find((q: any) => {
-                const baseRate = getBaseRate(q);
-                return baseRate === ratingClassRange.min;
-              }) || quotesArray[0];
+              // Calculate price range from processed options
+              const rates = displayOptions.map((opt: any) => opt.rate?.month || 0);
+              const minRate = rates.length > 0 ? Math.min(...rates) : 0;
+              const maxRate = rates.length > 0 ? Math.max(...rates) : 0;
+              
+              // Convert rates for display (handle cents to dollars conversion)
+              const displayMinRate = minRate >= 100 ? minRate / 100 : minRate;
+              const displayMaxRate = maxRate >= 100 ? maxRate / 100 : maxRate;
+              
+              const priceRange = { min: displayMinRate, max: displayMaxRate };
+              const hasRange = priceRange.min !== priceRange.max && rates.length > 1;
+              
+              const ratingInfo = {
+                count: displayOptions.length,
+                classes: displayOptions.map((opt: any) => opt.rating_class || 'Standard')
+              };
+              
+              // Get the best quote for this plan type (lowest rate from processed options)
+              const bestOption = displayOptions.find((opt: any) => {
+                const optRate = opt.rate?.month || 0;
+                const displayRate = optRate >= 100 ? optRate / 100 : optRate;
+                return Math.abs(displayRate - priceRange.min) < 0.01; // Small tolerance for floating point comparison
+              });
+              
+              // Find the corresponding quote for the best option
+              const bestQuote = bestOption ? quotesArray.find((q: any) => 
+                q.id === bestOption.id || 
+                (q.rating_class === bestOption.rating_class && q.view_type === bestOption.view_type)
+              ) || quotesArray[0] : quotesArray[0];
 
               return (
                 <div key={planType} className={`flex flex-col p-6 rounded-lg bg-card/50 transition-colors h-full min-h-[300px] ${
@@ -238,8 +317,8 @@ export default function MedigapCarrierGroup({
                         : 'text-2xl md:text-2xl lg:text-3xl'
                     }`}>
                       {hasRange ? 
-                        `$${Math.round(convertPriceByPaymentMode(priceRange.min))}-$${Math.round(convertPriceByPaymentMode(priceRange.max))}` : 
-                        `$${Math.round(convertPriceByPaymentMode(priceRange.min))}`
+                        `${formatRate(convertPriceByPaymentMode(priceRange.min))}-${formatRate(convertPriceByPaymentMode(priceRange.max))}` : 
+                        `${formatRate(convertPriceByPaymentMode(priceRange.min))}`
                       }
                     </div>
                     <div className="text-sm text-muted-foreground">{getPaymentLabel()}</div>
@@ -288,7 +367,8 @@ export default function MedigapCarrierGroup({
                       <p className="text-xs text-green-600">
                         {applyDiscounts ? 'Discounts applied: ' : 'Available discounts: '}{bestQuote.discounts.map((d: any) => {
                           const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);
-                          const value = d.type === 'percent' ? `${Math.round(d.value * 100)}%` : `$${d.value}`;
+                          const discountPercent = d.value ? (d.value * 100) : (d.percent || 0);
+                          const value = d.type === 'percent' ? `${Math.round(discountPercent)}%` : `$${d.value}`;
                           return `${name} (${value})`;
                         }).join(', ')}
                       </p>
@@ -297,7 +377,8 @@ export default function MedigapCarrierGroup({
                       <p className="text-xs text-blue-600">
                         Available discounts: {bestQuote.discounts.map((d: any) => {
                           const name = d.name.charAt(0).toUpperCase() + d.name.slice(1);
-                          const value = d.type === 'percent' ? `${Math.round(d.value * 100)}%` : `$${d.value}`;
+                          const discountPercent = d.value ? (d.value * 100) : (d.percent || 0);
+                          const value = d.type === 'percent' ? `${Math.round(discountPercent)}%` : `$${d.value}`;
                           return `${name} (${value})`;
                         }).join(', ')}
                       </p>
