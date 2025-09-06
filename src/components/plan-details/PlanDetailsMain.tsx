@@ -232,8 +232,8 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount / 100); // Assuming amounts are in cents
   };
 

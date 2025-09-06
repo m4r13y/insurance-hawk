@@ -147,6 +147,35 @@ export function filter2025Quotes(quotes: any[]): any[] {
 }
 
 /**
+ * Additional filter for recent and high-quality plans
+ */
+export function filterRecentQualityPlans(quotes: any[]): any[] {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  
+  const filtered = quotes.filter(quote => {
+    // Check if plan was updated in the last 6 months
+    const lastModified = new Date(quote.last_modified);
+    const isRecent = lastModified >= sixMonthsAgo;
+    
+    // Check A.M. Best rating (A- or better)
+    const rating = quote.company_base?.ambest_rating;
+    const hasGoodRating = rating && ['A++', 'A+', 'A', 'A-'].includes(rating);
+    
+    const shouldInclude = isRecent && hasGoodRating;
+    
+    if (shouldInclude) {
+      console.log(`📅 Including recent quality plan: ${quote.plan_name} (${rating}, ${quote.last_modified})`);
+    }
+    
+    return shouldInclude;
+  });
+  
+  console.log(`🎯 Filtered to ${filtered.length} recent high-quality plans (6 months + A- rating or better)`);
+  return filtered;
+}
+
+/**
  * Extracts essential fields from a single raw dental quote
  */
 function extractQuoteFields(rawQuote: any): OptimizedDentalQuote {
@@ -230,13 +259,21 @@ export function optimizeDentalQuotes(rawResponse: any): OptimizedDentalQuotesRes
     // Filter quotes to only include those with 2025 last_modified dates
     const current2025Quotes = filter2025Quotes(rawResponse.quotes);
     
+    // Apply additional quality filter for better user experience
+    const qualityFiltered = filterRecentQualityPlans(current2025Quotes);
+    
+    // Use quality filtered if we have enough plans, otherwise fall back to 2025 filter
+    const quotesToProcess = qualityFiltered.length >= 10 ? qualityFiltered : current2025Quotes;
+    
+    console.log(`📊 Using ${quotesToProcess.length} quotes after quality filtering (${qualityFiltered.length} quality, ${current2025Quotes.length} total 2025)`);
+    
     // Extract optimized quotes
     const optimizedQuotes: OptimizedDentalQuote[] = [];
     
-    for (let i = 0; i < current2025Quotes.length; i++) {
+    for (let i = 0; i < quotesToProcess.length; i++) {
       try {
-        const rawQuote = current2025Quotes[i];
-        console.log(`🔍 Processing quote ${i + 1}/${current2025Quotes.length}:`, rawQuote.key);
+        const rawQuote = quotesToProcess[i];
+        console.log(`🔍 Processing quote ${i + 1}/${quotesToProcess.length}:`, rawQuote.key);
         
         // Validate the quote structure to ensure we're processing it correctly
         if (!validateQuoteStructure(rawQuote)) {

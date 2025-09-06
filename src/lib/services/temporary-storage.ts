@@ -160,7 +160,8 @@ const getSubcollectionName = (key: string): string => {
     'medicare_quote_form_data': 'form_data',
     'medicare_quote_form_completed': 'form_status',
     'medicare_filter_state': 'filter_state',
-    'planDetailsData': 'plan_details'
+    'planDetailsData': 'plan_details',
+    'plan_builder_original_medicare': 'plan-builder'
   };
   
   return keyMapping[key] || 'misc_data';
@@ -991,6 +992,95 @@ const compressQuoteData = (quotes: any[]): any[] => {
     
     return compressed;
   });
+};
+
+// Plan Builder Data Interface
+export interface PlanBuilderData {
+  medigapPlan: {
+    plan: string;
+    carrier: string;
+    monthlyRate: number;
+    selected: boolean;
+  };
+  medicareAB: {
+    selected: boolean;
+    selectedAt: Timestamp;
+  };
+  selectedPlans: {
+    drugPlan?: any;
+    dentalPlan?: any;
+    cancerPlan?: any;
+  };
+  chartData: Array<{
+    name: string;
+    value: number;
+    color: string;
+    selected: boolean;
+    description: string;
+    quality: string;
+  }>;
+  totalMonthlyCost: number;
+  coverageQuality: string;
+  lastUpdated: Timestamp;
+}
+
+// Save plan builder data to the plan-builder subcollection
+export const savePlanBuilderData = async (planBuilderData: PlanBuilderData): Promise<void> => {
+  try {
+    if (!db) {
+      throw new Error('Firestore not initialized');
+    }
+    
+    const visitorId = getVisitorId();
+    const now = Timestamp.now();
+    const expiresAt = getExpirationTimestamp();
+    
+    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+    const planBuilderRef = collection(visitorDocRef, 'plan-builder');
+    const originalMedicareDocRef = doc(planBuilderRef, 'original-medicare');
+    
+    const documentData = {
+      ...planBuilderData,
+      visitorId,
+      savedAt: now,
+      expiresAt
+    };
+    
+    await retryWithBackoff(() => setDoc(originalMedicareDocRef, documentData));
+    console.log('💾 Plan Builder data saved to Firestore');
+    
+  } catch (error) {
+    console.error('❌ Error saving plan builder data:', error);
+    throw error;
+  }
+};
+
+// Load plan builder data from the plan-builder subcollection
+export const loadPlanBuilderData = async (): Promise<PlanBuilderData | null> => {
+  try {
+    if (!db) {
+      console.warn('Firestore not initialized, cannot load plan builder data');
+      return null;
+    }
+    
+    const visitorId = getVisitorId();
+    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+    const planBuilderRef = collection(visitorDocRef, 'plan-builder');
+    const originalMedicareDocRef = doc(planBuilderRef, 'original-medicare');
+    
+    const docSnap = await getDoc(originalMedicareDocRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log('📖 Plan Builder data loaded from Firestore');
+      return data as PlanBuilderData;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error loading plan builder data:', error);
+    return null;
+  }
 };
 
 // Export cache management functions for debugging and manual cache management

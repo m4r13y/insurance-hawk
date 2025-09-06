@@ -28,6 +28,7 @@ interface QuoteFormData {
   premiumMode?: 'monthly' | 'annual' | '';
   coveredMembers?: string;
   desiredFaceValue?: string;
+  benefitAmount?: string;
   state?: string;
 }
 
@@ -79,6 +80,7 @@ export default function MedicareShopLayout({
     premiumMode: '',
     coveredMembers: '',
     desiredFaceValue: '',
+    benefitAmount: '',
     state: ''
   });
 
@@ -103,7 +105,7 @@ export default function MedicareShopLayout({
   const getAdditionalFields = (category: string): string[] => {
     switch (category) {
       case 'cancer':
-        return ['familyType', 'carcinomaInSitu', 'premiumMode', 'state'];
+        return ['familyType', 'carcinomaInSitu', 'premiumMode', 'benefitAmount', 'state'];
       case 'dental':
         return ['coveredMembers'];
       case 'final-expense':
@@ -803,6 +805,30 @@ export default function MedicareShopLayout({
                         <SelectContent>
                           <SelectItem value="monthly">Monthly Bank Draft</SelectItem>
                           <SelectItem value="annual">Annual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {missingFields.includes('benefitAmount') && (
+                    <div className="space-y-2">
+                      <Label>Benefit Amount</Label>
+                      <Select 
+                        value={formInputs.benefitAmount} 
+                        onValueChange={(value) => setFormInputs(prev => ({ 
+                          ...prev, 
+                          benefitAmount: value 
+                        }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select benefit amount" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10000">$10,000</SelectItem>
+                          <SelectItem value="25000">$25,000</SelectItem>
+                          <SelectItem value="50000">$50,000</SelectItem>
+                          <SelectItem value="75000">$75,000</SelectItem>
+                          <SelectItem value="100000">$100,000</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
