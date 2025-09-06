@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { CheckIcon } from '@radix-ui/react-icons';
+import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
@@ -859,55 +859,44 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
               <div className="flex items-center justify-between">
                 <CardTitle>Build Your Medicare Plan</CardTitle>
                 <div className="flex items-center space-x-3">
-                  <label htmlFor="apply-discounts-inline" className="text-sm font-medium">
-                    Apply available discounts
-                  </label>
-                  <Switch 
-                    id="apply-discounts-inline"
-                    checked={applyDiscounts}
-                    onCheckedChange={(checked) => {
-                      console.log('Inline discount toggle changed:', checked);
-                      setApplyDiscounts(checked as boolean);
-                    }}
-                  />
+                  {/* Reset Button - Always visible when coverage builder is active */}
+                  {selectedPlanOption && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Reset all selected plans
+                        setSelectedDrugPlan(null);
+                        setSelectedDentalPlan(null);
+                        setSelectedCancerPlan(null);
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ResetIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {/* Hide discount toggle when coverage quality builder is visible */}
+                  {!selectedPlanOption && (
+                    <>
+                      <label htmlFor="apply-discounts-inline" className="text-sm font-medium">
+                        Apply available discounts
+                      </label>
+                      <Switch 
+                        id="apply-discounts-inline"
+                        checked={applyDiscounts}
+                        onCheckedChange={(checked) => {
+                          console.log('Inline discount toggle changed:', checked);
+                          setApplyDiscounts(checked as boolean);
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-0">
               {/* Plan Options Section */}
-              <div className="space-y-4">
-
-                {/* Selected Plan Display - Show only if a plan is selected */}
-                {selectedPlanOption && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-blue-900">Selected Plan</h4>
-                        <p className="text-sm text-blue-700">
-                          {selectedPlanOption.name || 
-                           (selectedPlanOption.rating_class ? `${selectedPlanOption.rating_class} Class` : '') ||
-                           `Plan ${quoteData.plan} Option`}
-                        </p>
-                        {selectedPlanOption.description && (
-                          <p className="text-xs text-blue-600 mt-1">{selectedPlanOption.description}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold text-blue-900">
-                          ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedPlanOption(null)}
-                          className="mt-2"
-                        >
-                          Change Plan
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div className="space-y-2">
 
                 {/* Plan Options List - Show only if no plan is selected */}
                 {!selectedPlanOption && (
@@ -1090,287 +1079,463 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
               {/* Coverage Builder Section - Only show if a plan option is selected */}
               {selectedPlanOption && (
                 <div data-scroll-target="coverage-builder">
-                  <h4 className="font-medium mb-4">Coverage Quality Builder</h4>
-                  
-                  {/* Split Layout: Categories on Left, Chart on Right */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Left Side: Coverage Categories */}
-                  <div className="space-y-3">
-                    {/* Medicare Part A & B */}
-                    <div className="border rounded-lg p-4 bg-red-50 border-red-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Checkbox 
-                            checked={chartData.find(item => item.name === 'Medicare A & B')?.selected || false}
-                            onCheckedChange={(checked) => {
-                              setChartData(prevData => 
-                                prevData.map(item => 
-                                  item.name === 'Medicare A & B' 
-                                    ? { ...item, selected: !!checked }
-                                    : item
-                                )
-                              );
-                            }}
-                          />
-                          <div>
-                            <h5 className="font-medium text-red-900">Medicare Part A & B</h5>
-                            <p className="text-sm text-red-700">Base Medicare coverage (required)</p>
+                  {/* Coverage Quality Header Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                    
+                    {/* Left Columns: Plan Options */}
+                    <div className="lg:col-span-6 space-y-3">
+                      {/* Medicare Part A & B */}
+                      <div className={`border rounded-lg p-4 ${
+                        chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                          ? 'bg-green-50 border-green-500' 
+                          : 'bg-red-50 border-red-500'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Checkbox 
+                              checked={chartData.find(item => item.name === 'Medicare A & B')?.selected || false}
+                              onCheckedChange={(checked) => {
+                                setChartData(prevData => 
+                                  prevData.map(item => 
+                                    item.name === 'Medicare A & B' 
+                                      ? { ...item, selected: !!checked }
+                                      : item
+                                  )
+                                );
+                              }}
+                            />
+                            <div>
+                              <h5 className={`font-medium ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? 'text-green-900' 
+                                  : 'text-red-900'
+                              }`}>Medicare Part A & B</h5>
+                              <p className={`text-sm ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? 'text-green-700' 
+                                  : 'text-red-700'
+                              }`}>Base Medicare coverage (required)</p>
+                            </div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Selected Medigap Plan */}
+                      {selectedPlanOption ? (
+                        <div className="p-4 bg-green-50 border border-green-500 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold text-green-900">Selected Plan</h4>
+                              <p className="text-sm text-green-700">
+                                {selectedPlanOption.name || 
+                                 (selectedPlanOption.rating_class ? `${selectedPlanOption.rating_class} Class` : '') ||
+                                 `Plan ${quoteData.plan} Option`}
+                              </p>
+                              {selectedPlanOption.description && (
+                                <p className="text-xs text-green-600 mt-1">{selectedPlanOption.description}</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-green-900">
+                                ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedPlanOption(null)}
+                                className="mt-2"
+                              >
+                                Change Plan
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-red-500 border rounded-lg p-4 bg-red-50 opacity-50">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className="font-medium text-red-900">Plan {quoteData.plan}</h5>
+                              <p className="text-sm text-red-700">Select a Medigap plan option</p>
+                            </div>
+                            <div className="font-medium text-red-900">
+                              Select option
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {selectedDrugPlan && (
+                        <div className="border rounded-lg p-4 border-green-500">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className="font-medium">
+                                {selectedDrugPlan.plan_name || 'Selected Drug Plan'}
+                              </h5>
+                              <p className="text-sm text-gray-600">
+                                {selectedDrugPlan.organization_name || 'Prescription Drug Coverage'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium text-green-900">
+                                ${((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100).toFixed(2)}/mo
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowDrugPlanModal(true)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Pencil1Icon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <InfoCircledIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Medicare Part D - if not selected */}
+                      {!selectedDrugPlan && (
+                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                          chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                            ? 'hover:bg-muted/50' 
+                            : 'opacity-50 cursor-not-allowed bg-gray-50'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className={`font-medium ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? '' 
+                                  : 'text-gray-500'
+                              }`}>Prescription Drug Plan</h5>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {drugPlanQuotes.length > 0 && (
+                                <button
+                                  onClick={() => setShowDrugPlanModal(true)}
+                                  className={`text-sm font-medium hover:underline cursor-pointer ${
+                                    chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                      ? 'text-blue-600 hover:text-blue-800' 
+                                      : 'text-gray-500'
+                                  }`}
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                >
+                                  {drugPlanQuotes.length} quotes
+                                </button>
+                              )}
+                              {loadingCoverageTypes.includes('partd') ? (
+                                <Button variant="ghost" size="sm" disabled>...</Button>
+                              ) : drugPlanQuotes.length === 0 ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="default"
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                  onClick={() => generateQuotesForCoverage('partd')}
+                                  className="text-lg font-bold w-10 h-10"
+                                >
+                                  +
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedDentalPlan && (
+                        <div className="border rounded-lg p-4 border-green-500">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className="font-medium">
+                                {selectedDentalPlan.planName}
+                              </h5>
+                              <p className="text-sm text-gray-600">
+                                {selectedDentalPlan.companyName} - Dental, Vision & Hearing
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium text-amber-900">
+                                ${selectedDentalPlan.monthlyPremium.toFixed(2)}/mo
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowDentalModal(true)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Pencil1Icon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <InfoCircledIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dental, Vision & Hearing Coverage - if not selected */}
+                      {!selectedDentalPlan && (
+                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                          chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                            ? 'hover:bg-muted/50' 
+                            : 'opacity-50 cursor-not-allowed bg-gray-50'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className={`font-medium ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? '' 
+                                  : 'text-gray-500'
+                              }`}>Dental, Vision & Hearing</h5>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {dentalQuotes.length > 0 && (
+                                <button
+                                  onClick={() => setShowDentalModal(true)}
+                                  className={`text-sm font-medium hover:underline cursor-pointer ${
+                                    chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                      ? 'text-blue-600 hover:text-blue-800' 
+                                      : 'text-gray-500'
+                                  }`}
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                >
+                                  {dentalQuotes.length} quotes
+                                </button>
+                              )}
+                              {loadingCoverageTypes.includes('dental-vision-hearing') ? (
+                                <Button variant="ghost" size="sm" disabled>...</Button>
+                              ) : dentalQuotes.length === 0 ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="default"
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                  onClick={() => generateQuotesForCoverage('dental-vision-hearing')}
+                                  className="text-lg font-bold w-10 h-10"
+                                >
+                                  +
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedCancerPlan && (
+                        <div className="border rounded-lg p-4 border-green-500">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className="font-medium">
+                                {selectedCancerPlan.plan_name || 'Selected Cancer Plan'}
+                              </h5>
+                              <p className="text-sm text-gray-600">
+                                {selectedCancerPlan.carrier || 'Cancer Insurance Coverage'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium">
+                                ${(selectedCancerPlan.monthly_premium || 0).toFixed(2)}/mo
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowCancerModal(true)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Pencil1Icon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <InfoCircledIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Cancer Insurance - if not selected */}
+                      {!selectedCancerPlan && (
+                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                          chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                            ? 'hover:bg-muted/50' 
+                            : 'opacity-50 cursor-not-allowed bg-gray-50'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className={`font-medium ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? '' 
+                                  : 'text-gray-500'
+                              }`}>Cancer Insurance</h5>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {cancerInsuranceQuotes.length > 0 && (
+                                <button
+                                  onClick={() => setShowCancerModal(true)}
+                                  className={`text-sm font-medium hover:underline cursor-pointer ${
+                                    chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                      ? 'text-blue-600 hover:text-blue-800' 
+                                      : 'text-gray-500'
+                                  }`}
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                >
+                                  {cancerInsuranceQuotes.length} quotes
+                                </button>
+                              )}
+                              {loadingCoverageTypes.includes('cancer') ? (
+                                <Button variant="ghost" size="sm" disabled>...</Button>
+                              ) : cancerInsuranceQuotes.length === 0 ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="default"
+                                  disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
+                                  onClick={() => generateQuotesForCoverage('cancer')}
+                                  className="text-lg font-bold w-10 h-10"
+                                >
+                                  +
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Current Medigap Plan */}
-                    <div className={`border rounded-lg p-4 ${
-                      chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                        ? 'bg-blue-50 border-blue-200' 
-                        : 'bg-gray-50 border-gray-200 opacity-50'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className={`font-medium ${
-                            chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                              ? 'text-blue-900' 
-                              : 'text-gray-500'
-                          }`}>Plan {quoteData.plan}</h5>
-                          <p className={`text-sm ${
-                            chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                              ? 'text-blue-700' 
-                              : 'text-gray-400'
-                          }`}>Your selected Medigap plan</p>
-                        </div>
-                        <div className={`font-medium ${
-                          chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                            ? 'text-blue-900' 
-                            : 'text-gray-500'
-                        }`}>
+                    {/* Right Columns: Score and Chart */}
+                    <div className="lg:col-span-6">
+                      {/* Coverage Quality Score - Above Chart */}
+                      <div className="text-center">
+                        <h5 className="font-semibold text-lg mb-2">Coverage Quality</h5>
+                        <div className="text-3xl font-bold">
                           {(() => {
-                            const rate = getCurrentSelectionRate();
-                            return rate !== null ? `${formatCurrency(rate)}/mo` : 'Select option';
+                            const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
+                            const totalScore = chartData.filter(item => {
+                              if (item.name === 'Medicare A & B') {
+                                return item.selected;
+                              } else {
+                                return medicareABSelected && item.selected;
+                              }
+                            }).reduce((sum, item) => sum + item.value, 0);
+                            
+                            if (totalScore >= 85) return <span className="text-green-600">Excellent</span>;
+                            if (totalScore >= 70) return <span className="text-blue-600">Very Good</span>;
+                            if (totalScore >= 55) return <span className="text-yellow-600">Good</span>;
+                            if (totalScore >= 40) return <span className="text-orange-600">Fair</span>;
+                            return <span className="text-red-600">Basic</span>;
                           })()}
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {(() => {
+                            const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
+                            return chartData.filter(item => {
+                              if (item.name === 'Medicare A & B') {
+                                return item.selected;
+                              } else {
+                                return medicareABSelected && item.selected;
+                              }
+                            }).reduce((sum, item) => sum + item.value, 0);
+                          })()}% Complete
+                        </p>
                       </div>
+                      
+                      {/* Pie Chart */}
+                      <div className="flex justify-center">
+                        <div className="w-full max-w-sm">
+                          <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                              <Pie
+                                data={chartData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={40}
+                                outerRadius={100}
+                                paddingAngle={2}
+                                dataKey="value"
+                                stroke="none"
+                              >
+                                {chartData.map((entry, index) => {
+                                  const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
+                                  let fillColor = '#e5e7eb';
+                                  
+                                  if (entry.name === 'Medicare A & B') {
+                                    fillColor = entry.selected ? entry.color : '#e5e7eb';
+                                  } else {
+                                    fillColor = (medicareABSelected && entry.selected) ? entry.color : '#e5e7eb';
+                                  }
+                                  
+                                  return <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={fillColor}
+                                    stroke="none"
+                                  />;
+                                })}
+                              </Pie>
+                              <Tooltip 
+                                formatter={(value, name) => [`${value}%`, name]}
+                                contentStyle={{ 
+                                  backgroundColor: 'white', 
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '8px'
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      
+                      {/* Legend Below Chart */}
+                      <div className="bg-gray-50 rounded-lg px-4">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-4">
+                          {chartData.map((item, index) => {
+                            const medicareABSelected = chartData.find(chartItem => chartItem.name === 'Medicare A & B')?.selected;
+                            const isEnabled = item.name === 'Medicare A & B' || medicareABSelected;
+                            const isActive = item.selected && isEnabled;
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full flex-shrink-0"
+                                    style={{ 
+                                      backgroundColor: isActive ? item.color : '#e5e7eb'
+                                    }}
+                                  />
+                                  <span className={
+                                    isActive ? 'font-medium' : 
+                                    isEnabled ? 'text-muted-foreground' : 'text-gray-400'
+                                  }>
+                                    {item.name}
+                                  </span>
+                                </div>
+                                <span className={`text-xs ${
+                                  isActive ? 'font-medium' : 
+                                  isEnabled ? 'text-muted-foreground' : 'text-gray-400'
+                                }`}>
+                                  {item.value}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      
                     </div>
 
-                    {/* Selected Additional Coverage Plans */}
-                    {selectedDrugPlan && (
-                      <div className="border rounded-lg p-4 border-green-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className="font-medium">
-                              {selectedDrugPlan.plan_name || 'Selected Drug Plan'}
-                            </h5>
-                            <p className="text-sm text-gray-600">
-                              {selectedDrugPlan.organization_name || 'Prescription Drug Coverage'}
-                            </p>
-                          </div>
-                          <div className="font-medium text-green-900">
-                            ${((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100).toFixed(2)}/mo
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedDentalPlan && (
-                      <div className="border rounded-lg p-4 border-amber-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className="font-medium">
-                              {selectedDentalPlan.planName}
-                            </h5>
-                            <p className="text-sm text-gray-600">
-                              {selectedDentalPlan.companyName} - Dental, Vision & Hearing
-                            </p>
-                          </div>
-                          <div className="font-medium text-amber-900">
-                            ${selectedDentalPlan.monthlyPremium.toFixed(2)}/mo
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedCancerPlan && (
-                      <div className="border rounded-lg p-4 border-purple-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className="font-medium">
-                              {selectedCancerPlan.plan_name || 'Selected Cancer Plan'}
-                            </h5>
-                            <p className="text-sm text-gray-600">
-                              {selectedCancerPlan.carrier || 'Cancer Insurance Coverage'}
-                            </p>
-                          </div>
-                          <div className="font-medium">
-                            ${(selectedCancerPlan.monthly_premium || 0).toFixed(2)}/mo
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Medicare Part D */}
-                    {!selectedDrugPlan && (
-                      <div className={`border rounded-lg p-4 transition-colors ${
-                        chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                          ? 'hover:bg-muted/50' 
-                          : 'opacity-50 cursor-not-allowed bg-gray-50'
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className={`font-medium ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? '' 
-                                : 'text-gray-500'
-                            }`}>Prescription Drug Plan</h5>
-                            <p className={`text-sm ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? 'text-muted-foreground' 
-                                : 'text-gray-400'
-                            }`}>Prescription drug coverage</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {drugPlanQuotes.length > 0 && (
-                              <button
-                                onClick={() => setShowDrugPlanModal(true)}
-                                className={`text-sm font-medium hover:underline cursor-pointer ${
-                                  chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                    ? 'text-blue-600 hover:text-blue-800' 
-                                    : 'text-gray-500'
-                                }`}
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                              >
-                                {drugPlanQuotes.length} quotes
-                              </button>
-                            )}
-                            {loadingCoverageTypes.includes('partd') ? (
-                              <Button variant="ghost" size="sm" disabled>...</Button>
-                            ) : drugPlanQuotes.length === 0 ? (
-                              <Button 
-                                variant="ghost" 
-                                size="default"
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                                onClick={() => generateQuotesForCoverage('partd')}
-                                className="text-lg font-bold w-10 h-10"
-                              >
-                                +
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Dental, Vision & Hearing Coverage */}
-                    {!selectedDentalPlan && (
-                      <div className={`border rounded-lg p-4 transition-colors ${
-                        chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                          ? 'hover:bg-muted/50' 
-                          : 'opacity-50 cursor-not-allowed bg-gray-50'
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className={`font-medium ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? '' 
-                                : 'text-gray-500'
-                            }`}>Dental, Vision & Hearing</h5>
-                            <p className={`text-sm ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? 'text-muted-foreground' 
-                                : 'text-gray-400'
-                            }`}>Comprehensive oral, eye, and hearing care</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {dentalQuotes.length > 0 && (
-                              <button
-                                onClick={() => setShowDentalModal(true)}
-                                className={`text-sm font-medium hover:underline cursor-pointer ${
-                                  chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                    ? 'text-blue-600 hover:text-blue-800' 
-                                    : 'text-gray-500'
-                                }`}
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                              >
-                                {dentalQuotes.length} quotes
-                              </button>
-                            )}
-                            {loadingCoverageTypes.includes('dental-vision-hearing') ? (
-                              <Button variant="ghost" size="sm" disabled>...</Button>
-                            ) : dentalQuotes.length === 0 ? (
-                              <Button 
-                                variant="ghost" 
-                                size="default"
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                                onClick={() => generateQuotesForCoverage('dental-vision-hearing')}
-                                className="text-lg font-bold w-10 h-10"
-                              >
-                                +
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Cancer Insurance */}
-                    {!selectedCancerPlan && (
-                      <div className={`border rounded-lg p-4 transition-colors ${
-                        chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                          ? 'hover:bg-muted/50' 
-                          : 'opacity-50 cursor-not-allowed bg-gray-50'
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className={`font-medium ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? '' 
-                                : 'text-gray-500'
-                            }`}>Cancer Insurance</h5>
-                            <p className={`text-sm ${
-                              chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                ? 'text-muted-foreground' 
-                                : 'text-gray-400'
-                            }`}>Additional cancer treatment coverage</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {cancerInsuranceQuotes.length > 0 && (
-                              <button
-                                onClick={() => setShowCancerModal(true)}
-                                className={`text-sm font-medium hover:underline cursor-pointer ${
-                                  chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                    ? 'text-blue-600 hover:text-blue-800' 
-                                    : 'text-gray-500'
-                                }`}
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                              >
-                                {cancerInsuranceQuotes.length} quotes
-                              </button>
-                            )}
-                            {loadingCoverageTypes.includes('cancer') ? (
-                              <Button variant="ghost" size="sm" disabled>...</Button>
-                            ) : cancerInsuranceQuotes.length === 0 ? (
-                              <Button 
-                                variant="ghost" 
-                                size="default"
-                                disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
-                                onClick={() => generateQuotesForCoverage('cancer')}
-                                className="text-lg font-bold w-10 h-10"
-                              >
-                                +
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right Side: Coverage Quality Pie Chart */}
-                  <div className="flex flex-col items-center justify-center">
-                    {/* Coverage Quality Header */}
-                    <div className="text-center mb-4">
-                      <h5 className="font-semibold text-lg mb-2">Coverage Quality</h5>
-                      <div className="text-2xl font-bold">
+                    {/* Bottom Section: Additional Plan Options */}
+                    <div className="lg:col-span-12 space-y-3">
+                      {/* Selected Additional Coverage Plans */}
+                     {/* Dynamic Explanation Text - Below Legend */}
+                      <div className="text-sm text-gray-600 space-y-2">
                         {(() => {
                           const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
                           const totalScore = chartData.filter(item => {
@@ -1381,140 +1546,77 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             }
                           }).reduce((sum, item) => sum + item.value, 0);
                           
-                          if (totalScore >= 85) return <span className="text-green-600">Excellent</span>;
-                          if (totalScore >= 70) return <span className="text-blue-600">Very Good</span>;
-                          if (totalScore >= 55) return <span className="text-yellow-600">Good</span>;
-                          if (totalScore >= 40) return <span className="text-orange-600">Fair</span>;
-                          return <span className="text-red-600">Basic</span>;
+                          if (totalScore >= 85) {
+                            return (
+                              <>
+                                <p><strong>Excellent Coverage!</strong></p>
+                                <p>You have comprehensive Medicare protection with all major coverage types. This provides:</p>
+                                <ul className="list-disc pl-4 space-y-1 text-xs">
+                                  <li>Complete hospital and medical coverage</li>
+                                  <li>No gaps in Medicare benefits</li>
+                                  <li>Prescription drug protection</li>
+                                  <li>Dental, vision, and hearing benefits</li>
+                                  <li>Specialized cancer insurance</li>
+                                </ul>
+                              </>
+                            );
+                          } else if (totalScore >= 70) {
+                            return (
+                              <>
+                                <p><strong>Very Good Coverage</strong></p>
+                                <p>You have strong Medicare protection. Consider adding the remaining coverage types for complete protection:</p>
+                                <ul className="list-disc pl-4 space-y-1 text-xs">
+                                  <li>Core Medicare and Medigap coverage in place</li>
+                                  <li>Good foundation for healthcare needs</li>
+                                  <li>Minor gaps that could be filled for optimal coverage</li>
+                                </ul>
+                              </>
+                            );
+                          } else if (totalScore >= 55) {
+                            return (
+                              <>
+                                <p><strong>Good Foundation</strong></p>
+                                <p>You have essential Medicare coverage but important gaps remain:</p>
+                                <ul className="list-disc pl-4 space-y-1 text-xs">
+                                  <li>Basic Medicare and supplement coverage</li>
+                                  <li>Missing prescription drug coverage puts you at risk</li>
+                                  <li>No dental, vision, or hearing benefits</li>
+                                  <li>Consider adding Part D and DVH coverage</li>
+                                </ul>
+                              </>
+                            );
+                          } else if (totalScore >= 40) {
+                            return (
+                              <>
+                                <p><strong>Fair Coverage - Significant Gaps</strong></p>
+                                <p>Your Medicare coverage has major gaps that could result in high out-of-pocket costs:</p>
+                                <ul className="list-disc pl-4 space-y-1 text-xs">
+                                  <li>Limited protection beyond basic Medicare</li>
+                                  <li>High exposure to copays and deductibles</li>
+                                  <li>No prescription drug coverage</li>
+                                  <li>Missing preventive dental and vision care</li>
+                                </ul>
+                              </>
+                            );
+                          } else {
+                            return (
+                              <>
+                                <p><strong>Basic Coverage - Major Risks</strong></p>
+                                <p>You have minimal Medicare protection with substantial financial exposure:</p>
+                                <ul className="list-disc pl-4 space-y-1 text-xs">
+                                  <li>Only basic Medicare A & B coverage</li>
+                                  <li>No protection from Medicare gaps</li>
+                                  <li>High risk of unexpected medical costs</li>
+                                  <li>Strongly recommend adding Medigap and Part D</li>
+                                </ul>
+                              </>
+                            );
+                          }
                         })()}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {(() => {
-                          const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
-                          return chartData.filter(item => {
-                            if (item.name === 'Medicare A & B') {
-                              return item.selected;
-                            } else {
-                              return medicareABSelected && item.selected;
-                            }
-                          }).reduce((sum, item) => sum + item.value, 0);
-                        })()}% Complete
-                      </p>
-                    </div>
-
-                    {/* Pie Chart */}
-                    <div className="w-full max-w-sm pointer-events-none">
-                      <ResponsiveContainer width="100%" height={280}>
-                        <PieChart>
-                          <Pie
-                            data={chartData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={110}
-                            paddingAngle={2}
-                            dataKey="value"
-                            stroke="none"
-                          >
-                            {chartData.map((entry, index) => {
-                              const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
-                              let fillColor = '#e5e7eb'; // Default gray
-                              
-                              if (entry.name === 'Medicare A & B') {
-                                // Medicare A & B always uses its own color when selected
-                                fillColor = entry.selected ? entry.color : '#e5e7eb';
-                              } else {
-                                // Other items only show color if Medicare A & B is selected AND they are selected
-                                fillColor = (medicareABSelected && entry.selected) ? entry.color : '#e5e7eb';
-                              }
-                              
-                              return <Cell 
-                                key={`cell-${index}`} 
-                                fill={fillColor}
-                                stroke="none"
-                                style={{ outline: 'none' }}
-                              />;
-                            })}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value, name) => [`${value}%`, name]}
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '8px'
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    
-                    {/* Chart Legend */}
-                    <div className="mt-4 space-y-2 w-full max-w-sm">
-                      {chartData.map((item, index) => {
-                        const medicareABSelected = chartData.find(chartItem => chartItem.name === 'Medicare A & B')?.selected;
-                        const isEnabled = item.name === 'Medicare A & B' || medicareABSelected;
-                        const isActive = item.selected && isEnabled;
-                        
-                        return (
-                          <div key={index} className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-full"
-                                style={{ 
-                                  backgroundColor: isActive ? item.color : '#e5e7eb'
-                                }}
-                              />
-                              <span className={
-                                isActive ? 'font-medium' : 
-                                isEnabled ? 'text-muted-foreground' : 'text-gray-400'
-                              }>
-                                {item.name}
-                              </span>
-                            </div>
-                            <span className={
-                              isActive ? 'font-medium' : 
-                              isEnabled ? 'text-muted-foreground' : 'text-gray-400'
-                            }>
-                              {item.value}%
-                            </span>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                 </div>
-                
-                {/* Edit and Reset buttons */}
-                <div className="flex gap-2 mt-6">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => {
-                      // Scroll to the top of the Coverage Quality Builder section
-                      document.querySelector('[data-scroll-target="coverage-builder"]')?.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    }}
-                  >
-                    Edit Plans
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => {
-                      // Reset all selected plans
-                      setSelectedDrugPlan(null);
-                      setSelectedDentalPlan(null);
-                      setSelectedCancerPlan(null);
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </div>
               )}
             </CardContent>
           </Card>
