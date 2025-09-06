@@ -89,29 +89,41 @@
   
   /* COMPREHENSIVE SOLUTION: Prevent scrollbar layout shifts */
   html {
-    /* Modern browsers: Use scrollbar-gutter for stable layout */
-    scrollbar-gutter: stable;
+    /* Don't use scrollbar-gutter as it reserves space even when scrollbar is hidden */
+    scrollbar-width: thin; /* Firefox - thin scrollbar */
+    scrollbar-color: hsl(var(--border)) transparent; /* Firefox - thumb and track colors */
   }
   
   body {
     @apply bg-background text-foreground;
-    /* Fallback for older browsers: Always show vertical scrollbar */
-    overflow-y: scroll;
+    /* Always show custom scrollbar - no hiding to prevent shifts */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: hsl(var(--border)) transparent; /* Firefox */
+    overflow-y: auto !important; /* Always allow scrolling */
   }
   
-  /* Modern browsers: Use scrollbar-gutter for cleaner approach */
-  @supports (scrollbar-gutter: stable) {
-    body {
-      overflow-y: auto;
-    }
+  /* Custom webkit scrollbar for html and body */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 8px;
+    display: block; /* Always show */
+    z-index: 9999; /* High z-index to prevent interference */
   }
   
-  /* Additional fix for webkit browsers */
-  @media screen and (-webkit-min-device-pixel-ratio: 0) {
-    html {
-      overflow-y: auto;
-      scrollbar-gutter: stable;
-    }
+  html::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  html::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+  
+  html::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border) / 0.8);
   }
 }
 }
@@ -216,5 +228,79 @@
   
   .dropdown-trigger-bg {
     @apply bg-white dark:bg-gray-800 border border-input;
+  }
+  
+  /* Ensure ScrollArea components can show their custom scrollbars */
+  [data-radix-scroll-area-viewport] {
+    scrollbar-width: thin !important;
+    -ms-overflow-style: auto !important;
+  }
+  
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+    display: block !important;
+    width: 10px;
+  }
+  
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+  }
+  
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border) / 0.8);
+  }
+}
+
+/* Fix for Radix UI dropdown/select interference with scrollbar */
+@layer base {
+  /* DISABLE Radix UI scroll locking completely - be very aggressive */
+  body[data-scroll-locked],
+  body[data-scroll-locked="true"],
+  body[data-scroll-locked="false"] {
+    overflow: auto !important;
+    overflow-y: auto !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: hsl(var(--border)) transparent !important;
+    /* Prevent any layout changes */
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* Keep webkit scrollbar exactly the same when locked */
+  body[data-scroll-locked]::-webkit-scrollbar,
+  body[data-scroll-locked="true"]::-webkit-scrollbar,
+  body[data-scroll-locked="false"]::-webkit-scrollbar {
+    width: 8px !important;
+    display: block !important;
+    z-index: 9999 !important; /* High z-index to prevent hiding */
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  body[data-scroll-locked]::-webkit-scrollbar-track,
+  body[data-scroll-locked="true"]::-webkit-scrollbar-track,
+  body[data-scroll-locked="false"]::-webkit-scrollbar-track {
+    background: transparent !important;
+    display: block !important;
+  }
+  
+  body[data-scroll-locked]::-webkit-scrollbar-thumb,
+  body[data-scroll-locked="true"]::-webkit-scrollbar-thumb,
+  body[data-scroll-locked="false"]::-webkit-scrollbar-thumb {
+    background: hsl(var(--border)) !important;
+    border-radius: 4px !important;
+    display: block !important;
+    opacity: 1 !important;
+  }
+  
+  /* Override any potential Radix UI styles that might interfere */
+  body[data-scroll-locked] * {
+    scrollbar-width: inherit !important;
   }
 }
