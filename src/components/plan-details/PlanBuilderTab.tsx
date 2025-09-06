@@ -20,6 +20,7 @@ import { processOptionsForDisplay } from "@/lib/medigap-utils";
 import { QuoteData } from './types';
 import { loadFromStorage, saveToStorage, QUOTE_FORM_DATA_KEY, DRUG_PLAN_QUOTES_KEY, DENTAL_QUOTES_KEY, CANCER_INSURANCE_QUOTES_KEY } from "@/components/medicare-shop/shared/storage";
 import { type QuoteFormData } from "@/components/medicare-shop/shared/types";
+import { MissingFieldsModal } from "@/components/shared/MissingFieldsModal";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
@@ -63,6 +64,50 @@ const getRatingColor = (rating: string) => {
   }
 };
 
+// Helper functions for validating required fields (same logic as MissingFieldsModal)
+const getRequiredFieldsForCategory = (categoryId: string): string[] => {
+  switch (categoryId) {
+    case 'dental':
+    case 'hospital-indemnity':
+    case 'final-expense':
+      return ['zipCode'];
+    case 'cancer':
+      return ['age', 'gender', 'tobaccoUse'];
+    case 'medigap':
+    default:
+      return ['age', 'zipCode', 'gender', 'tobaccoUse'];
+  }
+};
+
+const getAdditionalFieldsForCategory = (category: string): string[] => {
+  switch (category) {
+    case 'cancer':
+      return ['familyType', 'carcinomaInSitu', 'premiumMode', 'benefitAmount', 'state'];
+    case 'dental':
+      return ['coveredMembers'];
+    case 'final-expense':
+      return ['desiredFaceValue'];
+    default:
+      return [];
+  }
+};
+
+const validateCategoryData = (category: string, data: any): { isValid: boolean; missing: string[] } => {
+  const requiredFields = getRequiredFieldsForCategory(category);
+  const additionalFields = getAdditionalFieldsForCategory(category);
+  const allRequired = [...requiredFields, ...additionalFields];
+  
+  const missing = allRequired.filter(field => {
+    const value = data[field];
+    return value === '' || value === null || value === undefined;
+  });
+
+  return {
+    isValid: missing.length === 0,
+    missing
+  };
+};
+
 export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   quoteData,
   carrierQuotes,
@@ -83,6 +128,24 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [showDentalModal, setShowDentalModal] = useState(false);
   const [showCancerModal, setShowCancerModal] = useState(false);
   
+  // Shared missing fields modal state
+  const [showMissingFieldsModal, setShowMissingFieldsModal] = useState(false);
+  
+  // Debug: Watch for unexpected modal state changes
+  useEffect(() => {
+    console.log('PlanBuilderTab showMissingFieldsModal changed to:', showMissingFieldsModal);
+  }, [showMissingFieldsModal]);
+  const [selectedCoverageCategory, setSelectedCoverageCategory] = useState<string>('');
+  const [coverageDisplayName, setCoverageDisplayName] = useState<string>('');
+  const [initialFormDataForModal, setInitialFormDataForModal] = useState<Partial<QuoteFormData>>({});
+  const [formDataLoaded, setFormDataLoaded] = useState(false);
+  
+  // Keep legacy modal for complex fields (medications, dental history, etc.)
+  const [showAdditionalInfoModal, setShowAdditionalInfoModal] = useState(false);
+  const [currentCoverageType, setCurrentCoverageType] = useState<string>('');
+  const [additionalFormData, setAdditionalFormData] = useState<Record<string, any>>({});
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  
   // New state for additional coverage quote generation
   const [loadingCoverageTypes, setLoadingCoverageTypes] = useState<string[]>([]);
   const [completedCoverageTypes, setCompletedCoverageTypes] = useState<string[]>([]);
@@ -92,8 +155,28 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
   const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
 
-  // Note: Selection changes are tracked at the parent component level
-  // PlanBuilderTab only displays options, actual selection happens in modals/other components
+  // Effect to open modal after form data is loaded
+  useEffect(() => {
+    if (formDataLoaded && selectedCoverageCategory) {
+      console.log('Checking if fields are missing for category:', selectedCoverageCategory);
+      console.log('Form data loaded:', initialFormDataForModal);
+      
+      // Check if any fields are actually missing
+      const validation = validateCategoryData(selectedCoverageCategory, initialFormDataForModal);
+      console.log('Validation result:', validation);
+      
+      if (!validation.isValid && validation.missing.length > 0) {
+        console.log('Missing fields found, showing modal:', validation.missing);
+        setShowMissingFieldsModal(true);
+      } else {
+        console.log('All required fields present, proceeding with quote generation');
+        // All fields are present, proceed directly with quote generation
+        handleDirectQuoteGeneration();
+      }
+      
+      setFormDataLoaded(false); // Reset for next time
+    }
+  }, [formDataLoaded, selectedCoverageCategory]); // Removed initialFormDataForModal to prevent re-triggering
 
   // Calculate the current selection rate with applied discounts
   const getCurrentSelectionRate = () => {
@@ -117,75 +200,112 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [selectedDentalPlan, setSelectedDentalPlan] = useState<OptimizedDentalQuote | null>(null);
   const [selectedCancerPlan, setSelectedCancerPlan] = useState<any>(null);
   
-  // Additional information collection modal state
-  const [showAdditionalInfoModal, setShowAdditionalInfoModal] = useState(false);
-  const [currentCoverageType, setCurrentCoverageType] = useState<string>('');
-  const [additionalFormData, setAdditionalFormData] = useState<Record<string, any>>({});
-  const [missingFields, setMissingFields] = useState<string[]>([]);
-  
   // Flag to track if data has been loaded from Firestore
   const [dataLoaded, setDataLoaded] = useState(false);
   
   // Helper function to determine what additional information is needed for specific coverage types
+  // Note: This function only checks for coverage-specific fields that require custom handling.
+  // Basic fields (age, zipCode, gender, etc.) are handled by the shared MissingFieldsModal.
   const getRequiredAdditionalInfo = (coverageType: string, formData: any): string[] => {
     const missing: string[] = [];
+    
+    // Helper function to check if a field is missing or empty
+    const isFieldMissing = (value: any): boolean => {
+      return value === '' || value === null || value === undefined;
+    };
     
     switch (coverageType) {
       case 'partd':
       case 'Medicare Part D':
-        // Part D might need current medications information
+        // Part D might need current medications information (complex fields not in shared modal)
         if (!formData.medications || formData.medications.length === 0) {
           missing.push('Current Medications');
         }
-        if (!formData.pharmacy) {
+        if (isFieldMissing(formData.pharmacy)) {
           missing.push('Preferred Pharmacy');
         }
         break;
         
       case 'dental-vision-hearing':
       case 'Dental/Vision/Hearing':
-        // Dental might need dental history or specific needs
-        if (!formData.lastDentalVisit) {
+        // Dental might need dental history or specific needs (complex fields not in shared modal)
+        if (isFieldMissing(formData.lastDentalVisit)) {
           missing.push('Last Dental Visit');
         }
-        if (!formData.needsGlasses) {
+        if (isFieldMissing(formData.needsGlasses)) {
           missing.push('Vision Needs');
         }
-        if (!formData.hearingAids) {
+        if (isFieldMissing(formData.hearingAids)) {
           missing.push('Hearing Aids Needed');
         }
         break;
         
-      case 'cancer':
-      case 'Cancer Insurance':
-        // Cancer insurance needs specific fields for the API
-        if (!formData.state || (formData.state !== 'TX' && formData.state !== 'GA')) {
-          missing.push('State');
-        }
-        if (!formData.familyType) {
-          missing.push('Family Type');
-        }
-        if (formData.carcinomaInSitu === null || formData.carcinomaInSitu === undefined) {
-          missing.push('Carcinoma In Situ Benefit');
-        }
-        if (!formData.premiumMode) {
-          missing.push('Premium Payment Mode');
-        }
-        if (!formData.benefitAmount) {
-          missing.push('Benefit Amount');
-        }
-        break;
+      // Note: For coverage types that use the shared modal (cancer, final-expense, hospital-indemnity, etc.),
+      // we don't check basic fields here since they're handled by the shared modal's internal validation.
+      // Only add cases here for coverage types that need complex custom fields.
     }
     
     return missing;
   };
   
-  // Helper function to show additional information collection modal
-  const showAdditionalInfoCollection = (coverageType: string, missingInfo: string[]) => {
+  // Helper function to show additional information collection modal (legacy modal for complex fields)
+  const showAdditionalInfoCollection = async (coverageType: string, missingInfo: string[]) => {
+    // This function now only handles coverage types that need custom/complex fields
+    // that can't be handled by the shared modal
+    console.log('Using legacy modal for coverage type with custom fields:', coverageType);
+    
     setCurrentCoverageType(coverageType);
     setMissingFields(missingInfo);
     setAdditionalFormData({});
     setShowAdditionalInfoModal(true);
+  };
+  
+  // Handler for shared modal submission
+  const handleSharedModalSubmit = async (formData: QuoteFormData) => {
+    try {
+      // Close the modal first
+      setShowMissingFieldsModal(false);
+      
+      // Save the updated form data
+      await saveToStorage(QUOTE_FORM_DATA_KEY, formData);
+      
+      // Map category ID to coverage type name for internal processing
+      const coverageTypeMapping: Record<string, string> = {
+        'cancer': 'Cancer Insurance',
+        'dental': 'Dental/Vision/Hearing',
+        'drug-plan': 'Medicare Part D',
+        'final-expense': 'Final Expense',
+        'advantage': 'Medicare Advantage',
+        'hospital-indemnity': 'Hospital Indemnity'
+      };
+      
+      const coverageTypeName = coverageTypeMapping[selectedCoverageCategory] || selectedCoverageCategory;
+      
+      // Continue with quote generation using the mapped coverage type
+      await generateQuotesForCoverageInternal(coverageTypeName, formData);
+    } catch (error) {
+      console.error('Error in handleSharedModalSubmit:', error);
+      // Re-open modal if there was an error
+      setShowMissingFieldsModal(true);
+    }
+  };
+  
+  // Handler for direct quote generation when no fields are missing
+  const handleDirectQuoteGeneration = async () => {
+    // Map category ID to coverage type name for internal processing
+    const coverageTypeMapping: Record<string, string> = {
+      'cancer': 'Cancer Insurance',
+      'dental': 'Dental/Vision/Hearing',
+      'drug-plan': 'Medicare Part D',
+      'final-expense': 'Final Expense',
+      'advantage': 'Medicare Advantage',
+      'hospital-indemnity': 'Hospital Indemnity'
+    };
+    
+    const coverageTypeName = coverageTypeMapping[selectedCoverageCategory] || selectedCoverageCategory;
+    
+    // Continue with quote generation using existing form data
+    await generateQuotesForCoverageInternal(coverageTypeName, initialFormDataForModal);
   };
   
   // Helper function to proceed with quote generation after collecting additional info
@@ -468,7 +588,39 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         return;
       }
 
-      // Check if additional information is needed
+      // Check if this coverage type should use the shared modal for validation
+      const sharedModalCategoryMapping: Record<string, { categoryId: string; displayName: string }> = {
+        'cancer': { categoryId: 'cancer', displayName: 'Cancer Insurance' },
+        'Cancer Insurance': { categoryId: 'cancer', displayName: 'Cancer Insurance' },
+        'dental': { categoryId: 'dental', displayName: 'Dental, Vision & Hearing' },
+        'dental-vision-hearing': { categoryId: 'dental', displayName: 'Dental, Vision & Hearing' },
+        'Dental/Vision/Hearing': { categoryId: 'dental', displayName: 'Dental, Vision & Hearing' },
+        'final-expense': { categoryId: 'final-expense', displayName: 'Final Expense Life' },
+        'Final Expense': { categoryId: 'final-expense', displayName: 'Final Expense Life' },
+        'hospital-indemnity': { categoryId: 'hospital-indemnity', displayName: 'Hospital Indemnity' },
+        'Hospital Indemnity': { categoryId: 'hospital-indemnity', displayName: 'Hospital Indemnity' },
+        'advantage': { categoryId: 'advantage', displayName: 'Medicare Advantage' },
+        'Medicare Advantage': { categoryId: 'advantage', displayName: 'Medicare Advantage' },
+        'drug-plan': { categoryId: 'drug-plan', displayName: 'Medicare Part D' },
+        'partd': { categoryId: 'drug-plan', displayName: 'Medicare Part D' },
+        'Medicare Part D': { categoryId: 'drug-plan', displayName: 'Medicare Part D' }
+      };
+
+      const mappedCategory = sharedModalCategoryMapping[coverageType];
+      
+      if (mappedCategory) {
+        // For coverage types that use the shared modal, show the modal directly
+        // The modal will handle all validation internally
+        console.log('📋 Using shared modal for', coverageType);
+        setLoadingCoverageTypes(prev => prev.filter(type => type !== coverageType));
+        setInitialFormDataForModal(formData);
+        setSelectedCoverageCategory(mappedCategory.categoryId);
+        setCoverageDisplayName(mappedCategory.displayName);
+        setFormDataLoaded(true); // This will trigger the useEffect to open the modal
+        return;
+      }
+
+      // For coverage types that need custom fields, check for additional information
       const missingInfo = getRequiredAdditionalInfo(coverageType, formData);
       
       if (missingInfo.length > 0) {
@@ -1921,6 +2073,17 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Shared Missing Fields Modal */}
+      <MissingFieldsModal
+        isOpen={showMissingFieldsModal}
+        onClose={() => setShowMissingFieldsModal(false)}
+        onSubmit={handleSharedModalSubmit}
+        categoryId={selectedCoverageCategory}
+        categoryName={coverageDisplayName}
+        missingFields={[]} // Will be calculated internally
+        initialFormData={initialFormDataForModal}
+      />
 
     </TabsContent>
   );

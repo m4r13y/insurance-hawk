@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -62,6 +62,31 @@ export function MissingFieldsModal({
     ...initialFormData
   });
 
+  // Update form inputs when modal opens with initial data
+  useEffect(() => {
+    if (isOpen) {
+      setFormInputs(prev => ({
+        age: '',
+        zipCode: '',
+        gender: '',
+        tobaccoUse: null,
+        familyType: '',
+        carcinomaInSitu: null,
+        premiumMode: '',
+        coveredMembers: '',
+        desiredFaceValue: '',
+        benefitAmount: '',
+        state: '',
+        ...initialFormData // Override with any existing data
+      }));
+    }
+  }, [isOpen]); // Only run when modal opens, not when initialFormData changes
+
+  // Debug: Watch for unexpected modal closures
+  useEffect(() => {
+    console.log('MissingFieldsModal isOpen changed to:', isOpen);
+  }, [isOpen]);
+
   // Helper function to get required fields for each plan type
   const getRequiredFields = (category: string): string[] => {
     switch (category) {
@@ -110,6 +135,15 @@ export function MissingFieldsModal({
     };
   };
 
+  // Calculate missing fields internally based on category and current form data
+  const calculatedMissingFields = (() => {
+    const validation = validateRequiredData(categoryId, formInputs);
+    return validation.missing;
+  })();
+
+  // Use calculated missing fields if missingFields prop is empty, otherwise use the prop
+  const actualMissingFields = missingFields.length > 0 ? missingFields : calculatedMissingFields;
+
   // Handle form submission
   const handleSubmit = async () => {
     const validation = validateRequiredData(categoryId, formInputs);
@@ -152,7 +186,7 @@ export function MissingFieldsModal({
           </p>
           
           <div className="space-y-3">
-            {missingFields.includes('age') && (
+            {actualMissingFields.includes('age') && (
               <div className="space-y-2">
                 <Label htmlFor="age">Age</Label>
                 <Input
@@ -168,7 +202,7 @@ export function MissingFieldsModal({
               </div>
             )}
             
-            {missingFields.includes('zipCode') && (
+            {actualMissingFields.includes('zipCode') && (
               <div className="space-y-2">
                 <Label htmlFor="zipCode">ZIP Code</Label>
                 <Input
@@ -183,7 +217,7 @@ export function MissingFieldsModal({
               </div>
             )}
             
-            {missingFields.includes('gender') && (
+            {actualMissingFields.includes('gender') && (
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
                 <Select 
@@ -204,7 +238,7 @@ export function MissingFieldsModal({
               </div>
             )}
             
-            {missingFields.includes('tobaccoUse') && (
+            {actualMissingFields.includes('tobaccoUse') && (
               <div className="space-y-2">
                 <Label>Tobacco Use</Label>
                 <Select 
@@ -225,7 +259,7 @@ export function MissingFieldsModal({
               </div>
             )}
             
-            {missingFields.includes('state') && categoryId !== 'cancer' && (
+            {actualMissingFields.includes('state') && categoryId !== 'cancer' && (
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
                 <Select 
@@ -297,7 +331,7 @@ export function MissingFieldsModal({
             {/* Cancer Insurance specific fields */}
             {categoryId === 'cancer' && (
               <>
-                {missingFields.includes('state') && (
+                {actualMissingFields.includes('state') && (
                   <div className="space-y-2">
                     <Label>State</Label>
                     <Select 
@@ -321,7 +355,7 @@ export function MissingFieldsModal({
                   </div>
                 )}
                 
-                {missingFields.includes('familyType') && (
+                {actualMissingFields.includes('familyType') && (
                   <div className="space-y-2">
                     <Label>Coverage Type</Label>
                     <Select 
@@ -342,7 +376,7 @@ export function MissingFieldsModal({
                   </div>
                 )}
                 
-                {missingFields.includes('carcinomaInSitu') && (
+                {actualMissingFields.includes('carcinomaInSitu') && (
                   <div className="space-y-2">
                     <Label>Carcinoma In Situ Benefit</Label>
                     <Select 
@@ -363,7 +397,7 @@ export function MissingFieldsModal({
                   </div>
                 )}
                 
-                {missingFields.includes('premiumMode') && (
+                {actualMissingFields.includes('premiumMode') && (
                   <div className="space-y-2">
                     <Label>Premium Payment Mode</Label>
                     <Select 
@@ -384,7 +418,7 @@ export function MissingFieldsModal({
                   </div>
                 )}
                 
-                {missingFields.includes('benefitAmount') && (
+                {actualMissingFields.includes('benefitAmount') && (
                   <div className="space-y-2">
                     <Label>Benefit Amount</Label>
                     <Select 
@@ -411,7 +445,7 @@ export function MissingFieldsModal({
             )}
             
             {/* Dental Insurance specific fields */}
-            {categoryId === 'dental' && missingFields.includes('coveredMembers') && (
+            {categoryId === 'dental' && actualMissingFields.includes('coveredMembers') && (
               <div className="space-y-2">
                 <Label htmlFor="coveredMembers">Number of Covered Members</Label>
                 <Input
@@ -427,7 +461,7 @@ export function MissingFieldsModal({
             )}
             
             {/* Final Expense specific fields */}
-            {categoryId === 'final-expense' && missingFields.includes('desiredFaceValue') && (
+            {categoryId === 'final-expense' && actualMissingFields.includes('desiredFaceValue') && (
               <div className="space-y-2">
                 <Label htmlFor="desiredFaceValue">Desired Coverage Amount</Label>
                 <Select 
