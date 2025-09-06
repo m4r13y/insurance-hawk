@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    --scrollbar-width: 8px; /* Define scrollbar width as custom property */
+    --scrollbar-gutter: 4px; /* Additional gutter space around scrollbar */
+    --total-scrollbar-space: calc(var(--scrollbar-width) + var(--scrollbar-gutter)); /* Total space needed */
     --background: 220 6% 98%; /* Cool but very light off-white */
     --foreground: 222.2 84% 4.9%;
     --card: 220 14% 98%; /* Solid background instead of transparent */
@@ -105,7 +108,7 @@
   /* Custom webkit scrollbar for html and body */
   html::-webkit-scrollbar,
   body::-webkit-scrollbar {
-    width: 8px;
+    width: var(--scrollbar-width);
     display: block; /* Always show */
     z-index: 9999; /* High z-index to prevent interference */
   }
@@ -239,19 +242,23 @@
   [data-radix-scroll-area-viewport]::-webkit-scrollbar {
     display: block !important;
     width: 10px;
+    z-index: 9999 !important; /* High z-index to prevent layout impact */
   }
   
   [data-radix-scroll-area-viewport]::-webkit-scrollbar-track {
     background: transparent;
+    z-index: 9999 !important;
   }
   
   [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
     border-radius: 5px;
+    z-index: 9999 !important;
   }
   
   [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--border) / 0.8);
+    z-index: 9999 !important;
   }
 }
 
@@ -267,18 +274,15 @@
     margin-right: 0 !important;
     scrollbar-width: thin !important;
     scrollbar-color: hsl(var(--border)) transparent !important;
-    /* Prevent any layout changes */
-    width: auto !important;
-    max-width: none !important;
   }
   
   /* Keep webkit scrollbar exactly the same when locked */
   body[data-scroll-locked]::-webkit-scrollbar,
   body[data-scroll-locked="true"]::-webkit-scrollbar,
   body[data-scroll-locked="false"]::-webkit-scrollbar {
-    width: 8px !important;
+    width: var(--scrollbar-width) !important;
     display: block !important;
-    z-index: 9999 !important; /* High z-index to prevent hiding */
+    z-index: 9999 !important; /* High z-index to stay on top */
     opacity: 1 !important;
     visibility: visible !important;
   }
@@ -288,6 +292,8 @@
   body[data-scroll-locked="false"]::-webkit-scrollbar-track {
     background: transparent !important;
     display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
   
   body[data-scroll-locked]::-webkit-scrollbar-thumb,
@@ -297,10 +303,21 @@
     border-radius: 4px !important;
     display: block !important;
     opacity: 1 !important;
+    visibility: visible !important;
   }
   
-  /* Override any potential Radix UI styles that might interfere */
-  body[data-scroll-locked] * {
-    scrollbar-width: inherit !important;
+  /* Additional override to prevent any CSS from hiding the scrollbar */
+  body[data-scroll-locked]::-webkit-scrollbar-corner,
+  body[data-scroll-locked="true"]::-webkit-scrollbar-corner,
+  body[data-scroll-locked="false"]::-webkit-scrollbar-corner {
+    background: transparent !important;
+    display: block !important;
+  }
+  
+  /* Compensate header positioning when scrollbar is hidden */
+  body[data-scroll-locked] header,
+  body[data-scroll-locked="true"] header,
+  body[data-scroll-locked="false"] header {
+    margin-right: var(--total-scrollbar-space) !important; /* Account for scrollbar + gutter */
   }
 }

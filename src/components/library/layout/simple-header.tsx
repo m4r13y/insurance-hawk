@@ -154,8 +154,9 @@ export function SimpleHeader() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-7xl">
-      <nav className="relative backdrop-blur-md bg-card dark:card border border-border/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
+    <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-[5%]">
+      <header className="w-full max-w-7xl">
+        <nav className="relative backdrop-blur-md bg-card dark:card border border-border/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
         <div className="relative z-10 px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
@@ -304,6 +305,7 @@ export function SimpleHeader() {
           </div>
         </div>
       </nav>
-    </header>
+      </header>
+    </div>
   );
 }
