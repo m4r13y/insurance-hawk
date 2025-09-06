@@ -10,7 +10,7 @@ interface PlanDetailsHeaderProps {
   quoteData: QuoteData;
   onGoBack: () => void;
   calculateDiscountedRate: (rate: number, discounts: any[]) => number;
-  getCurrentRate: () => number;
+  getCurrentRate: () => number | null; // Can return null when no selection made
   formatCurrency: (amount: number) => string;
 }
 
@@ -22,6 +22,7 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
   formatCurrency
 }) => {
   const logoUrl = getCarrierLogoUrl(quoteData.company_base.name);
+  const currentRate = getCurrentRate();
 
   return (
     <div className="sticky top-20 z-40 backdrop-blur-sm pt-4">
@@ -64,7 +65,11 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
             <div className="text-right">
               <div className="text-sm text-muted-foreground">Plan {quoteData.plan}</div>
               <div className="font-semibold text-primary">
-                {formatCurrency(getCurrentRate())}/mo
+                {currentRate !== null ? (
+                  `${formatCurrency(currentRate)}/mo`
+                ) : (
+                  <span className="text-muted-foreground">Select an option</span>
+                )}
               </div>
             </div>
           </div>

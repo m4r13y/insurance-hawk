@@ -50,9 +50,12 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   
   // Current selection state for header rate calculation
   const [currentSelection, setCurrentSelection] = React.useState<PlanConfiguration>({
-    ratingClass: '',
+    ratingClass: '', // Empty means no selection made yet
     discounts: []
   });
+  
+  // Track if user has made any selection
+  const [hasUserSelection, setHasUserSelection] = React.useState(false);
 
   // Load existing medigap quotes from Firestore/localStorage
   const loadExistingQuotes = async (): Promise<QuoteData[]> => {
@@ -256,14 +259,20 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   // Calculate current rate based on user selections using shared utilities
   const getCurrentSelectionRate = () => {
     console.log('PlanDetailsMain - getCurrentSelectionRate called');
+    console.log('hasUserSelection:', hasUserSelection);
     console.log('currentSelection:', currentSelection);
     console.log('carrierQuotes length:', carrierQuotes?.length || 0);
     console.log('quoteData:', quoteData?.rate?.month);
     
+    // If no user selection has been made, return null to show placeholder
+    if (!hasUserSelection || !currentSelection.ratingClass) {
+      console.log('No user selection made yet, returning null');
+      return null;
+    }
+    
     if (!carrierQuotes || carrierQuotes.length === 0 || !quoteData) {
-      const fallbackRate = quoteData?.rate.month || 0;
-      console.log('No carrier quotes, returning fallback rate:', fallbackRate);
-      return fallbackRate;
+      console.log('No carrier quotes or quote data available');
+      return null;
     }
 
     // Find quote matching current selection
@@ -281,10 +290,8 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       return Math.round(rate);
     }
 
-    // Fallback to base quote with discounts
-    const fallbackRate = calculateDiscountedRate(quoteData.rate.month, quoteData.discounts);
-    console.log('Using fallback discounted rate:', fallbackRate);
-    return fallbackRate;
+    console.log('No matching quote found for user selection');
+    return null;
   };
 
   const formatCurrency = (amount: number) => {
@@ -294,6 +301,17 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount / 100); // Assuming amounts are in cents
+  };
+
+  // Custom selection change handler that tracks user interaction
+  const handleSelectionChange = (selection: PlanConfiguration) => {
+    console.log('User made selection:', selection);
+    setCurrentSelection(selection);
+    
+    // Mark that user has made a selection if rating class is provided
+    if (selection.ratingClass && selection.ratingClass !== '') {
+      setHasUserSelection(true);
+    }
   };
 
   if (loading) {
@@ -357,7 +375,7 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
             calculateDiscountedRate={calculateDiscountedRate}
             currentSelection={currentSelection}
             getCurrentRate={getCurrentSelectionRate}
-            onSelectionChange={setCurrentSelection}
+            hasUserSelection={hasUserSelection}
           />
 
           <PlanDetailsTab 

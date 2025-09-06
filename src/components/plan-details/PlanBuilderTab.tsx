@@ -36,8 +36,8 @@ interface PlanBuilderTabProps {
   formatCurrency: (amount: number) => string;
   calculateDiscountedRate: (rate: number, discounts: any[]) => number;
   currentSelection?: PlanConfiguration;
-  getCurrentRate?: () => number;
-  onSelectionChange?: (selection: PlanConfiguration) => void;
+  getCurrentRate?: () => number | null;
+  hasUserSelection?: boolean;
 }
 
 // Helper function for rating colors
@@ -69,7 +69,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   calculateDiscountedRate,
   currentSelection,
   getCurrentRate,
-  onSelectionChange
+  hasUserSelection = false
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
@@ -92,25 +92,18 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
   const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
 
-  // Notify parent component of selection changes
-  useEffect(() => {
-    if (onSelectionChange) {
-      onSelectionChange({
-        ratingClass: '', // PlanBuilderTab doesn't currently track specific rating classes
-        discounts: applyDiscounts ? ['household'] : [] // Simplified discount tracking
-      });
-    }
-  }, [applyDiscounts, onSelectionChange]);
-
-  // Debug: Watch applyDiscounts state changes
-  useEffect(() => {
-    console.log('applyDiscounts state changed in PlanBuilderTab:', applyDiscounts);
-  }, [applyDiscounts]);
+  // Note: Selection changes are tracked at the parent component level
+  // PlanBuilderTab only displays options, actual selection happens in modals/other components
 
   // Calculate the current selection rate with applied discounts
   const getCurrentSelectionRate = () => {
-    // Use the parent's rate calculation function if available, otherwise fallback to base rate
-    return getCurrentRate ? getCurrentRate() : quoteData.rate.month;
+    // Use the parent's rate calculation function if available
+    if (getCurrentRate) {
+      const rate = getCurrentRate();
+      return rate !== null ? rate : null; // Return null if no selection made
+    }
+    // Fallback to base rate only if no parent function available
+    return quoteData.rate.month;
   };
   
   // Selected additional coverage plans
@@ -639,8 +632,14 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   // Function to save plan builder state to Firestore
   const savePlanBuilderState = async () => {
     try {
+      const currentRate = getCurrentSelectionRate();
+      if (currentRate === null) {
+        console.warn('Cannot save plan builder state: No plan selection made yet');
+        return;
+      }
+
       const totalMonthlyCost = 
-        getCurrentSelectionRate() + 
+        currentRate + 
         (selectedDrugPlan ? ((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100) : 0) +
         (selectedDentalPlan ? selectedDentalPlan.monthlyPremium : 0) +
         (selectedCancerPlan ? (selectedCancerPlan.monthly_premium || 0) : 0);
@@ -656,7 +655,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         medigapPlan: {
           plan: quoteData.plan,
           carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
-          monthlyRate: getCurrentSelectionRate(),
+          monthlyRate: currentRate,
           selected: true
         },
         medicareAB: {
@@ -789,7 +788,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-semibold text-primary">
-                      {formatCurrency(getCurrentSelectionRate())}/mo
+                      {(() => {
+                        const rate = getCurrentSelectionRate();
+                        return rate !== null ? `${formatCurrency(rate)}/mo` : 'Select an option';
+                      })()}
                     </div>
                     <Badge variant="outline">Current Selection</Badge>
                   </div>
@@ -822,12 +824,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                 </div>
               </div>
 
-              {/* Coverage Builder Section */}
-              <div data-scroll-target="coverage-builder">
-                <h4 className="font-medium mb-4">Coverage Quality Builder</h4>
-                
-                {/* Split Layout: Categories on Left, Chart on Right */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Coverage Builder Section - Only show if user has made a selection */}
+              {hasUserSelection && (
+                <div data-scroll-target="coverage-builder">
+                  <h4 className="font-medium mb-4">Coverage Quality Builder</h4>
+                  
+                  {/* Split Layout: Categories on Left, Chart on Right */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Left Side: Coverage Categories */}
                   <div className="space-y-3">
@@ -879,7 +882,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             ? 'text-blue-900' 
                             : 'text-gray-500'
                         }`}>
-                          {formatCurrency(getCurrentSelectionRate())}/mo
+                          {(() => {
+                            const rate = getCurrentSelectionRate();
+                            return rate !== null ? `${formatCurrency(rate)}/mo` : 'Select option';
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1246,6 +1252,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   </Button>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1262,7 +1269,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                 <div className="text-sm text-gray-600 mb-1">Total Monthly Premium</div>
                 <div className="text-2xl font-bold">
                   ${(() => {
-                    const baseRate = getCurrentSelectionRate() / 100; // Convert from cents to dollars and use discounted rate
+                    const currentRate = getCurrentSelectionRate();
+                    if (currentRate === null) return '-.--'; // Show placeholder when no selection
+                    const baseRate = currentRate / 100; // Convert from cents to dollars and use discounted rate
                     const drugRate = selectedDrugPlan ? ((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100) : 0;
                     const dentalRate = selectedDentalPlan ? ((selectedDentalPlan as any).monthlyPremium || 0) : 0;
                     const cancerRate = selectedCancerPlan ? ((selectedCancerPlan.monthly_premium || 0)) : 0;
@@ -1283,7 +1292,12 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       <div className="text-sm font-medium">Plan {quoteData.plan}</div>
                       <div className="text-xs text-gray-600">{getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}</div>
                     </div>
-                    <span className="font-medium">{formatCurrency(getCurrentSelectionRate())}</span>
+                    <span className="font-medium">
+                      {(() => {
+                        const rate = getCurrentSelectionRate();
+                        return rate !== null ? formatCurrency(rate) : 'Select option';
+                      })()}
+                    </span>
                   </div>
                   
                   {/* Selected Additional Plans */}
