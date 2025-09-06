@@ -118,8 +118,11 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
           
           if (carrierGroup && carrierGroup.quotes && carrierGroup.quotes.length > 0) {
             console.log('Plan Details - carrierGroup found with quotes:', carrierGroup.quotes.length);
-            // Convert the first quote to our QuoteData format
+            console.log('Plan Details - selectedPlanType:', carrierGroup.selectedPlanType);
+            
+            // Use the selected plan type if available, otherwise use the first quote
             const firstQuote = carrierGroup.quotes[0];
+            const selectedPlanType = carrierGroup.selectedPlanType || firstQuote.plan || 'G';
             const convertedQuote: QuoteData = {
             key: firstQuote.key || `quote-${firstQuote.plan}-${carrierGroup.carrierId}`,
             age: firstQuote.age || 65,
@@ -149,7 +152,7 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
             gender: firstQuote.gender || 'M',
             has_brochure: firstQuote.has_brochure || false,
             has_pdf_app: firstQuote.has_pdf_app || false,
-            plan: firstQuote.plan || 'G',
+            plan: selectedPlanType, // Use the selected plan type instead of defaulting to 'G'
             rate: {
               annual: firstQuote.rate?.annual || (firstQuote.monthly_premium || 12000) * 12,
               month: firstQuote.rate?.month || firstQuote.monthly_premium || 12000,

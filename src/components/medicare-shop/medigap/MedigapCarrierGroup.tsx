@@ -397,7 +397,11 @@ export default function MedigapCarrierGroup({
                   
                   {/* Action Button - always at bottom */}
                   <div className="mt-auto">
-                    <Button size="default" className="w-full" onClick={() => openPlanModal(filteredCarrierGroup)}>
+                    <Button size="default" className="w-full" onClick={() => openPlanModal({
+                      ...filteredCarrierGroup,
+                      selectedPlanType: planType,
+                      quotes: quotesArray // Pass only the quotes for this specific plan type
+                    })}>
                       Select Plan
                     </Button>
                   </div>
