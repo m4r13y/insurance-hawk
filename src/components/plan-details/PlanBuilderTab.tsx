@@ -60,12 +60,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [loadingCoverageTypes, setLoadingCoverageTypes] = useState<string[]>([]);
   const [completedCoverageTypes, setCompletedCoverageTypes] = useState<string[]>([]);
   
-  // Chart data for the pie chart
+  // Chart data for the Coverage Quality scale
   const [chartData, setChartData] = useState([
-    { name: 'Medigap', value: 100, color: '#3b82f6', selected: true },
-    { name: 'Part D', value: 0, color: '#10b981', selected: false },
-    { name: 'Dental/Vision', value: 0, color: '#f59e0b', selected: false },
-    { name: 'Hospital', value: 0, color: '#ef4444', selected: false },
+    { name: 'Medicare A & B', value: 50, color: '#ef4444', selected: true, description: 'Base minimum', quality: 'Basic' },
+    { name: 'Medigap', value: 20, color: '#3b82f6', selected: true, description: 'Essential supplement', quality: 'Good' },
+    { name: 'Part D', value: 15, color: '#10b981', selected: false, description: 'Drug coverage', quality: 'Better' },
+    { name: 'DVH', value: 10, color: '#f59e0b', selected: false, description: 'Dental, Vision & Hearing', quality: 'Very Good' },
+    { name: 'Cancer', value: 5, color: '#8b5cf6', selected: false, description: 'Cancer insurance', quality: 'Excellent' },
   ]);
 
   // Helper functions from test-multi-plan
@@ -249,19 +250,16 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     }
   };
 
-  // Toggle coverage type selection and update chart
+  // Toggle coverage type selection and update Coverage Quality
   const toggleCoverageType = (coverageType: string) => {
     setChartData(prevData => 
       prevData.map(item => {
-        if (item.name.toLowerCase().includes(coverageType.toLowerCase()) || 
-            (coverageType === 'partd' && item.name === 'Part D') ||
-            (coverageType === 'hospital-indemnity' && item.name === 'Hospital') ||
-            ((coverageType === 'dental-vision-hearing' || coverageType === 'dental' || coverageType === 'vision') && item.name === 'Dental/Vision')) {
-          const newSelected = !item.selected;
+        if ((coverageType === 'partd' && item.name === 'Part D') ||
+            ((coverageType === 'dental-vision-hearing' || coverageType === 'dental' || coverageType === 'vision') && item.name === 'DVH') ||
+            (coverageType === 'cancer' && item.name === 'Cancer')) {
           return {
             ...item,
-            selected: newSelected,
-            value: newSelected ? 33 : 0  // Adjusted for 3 total categories instead of 5
+            selected: !item.selected
           };
         }
         return item;
@@ -451,7 +449,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
               {/* Coverage Builder Section */}
               <div>
-                <h4 className="font-medium mb-4">Build Your Complete Coverage</h4>
+                <h4 className="font-medium mb-4">Coverage Quality Builder</h4>
                 
                 {/* Split Layout: Categories on Left, Chart on Right */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -597,28 +595,28 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       </div>
                     </div>
 
-                    {/* Hospital Indemnity */}
+                    {/* Cancer Insurance */}
                     <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h5 className="font-medium">Hospital Indemnity</h5>
-                          <p className="text-sm text-muted-foreground">Cash benefits for hospital stays</p>
+                          <h5 className="font-medium">Cancer Insurance</h5>
+                          <p className="text-sm text-muted-foreground">Additional cancer treatment coverage</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
-                            {completedCoverageTypes.includes('hospital-indemnity') ? 'View Quotes' : '$25+/mo'}
+                            {completedCoverageTypes.includes('cancer') ? 'View Quotes' : '$30+/mo'}
                           </span>
-                          {loadingCoverageTypes.includes('hospital-indemnity') ? (
+                          {loadingCoverageTypes.includes('cancer') ? (
                             <Button variant="ghost" size="sm" disabled>...</Button>
                           ) : (
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => {
-                                if (completedCoverageTypes.includes('hospital-indemnity')) {
+                                if (completedCoverageTypes.includes('cancer')) {
                                   // Navigate to quotes view
                                 } else {
-                                  generateQuotesForCoverage('hospital-indemnity');
+                                  generateQuotesForCoverage('cancer');
                                 }
                               }}
                             >
@@ -630,22 +628,41 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     </div>
                   </div>
 
-                  {/* Right Side: Dynamic Pie Chart */}
+                  {/* Right Side: Coverage Quality Pie Chart */}
                   <div className="flex flex-col items-center justify-center">
+                    {/* Coverage Quality Header */}
+                    <div className="text-center mb-4">
+                      <h5 className="font-semibold text-lg mb-2">Coverage Quality</h5>
+                      <div className="text-2xl font-bold">
+                        {(() => {
+                          const totalScore = chartData.filter(item => item.selected).reduce((sum, item) => sum + item.value, 0);
+                          if (totalScore >= 85) return <span className="text-green-600">Excellent</span>;
+                          if (totalScore >= 70) return <span className="text-blue-600">Very Good</span>;
+                          if (totalScore >= 55) return <span className="text-yellow-600">Good</span>;
+                          if (totalScore >= 40) return <span className="text-orange-600">Fair</span>;
+                          return <span className="text-red-600">Basic</span>;
+                        })()}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {chartData.filter(item => item.selected).reduce((sum, item) => sum + item.value, 0)}% Complete
+                      </p>
+                    </div>
+
+                    {/* Pie Chart */}
                     <div className="w-full max-w-sm">
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer width="100%" height={280}>
                         <PieChart>
                           <Pie
-                            data={chartData.filter(item => item.value > 0)}
+                            data={chartData}
                             cx="50%"
                             cy="50%"
-                            innerRadius={60}
-                            outerRadius={120}
+                            innerRadius={50}
+                            outerRadius={110}
                             paddingAngle={2}
                             dataKey="value"
                           >
-                            {chartData.filter(item => item.value > 0).map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            {chartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.selected ? entry.color : '#e5e7eb'} />
                             ))}
                           </Pie>
                           <Tooltip 
