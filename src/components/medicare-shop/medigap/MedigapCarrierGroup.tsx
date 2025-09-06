@@ -148,7 +148,12 @@ export default function MedigapCarrierGroup({
   // Add formatRate function to match test-quote-processor precision
   const formatRate = (rate: any) => {
     if (typeof rate === 'number') {
-      return rate >= 100 ? `$${(rate / 100).toFixed(2)}` : `$${rate.toFixed(2)}`;
+      const actualRate = rate >= 100 ? rate / 100 : rate;
+      // Round to whole numbers when 2-3 plans are selected for cleaner display
+      if (selectedQuotePlans.length >= 2) {
+        return `$${Math.round(actualRate)}`;
+      }
+      return `$${actualRate.toFixed(2)}`;
     }
     return 'N/A';
   };

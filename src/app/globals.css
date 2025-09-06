@@ -87,21 +87,30 @@
     @apply border-border;
   }
   
-  /* SIMPLE SOLUTION: Always show scrollbar to prevent layout shift */
+  /* COMPREHENSIVE SOLUTION: Prevent scrollbar layout shifts */
+  html {
+    /* Modern browsers: Use scrollbar-gutter for stable layout */
+    scrollbar-gutter: stable;
+  }
+  
   body {
     @apply bg-background text-foreground;
-    /* Force scrollbar to always be present */
+    /* Fallback for older browsers: Always show vertical scrollbar */
     overflow-y: scroll;
   }
   
   /* Modern browsers: Use scrollbar-gutter for cleaner approach */
   @supports (scrollbar-gutter: stable) {
-    html {
-      scrollbar-gutter: stable;
-    }
-    
     body {
       overflow-y: auto;
+    }
+  }
+  
+  /* Additional fix for webkit browsers */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    html {
+      overflow-y: auto;
+      scrollbar-gutter: stable;
     }
   }
 }

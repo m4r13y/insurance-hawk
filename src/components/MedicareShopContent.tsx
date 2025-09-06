@@ -70,6 +70,7 @@ import {
   MedigapResultsHeader,
   PlanComparisonModal
 } from "@/components/medicare-shop/medigap";
+import MedigapCarrierSkeleton from "@/components/MedigapCarrierSkeleton";
 
 import {
   DentalShopContent,
@@ -208,6 +209,7 @@ function MedicareShopContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<any[]>([]);
   const [showPreferredOnly, setShowPreferredOnly] = useState(true);
+  const [isPlanLoading, setIsPlanLoading] = useState(false);
 
   // Wrapper for handleCategorySelect that prevents auto-switching after manual selection
   const handleManualCategorySelect = useCallback((categoryId: string) => {
@@ -461,6 +463,28 @@ function MedicareShopContent() {
   useEffect(() => {
     updatePlanAvailability(realQuotes);
   }, [realQuotes, updatePlanAvailability]);
+
+  // Clear loading state when all requested plans are available
+  useEffect(() => {
+    if (isPlanLoading && selectedQuotePlans.length > 0) {
+      const allRequestedPlansAvailable = selectedQuotePlans.every(plan => availableMedigapPlans[plan]);
+      if (allRequestedPlansAvailable) {
+        setIsPlanLoading(false);
+      }
+    }
+  }, [isPlanLoading, selectedQuotePlans, availableMedigapPlans]);
+
+  // Safety: Clear loading state after 5 seconds to prevent infinite loading
+  useEffect(() => {
+    if (isPlanLoading) {
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ Clearing stuck loading state after 5 seconds');
+        setIsPlanLoading(false);
+      }, 5000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isPlanLoading]);
 
   const fetchIndividualPlanQuotes = useCallback(async (planType: string, formData?: any) => {
     setLoadingPlanButton(planType);
@@ -1934,9 +1958,18 @@ function MedicareShopContent() {
 
   // Simplified plan selection handler - single source of truth
   const handlePlanSelection = useCallback((plans: string[]) => {
+    // Check if any of the new plans require quote generation
+    // (i.e., plans that are not currently available in availableMedigapPlans)
+    const newPlansNeedingQuotes = plans.some(plan => !availableMedigapPlans[plan]);
+    
+    // Only show loading skeleton if new quotes need to be generated
+    if (newPlansNeedingQuotes) {
+      setIsPlanLoading(true);
+    }
+    
     // Update selectedQuotePlans directly (this triggers storage save via useEffect)
     setSelectedQuotePlans(plans);
-  }, []);
+  }, [availableMedigapPlans]);
 
   // Transform drug plan API data to component format
   const transformDrugPlanData = React.useCallback((apiQuotes: any[]) => {
@@ -2450,7 +2483,15 @@ function MedicareShopContent() {
                               ? 'grid-cols-1 sm:grid-cols-2' 
                               : 'grid-cols-1'
                           }`}>
-                            {displayData.type === 'grouped' && (
+                            {isPlanLoading ? (
+                              // Show skeleton loading state during plan changes
+                              Array.from({ length: Math.min(paginatedData.length, 3) }).map((_, index) => (
+                                <MedigapCarrierSkeleton 
+                                  key={`skeleton-${index}`}
+                                  planCount={actualPlanCount}
+                                />
+                              ))
+                            ) : displayData.type === 'grouped' && (
                               // Use the dedicated MedigapCarrierGroup component with dynamic layout
                               paginatedData.map((carrierGroup: any) => (
                                 <MedigapCarrierGroup

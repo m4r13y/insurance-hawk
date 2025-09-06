@@ -13,12 +13,13 @@ import {
 } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getProperLogoUrl } from "@/lib/carrier-system";
+import { loadTemporaryData } from "@/lib/services/temporary-storage";
+import { REAL_QUOTES_KEY } from "@/components/medicare-shop/shared/storage";
 
 // Import types and components from relative paths
 import type { QuoteData } from './types';
 import { PlanDetailsHeader } from './PlanDetailsHeader';
 import { PlanBuilderTab } from './PlanBuilderTab';
-import { AllPlansTab } from './AllPlansTab';
 import { PlanDetailsTab } from './PlanDetailsTab';
 import { UnderwritingTab } from './UnderwritingTab';
 import { LoadingState } from './LoadingState';
@@ -35,6 +36,50 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   const [quoteData, setQuoteData] = React.useState<QuoteData | null>(null);
   const [carrierQuotes, setCarrierQuotes] = React.useState<QuoteData[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [showGenerateQuote, setShowGenerateQuote] = React.useState(false);
+
+  // Load existing medigap quotes from Firestore/localStorage
+  const loadExistingQuotes = async (): Promise<QuoteData[]> => {
+    try {
+      console.log('Plan Details - Loading existing medigap quotes...');
+      const quotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+      if (quotes && Array.isArray(quotes) && quotes.length > 0) {
+        console.log('Plan Details - Found existing quotes:', quotes.length);
+        return quotes;
+      }
+    } catch (error) {
+      console.error('Error loading existing quotes:', error);
+    }
+    return [];
+  };
+
+  // Load existing medigap quotes the same way as main Medicare shop page
+  const loadExistingMedigapQuotes = async (): Promise<QuoteData[]> => {
+    try {
+      console.log('Plan Details - Loading existing medigap quotes from storage...');
+      
+      // Use the same storage system as the main Medicare shop page
+      const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+      
+      console.log('Plan Details - Raw storage data:', {
+        type: typeof savedQuotes,
+        isArray: Array.isArray(savedQuotes),
+        length: savedQuotes?.length,
+        firstItem: savedQuotes?.[0]
+      });
+      
+      if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
+        console.log('Plan Details - Found existing quotes:', savedQuotes.length);
+        return savedQuotes as QuoteData[];
+      }
+      
+      console.log('Plan Details - No existing quotes found');
+      return [];
+    } catch (error) {
+      console.error('Plan Details - Error loading existing quotes:', error);
+      return [];
+    }
+  };
 
   // Handle back navigation
   const handleGoBack = () => {
@@ -58,18 +103,24 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   };
 
   React.useEffect(() => {
-    // Get data from localStorage
-    const planDetailsDataStr = localStorage.getItem('planDetailsData');
-    
-    if (planDetailsDataStr) {
-      try {
-        const planDetailsData = JSON.parse(planDetailsDataStr);
-        const { carrierGroup } = planDetailsData;
-        
-        if (carrierGroup && carrierGroup.quotes && carrierGroup.quotes.length > 0) {
-          // Convert the first quote to our QuoteData format
-          const firstQuote = carrierGroup.quotes[0];
-          const convertedQuote: QuoteData = {
+    const initializeComponent = async () => {
+      // First, try to get data from localStorage (plan details data)
+      const planDetailsDataStr = localStorage.getItem('planDetailsData');
+      
+      console.log('Plan Details - localStorage data:', planDetailsDataStr);
+      
+      if (planDetailsDataStr) {
+        try {
+          const planDetailsData = JSON.parse(planDetailsDataStr);
+          console.log('Plan Details - parsed data:', planDetailsData);
+          
+          const { carrierGroup } = planDetailsData;
+          
+          if (carrierGroup && carrierGroup.quotes && carrierGroup.quotes.length > 0) {
+            console.log('Plan Details - carrierGroup found with quotes:', carrierGroup.quotes.length);
+            // Convert the first quote to our QuoteData format
+            const firstQuote = carrierGroup.quotes[0];
+            const convertedQuote: QuoteData = {
             key: firstQuote.key || `quote-${firstQuote.plan}-${carrierGroup.carrierId}`,
             age: firstQuote.age || 65,
             age_increases: firstQuote.age_increases || [],
@@ -133,20 +184,37 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
             rating_class: quote.rating_class || ''
           }));
 
+          console.log('Plan Details - converted quote data:', convertedQuote);
           setQuoteData(convertedQuote);
           setCarrierQuotes(allQuotes);
+          setLoading(false);
+          return;
         } else {
-          console.error('No quotes found in carrier group');
+          console.error('Plan Details - No quotes found in carrier group:', carrierGroup);
         }
       } catch (error) {
-        console.error('Error parsing plan details data:', error);
+        console.error('Plan Details - Error parsing plan details data:', error);
       }
+    }
+    
+    // If no plan details data, check for existing medigap quotes
+    console.log('Plan Details - No plan details data, checking for existing quotes...');
+    const existingQuotes = await loadExistingQuotes();
+    
+    if (existingQuotes.length > 0) {
+      console.log('Plan Details - Found existing quotes, using first quote:', existingQuotes[0]);
+      setQuoteData(existingQuotes[0]);
+      setCarrierQuotes(existingQuotes);
     } else {
-      console.warn('No plan details data found in localStorage');
+      console.log('Plan Details - No existing quotes found, will show generate quote option');
+      setShowGenerateQuote(true);
     }
     
     setLoading(false);
-  }, []);
+  };
+
+  initializeComponent();
+}, []);
 
   const calculateDiscountedRate = (rate: number, discounts: any[]) => {
     let discountedRate = rate;
@@ -173,8 +241,33 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     return <LoadingState />;
   }
 
-  if (!quoteData) {
-    return <ErrorState onGoBack={handleGoBack} />;
+  if (showGenerateQuote || !quoteData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center gap-2 justify-center">
+              <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500" />
+              No Quote Data
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">
+              No quote data is available. Please generate a new quote to view plan details.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={handleGoBack}>
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
+              <Button onClick={handleGoBack}>
+                Generate Quote
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -188,11 +281,10 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="builder" className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-4 min-w-[400px] sm:min-w-0">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">Plan Builder</TabsTrigger>
-              <TabsTrigger value="quotes" className="text-xs sm:text-sm">All Plans</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 min-w-[300px] sm:min-w-0">
+              <TabsTrigger value="builder" className="text-xs sm:text-sm">Plan Builder</TabsTrigger>
               <TabsTrigger value="plan" className="text-xs sm:text-sm">Plan Details</TabsTrigger>
               <TabsTrigger value="underwriting" className="text-xs sm:text-sm">Underwriting</TabsTrigger>
             </TabsList>
@@ -200,13 +292,6 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
 
           <PlanBuilderTab 
             quoteData={quoteData}
-            formatCurrency={formatCurrency}
-            calculateDiscountedRate={calculateDiscountedRate}
-          />
-
-          <AllPlansTab 
-            quoteData={quoteData}
-            carrierQuotes={carrierQuotes}
             formatCurrency={formatCurrency}
             calculateDiscountedRate={calculateDiscountedRate}
           />
