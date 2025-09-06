@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { CheckIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
@@ -15,6 +16,7 @@ import { getDrugPlanQuotes } from "@/lib/actions/drug-plan-quotes";
 import { getDentalQuotes } from "@/lib/actions/dental-quotes";
 import { getCancerInsuranceQuotes, type CancerInsuranceQuoteParams } from "@/lib/actions/cancer-insurance-quotes";
 import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
+import { processOptionsForDisplay } from "@/lib/medigap-utils";
 import { QuoteData } from './types';
 import { loadFromStorage, saveToStorage, QUOTE_FORM_DATA_KEY, DRUG_PLAN_QUOTES_KEY, DENTAL_QUOTES_KEY, CANCER_INSURANCE_QUOTES_KEY } from "@/components/medicare-shop/shared/storage";
 import { type QuoteFormData } from "@/components/medicare-shop/shared/types";
@@ -22,7 +24,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
 import { Timestamp } from 'firebase/firestore';
-import { processOptionsForDisplay } from "@/lib/medigap-utils";
 import { useDiscountState } from "@/lib/services/discount-state";
 
 interface PlanConfiguration {
@@ -71,9 +72,8 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   getCurrentRate,
   hasUserSelection = false
 }) => {
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
   const [applyDiscounts, setApplyDiscounts] = useDiscountState();
+  const [selectedPlanOption, setSelectedPlanOption] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [realQuotes, setRealQuotes] = useState<QuoteData[]>([]);
   const [generatingQuote, setGeneratingQuote] = useState<string | null>(null);
@@ -97,13 +97,19 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
   // Calculate the current selection rate with applied discounts
   const getCurrentSelectionRate = () => {
+    // If a plan option is selected, use its rate
+    if (selectedPlanOption) {
+      return selectedPlanOption.rate?.month || 0;
+    }
+    
     // Use the parent's rate calculation function if available
     if (getCurrentRate) {
       const rate = getCurrentRate();
       return rate !== null ? rate : null; // Return null if no selection made
     }
-    // Fallback to base rate only if no parent function available
-    return quoteData.rate.month;
+    
+    // Return null if no selection has been made
+    return null;
   };
   
   // Selected additional coverage plans
@@ -681,56 +687,6 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     }
   };
 
-  const handleViewPlanOptions = async (plan: any) => {
-    if (!plan) return;
-    
-    console.log('handleViewPlanOptions called with plan:', plan);
-    console.log('Plan options available:', plan.options?.length || 0);
-    console.log('Carrier quotes available:', carrierQuotes?.length || 0);
-    console.log('Sample option data:', plan.options?.[0]);
-    
-    setLoading(true);
-    setSelectedPlanData(null);
-    setShowOptionsModal(true);
-
-    try {
-      // Use carrierQuotes if available, otherwise fallback to plan.options
-      const availableOptions = plan.options || [];
-      console.log('Using options:', availableOptions.length);
-      console.log('Full option details:', availableOptions);
-      
-      // Create a mock carrier group structure for the modal
-      const carrierGroup = {
-        carrierName: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
-        originalCarrierName: quoteData.company_base?.name || quoteData.company || '',
-        minPrice: availableOptions.length > 0 ? Math.min(...availableOptions.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
-        maxPrice: availableOptions.length > 0 ? Math.max(...availableOptions.map((opt: any) => opt.rate?.month || 0)) : quoteData.rate.month,
-        quotes: availableOptions
-      };
-
-      const consolidatedPlans = [{
-        plan: plan.plan || quoteData.plan,
-        options: availableOptions
-      }];
-
-      console.log('Setting modal data:', {
-        carrierGroup,
-        consolidatedPlans,
-        quotesCount: availableOptions.length
-      });
-
-      setSelectedPlanData({
-        carrierGroup,
-        consolidatedPlans,
-        quotes: availableOptions
-      });
-    } catch (error) {
-      console.error('Error preparing plan options:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     // Load existing quotes when component mounts
     loadExistingQuotes();
@@ -748,84 +704,239 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Build Your Medicare Plan</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Build Your Medicare Plan</CardTitle>
+                <div className="flex items-center space-x-3">
+                  <label htmlFor="apply-discounts-inline" className="text-sm font-medium">
+                    Apply available discounts
+                  </label>
+                  <Switch 
+                    id="apply-discounts-inline"
+                    checked={applyDiscounts}
+                    onCheckedChange={(checked) => {
+                      console.log('Inline discount toggle changed:', checked);
+                      setApplyDiscounts(checked as boolean);
+                    }}
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Current Plan Details */}
-              <div className="border border-primary/20 bg-primary/5 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+              {/* Plan Options Section */}
+              <div className="space-y-4">
+
+                {/* Selected Plan Display - Show only if a plan is selected */}
+                {selectedPlanOption && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-blue-900">Selected Plan</h4>
+                        <p className="text-sm text-blue-700">
+                          {selectedPlanOption.name || 
+                           (selectedPlanOption.rating_class ? `${selectedPlanOption.rating_class} Class` : '') ||
+                           `Plan ${quoteData.plan} Option`}
+                        </p>
+                        {selectedPlanOption.description && (
+                          <p className="text-xs text-blue-600 mt-1">{selectedPlanOption.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-blue-900">
+                          ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedPlanOption(null)}
+                          className="mt-2"
+                        >
+                          Change Plan
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Plan Options List - Show only if no plan is selected */}
+                {!selectedPlanOption && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold">Choose Your Plan Option:</h4>
                       {(() => {
-                        const logoUrl = getCarrierLogoUrl(quoteData.company_base?.name || quoteData.company || '');
-                        if (logoUrl) {
+                        // Quick check for pre-calculated discounts badge
+                        const planSpecificQuotes = carrierQuotes?.filter(quote => 
+                          quote.plan === quoteData.plan
+                        ) || [];
+                        
+                        const availableOptions = planSpecificQuotes.length > 0 ? planSpecificQuotes : [{
+                          name: 'Standard Plan',
+                          rate: quoteData.rate,
+                          view_type: ['standard'],
+                          rating_class: 'Standard',
+                          description: 'Standard coverage with no additional discounts'
+                        }];
+                        
+                        const hasWithHHD = availableOptions.some((opt: any) => opt.view_type?.includes('with_hhd'));
+                        const hasSansHHD = availableOptions.some((opt: any) => opt.view_type?.includes('sans_hhd'));
+                        const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
+                        
+                        if (hasPreCalculatedDiscounts) {
                           return (
-                            <img 
-                              src={logoUrl} 
-                              alt={`${quoteData.company_base?.name || quoteData.company} logo`}
-                              className="w-10 h-10 object-contain"
-                            />
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                              pre-calculated discounts
+                            </Badge>
                           );
                         }
-                        return (
-                          <div className="text-sm font-semibold text-gray-600">
-                            {(quoteData.company_base?.name || quoteData.company || 'UC')
-                              .split(' ')
-                              .map((word: string) => word[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
-                        );
+                        return null;
                       })()}
                     </div>
-                    <div>
-                      <h5 className="font-medium">Medicare Supplement Plan {quoteData.plan}</h5>
-                      <p className="text-sm text-muted-foreground">
-                        {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-semibold text-primary">
-                      {(() => {
-                        const rate = getCurrentSelectionRate();
-                        return rate !== null ? `${formatCurrency(rate)}/mo` : 'Select an option';
-                      })()}
-                    </div>
-                    <Badge variant="outline">Current Selection</Badge>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      // Filter carrier quotes to only include quotes for the same plan
+                    {(() => {
+                      // Get available plan options
                       const planSpecificQuotes = carrierQuotes?.filter(quote => 
                         quote.plan === quoteData.plan
                       ) || [];
                       
-                      console.log('Plan specific quotes:', planSpecificQuotes.length);
-                      
-                      handleViewPlanOptions({
+                      console.log('PlanBuilderTab: planSpecificQuotes found:', planSpecificQuotes.length);
+                      console.log('PlanBuilderTab: applyDiscounts state:', applyDiscounts);
+
+                      // Create fallback option if no carrier quotes
+                      const availableOptions = planSpecificQuotes.length > 0 ? planSpecificQuotes : [{
+                        name: 'Standard Plan',
+                        rate: quoteData.rate,
+                        view_type: ['standard'],
+                        rating_class: 'Standard',
+                        description: 'Standard coverage option'
+                      }];
+
+                      // Create plan object for processOptionsForDisplay function
+                      const planData = {
                         plan: quoteData.plan,
-                        options: planSpecificQuotes.length > 0 ? planSpecificQuotes : [{
-                          name: 'Current Plan',
-                          rate: quoteData.rate,
-                          view_type: ['standard'],
-                          rating_class: 'Standard'
-                        }]
-                      });
-                    }}
-                  >
-                    View Plan Options
-                  </Button>
-                </div>
+                        options: availableOptions
+                      };
+
+                      console.log('PlanBuilderTab: planData created with', availableOptions.length, 'options');
+                      console.log('PlanBuilderTab: sample option:', availableOptions[0]);
+
+                      // Use the proper filtering logic from medigap-utils
+                      const displayOptions = processOptionsForDisplay(planData, applyDiscounts);
+                      
+                      console.log('PlanBuilderTab: displayOptions after filtering:', displayOptions.length);
+
+                      // Add description of what options are being shown
+                      const hasWithHHD = planData.options.some((opt: any) => opt.view_type?.includes('with_hhd'));
+                      const hasSansHHD = planData.options.some((opt: any) => opt.view_type?.includes('sans_hhd'));
+                      const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
+                      
+                      const optionsDescription = (() => {
+                        if (hasPreCalculatedDiscounts) {
+                          return applyDiscounts ? 
+                            `Discounted Options (${displayOptions.length}):` : 
+                            `Standard Options (${displayOptions.length}):`;
+                        } else {
+                          return `All Options (${displayOptions.length}):`;
+                        }
+                      })();
+
+                      return (
+                        <>
+                          <div className="text-sm font-medium mb-2 text-gray-600">
+                            {optionsDescription}
+                          </div>
+                          {displayOptions.map((option: any, index: number) => {
+                        const hasWithHHD = option.view_type?.includes('with_hhd');
+                        const hasSansHHD = option.view_type?.includes('sans_hhd');
+                        
+                        return (
+                          <div 
+                            key={`${index}-${applyDiscounts}`} 
+                            className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setSelectedPlanOption(option);
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium">
+                                    {option.name || 
+                                     (option.rating_class ? `${option.rating_class} Class` : '') ||
+                                     (option.discount_category ? `${option.discount_category} Rate` : '') ||
+                                     `Plan ${quoteData.plan} Option ${index + 1}`}
+                                  </span>
+                                  {option.isRecommended && <Badge className="text-xs">Recommended</Badge>}
+                                  {option.isCalculatedDiscount && (
+                                    <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                                      Calculated Discount
+                                    </Badge>
+                                  )}
+                                  {hasWithHHD && (
+                                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                      Including Household Discount
+                                    </Badge>
+                                  )}
+                                  {hasSansHHD && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Household Discount Available
+                                    </Badge>
+                                  )}
+                                  {!hasWithHHD && !hasSansHHD && option.discounts && option.discounts.length > 0 && !applyDiscounts && (
+                                    <Badge variant="outline" className="text-xs text-green-600">
+                                      Discounts Available
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                {option.description && (
+                                  <div className="text-sm text-muted-foreground mb-1">{option.description}</div>
+                                )}
+                                
+                                {/* Available Discounts */}
+                                {option.discounts && option.discounts.length > 0 && (
+                                  <div className="text-xs text-green-600 mb-1">
+                                    {applyDiscounts ? 'Discounts applied: ' : 'Available discounts: '}
+                                    {option.discounts.map((d: any) => {
+                                      const name = d.name?.charAt(0).toUpperCase() + d.name?.slice(1) || 'Discount';
+                                      const discountPercent = d.value ? (d.value * 100) : (d.percent || 0);
+                                      const value = d.type === 'percent' ? `${Math.round(discountPercent)}%` : `$${d.value}`;
+                                      return `${name} (${value})`;
+                                    }).join(', ')}
+                                  </div>
+                                )}
+                                
+                                {option.rating_class && (
+                                  <div className="text-xs text-blue-600">
+                                    Rating Class: {option.rating_class}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-semibold">
+                                  ${((option.rate?.month || 0) / 100).toFixed(2)}/mo
+                                </div>
+                                {option.rate?.annual && (
+                                  <div className="text-xs text-muted-foreground">
+                                    ${Math.round((option.rate.annual || 0) / 100)}/year
+                                  </div>
+                                )}
+                                {option.savings && (
+                                  <div className="text-xs text-green-600">
+                                    Save ${((option.savings || 0) / 100).toFixed(2)}/mo
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
-              {/* Coverage Builder Section - Only show if user has made a selection */}
-              {hasUserSelection && (
+              {/* Coverage Builder Section - Only show if a plan option is selected */}
+              {selectedPlanOption && (
                 <div data-scroll-target="coverage-builder">
                   <h4 className="font-medium mb-4">Coverage Quality Builder</h4>
                   
@@ -1346,229 +1457,6 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
           </Card>
         </div>
       </div>
-
-      {/* Plan Options Modal */}
-      <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPlanData && (
-                <>
-                  {getCarrierDisplayName(selectedPlanData.carrierGroup.originalCarrierName)} - Plan Options
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* Apply Discounts Toggle */}
-          <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
-            <Checkbox 
-              id="apply-discounts-modal"
-              checked={applyDiscounts}
-              onCheckedChange={(checked) => {
-                console.log('Modal discount toggle changed:', checked);
-                setApplyDiscounts(checked as boolean);
-              }}
-            />
-            <label htmlFor="apply-discounts-modal" className="text-sm font-medium">
-              Apply available discounts
-            </label>
-            <Badge variant={applyDiscounts ? "default" : "secondary"}>
-              {applyDiscounts ? "Enabled" : "Disabled"}
-            </Badge>
-          </div>
-          
-          {selectedPlanData && (
-            <div className="space-y-6">
-              {/* Carrier Info */}
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                  {(() => {
-                    const logoUrl = getCarrierLogoUrl(selectedPlanData.carrierGroup.originalCarrierName);
-                    if (logoUrl) {
-                      return (
-                        <img 
-                          src={logoUrl} 
-                          alt={`${selectedPlanData.carrierGroup.carrierName} logo`}
-                          className="w-10 h-10 object-contain"
-                        />
-                      );
-                    }
-                    return (
-                      <div className="text-sm font-semibold text-gray-600">
-                        {selectedPlanData.carrierGroup.carrierName
-                          .split(' ')
-                          .map((word: string) => word[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {getCarrierDisplayName(selectedPlanData.carrierGroup.originalCarrierName)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPlanData.quotes.length} quotes available
-                  </p>
-                </div>
-              </div>
-
-              {/* Plans Available */}
-              <div className="space-y-4">
-                <h4 className="font-semibold">Available Plans:</h4>
-                {selectedPlanData.consolidatedPlans.map((plan: any, index: number) => {
-                  console.log('Rendering plan in modal:', { 
-                    planType: plan.plan, 
-                    applyDiscounts, 
-                    optionsLength: plan.options?.length || 0 
-                  });
-                  
-                  const displayOptions = processOptionsForDisplay(plan, applyDiscounts);
-                  console.log('After processOptionsForDisplay:', {
-                    planType: plan.plan,
-                    originalOptionsCount: plan.options?.length || 0,
-                    displayOptionsCount: displayOptions.length,
-                    applyDiscounts
-                  });
-                  
-                  const rates = displayOptions.map((opt: any) => (opt.rate?.month || 0) / 100);
-                  const minRate = Math.min(...rates);
-                  const maxRate = Math.max(...rates);
-                  const priceRange = minRate === maxRate ? 
-                    `${formatRate(minRate)}/mo` : 
-                    `${formatRate(minRate)} - ${formatRate(maxRate)}/mo`;
-
-                  return (
-                    <div key={`${index}-${applyDiscounts}`} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-semibold">Plan {plan.plan}</h5>
-                          <p className="text-sm text-muted-foreground">Price Range: {priceRange}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{displayOptions.length} options</Badge>
-                          {/* Removed pre-calculated discounts badge for cleaner UI */}
-                        </div>
-                      </div>
-
-                      {/* Options Table */}
-                      <div className="space-y-2">
-                        <h6 className="font-medium text-sm">
-                          {(() => {
-                            const hasWithHHD = plan.options?.some((opt: any) => opt.view_type?.includes('with_hhd'));
-                            const hasSansHHD = plan.options?.some((opt: any) => opt.view_type?.includes('sans_hhd'));
-                            
-                            if (hasWithHHD && hasSansHHD) {
-                              return applyDiscounts ? 
-                                `Discounted Options (${displayOptions.length}):` : 
-                                `Standard Options (${displayOptions.length}):`;
-                            } else {
-                              return `All Options (${displayOptions.length}):`;
-                            }
-                          })()}
-                        </h6>
-                        <div className="space-y-2">
-                          {displayOptions.map((option: any, i: number) => {
-                            const hasWithHHD = option.view_type?.includes('with_hhd');
-                            const hasSansHHD = option.view_type?.includes('sans_hhd');
-                            
-                            return (
-                              <div key={`${i}-${applyDiscounts}`} className="text-sm p-3 border rounded flex justify-between items-center">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium">
-                                      {option.name || 
-                                       (option.rating_class ? `${option.rating_class} Class` : '') ||
-                                       (option.discount_category ? `${option.discount_category} Rate` : '') ||
-                                       `Plan ${quoteData.plan} Option ${i + 1}`}
-                                    </span>
-                                    {option.isRecommended && <Badge className="text-xs">Recommended</Badge>}
-                                    {option.isCalculatedDiscount && (
-                                      <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
-                                        calculated
-                                      </Badge>
-                                    )}
-                                    {hasWithHHD && (
-                                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                                        Including Household Discount
-                                      </Badge>
-                                    )}
-                                    {hasSansHHD && (
-                                      <Badge variant="outline" className="text-xs">
-                                        Household Discount Available
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Rating Class */}
-                                  {option.rating_class && (
-                                    <div className="text-xs text-blue-600 mb-1">
-                                      Rating Class: {option.rating_class}
-                                    </div>
-                                  )}
-                                  
-                                  {/* Description */}
-                                  {option.description && (
-                                    <div className="text-xs text-muted-foreground mb-1">{option.description}</div>
-                                  )}
-                                  
-                                  {/* Discount Category */}
-                                  {option.discount_category && (
-                                    <div className="text-xs text-purple-600 mb-1">
-                                      Category: {option.discount_category}
-                                    </div>
-                                  )}
-                                  
-                                  {/* View Types */}
-                                  {option.view_type && option.view_type.length > 0 && (
-                                    <div className="text-xs text-gray-500 mb-1">
-                                      View types: {option.view_type.join(', ')}
-                                    </div>
-                                  )}
-                                  
-                                  {/* Available Discounts */}
-                                  {option.discounts && option.discounts.length > 0 && (
-                                    <div className="text-xs text-green-600 mb-1">
-                                      Discounts: {option.discounts.map((d: any) => d.name || d.type).join(', ')}
-                                    </div>
-                                  )}
-                                  
-                                  {/* Company Rating */}
-                                  {option.company_base?.ambest_rating && option.company_base.ambest_rating !== 'n/a' && (
-                                    <div className="text-xs text-gray-600">
-                                      AM Best Rating: {option.company_base.ambest_rating}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <div className="font-medium">${((option.rate?.month || 0) / 100).toFixed(2)}/mo</div>
-                                  {option.rate?.annual && (
-                                    <div className="text-xs text-muted-foreground">
-                                      ${Math.round((option.rate.annual || 0) / 100)}/year
-                                    </div>
-                                  )}
-                                  {option.savings && (
-                                    <div className="text-xs text-green-600">
-                                      Save ${((option.savings || 0) / 100).toFixed(2)}/mo
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Drug Plan Quotes Modal */}
       <Dialog open={showDrugPlanModal} onOpenChange={setShowDrugPlanModal}>

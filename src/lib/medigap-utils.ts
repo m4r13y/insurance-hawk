@@ -4,48 +4,88 @@
 export const processOptionsForDisplay = (plan: any, applyDiscounts: boolean) => {
   console.log('processOptionsForDisplay - plan:', plan.plan, 'applyDiscounts:', applyDiscounts);
   
-  const hasWithHHD = plan.options.some((opt: any) => opt.view_type?.includes('with_hhd'));
-  const hasSansHHD = plan.options.some((opt: any) => opt.view_type?.includes('sans_hhd'));
+  // Log all view_types to debug
+  console.log('All options view_types:');
+  plan.options.forEach((opt: any, index: number) => {
+    console.log(`  Option ${index}:`, {
+      rating_class: opt.rating_class,
+      view_type: opt.view_type,
+      rate: opt.rate?.month
+    });
+  });
+  
+  // Check if this plan has pre-calculated discounts
+  // Check both view_type and rating_class for discount indicators
+  const hasWithHHD = plan.options.some((opt: any) => 
+    opt.view_type?.includes('with_hhd') || 
+    opt.rating_class?.toLowerCase().includes('hhd')
+  );
+  const hasSansHHD = plan.options.some((opt: any) => 
+    opt.view_type?.includes('sans_hhd') || 
+    (opt.rating_class && !opt.rating_class.toLowerCase().includes('hhd'))
+  );
   const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
 
+  console.log('Detection results:', { hasWithHHD, hasSansHHD, hasPreCalculatedDiscounts });
+
   if (hasPreCalculatedDiscounts) {
+    // For pre-calculated discounts, just filter based on toggle
     if (applyDiscounts) {
-      const filtered = plan.options.filter((opt: any) => opt.view_type?.includes('with_hhd'));
-      console.log('✅ Pre-calculated: Showing with_hhd options:', filtered.length);
+      // Show with_hhd options OR options with HHD in rating_class (discounted versions)
+      const filtered = plan.options.filter((opt: any) => 
+        opt.view_type?.includes('with_hhd') || 
+        opt.rating_class?.toLowerCase().includes('hhd')
+      );
+      console.log('✅ Pre-calculated: Showing discounted options:', filtered.length);
       return filtered;
     } else {
-      const filtered = plan.options.filter((opt: any) => opt.view_type?.includes('sans_hhd'));
-      console.log('✅ Pre-calculated: Showing sans_hhd options:', filtered.length);
+      // Show sans_hhd options OR options without HHD in rating_class (non-discounted versions)
+      const filtered = plan.options.filter((opt: any) => 
+        opt.view_type?.includes('sans_hhd') || 
+        (opt.rating_class !== undefined && !opt.rating_class.toLowerCase().includes('hhd'))
+      );
+      console.log('✅ Pre-calculated: Showing standard options:', filtered.length);
       return filtered;
     }
   } else {
+    // For non-pre-calculated discounts, we need to calculate
     if (applyDiscounts) {
-      const optionsWithDiscounts = plan.options?.filter((opt: any) => 
-        opt.discounts && opt.discounts.length > 0
-      ).map((opt: any) => {
-        let discountedRate = opt.rate.month;
-        opt.discounts.forEach((discount: any) => {
-          const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
-          discountedRate = discountedRate * (1 - discountPercent / 100);
-        });
-        console.log(`Applied calculated discount to ${opt.rating_class || 'option'}: ${opt.rate.month} -> ${discountedRate}`);
-        return { ...opt, rate: { ...opt.rate, month: discountedRate }, isCalculatedDiscount: true };
-      }) || [];
+      // Apply discounts to base options
+      const result = plan.options.map((opt: any) => {
+        // Check if this option has discounts available
+        const hasDiscounts = opt.discounts && opt.discounts.length > 0;
+        
+        if (hasDiscounts) {
+          // Calculate discounted price
+          let discountedRate = opt.rate.month;
+          opt.discounts.forEach((discount: any) => {
+            const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
+            discountedRate = discountedRate * (1 - discountPercent / 100);
+          });
+          
+          console.log(`Applied calculated discount to ${opt.rating_class || 'option'}: ${opt.rate.month} -> ${discountedRate}`);
+          return {
+            ...opt,
+            rate: {
+              ...opt.rate,
+              month: discountedRate,
+              annual: discountedRate * 12,
+              quarter: discountedRate * 3,
+              semi_annual: discountedRate * 6
+            },
+            isCalculatedDiscount: true
+          };
+        }
+        
+        return opt;
+      });
       
-      console.log('✅ Calculated: Showing options with discounts applied:', optionsWithDiscounts.length);
-      return optionsWithDiscounts;
+      console.log('✅ Calculated: Showing options with discounts applied:', result.length);
+      return result;
     } else {
-      const optionsWithoutDiscounts = plan.options?.filter((opt: any) => 
-        !opt.discounts || opt.discounts.length === 0
-      ) || [];
-      
-      if (optionsWithoutDiscounts.length === 0) {
-        console.log('✅ Calculated: No options without discounts found, showing all options with base rates:', plan.options?.length || 0);
-        return plan.options || [];
-      }
-      
-      console.log('✅ Calculated: Showing only options without discounts:', optionsWithoutDiscounts.length);
-      return optionsWithoutDiscounts;
+      // Show base options without discounts
+      console.log('✅ Calculated: Showing all base options without discount calculations:', plan.options?.length || 0);
+      return plan.options;
     }
   }
 };
