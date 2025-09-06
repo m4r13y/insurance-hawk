@@ -1087,12 +1087,25 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       {/* Medicare Part A & B */}
                       <div className={`border rounded-lg p-4 ${
                         chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                          ? 'bg-green-50 border-green-500' 
-                          : 'bg-red-50 border-red-500'
+                          ? 'border-green-500' 
+                          : 'border-red-500'
                       }`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Checkbox 
+                            <div>
+                              <h5 className={`font-medium ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? '' 
+                                  : ''
+                              }`}>Medicare Part A & B</h5>
+                              <p className={`text-sm ${
+                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
+                                  ? '' 
+                                  : ''
+                              }`}>Base Medicare coverage (required)</p>
+                            </div>
+                            </div>
+                              <Checkbox 
                               checked={chartData.find(item => item.name === 'Medicare A & B')?.selected || false}
                               onCheckedChange={(checked) => {
                                 setChartData(prevData => 
@@ -1104,41 +1117,19 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 );
                               }}
                             />
-                            <div>
-                              <h5 className={`font-medium ${
-                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                  ? 'text-green-900' 
-                                  : 'text-red-900'
-                              }`}>Medicare Part A & B</h5>
-                              <p className={`text-sm ${
-                                chartData.find(item => item.name === 'Medicare A & B')?.selected 
-                                  ? 'text-green-700' 
-                                  : 'text-red-700'
-                              }`}>Base Medicare coverage (required)</p>
-                            </div>
-                          </div>
+                          
                         </div>
                       </div>
 
                       {/* Selected Medigap Plan */}
                       {selectedPlanOption ? (
-                        <div className="p-4 bg-green-50 border border-green-500 rounded-lg">
+                        <div className="p-4 border border-green-500 rounded-lg">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-semibold text-green-900">Selected Plan</h4>
-                              <p className="text-sm text-green-700">
-                                {selectedPlanOption.name || 
-                                 (selectedPlanOption.rating_class ? `${selectedPlanOption.rating_class} Class` : '') ||
-                                 `Plan ${quoteData.plan} Option`}
-                              </p>
-                              {selectedPlanOption.description && (
-                                <p className="text-xs text-green-600 mt-1">{selectedPlanOption.description}</p>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-semibold text-green-900">
-                                ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
-                              </div>
+                            <div className='text-md'>
+                              <h4 className="font-semibold">
+                                {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')} - Plan {quoteData.plan}
+                              </h4>
+                              <div className='flex items-center gap-2'>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1147,6 +1138,23 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                               >
                                 Change Plan
                               </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedPlanOption(null)}
+                                className="mt-2"
+                              >
+                                Info
+                              </Button>
+                              </div>
+                              {selectedPlanOption.description && (
+                                <p className="text-xs mt-1">{selectedPlanOption.description}</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xl font-semibold">
+                                ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
+                              </div>
                             </div>
                           </div>
                         </div>
