@@ -30,7 +30,7 @@ import {
   LightningBoltIcon as Zap,
   MagnifyingGlassIcon as Search,
   MixerHorizontalIcon as Filter,
-  GitHubLogoIcon as GitCompare,
+  Component2Icon as Compare,
   DownloadIcon as Download,
   ExternalLinkIcon as ExternalLink,
   InfoCircledIcon as Info,
@@ -405,7 +405,7 @@ const PlanCard: React.FC<{
             className="flex-1"
             variant={isComparing ? "secondary" : "default"}
           >
-            <GitCompare className="h-4 w-4 mr-2" />
+            <Compare className="h-4 w-4 mr-2" />
             {isComparing ? "Remove from Compare" : "Add to Compare"}
           </Button>
         </div>
@@ -627,7 +627,7 @@ export default function ComprehensiveMedicareAdvantageContent({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <GitCompare className="h-5 w-5 text-blue-600" />
+                  <Compare className="h-5 w-5 text-blue-600" />
                   <span className="font-medium text-blue-900">
                     Comparing {comparePlans.length} plan{comparePlans.length > 1 ? "s" : ""}
                   </span>

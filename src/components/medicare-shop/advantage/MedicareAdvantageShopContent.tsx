@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import MedicareAdvantageSidebar, { MedicareAdvantageFilters } from "./MedicareAdvantageSidebar";
 import { getMedicareAdvantageQuotes } from "@/lib/actions/advantage-quotes";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
+import { loadFromStorage, saveToStorage, ADVANTAGE_QUOTES_KEY } from '@/lib/services/storage-bridge';
 import { 
   StarFilledIcon as Star, 
   PersonIcon,
@@ -23,8 +25,6 @@ import {
   LightningBoltIcon,
   InfoCircledIcon as Info,
   CheckIcon as Check,
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
   Cross1Icon as X,
   ResetIcon,
   ReaderIcon as Stethoscope,
@@ -33,7 +33,14 @@ import {
   RocketIcon as Ambulance,
   TokensIcon as DollarSign,
   GlobeIcon as MapPin,
-  GitHubLogoIcon as GitCompare
+  Component2Icon as Compare,
+  ViewGridIcon as GridView,
+  ListBulletIcon as ListView,
+  MagnifyingGlassIcon as SearchIcon,
+  GearIcon as ColumnOptions,
+  GridIcon as Grid,
+  ListBulletIcon as List,
+  GearIcon as Settings
 } from "@radix-ui/react-icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -41,6 +48,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Medicare Advantage Quote Interface
 interface MedicareAdvantageQuote {
@@ -55,6 +64,7 @@ interface MedicareAdvantageQuote {
   part_d_rate: number;
   month_rate: number;
   in_network_moop: string;
+  annual_drug_deductible: number; // Missing field from API
   benefits: Array<{
     benefit_type: string;
     full_description: string;
@@ -100,6 +110,188 @@ const formatCurrency = (cents: number): string => {
   }).format(cents / 100);
 };
 
+// Helper function to extract benefit data
+const extractBenefitData = (plan: MedicareAdvantageQuote, benefitType: string): string => {
+  const benefit = plan.benefits?.find(b => 
+    b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+  );
+  
+  if (!benefit) return 'N/A';
+  
+  if (typeof benefit.summary_description === 'string') {
+    return benefit.summary_description;
+  } else if (benefit.summary_description?.in_network) {
+    return benefit.summary_description.in_network;
+  } else {
+    return benefit.full_description || 'Details available';
+  }
+};
+
+// Improved helper functions for specific data extraction based on API analysis
+const getMedicalDeductible = (plan: MedicareAdvantageQuote): string => {
+  const deductibleBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase().includes('health plan deductible') ||
+    b.benefit_type.toLowerCase().includes('medical deductible')
+  );
+  
+  if (deductibleBenefit) {
+    if (deductibleBenefit.summary_description?.in_network) {
+      return deductibleBenefit.summary_description.in_network;
+    }
+    // Clean HTML tags and extract value
+    const cleanText = deductibleBenefit.full_description.replace(/<[^>]*>/g, '').trim();
+    return cleanText || '$0';
+  }
+  return 'Contact Plan';
+};
+
+const getDrugDeductible = (plan: MedicareAdvantageQuote): string => {
+  // Use the direct API field if available
+  if (plan.annual_drug_deductible !== undefined) {
+    return plan.annual_drug_deductible === 0 ? '$0' : `$${plan.annual_drug_deductible}`;
+  }
+  
+  // Fallback to benefits search
+  const drugDeductibleBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase().includes('drug deductible') ||
+    b.benefit_type.toLowerCase().includes('prescription deductible')
+  );
+  
+  if (drugDeductibleBenefit) {
+    return extractBenefitData(plan, 'drug deductible') || 'Contact Plan';
+  }
+  return 'Contact Plan';
+};
+
+const getPrimaryCareData = (plan: MedicareAdvantageQuote): string => {
+  const doctorVisitBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase().includes("doctor's office visits") ||
+    b.benefit_type.toLowerCase().includes("primary care")
+  );
+  
+  if (doctorVisitBenefit?.summary_description?.in_network) {
+    const summary = doctorVisitBenefit.summary_description.in_network;
+    // Extract primary care copay from text like "$0 copay for Primary. $35 copay per visit for Specialist"
+    const primaryMatch = summary.match(/\$\d+\s+copay\s+for\s+Primary/i);
+    return primaryMatch ? primaryMatch[0] : summary;
+  }
+  return 'Contact Plan';
+};
+
+const getSpecialistCareData = (plan: MedicareAdvantageQuote): string => {
+  const doctorVisitBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase().includes("doctor's office visits") ||
+    b.benefit_type.toLowerCase().includes("specialist")
+  );
+  
+  if (doctorVisitBenefit?.summary_description?.in_network) {
+    const summary = doctorVisitBenefit.summary_description.in_network;
+    // Extract specialist copay from text
+    const specialistMatch = summary.match(/\$\d+\s+copay.*specialist/i);
+    return specialistMatch ? specialistMatch[0] : summary;
+  }
+  return 'Contact Plan';
+};
+
+const getOTCBenefit = (plan: MedicareAdvantageQuote): string => {
+  const otcBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase() === 'otc items' ||
+    b.benefit_type.toLowerCase().includes('over-the-counter') ||
+    b.benefit_type.toLowerCase().includes('over the counter')
+  );
+  
+  if (otcBenefit) {
+    if (otcBenefit.summary_description?.in_network) {
+      return otcBenefit.summary_description.in_network;
+    }
+    // Extract benefit amount from full description
+    const amountMatch = otcBenefit.full_description.match(/\$\d+/);
+    if (amountMatch) {
+      return amountMatch[0];
+    }
+    // Check if it mentions "Some Coverage"
+    if (otcBenefit.full_description.toLowerCase().includes('some coverage')) {
+      return 'Some Coverage';
+    }
+  }
+  return 'Not Covered';
+};
+
+const hasBenefitType = (plan: MedicareAdvantageQuote, benefitType: string): boolean => {
+  const benefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+    b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+  );
+  
+  if (!benefit) return false;
+  
+  // Get all text content and clean HTML
+  const fullDesc = (benefit.full_description || '').replace(/<[^>]*>/g, ' ').toLowerCase().trim();
+  const inNetwork = (benefit.summary_description?.in_network || '').toLowerCase().trim();
+  const outNetwork = (benefit.summary_description?.out_network || '').toLowerCase().trim();
+  const allText = `${fullDesc} ${inNetwork} ${outNetwork}`.replace(/\s+/g, ' ').trim();
+  
+  // If no content at all, assume no benefit
+  if (!allText || allText === '') return false;
+  
+  // Strong positive indicators first (these override negatives)
+  const positiveIndicators = [
+    '$0',
+    '$', // Any dollar amount
+    'copay',
+    'coinsurance', 
+    'covered',
+    'some coverage',
+    'per visit',
+    'per day',
+    'per year',
+    'included',
+    'available',
+    'deductible',
+    'maximum',
+    'limit',
+    'allowance',
+    'in-network',
+    'days 1',
+    'tier 1'
+  ];
+  
+  // Check for positive indicators first
+  const hasPositive = positiveIndicators.some(indicator => 
+    allText.includes(indicator)
+  );
+  
+  // Strong negative indicators - only applies if NO positive indicators found
+  const strongNegativeIndicators = [
+    'not covered',
+    'no coverage',
+    'not available',
+    'excluded',
+    'not included',
+    'no benefit'
+  ];
+  
+  // If we have positive indicators, it's positive (mixed benefits favor positive)
+  if (hasPositive) return true;
+  
+  // Only check for negatives if no positives found
+  const hasStrongNegative = strongNegativeIndicators.some(indicator => 
+    allText.includes(indicator)
+  );
+  
+  if (hasStrongNegative) return false;
+  
+  // Check for simple "covered" or "yes" responses
+  const simplePositives = ['covered', 'yes', 'some coverage'];
+  const hasSimplePositive = simplePositives.some(indicator => 
+    allText.includes(indicator)
+  );
+  
+  if (hasSimplePositive) return true;
+  
+  return false;
+};
+
 // Helper function to render star rating
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
@@ -138,6 +330,7 @@ const PlanCard: React.FC<{
   onViewDetails: (plan: MedicareAdvantageQuote) => void;
   isComparing: boolean;
 }> = ({ plan, onCompare, onViewDetails, isComparing }) => {
+  const [planSearch, setPlanSearch] = useState('');
   const [showAllBenefits, setShowAllBenefits] = useState(false);
   
   // Group benefits by category for better organization
@@ -184,11 +377,14 @@ const PlanCard: React.FC<{
 
       <CardContent className="pt-0">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="benefits">Benefits</TabsTrigger>
             <TabsTrigger value="drugs">Prescriptions</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="search" className="px-2">
+              <SearchIcon className="h-4 w-4" />
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
@@ -266,9 +462,9 @@ const PlanCard: React.FC<{
                               className="w-full"
                             >
                               {showAllBenefits ? (
-                                <>Show Less <ChevronUp className="ml-1 h-3 w-3" /></>
+                                <>Show Less</>
                               ) : (
-                                <>Show {benefits.length - 3} More <ChevronDown className="ml-1 h-3 w-3" /></>
+                                <>Show {benefits.length - 3} More</>
                               )}
                             </Button>
                           )}
@@ -317,6 +513,66 @@ const PlanCard: React.FC<{
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="search" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Search plan details, benefits, or coverage..."
+                  value={planSearch}
+                  onChange={(e) => setPlanSearch(e.target.value)}
+                  className="flex-1"
+                />
+                <Button variant="outline" size="sm">
+                  <SearchIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {planSearch && (
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Search Results:</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {plan.benefits
+                      ?.filter(benefit => {
+                        const query = planSearch.toLowerCase();
+                        const matchesBenefitType = benefit.benefit_type.toLowerCase().includes(query);
+                        const matchesFullDescription = benefit.full_description.toLowerCase().includes(query);
+                        
+                        let matchesSummary = false;
+                        const summaryDesc = benefit.summary_description;
+                        if (summaryDesc) {
+                          try {
+                            // Handle as object type (which is what it's defined as)
+                            if (typeof summaryDesc === 'object' && summaryDesc !== null) {
+                              const obj = summaryDesc;
+                              matchesSummary = !!(
+                                (obj.in_network && obj.in_network.toLowerCase().includes(query)) ||
+                                (obj.out_network && obj.out_network.toLowerCase().includes(query))
+                              );
+                            }
+                          } catch (e) {
+                            // Ignore type errors and continue
+                          }
+                        }
+                        
+                        return matchesBenefitType || matchesFullDescription || matchesSummary;
+                      })
+                      .map((benefit, index) => (
+                        <div key={index} className="p-2 bg-gray-50 rounded text-sm">
+                          <div className="font-medium">{benefit.benefit_type}</div>
+                          <div className="text-gray-600 text-xs mt-1">
+                            {typeof benefit.summary_description === 'string' 
+                              ? benefit.summary_description 
+                              : benefit.summary_description?.in_network || benefit.full_description}
+                          </div>
+                        </div>
+                      )) || <div className="text-sm text-gray-500">No matching benefits found.</div>
+                    }
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         <div className="flex gap-2 mt-6">
@@ -333,12 +589,361 @@ const PlanCard: React.FC<{
             className="flex-1"
             variant={isComparing ? "secondary" : "default"}
           >
-            <GitCompare className="h-4 w-4 mr-2" />
+            <Compare className="h-4 w-4 mr-2" />
             {isComparing ? "Remove from Compare" : "Add to Compare"}
           </Button>
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+// Expanded Row Search Component
+const ExpandedRowSearch: React.FC<{ plan: MedicareAdvantageQuote }> = ({ plan }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Search plan details, benefits, or coverage..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1"
+        />
+        <Button variant="outline" size="sm">
+          <SearchIcon className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {searchQuery && (
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm">Search Results:</h4>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {plan.benefits
+              ?.filter(benefit => {
+                const query = searchQuery.toLowerCase();
+                const matchesBenefitType = benefit.benefit_type.toLowerCase().includes(query);
+                const matchesFullDescription = benefit.full_description.toLowerCase().includes(query);
+                
+                let matchesSummary = false;
+                try {
+                  const summary = benefit.summary_description;
+                  if (summary && typeof summary === 'object') {
+                    matchesSummary = !!(
+                      (summary.in_network && summary.in_network.toLowerCase().includes(query)) ||
+                      (summary.out_network && summary.out_network.toLowerCase().includes(query))
+                    );
+                  }
+                } catch (e) {
+                  // Ignore errors
+                }
+                
+                return matchesBenefitType || matchesFullDescription || matchesSummary;
+              })
+              .map((benefit, index) => (
+                <div key={index} className="p-2 bg-white rounded text-sm border">
+                  <div className="font-medium">{benefit.benefit_type}</div>
+                  <div className="text-gray-600 text-xs mt-1">
+                    {typeof benefit.summary_description === 'string' 
+                      ? benefit.summary_description 
+                      : benefit.summary_description?.in_network || benefit.full_description}
+                  </div>
+                </div>
+              )) || <div className="text-sm text-gray-500">No matching benefits found.</div>
+            }
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Plan List View Component for table display
+const PlanListView: React.FC<{
+  plans: MedicareAdvantageQuote[];
+  visibleColumns: string[];
+  expandedRows: Set<string>;
+  onRowClick: (planKey: string) => void;
+  onCompare: (plan: MedicareAdvantageQuote) => void;
+  onViewDetails: (plan: MedicareAdvantageQuote) => void;
+  comparePlans: MedicareAdvantageQuote[];
+  availableColumns: Array<{ id: string; label: string; required: boolean; default: boolean; }>;
+  setComparePlans: React.Dispatch<React.SetStateAction<MedicareAdvantageQuote[]>>;
+  compareMode: boolean;
+}> = ({ plans, visibleColumns, expandedRows, onRowClick, onCompare, onViewDetails, comparePlans, availableColumns, setComparePlans, compareMode }) => {
+  
+  const renderCellContent = (plan: MedicareAdvantageQuote, columnId: string) => {
+    switch (columnId) {
+      case 'plan_name':
+        return (
+          <div className="flex items-center gap-3">
+            <div>
+              <div className="font-medium">{plan.plan_name}</div>
+              <div className="flex items-center gap-2 my-1">
+                <StarRating rating={plan.overall_star_rating} />
+              </div>
+              <div className="text-sm text-gray-500">{plan.organization_name}</div>
+            </div>
+          </div>
+        );
+      case 'monthly_premium':
+        return <span className="font-medium">{formatCurrency(plan.month_rate)}</span>;
+      case 'annual_cost':
+        // Calculate annual cost (monthly premium * 12)
+        return <span className="font-medium">{formatCurrency(plan.month_rate * 12)}</span>;
+      case 'max_out_of_pocket':
+        return <span className="text-sm">{plan.in_network_moop}</span>;
+      case 'drug_deductible':
+        return <span className="text-sm">{getDrugDeductible(plan)}</span>;
+      case 'dental':
+        const hasDental = hasBenefitType(plan, 'Comprehensive Dental Service');
+        return hasDental ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-gray-400" />;
+      case 'medical_deductible':
+        return <span className="text-sm">{getMedicalDeductible(plan)}</span>;
+      case 'primary_care_copay':
+        return <span className="text-sm">{getPrimaryCareData(plan)}</span>;
+      case 'specialist_copay':
+        return <span className="text-sm">{getSpecialistCareData(plan)}</span>;
+      case 'otc_benefit':
+        return <span className="text-sm">{getOTCBenefit(plan)}</span>;
+      case 'vision':
+        const hasVision = hasBenefitType(plan, 'Vision');
+        return hasVision ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-gray-400" />;
+      case 'hearing':
+        const hasHearing = hasBenefitType(plan, 'Hearing services');
+        return hasHearing ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-gray-400" />;
+      case 'transport':
+        const hasTransport = hasBenefitType(plan, 'Transportation');
+        return hasTransport ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-gray-400" />;
+      default:
+        return <span>-</span>;
+    }
+  };
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {compareMode && (
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={comparePlans.length === plans.length && plans.length > 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      // Add all plans to compare (up to 3)
+                      setComparePlans(plans.slice(0, 3));
+                    } else {
+                      // Clear all compare selections
+                      setComparePlans([]);
+                    }
+                  }}
+                />
+              </TableHead>
+            )}
+            {visibleColumns.map((columnId) => {
+              const column = availableColumns.find(col => col.id === columnId);
+              return (
+                <TableHead key={columnId} className="font-semibold">
+                  {column?.label}
+                </TableHead>
+              );
+            })}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {plans.map((plan) => (
+            <React.Fragment key={plan.key}>
+              {/* Main Row */}
+              <TableRow 
+                className={`cursor-pointer hover:bg-gray-50 ${comparePlans.some(p => p.key === plan.key) ? 'bg-blue-50' : ''}`}
+                onClick={() => onRowClick(plan.key)}
+              >
+                {compareMode && (
+                  <TableCell>
+                    <Checkbox
+                      checked={comparePlans.some(p => p.key === plan.key)}
+                      onCheckedChange={(checked) => {
+                        const event = new Event('stopPropagation');
+                        event.stopPropagation();
+                        onCompare(plan);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
+                )}
+                {visibleColumns.map((columnId) => (
+                  <TableCell key={columnId}>
+                    {renderCellContent(plan, columnId)}
+                  </TableCell>
+                ))}
+              </TableRow>
+              
+              {/* Expanded Row */}
+              {expandedRows.has(plan.key) && (
+                <TableRow>
+                  <TableCell colSpan={visibleColumns.length + (compareMode ? 1 : 0)} className="p-0">
+                    <div className="bg-gray-50 p-6 border-t">
+                      <Tabs defaultValue="overview" className="w-full">
+                        <TabsList className="grid w-full grid-cols-5">
+                          <TabsTrigger value="overview">Overview</TabsTrigger>
+                          <TabsTrigger value="benefits">Benefits</TabsTrigger>
+                          <TabsTrigger value="drugs">Prescriptions</TabsTrigger>
+                          <TabsTrigger value="resources">Resources</TabsTrigger>
+                          <TabsTrigger value="search" className="px-2">
+                            <SearchIcon className="h-4 w-4" />
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="overview" className="mt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Plan Summary */}
+                            <div>
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <Info className="h-4 w-4" />
+                                Plan Summary
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span>Plan Key:</span>
+                                  <span className="font-medium">{plan.key}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Organization:</span>
+                                  <span className="font-medium">{plan.organization_name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Plan Type:</span>
+                                  <span className="font-medium">{plan.plan_type}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Service Area:</span>
+                                  <span className="font-medium">{plan.county}, {plan.state}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Cost Summary */}
+                            <div>
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <DollarSign className="h-4 w-4" />
+                                Cost Details
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span>Monthly Premium:</span>
+                                  <span className="font-medium">{formatCurrency(plan.month_rate)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Part C Rate:</span>
+                                  <span className="font-medium">{formatCurrency(plan.part_c_rate)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Max Out-of-Pocket:</span>
+                                  <span className="font-medium">{plan.in_network_moop}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Key Benefits */}
+                            <div>
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <Shield className="h-4 w-4" />
+                                Key Benefits
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                {plan.benefits && plan.benefits.slice(0, 4).map((benefit, index) => (
+                                  <div key={index} className="flex items-start gap-2">
+                                    {getBenefitIcon(benefit.benefit_type)}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium truncate">{benefit.benefit_type}</div>
+                                      <div className="text-gray-600 text-xs truncate">
+                                        {typeof benefit.summary_description === 'string' 
+                                          ? benefit.summary_description 
+                                          : benefit.summary_description?.in_network || 'Details available'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="benefits" className="mt-4">
+                          <div className="grid gap-4">
+                            {plan.benefits && plan.benefits.map((benefit, index) => (
+                              <div key={index} className="p-3 border rounded-lg">
+                                <div className="flex items-start gap-3">
+                                  {getBenefitIcon(benefit.benefit_type)}
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-sm">{benefit.benefit_type}</h4>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                      {typeof benefit.summary_description === 'string' 
+                                        ? benefit.summary_description 
+                                        : benefit.summary_description?.in_network || benefit.full_description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="drugs" className="mt-4">
+                          <div className="space-y-4">
+                            <h4 className="font-medium">Prescription Drug Coverage</h4>
+                            {plan.drug_benefit_type ? (
+                              <div className="p-3 border rounded-lg">
+                                <div className="font-medium text-sm">Coverage Type: {plan.drug_benefit_type}</div>
+                                {plan.drug_benefit_type_detail && (
+                                  <div className="text-xs text-gray-600 mt-1">{plan.drug_benefit_type_detail}</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">No prescription drug coverage information available.</div>
+                            )}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="resources" className="mt-4">
+                          <div className="space-y-4">
+                            <h4 className="font-medium">Plan Resources</h4>
+                            {plan.contextual_data?.carrier_resources && Object.keys(plan.contextual_data.carrier_resources).length > 0 ? (
+                              <div className="grid gap-2">
+                                {Object.entries(plan.contextual_data.carrier_resources).map(([key, url]) => (
+                                  <a
+                                    key={key}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                                  >
+                                    <Globe className="h-3 w-3" />
+                                    {key}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">No additional resources available.</div>
+                            )}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="search" className="mt-4">
+                          <ExpandedRowSearch plan={plan} />
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </React.Fragment>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
@@ -377,49 +982,99 @@ export default function MedicareAdvantageShopContent({
   const [selectedPlan, setSelectedPlan] = useState<MedicareAdvantageQuote | null>(null);
   const [showCompareDialog, setShowCompareDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [selectedAdvantageTypes, setSelectedAdvantageTypes] = useState<string[]>(['HMO', 'HMOPOS', 'LOCAL PPO', 'REGIONAL PPO', 'PFFS', 'MSA']);
+
+  // View mode and column management
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list'); // Default to list view
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(['plan_name', 'max_out_of_pocket', 'drug_deductible', 'monthly_premium', 'annual_cost']); // Default active columns per instructions
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [compareMode, setCompareMode] = useState(false); // Track if we're in compare selection mode
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const plansPerPage = 10;
+
+  // Available columns for the dropdown
+  const availableColumns = [
+    // Required Columns (always visible)
+    { id: 'plan_name', label: 'Plan Info', required: true, default: true },
+    { id: 'monthly_premium', label: 'Monthly Premium', required: true, default: true },
+    { id: 'annual_cost', label: 'Annual Cost', required: true, default: true },
+    
+    // Default Active Columns
+    { id: 'max_out_of_pocket', label: 'Max Out-of-Pocket', required: false, default: true },
+    { id: 'drug_deductible', label: 'Drug Deductible', required: false, default: true },
+    
+    // Other Column Options
+    { id: 'dental', label: 'Dental', required: false, default: false },
+    { id: 'medical_deductible', label: 'Medical Deductible', required: false, default: false },
+    { id: 'primary_care_copay', label: 'Primary Care Co-pay', required: false, default: false },
+    { id: 'specialist_copay', label: 'Specialist Co-pay', required: false, default: false },
+    { id: 'otc_benefit', label: 'OTC Benefit', required: false, default: false },
+    { id: 'vision', label: 'Vision', required: false, default: false },
+    { id: 'hearing', label: 'Hearing', required: false, default: false },
+    { id: 'transport', label: 'Transport', required: false, default: false },
+  ];
 
   // Helper functions
   const hasQuotes = () => {
     return plans?.length > 0;
   };
 
+  // Handle row expansion
+  const handleRowClick = (planKey: string) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (expandedRows.has(planKey)) {
+      newExpandedRows.delete(planKey);
+    } else {
+      newExpandedRows.add(planKey);
+    }
+    setExpandedRows(newExpandedRows);
+  };
+
   // Load saved data on component mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedZipCode = localStorage.getItem('medicare_advantage_zipcode');
-      const savedPlans = localStorage.getItem('medicare_advantage_quotes');
-      const savedFilters = localStorage.getItem('medicare_advantage_filters');
-      
-      if (savedZipCode) {
-        setZipCode(savedZipCode);
-      }
-      
-      // Use external quotes if provided, otherwise fall back to localStorage
-      if (externalQuotes && externalQuotes.length > 0) {
-        console.log('🎯 Using external Medicare Advantage quotes:', externalQuotes.length);
-        setPlans(externalQuotes);
-      } else if (savedPlans) {
-        try {
-          const parsedPlans = JSON.parse(savedPlans);
-          setPlans(parsedPlans);
-        } catch (error) {
-          console.error('Error parsing saved plans:', error);
+    const loadData = async () => {
+      if (typeof window !== 'undefined') {
+        // Use external quotes if provided, otherwise load from Firestore
+        if (externalQuotes && externalQuotes.length > 0) {
+          console.log('🎯 Using external Medicare Advantage quotes:', externalQuotes.length);
+          setPlans(externalQuotes);
+        } else {
+          try {
+            console.log('📥 Loading Medicare Advantage quotes from Firestore...');
+            const savedPlans = await loadFromStorage(ADVANTAGE_QUOTES_KEY, []);
+            if (savedPlans && savedPlans.length > 0) {
+              console.log('✅ Loaded Medicare Advantage quotes from Firestore:', savedPlans.length);
+              setPlans(savedPlans);
+            }
+          } catch (error) {
+            console.error('Error loading plans from Firestore:', error);
+          }
+        }
+
+        // Still load zipcode and filters from localStorage for UI state
+        const savedZipCode = localStorage.getItem('medicare_advantage_zipcode');
+        const savedFilters = localStorage.getItem('medicare_advantage_filters');
+        
+        if (savedZipCode) {
+          setZipCode(savedZipCode);
+        }
+        
+        if (savedFilters) {
+          try {
+            const parsedFilters = JSON.parse(savedFilters);
+            setFilters({ ...filters, ...parsedFilters });
+          } catch (error) {
+            console.error('Error parsing saved filters:', error);
+          }
         }
       }
-      
-      if (savedFilters) {
-        try {
-          const parsedFilters = JSON.parse(savedFilters);
-          setFilters({ ...filters, ...parsedFilters });
-        } catch (error) {
-          console.error('Error parsing saved filters:', error);
-        }
-      }
-    }
+    };
+
+    loadData();
   }, [externalQuotes]);
 
-  // Save data to localStorage when it changes
+  // Save data when it changes
   useEffect(() => {
     if (typeof window !== 'undefined' && zipCode) {
       localStorage.setItem('medicare_advantage_zipcode', zipCode);
@@ -427,8 +1082,11 @@ export default function MedicareAdvantageShopContent({
   }, [zipCode]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && plans.length > 0) {
-      localStorage.setItem('medicare_advantage_quotes', JSON.stringify(plans));
+    // Save plans to Firestore instead of localStorage
+    if (plans.length > 0) {
+      saveToStorage(ADVANTAGE_QUOTES_KEY, plans).catch(error => {
+        console.error('Error saving plans to Firestore:', error);
+      });
     }
   }, [plans]);
 
@@ -529,6 +1187,17 @@ export default function MedicareAdvantageShopContent({
     setFilteredPlans(filtered);
   }, [plans, filters]);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    setExpandedRows(new Set()); // Clear expanded rows when pagination changes
+  }, [filteredPlans]);
+
+  // Clear expanded rows when page changes
+  useEffect(() => {
+    setExpandedRows(new Set());
+  }, [currentPage]);
+
   const handleFiltersChange = (newFilters: MedicareAdvantageFilters) => {
     setFilters(newFilters);
   };
@@ -559,29 +1228,32 @@ export default function MedicareAdvantageShopContent({
     setShowCompareDialog(false);
     setShowDetailsDialog(false);
 
-    // Clear localStorage
+    // Clear localStorage and Firestore
     if (typeof window !== 'undefined') {
-      // Clear Medicare Advantage specific data
-      localStorage.removeItem('medicare_advantage_quotes');
+      // Clear localStorage UI state data only
       localStorage.removeItem('medicare_advantage_filters');
       localStorage.removeItem('medicare_advantage_zipcode');
       
-      // Clear shared Medicare data
+      // Clear shared Medicare UI data
       localStorage.removeItem('medicare_quote_form_data');
       localStorage.removeItem('medicare_quote_form_completed');
-      localStorage.removeItem('medicare_real_quotes');
       localStorage.removeItem('medicare_filter_state');
       localStorage.removeItem('planDetailsData');
       
-      // Clean up any other Medicare-related data
+      // Clean up any other Medicare-related UI data
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('medicare_')) {
+        if (key.startsWith('medicare_') && !key.includes('quotes')) {
           localStorage.removeItem(key);
         }
       });
-      
-      console.log('✅ Cleared all Medicare Advantage data and localStorage');
     }
+
+    // Clear quotes from Firestore
+    saveToStorage(ADVANTAGE_QUOTES_KEY, []).catch(error => {
+      console.error('Error clearing quotes from Firestore:', error);
+    });
+      
+    console.log('✅ Cleared all Medicare Advantage data and localStorage');
 
     // Navigate back to main Medicare flow page
     if (typeof window !== 'undefined') {
@@ -631,17 +1303,21 @@ export default function MedicareAdvantageShopContent({
   };
 
   const displayPlans = React.useMemo(() => {
-    const basePlans = filteredPlans.length > 0 ? filteredPlans : plans;
+    // Get filtered plans
+    const allFilteredPlans = filteredPlans.length > 0 ? filteredPlans : plans;
     
-    // Filter by selected advantage types
-    if (selectedAdvantageTypes.length > 0) {
-      return basePlans.filter(plan => 
-        selectedAdvantageTypes.includes(plan.plan_type)
-      );
-    }
+    // Apply pagination
+    const startIndex = (currentPage - 1) * plansPerPage;
+    const endIndex = startIndex + plansPerPage;
     
-    return basePlans;
-  }, [filteredPlans, plans, selectedAdvantageTypes]);
+    return allFilteredPlans.slice(startIndex, endIndex);
+  }, [filteredPlans, plans, currentPage, plansPerPage]);
+
+  // Calculate total pages and pagination info
+  const totalPlans = filteredPlans.length > 0 ? filteredPlans.length : plans.length;
+  const totalPages = Math.ceil(totalPlans / plansPerPage);
+  const startPlan = totalPlans > 0 ? (currentPage - 1) * plansPerPage + 1 : 0;
+  const endPlan = Math.min(currentPage * plansPerPage, totalPlans);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -664,7 +1340,7 @@ export default function MedicareAdvantageShopContent({
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <GitCompare className="h-5 w-5 text-blue-600" />
+                      <Compare className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-blue-900">
                         Comparing {comparePlans.length} plan{comparePlans.length > 1 ? "s" : ""}
                       </span>
@@ -713,7 +1389,7 @@ export default function MedicareAdvantageShopContent({
           {/* Plans List */}
           {!loading && !isExternallyLoading && displayPlans.length > 0 && (
             <div className="space-y-6">
-              {/* Results Header with Plan Type Controls */}
+              {/* Results Header with Compare and View Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-4">
@@ -726,111 +1402,181 @@ export default function MedicareAdvantageShopContent({
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Showing 1-{displayPlans.length} of {displayPlans.length} plan{displayPlans.length !== 1 ? 's' : ''}
+                    Showing {startPlan}-{endPlan} of {totalPlans} plan{totalPlans !== 1 ? 's' : ''}
                     <span className="ml-2 text-xs">
-                      ({plans.length} plan{plans.length !== 1 ? 's' : ''} loaded)
+                      (Page {currentPage} of {totalPages})
                     </span>
                   </p>
                 </div>
 
-                {/* Plan Type Controls */}
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-3">
-                    <span className="text-sm font-medium text-muted-foreground">Plan Types:</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {/* HMO (includes HMO + HMOPOS) */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-hmo-group"
-                          checked={selectedAdvantageTypes.includes('HMO') || selectedAdvantageTypes.includes('HMOPOS')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              const newTypes = [...selectedAdvantageTypes];
-                              if (!newTypes.includes('HMO')) newTypes.push('HMO');
-                              if (!newTypes.includes('HMOPOS')) newTypes.push('HMOPOS');
-                              setSelectedAdvantageTypes(newTypes);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'HMO' && plan !== 'HMOPOS'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-hmo-group" className="text-sm font-medium">
-                          HMO
-                        </label>
-                      </div>
-                      
-                      {/* PPO (includes Local PPO + Regional PPO) */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-ppo-group"
-                          checked={selectedAdvantageTypes.includes('LOCAL PPO') || selectedAdvantageTypes.includes('REGIONAL PPO')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              const newTypes = [...selectedAdvantageTypes];
-                              if (!newTypes.includes('LOCAL PPO')) newTypes.push('LOCAL PPO');
-                              if (!newTypes.includes('REGIONAL PPO')) newTypes.push('REGIONAL PPO');
-                              setSelectedAdvantageTypes(newTypes);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'LOCAL PPO' && plan !== 'REGIONAL PPO'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-ppo-group" className="text-sm font-medium">
-                          PPO
-                        </label>
-                      </div>
-                      
-                      {/* PFFS */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-pffs"
-                          checked={selectedAdvantageTypes.includes('PFFS')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'PFFS']);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'PFFS'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-pffs" className="text-sm font-medium">
-                          PFFS
-                        </label>
-                      </div>
-                      
-                      {/* MSA */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="header-plan-msa"
-                          checked={selectedAdvantageTypes.includes('MSA')}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedAdvantageTypes([...selectedAdvantageTypes, 'MSA']);
-                            } else {
-                              setSelectedAdvantageTypes(selectedAdvantageTypes.filter(plan => plan !== 'MSA'));
-                            }
-                          }}
-                        />
-                        <label htmlFor="header-plan-msa" className="text-sm font-medium">
-                          MSA
-                        </label>
-                      </div>
+                {/* Compare Button and View Controls */}
+                <div className="flex items-center gap-4">
+                  {/* Compare Mode Indicator */}
+                  {compareMode && (
+                    <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      Select plans to compare
                     </div>
+                  )}
+                  
+                  {/* Compare Button */}
+                  <Button 
+                    variant={compareMode ? "secondary" : comparePlans.length > 0 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      if (compareMode) {
+                        // Exit compare mode
+                        setCompareMode(false);
+                        if (comparePlans.length >= 2) {
+                          setShowCompareDialog(true);
+                        }
+                      } else {
+                        // Enter compare mode
+                        setCompareMode(true);
+                      }
+                    }}
+                    className="h-8"
+                  >
+                    <Compare className="h-4 w-4 mr-1" />
+                    {compareMode ? `Done (${comparePlans.length})` : `Compare (${comparePlans.length})`}
+                  </Button>
+
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className="px-3 py-1 text-xs h-8"
+                    >
+                      <List className="h-4 w-4 mr-1" />
+                      List
+                    </Button>
+                    <Button
+                      variant={viewMode === 'card' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('card')}
+                      className="px-3 py-1 text-xs h-8"
+                    >
+                      <Grid className="h-4 w-4 mr-1" />
+                      Cards
+                    </Button>
                   </div>
+
+                  {/* Column Options for List View */}
+                  {viewMode === 'list' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <Settings className="h-4 w-4 mr-1" />
+                          Columns
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Visible Columns</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {availableColumns.filter(column => !column.required).map((column) => (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            checked={visibleColumns.includes(column.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setVisibleColumns([...visibleColumns, column.id]);
+                              } else {
+                                setVisibleColumns(visibleColumns.filter(col => col !== column.id));
+                              }
+                            }}
+                          >
+                            {column.label}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </div>
               
-              <div className="grid gap-6">
-                {displayPlans.map((plan) => (
-                  <PlanCard
-                    key={plan.key}
-                    plan={plan}
-                    onCompare={handleCompare}
-                    onViewDetails={handleViewDetails}
-                    isComparing={comparePlans.some(p => p.key === plan.key)}
-                  />
-                ))}
-              </div>
+              {/* Conditional View Rendering */}
+              {viewMode === 'list' ? (
+                <PlanListView 
+                  plans={displayPlans}
+                  visibleColumns={visibleColumns}
+                  expandedRows={expandedRows}
+                  onRowClick={handleRowClick}
+                  onCompare={handleCompare}
+                  onViewDetails={handleViewDetails}
+                  comparePlans={comparePlans}
+                  availableColumns={availableColumns}
+                  setComparePlans={setComparePlans}
+                  compareMode={compareMode}
+                />
+              ) : (
+                <div className="grid gap-6">
+                  {displayPlans.map((plan) => (
+                    <PlanCard
+                      key={plan.key}
+                      plan={plan}
+                      onCompare={handleCompare}
+                      onViewDetails={handleViewDetails}
+                      isComparing={comparePlans.some(p => p.key === plan.key)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 p-4 border-t">
+                  <div className="text-sm text-gray-600">
+                    Showing {startPlan}-{endPlan} of {totalPlans} plans
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                        let pageNumber;
+                        if (totalPages <= 5) {
+                          pageNumber = index + 1;
+                        } else if (currentPage <= 3) {
+                          pageNumber = index + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNumber = totalPages - 4 + index;
+                        } else {
+                          pageNumber = currentPage - 2 + index;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNumber)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNumber}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

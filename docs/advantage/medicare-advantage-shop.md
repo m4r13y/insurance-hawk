@@ -68,3 +68,52 @@ Instead of 'FREE' and 'MOOP', include the details from the required and default 
 
 #### Resources Tab
 1. Leave as is
+
+
+## Benefit Fields
+Benefit Types:
+Additional Telehealth Services
+Ambulance
+Annual Physical Exam
+Comprehensive Dental Service
+Defined Supplemental Benefits
+Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting
+Dialysis Services
+Doctor's office visits
+Emergency Care
+Foot care (podiatry services)
+Health Plan Deductible
+Hearing services
+Inpatient Hospital
+Maximum Oopc
+Meal Benefit
+Medical Equipment
+Medicare Part B
+Mental health care
+Non Opioid Pain Management
+Opioid Treatment Services
+Optional Supplemental Benefits
+Otc Items
+Other Deductibles
+Outpatient Hospital
+Outpatient rehabilitation
+Preventive Care
+Preventive Dental Service
+Skilled Nursing Facility (SNF)
+Transportation
+Transportation Services
+Vision
+Wellness Programs
+Worldwide Emergency Urgent Coverage
+Outpatient prescription drugs
+
+### Benefit Field Array
+        {
+          "full_description": "",
+          "summary_description": {
+            "in_network": "",
+            "out_network": ""
+          },
+          "benefit_type": "Ambulance",
+          "pd_view_display": true
+        },
