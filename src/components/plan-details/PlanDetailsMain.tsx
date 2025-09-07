@@ -125,12 +125,11 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     const initializeComponent = async () => {
       console.log('Plan Details - Initializing component...');
       
-      // Get URL parameters for carrier and plan specificity
-      const carrierId = searchParams.get('carrier');
-      const carrierName = searchParams.get('carrierName');
+      // Get simplified URL parameters 
+      const carrier = searchParams.get('carrier'); // The company field from API
       const planType = searchParams.get('plan');
       
-      console.log('Plan Details - URL Parameters:', { carrierId, carrierName, planType });
+      console.log('Plan Details - URL Parameters:', { carrier, planType });
       
       setCurrentSelection({
         ratingClass: '', // Will be set based on available quotes
@@ -147,33 +146,30 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
         // Filter quotes based on URL parameters if provided
         let filteredQuotes = existingQuotes;
         
-        if (carrierId || carrierName || planType) {
+        if (carrier || planType) {
           filteredQuotes = existingQuotes.filter(quote => {
-            const matchesCarrierId = !carrierId || quote.company_base?.key === carrierId || quote.key === carrierId;
-            const matchesCarrierName = !carrierName || 
-              quote.company_base?.name === carrierName || 
-              quote.company === carrierName;
+            // Match using the company field from the API (primary identifier)
+            const matchesCarrier = !carrier || quote.company === carrier;
             const matchesPlan = !planType || quote.plan === planType;
             
             console.log('Quote filter check:', {
               quoteKey: quote.key,
-              quoteCarrierKey: quote.company_base?.key,
-              quoteCarrierName: quote.company_base?.name || quote.company,
+              quoteCompany: quote.company,
               quotePlan: quote.plan,
-              matchesCarrierId,
-              matchesCarrierName,
+              urlCarrier: carrier,
+              urlPlanType: planType,
+              matchesCarrier,
               matchesPlan,
-              overallMatch: matchesCarrierId && matchesCarrierName && matchesPlan
+              overallMatch: matchesCarrier && matchesPlan
             });
             
-            return matchesCarrierId && matchesCarrierName && matchesPlan;
+            return matchesCarrier && matchesPlan;
           });
           
           console.log('Plan Details - Filtered quotes for specific carrier/plan:', {
             original: existingQuotes.length,
             filtered: filteredQuotes.length,
-            carrierId,
-            carrierName,
+            carrier,
             planType
           });
         }

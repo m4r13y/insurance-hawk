@@ -1522,16 +1522,14 @@ function MedicareShopContent() {
       localStorage.setItem('planDetailsReturnUrl', currentUrl);
       
       // Extract carrier and plan information from carrierGroup
-      const carrierId = carrierGroup.carrierId || carrierGroup.id;
-      const carrierName = carrierGroup.carrierName || carrierGroup.name;
+      const company = carrierGroup.company; // Primary identifier from API
       const planType = carrierGroup.selectedPlanType;
       
-      console.log('Navigation data:', { carrierId, carrierName, planType });
+      console.log('Navigation data:', { company, planType });
       
-      // Build URL with parameters for specific carrier and plan
+      // Build URL with simplified parameters
       const params = new URLSearchParams();
-      if (carrierId) params.set('carrier', carrierId);
-      if (carrierName) params.set('carrierName', carrierName);
+      if (company) params.set('carrier', company); // Use company field as primary identifier
       if (planType) params.set('plan', planType);
       
       const planDetailsUrl = `/plan-details${params.toString() ? `?${params.toString()}` : ''}`;
@@ -2041,15 +2039,17 @@ function MedicareShopContent() {
 
       const groupedByCarrier = filteredQuotes.reduce((groups: Record<string, any>, quote: any) => {
         const carrierName = quote.carrier?.name || quote.company_base?.name || quote.company || 'Unknown Carrier';
-        const displayName = getCarrierDisplayName(carrierName, '');
-        // Use carrier name as the key since we're no longer using NAIC codes
-        const carrierKey = carrierName;
+        // TEMPORARY: Show actual API names instead of display names
+        const displayName = carrierName; // Use original name to see actual structure
+        // TEMPORARY: Use company field as the key to see how carriers split
+        const carrierKey = quote.company || carrierName;
         
         if (!groups[carrierKey]) {
           groups[carrierKey] = {
             carrierId: carrierKey,
-            carrierName: displayName, // Use the display name (short name when available)
+            carrierName: displayName, // Use the original API name temporarily
             originalCarrierName: carrierName, // Keep original name for fallback
+            company: quote.company, // Add the company field from the API
             quotes: []
           };
         }

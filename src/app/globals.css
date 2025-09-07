@@ -90,6 +90,14 @@
     @apply border-border;
   }
   
+  /* Remove default focus outlines from all input elements */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
   /* COMPREHENSIVE SOLUTION: Prevent scrollbar layout shifts */
   html {
     /* Don't use scrollbar-gutter as it reserves space even when scrollbar is hidden */

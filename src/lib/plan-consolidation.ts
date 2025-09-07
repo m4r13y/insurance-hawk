@@ -87,13 +87,15 @@ export interface ConsolidatedPlan {
 }
 
 /**
- * Determine the base plan identifier (carrier + plan letter)
+ * Determine the base plan identifier (company + plan letter)
  */
 function getBasePlanId(quote: any): string {
-  const carrierName = quote.carrier?.name || quote.company_base?.name || 'Unknown';
+  // TEMPORARY: Use company ID instead of carrier name for grouping
+  const companyId = quote.company || quote.carrier?.name || quote.company_base?.name || 'Unknown';
   const plan = quote.plan || 'Unknown';
   
   // For UnitedHealthcare, create separate plans based on rating class and underwriting type
+  const carrierName = quote.carrier?.name || quote.company_base?.name || 'Unknown';
   if (carrierName.includes('UnitedHealthcare') || carrierName.includes('AARP')) {
     const ratingClass = quote.rating_class || 'Standard';
     const selectUnderwriting = quote.select ? 'Select' : 'Standard';
@@ -101,10 +103,10 @@ function getBasePlanId(quote: any): string {
     // Extract base rating class (remove /Household suffix for grouping)
     const baseRatingClass = ratingClass.replace('/Household', '').replace('/Multi-Insured', '').replace('/Multi-Person', '');
     
-    return `${carrierName}-${plan}-${baseRatingClass}-${selectUnderwriting}`;
+    return `${companyId}-${plan}-${baseRatingClass}-${selectUnderwriting}`;
   }
   
-  return `${carrierName}-${plan}`;
+  return `${companyId}-${plan}`;
 }
 
 /**
@@ -361,22 +363,22 @@ function createPlanOption(quote: any, allQuotes: any[]): PlanOption {
  * Consolidate quotes by carrier and plan type - for multi-plan scenarios
  */
 export function consolidateQuotesByCarrierAndPlan(quotes: any[]): Record<string, ConsolidatedPlan[]> {
-  // First group by carrier
+  // TEMPORARY: First group by company ID instead of carrier name
   const carrierGroups = quotes.reduce((groups: Record<string, any[]>, quote: any) => {
-    const carrierName = quote.carrier?.name || quote.company_base?.name || 'Unknown';
+    const companyId = quote.company || quote.carrier?.name || quote.company_base?.name || 'Unknown';
     
-    if (!groups[carrierName]) {
-      groups[carrierName] = [];
+    if (!groups[companyId]) {
+      groups[companyId] = [];
     }
-    groups[carrierName].push(quote);
+    groups[companyId].push(quote);
     return groups;
   }, {});
   
   // Then consolidate each carrier's quotes by plan type
   const result: Record<string, ConsolidatedPlan[]> = {};
   
-  Object.entries(carrierGroups).forEach(([carrierName, carrierQuotes]) => {
-    result[carrierName] = consolidateQuoteVariations(carrierQuotes);
+  Object.entries(carrierGroups).forEach(([companyId, carrierQuotes]) => {
+    result[companyId] = consolidateQuoteVariations(carrierQuotes);
   });
   
   return result;
