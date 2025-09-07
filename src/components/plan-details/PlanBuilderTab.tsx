@@ -418,6 +418,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
             console.log('🎗️ Restoring cancer plan:', existingPlanBuilder.selectedPlans.cancerPlan);
             setSelectedCancerPlan(existingPlanBuilder.selectedPlans.cancerPlan);
           }
+          if (existingPlanBuilder.selectedPlans.medigapPlanOption) {
+            console.log('📋 Restoring medigap plan option:', existingPlanBuilder.selectedPlans.medigapPlanOption);
+            setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
+          }
         } else {
           console.log('📝 No existing plan builder data found, using defaults');
         }
@@ -890,7 +894,8 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         selectedPlans: {
           drugPlan: selectedDrugPlan,
           dentalPlan: selectedDentalPlan,
-          cancerPlan: selectedCancerPlan
+          cancerPlan: selectedCancerPlan,
+          medigapPlanOption: selectedPlanOption
         },
         chartData: chartData,
         totalMonthlyCost: totalMonthlyCost,

@@ -1010,6 +1010,7 @@ export interface PlanBuilderData {
     drugPlan?: any;
     dentalPlan?: any;
     cancerPlan?: any;
+    medigapPlanOption?: any;
   };
   chartData: Array<{
     name: string;
