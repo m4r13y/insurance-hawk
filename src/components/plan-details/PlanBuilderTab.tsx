@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon, DotsHorizontalIcon, UpdateIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
@@ -134,6 +134,17 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   // Action dialog state for selected plans
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionDialogPlan, setActionDialogPlan] = useState<{type: string, data: any} | null>(null);
+  
+  // State for carrier change notification
+  const [carrierChangeInfo, setCarrierChangeInfo] = useState<{
+    previousCarrier: string;
+    newCarrier: string;
+    show: boolean;
+  } | null>(null);
+  
+  // Confirmation dialog states
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
   
   // Debug: Watch for unexpected modal state changes
   useEffect(() => {
@@ -289,7 +300,19 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       await generateQuotesForCoverageInternal(coverageTypeName, formData);
     } catch (error) {
       console.error('Error in handleSharedModalSubmit:', error);
-      // Re-open modal if there was an error
+      // Remove loading state and re-open modal if there was an error
+      const coverageTypeMapping: Record<string, string> = {
+        'cancer': 'cancer',
+        'dental': 'dental-vision-hearing',
+        'drug-plan': 'partd',
+        'final-expense': 'final-expense',
+        'advantage': 'advantage',
+        'hospital-indemnity': 'hospital-indemnity'
+      };
+      const loadingCoverageType = coverageTypeMapping[selectedCoverageCategory];
+      if (loadingCoverageType) {
+        setLoadingCoverageTypes(prev => prev.filter(type => type !== loadingCoverageType));
+      }
       setShowMissingFieldsModal(true);
     }
   };
@@ -314,14 +337,22 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   
   // Helper function to proceed with quote generation after collecting additional info
   const proceedWithQuoteGeneration = async (coverageType: string, updatedFormData: any) => {
-    // Save the updated form data
-    await saveToStorage(QUOTE_FORM_DATA_KEY, updatedFormData);
-    
-    // Close the modal
-    setShowAdditionalInfoModal(false);
-    
-    // Continue with the original quote generation logic
-    await generateQuotesForCoverageInternal(coverageType, updatedFormData);
+    try {
+      // Save the updated form data
+      await saveToStorage(QUOTE_FORM_DATA_KEY, updatedFormData);
+      
+      // Close the modal
+      setShowAdditionalInfoModal(false);
+      
+      // Continue with the original quote generation logic
+      await generateQuotesForCoverageInternal(coverageType, updatedFormData);
+    } catch (error) {
+      console.error('Error in proceedWithQuoteGeneration:', error);
+      // Remove loading state on error
+      setLoadingCoverageTypes(prev => prev.filter(type => type !== coverageType));
+      // Re-open modal if there was an error
+      setShowAdditionalInfoModal(true);
+    }
   };
   
   // Action dialog handlers for selected plans
@@ -329,51 +360,91 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     setActionDialogPlan({ type: planType, data: planData });
     setActionDialogOpen(true);
   };
+
+  // Close action dialog helper
+  const closeActionDialog = () => {
+    setActionDialogOpen(false);
+    setActionDialogPlan(null);
+    setShowRemoveConfirmation(false); // Also close remove confirmation if open
+  };
+  
+  // Handler for closing the missing fields modal
+  const handleMissingFieldsModalClose = () => {
+    setShowMissingFieldsModal(false);
+    
+    // Remove loading state for the current coverage category if user cancels
+    const coverageTypeMapping: Record<string, string> = {
+      'cancer': 'cancer',
+      'dental': 'dental-vision-hearing',
+      'drug-plan': 'partd',
+      'final-expense': 'final-expense',
+      'advantage': 'advantage',
+      'hospital-indemnity': 'hospital-indemnity'
+    };
+    const loadingCoverageType = coverageTypeMapping[selectedCoverageCategory];
+    if (loadingCoverageType) {
+      setLoadingCoverageTypes(prev => prev.filter(type => type !== loadingCoverageType));
+    }
+  };
+  
+  // Handler for closing the additional info modal
+  const handleAdditionalInfoModalClose = () => {
+    setShowAdditionalInfoModal(false);
+    
+    // Remove loading state for the current coverage type if user cancels
+    setLoadingCoverageTypes(prev => prev.filter(type => type !== currentCoverageType));
+  };
   
   const handleChangePlan = () => {
     if (!actionDialogPlan) return;
     
-    // Clear the selected plan to trigger plan selection
+    // Clear the selected plan to trigger plan selection and update chart data
     switch (actionDialogPlan.type) {
       case 'drug':
         setSelectedDrugPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'Part D') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
         break;
       case 'medigap':
         setSelectedPlanOption(null);
+        // Note: Medigap should stay selected in chart as it's part of the base coverage
         break;
       case 'dental':
         setSelectedDentalPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'DVH') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
         break;
       case 'cancer':
         setSelectedCancerPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'Cancer') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
         break;
     }
     
-    setActionDialogOpen(false);
-    setActionDialogPlan(null);
+    closeActionDialog();
   };
   
   const handleRemoveSelection = () => {
-    if (!actionDialogPlan) return;
-    
-    // Remove the selected plan completely
-    switch (actionDialogPlan.type) {
-      case 'drug':
-        setSelectedDrugPlan(null);
-        break;
-      case 'medigap':
-        setSelectedPlanOption(null);
-        break;
-      case 'dental':
-        setSelectedDentalPlan(null);
-        break;
-      case 'cancer':
-        setSelectedCancerPlan(null);
-        break;
-    }
-    
-    setActionDialogOpen(false);
-    setActionDialogPlan(null);
+    // Show confirmation dialog instead of immediately removing
+    handleRemoveClick();
   };
   
   const handleViewDetails = () => {
@@ -383,8 +454,97 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     // This could open a detailed view modal or navigate to a details page
     console.log('View details for:', actionDialogPlan);
     
-    setActionDialogOpen(false);
-    setActionDialogPlan(null);
+    closeActionDialog();
+  };
+
+  // Reset confirmation handlers
+  const handleResetClick = () => {
+    setShowResetConfirmation(true);
+  };
+
+  const handleConfirmReset = () => {
+    // Reset all selected plans
+    setSelectedDrugPlan(null);
+    setSelectedDentalPlan(null);
+    setSelectedCancerPlan(null);
+    setSelectedPlanOption(null);
+    
+    // Reset chart data to default state (only Medicare A&B and Medigap selected)
+    setChartData(prevData => 
+      prevData.map(item => {
+        if (item.name === 'Medicare A & B' || item.name === 'Medigap') {
+          return { ...item, selected: true };
+        } else {
+          return { ...item, selected: false };
+        }
+      })
+    );
+    
+    setShowResetConfirmation(false);
+    console.log('✅ Plan builder reset completed');
+  };
+
+  const handleCancelReset = () => {
+    setShowResetConfirmation(false);
+  };
+
+  // Remove selection confirmation handlers
+  const handleRemoveClick = () => {
+    setShowRemoveConfirmation(true);
+  };
+
+  const handleConfirmRemove = () => {
+    if (!actionDialogPlan) return;
+    
+    // Remove the selected plan completely and update chart data
+    switch (actionDialogPlan.type) {
+      case 'drug':
+        setSelectedDrugPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'Part D') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
+        break;
+      case 'medigap':
+        setSelectedPlanOption(null);
+        // Note: Medigap should stay selected in chart as it's part of the base coverage
+        break;
+      case 'dental':
+        setSelectedDentalPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'DVH') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
+        break;
+      case 'cancer':
+        setSelectedCancerPlan(null);
+        setChartData(prevData => 
+          prevData.map(item => {
+            if (item.name === 'Cancer') {
+              return { ...item, selected: false };
+            }
+            return item;
+          })
+        );
+        break;
+    }
+    
+    setShowRemoveConfirmation(false);
+    closeActionDialog();
+    
+    console.log(`✅ Removed ${actionDialogPlan.type} plan selection`);
+  };
+
+  const handleCancelRemove = () => {
+    setShowRemoveConfirmation(false);
   };
 
   // Load existing quotes from Firestore on component mount
@@ -402,7 +562,16 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
           // Restore chart data if it exists
           if (existingPlanBuilder.chartData) {
             console.log('🔄 Restoring chart data:', existingPlanBuilder.chartData);
-            setChartData(existingPlanBuilder.chartData);
+            // Ensure backward compatibility by adding missing properties
+            const enhancedChartData = existingPlanBuilder.chartData.map(item => {
+              const defaultItem = getDefaultChartData().find(defaultItem => defaultItem.name === item.name);
+              return {
+                ...item,
+                importance: item.importance || defaultItem?.importance || '',
+                missingWarning: item.missingWarning || defaultItem?.missingWarning || ''
+              };
+            });
+            setChartData(enhancedChartData);
           }
           
           // Restore selected plans
@@ -419,8 +588,50 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
             setSelectedCancerPlan(existingPlanBuilder.selectedPlans.cancerPlan);
           }
           if (existingPlanBuilder.selectedPlans.medigapPlanOption) {
-            console.log('📋 Restoring medigap plan option:', existingPlanBuilder.selectedPlans.medigapPlanOption);
-            setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
+            console.log('📋 Checking saved medigap plan option:', existingPlanBuilder.selectedPlans.medigapPlanOption);
+            console.log('📋 Current quote data:', { plan: quoteData.plan, carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '') });
+            
+            // Check if the saved plan matches the current quote (same carrier and plan type)
+            const savedCarrier = existingPlanBuilder.medigapPlan?.carrier;
+            const currentCarrier = getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '');
+            const savedPlan = existingPlanBuilder.medigapPlan?.plan;
+            const currentPlan = quoteData.plan;
+            
+            const carrierMatches = savedCarrier === currentCarrier;
+            const planMatches = savedPlan === currentPlan;
+            
+            console.log('📋 Plan comparison:', { 
+              savedCarrier, 
+              currentCarrier, 
+              carrierMatches, 
+              savedPlan, 
+              currentPlan, 
+              planMatches 
+            });
+            
+            // Only restore the selected plan option if both carrier and plan type match
+            if (carrierMatches && planMatches) {
+              console.log('✅ Carrier and plan match - restoring selected plan option');
+              setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
+              setCarrierChangeInfo(null); // Clear any previous notifications
+            } else {
+              console.log('❌ Carrier or plan mismatch - user needs to select new plan option');
+              console.log(`Carrier match: ${carrierMatches}, Plan match: ${planMatches}`);
+              
+              // Show notification about carrier/plan change
+              if (!carrierMatches) {
+                setCarrierChangeInfo({
+                  previousCarrier: savedCarrier,
+                  newCarrier: currentCarrier,
+                  show: true
+                });
+              } else if (!planMatches) {
+                // Same carrier but different plan type - just log it
+                console.log(`📋 Plan type changed: ${savedPlan} → ${currentPlan} (same carrier: ${currentCarrier})`);
+              }
+              
+              // Don't restore the selected plan option, user will need to select again
+            }
           }
         } else {
           console.log('📝 No existing plan builder data found, using defaults');
@@ -456,13 +667,58 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     loadStoredQuotes();
   }, []);
   
-  // Chart data for the Coverage Quality scale - initialized with default values
+  // Chart data for the Coverage Quality scale - percentage-based scoring
   const getDefaultChartData = () => [
-    { name: 'Medicare A & B', value: 50, color: '#ef4444', selected: true, description: 'Base minimum', quality: 'Basic' },
-    { name: 'Medigap', value: 20, color: '#3b82f6', selected: true, description: 'Essential supplement', quality: 'Good' },
-    { name: 'Part D', value: 15, color: '#10b981', selected: false, description: 'Drug coverage', quality: 'Better' },
-    { name: 'DVH', value: 10, color: '#f59e0b', selected: false, description: 'Dental, Vision & Hearing', quality: 'Very Good' },
-    { name: 'Cancer', value: 5, color: '#8b5cf6', selected: false, description: 'Cancer insurance', quality: 'Excellent' },
+    { 
+      name: 'Medicare A & B', 
+      value: 40, 
+      color: '#ef4444', 
+      selected: true, 
+      description: 'Basic hospital & medical coverage', 
+      quality: 'Essential',
+      importance: 'Required foundation for all other Medicare coverage',
+      missingWarning: 'This is your required base Medicare coverage'
+    },
+    { 
+      name: 'Medigap', 
+      value: 30, 
+      color: '#3b82f6', 
+      selected: true, 
+      description: 'Covers Medicare gaps & deductibles', 
+      quality: 'Important',
+      importance: 'Protects against high out-of-pocket costs from Medicare gaps',
+      missingWarning: 'Without Medigap, you pay Medicare deductibles and coinsurance'
+    },
+    { 
+      name: 'Part D', 
+      value: 15, 
+      color: '#10b981', 
+      selected: false, 
+      description: 'Prescription drug coverage', 
+      quality: 'Recommended',
+      importance: 'Essential for prescription medication costs and avoiding penalties',
+      missingWarning: 'No prescription drug coverage - you\'ll pay full price for medications'
+    },
+    { 
+      name: 'DVH', 
+      value: 10, 
+      color: '#f59e0b', 
+      selected: false, 
+      description: 'Dental, Vision & Hearing coverage', 
+      quality: 'Beneficial',
+      importance: 'Covers routine dental care, vision exams, and hearing aids',
+      missingWarning: 'No coverage for dental, vision, or hearing care expenses'
+    },
+    { 
+      name: 'Cancer', 
+      value: 5, 
+      color: '#8b5cf6', 
+      selected: false, 
+      description: 'Cancer insurance supplement', 
+      quality: 'Optional',
+      importance: 'Additional financial protection for cancer-related expenses',
+      missingWarning: 'No extra protection against high cancer treatment costs'
+    },
   ];
   
   const [chartData, setChartData] = useState(getDefaultChartData());
@@ -482,7 +738,8 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         chartData,
         selectedDrugPlan,
         selectedDentalPlan,
-        selectedCancerPlan
+        selectedCancerPlan,
+        selectedPlanOption
       });
       savePlanBuilderState();
     } else {
@@ -491,7 +748,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         hasQuoteData: !!quoteData.plan
       });
     }
-  }, [chartData, selectedDrugPlan, selectedDentalPlan, selectedCancerPlan, dataLoaded]);
+  }, [chartData, selectedDrugPlan, selectedDentalPlan, selectedCancerPlan, selectedPlanOption, dataLoaded]);
 
   // Helper functions from test-multi-plan
   const formatRate = (rate: any) => {
@@ -683,7 +940,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         // For coverage types that use the shared modal, show the modal directly
         // The modal will handle all validation internally
         console.log('📋 Using shared modal for', coverageType);
-        setLoadingCoverageTypes(prev => prev.filter(type => type !== coverageType));
+        // Don't remove loading state here - let the modal completion handle it
         setInitialFormDataForModal(formData);
         setSelectedCoverageCategory(mappedCategory.categoryId);
         setCoverageDisplayName(mappedCategory.displayName);
@@ -696,7 +953,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       
       if (missingInfo.length > 0) {
         console.log('📋 Additional information needed for', coverageType, ':', missingInfo);
-        setLoadingCoverageTypes(prev => prev.filter(type => type !== coverageType));
+        // Don't remove loading state here - let the additional info completion handle it
         showAdditionalInfoCollection(coverageType, missingInfo);
         return;
       }
@@ -874,11 +1131,14 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         (selectedCancerPlan ? (selectedCancerPlan.monthly_premium || 0) : 0);
 
       const totalScore = chartData.filter(item => item.selected).reduce((sum, item) => sum + item.value, 0);
+      const maxPossibleScore = 100; // Total percentage possible
+      const coveragePercentage = Math.round((totalScore / maxPossibleScore) * 100);
+      
       let coverageQuality = 'Basic';
-      if (totalScore >= 85) coverageQuality = 'Excellent';
-      else if (totalScore >= 70) coverageQuality = 'Very Good';
-      else if (totalScore >= 55) coverageQuality = 'Good';
-      else if (totalScore >= 40) coverageQuality = 'Fair';
+      if (coveragePercentage >= 90) coverageQuality = 'Excellent';
+      else if (coveragePercentage >= 80) coverageQuality = 'Very Good';
+      else if (coveragePercentage >= 70) coverageQuality = 'Good';
+      else if (coveragePercentage >= 60) coverageQuality = 'Fair';
 
       const planBuilderData: PlanBuilderData = {
         medigapPlan: {
@@ -936,12 +1196,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        // Reset all selected plans
-                        setSelectedDrugPlan(null);
-                        setSelectedDentalPlan(null);
-                        setSelectedCancerPlan(null);
-                      }}
+                      onClick={handleResetClick}
                       className="h-8 w-8 p-0"
                     >
                       <ResetIcon className="h-4 w-4" />
@@ -1052,6 +1307,30 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       return (
                         <>
+                          {/* Carrier Change Notification */}
+                          {carrierChangeInfo?.show && (
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <div className="text-blue-600 mt-0.5">ℹ️</div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-blue-800">
+                                    Carrier Changed - Please Select Plan Option
+                                  </p>
+                                  <p className="text-xs text-blue-700 mt-1">
+                                    You switched from <strong>{carrierChangeInfo.previousCarrier}</strong> to <strong>{carrierChangeInfo.newCarrier}</strong>. 
+                                    Please select a plan option below to continue with your new carrier choice.
+                                  </p>
+                                  <button 
+                                    onClick={() => setCarrierChangeInfo(null)}
+                                    className="text-xs text-blue-600 hover:text-blue-800 mt-1 underline"
+                                  >
+                                    Dismiss
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
                           <div className="text-sm font-medium mb-2 text-gray-600">
                             {optionsDescription}
                           </div>
@@ -1064,7 +1343,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             key={`${index}-${applyDiscounts}`} 
                             className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => {
+                              console.log('🎯 User selected new plan option:', {
+                                option,
+                                currentCarrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
+                                currentPlan: quoteData.plan
+                              });
                               setSelectedPlanOption(option);
+                              setCarrierChangeInfo(null); // Clear notification when plan is selected
                             }}
                           >
                             <div className="flex items-center justify-between">
@@ -1300,7 +1585,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </button>
                               )}
                               {loadingCoverageTypes.includes('partd') ? (
-                                <Button variant="ghost" size="sm" disabled>...</Button>
+                                <Button variant="ghost" size="sm" disabled className="w-10 h-10">
+                                  <UpdateIcon className="h-4 w-4 animate-spin" />
+                                </Button>
                               ) : drugPlanQuotes.length === 0 ? (
                                 <Button 
                                   variant="ghost" 
@@ -1378,7 +1665,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </button>
                               )}
                               {loadingCoverageTypes.includes('dental-vision-hearing') ? (
-                                <Button variant="ghost" size="sm" disabled>...</Button>
+                                <Button variant="ghost" size="sm" disabled className="w-10 h-10">
+                                  <UpdateIcon className="h-4 w-4 animate-spin" />
+                                </Button>
                               ) : dentalQuotes.length === 0 ? (
                                 <Button 
                                   variant="ghost" 
@@ -1456,7 +1745,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </button>
                               )}
                               {loadingCoverageTypes.includes('cancer') ? (
-                                <Button variant="ghost" size="sm" disabled>...</Button>
+                                <Button variant="ghost" size="sm" disabled className="w-10 h-10">
+                                  <UpdateIcon className="h-4 w-4 animate-spin" />
+                                </Button>
                               ) : cancerInsuranceQuotes.length === 0 ? (
                                 <Button 
                                   variant="ghost" 
@@ -1490,10 +1781,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                               }
                             }).reduce((sum, item) => sum + item.value, 0);
                             
-                            if (totalScore >= 85) return <span className="text-green-600">Excellent</span>;
-                            if (totalScore >= 70) return <span className="text-blue-600">Very Good</span>;
-                            if (totalScore >= 55) return <span className="text-yellow-600">Good</span>;
-                            if (totalScore >= 40) return <span className="text-orange-600">Fair</span>;
+                            if (totalScore >= 90) return <span className="text-green-600">Excellent</span>;
+                            if (totalScore >= 80) return <span className="text-blue-600">Very Good</span>;
+                            if (totalScore >= 70) return <span className="text-yellow-600">Good</span>;
+                            if (totalScore >= 60) return <span className="text-orange-600">Fair</span>;
                             return <span className="text-red-600">Basic</span>;
                           })()}
                         </div>
@@ -1599,7 +1890,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     <div className="lg:col-span-12 space-y-3">
                       {/* Selected Additional Coverage Plans */}
                      {/* Dynamic Explanation Text - Below Legend */}
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-sm text-gray-600 space-y-3">
                         {(() => {
                           const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
                           const totalScore = chartData.filter(item => {
@@ -1610,72 +1901,82 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             }
                           }).reduce((sum, item) => sum + item.value, 0);
                           
-                          if (totalScore >= 85) {
-                            return (
-                              <>
-                                <p><strong>Excellent Coverage!</strong></p>
-                                <p>You have comprehensive Medicare protection with all major coverage types. This provides:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-xs">
-                                  <li>Complete hospital and medical coverage</li>
-                                  <li>No gaps in Medicare benefits</li>
-                                  <li>Prescription drug protection</li>
-                                  <li>Dental, vision, and hearing benefits</li>
-                                  <li>Specialized cancer insurance</li>
-                                </ul>
-                              </>
-                            );
-                          } else if (totalScore >= 70) {
-                            return (
-                              <>
-                                <p><strong>Very Good Coverage</strong></p>
-                                <p>You have strong Medicare protection. Consider adding the remaining coverage types for complete protection:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-xs">
-                                  <li>Core Medicare and Medigap coverage in place</li>
-                                  <li>Good foundation for healthcare needs</li>
-                                  <li>Minor gaps that could be filled for optimal coverage</li>
-                                </ul>
-                              </>
-                            );
-                          } else if (totalScore >= 55) {
-                            return (
-                              <>
-                                <p><strong>Good Foundation</strong></p>
-                                <p>You have essential Medicare coverage but important gaps remain:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-xs">
-                                  <li>Basic Medicare and supplement coverage</li>
-                                  <li>Missing prescription drug coverage puts you at risk</li>
-                                  <li>No dental, vision, or hearing benefits</li>
-                                  <li>Consider adding Part D and DVH coverage</li>
-                                </ul>
-                              </>
-                            );
-                          } else if (totalScore >= 40) {
-                            return (
-                              <>
-                                <p><strong>Fair Coverage - Significant Gaps</strong></p>
-                                <p>Your Medicare coverage has major gaps that could result in high out-of-pocket costs:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-xs">
-                                  <li>Limited protection beyond basic Medicare</li>
-                                  <li>High exposure to copays and deductibles</li>
-                                  <li>No prescription drug coverage</li>
-                                  <li>Missing preventive dental and vision care</li>
-                                </ul>
-                              </>
-                            );
-                          } else {
-                            return (
-                              <>
-                                <p><strong>Basic Coverage - Major Risks</strong></p>
-                                <p>You have minimal Medicare protection with substantial financial exposure:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-xs">
-                                  <li>Only basic Medicare A & B coverage</li>
-                                  <li>No protection from Medicare gaps</li>
-                                  <li>High risk of unexpected medical costs</li>
-                                  <li>Strongly recommend adding Medigap and Part D</li>
-                                </ul>
-                              </>
-                            );
-                          }
+                          const missingCoverage = chartData.filter(item => {
+                            if (item.name === 'Medicare A & B') {
+                              return !item.selected;
+                            } else {
+                              return medicareABSelected && !item.selected;
+                            }
+                          });
+                          
+                          const selectedCoverage = chartData.filter(item => {
+                            if (item.name === 'Medicare A & B') {
+                              return item.selected;
+                            } else {
+                              return medicareABSelected && item.selected;
+                            }
+                          });
+                          
+                          return (
+                            <>
+                              {/* Coverage Status */}
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <p className="font-medium">
+                                  {totalScore >= 90 && <span className="text-green-600">🎯 Excellent Coverage ({totalScore}%)</span>}
+                                  {totalScore >= 80 && totalScore < 90 && <span className="text-blue-600">✅ Very Good Coverage ({totalScore}%)</span>}
+                                  {totalScore >= 70 && totalScore < 80 && <span className="text-yellow-600">⚡ Good Coverage ({totalScore}%)</span>}
+                                  {totalScore >= 60 && totalScore < 70 && <span className="text-orange-600">⚠️ Fair Coverage ({totalScore}%)</span>}
+                                  {totalScore < 60 && <span className="text-red-600">🚨 Basic Coverage ({totalScore}%)</span>}
+                                </p>
+                              </div>
+
+                              {/* Current Coverage */}
+                              {selectedCoverage.length > 0 && (
+                                <div>
+                                  <p className="font-medium text-green-700 mb-2">✓ Your Current Coverage:</p>
+                                  <ul className="space-y-1">
+                                    {selectedCoverage.map(item => (
+                                      <li key={item.name} className="flex items-start gap-2 text-xs">
+                                        <span className="w-2 h-2 rounded-full mt-1.5 bg-green-500 flex-shrink-0"></span>
+                                        <span><strong>{item.name}</strong> ({item.value}%) - {item.description}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Missing Coverage Highlights */}
+                              {missingCoverage.length > 0 && (
+                                <div>
+                                  <p className="font-medium text-orange-700 mb-2">⚠️ Missing Important Coverage:</p>
+                                  <ul className="space-y-2">
+                                    {missingCoverage.map(item => (
+                                      <li key={item.name} className="bg-orange-50 p-2 rounded text-xs border-l-4 border-orange-400">
+                                        <div className="flex justify-between items-start mb-1">
+                                          <span className="font-semibold text-orange-800">{item.name} ({item.value}%)</span>
+                                          <span className="text-orange-600 text-xs">{item.quality}</span>
+                                        </div>
+                                        <p className="text-orange-700 mb-1">{item.importance}</p>
+                                        <p className="text-red-600 font-medium">⚠️ {item.missingWarning}</p>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Recommendation */}
+                              {totalScore < 90 && (
+                                <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                                  <p className="font-medium text-blue-800 mb-1">💡 Recommendation:</p>
+                                  <p className="text-blue-700 text-xs">
+                                    {totalScore < 60 && "Consider adding Medigap coverage first to protect against Medicare gaps, then add Part D for prescription drugs."}
+                                    {totalScore >= 60 && totalScore < 75 && "Consider adding Part D prescription drug coverage for complete protection."}
+                                    {totalScore >= 75 && totalScore < 90 && "Consider adding dental, vision & hearing or cancer coverage for comprehensive protection."}
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          );
                         })()}
                       </div>
                     </div>
@@ -2021,7 +2322,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       </Dialog>
 
       {/* Additional Information Collection Modal */}
-      <Dialog open={showAdditionalInfoModal} onOpenChange={setShowAdditionalInfoModal}>
+      <Dialog open={showAdditionalInfoModal} onOpenChange={(open) => {
+        if (!open) handleAdditionalInfoModalClose();
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Additional Information Required</DialogTitle>
@@ -2201,7 +2504,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
             <div className="flex gap-3 justify-end">
               <Button
                 variant="outline"
-                onClick={() => setShowAdditionalInfoModal(false)}
+                onClick={handleAdditionalInfoModalClose}
               >
                 Cancel
               </Button>
@@ -2243,7 +2546,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       {/* Shared Missing Fields Modal */}
       <MissingFieldsModal
         isOpen={showMissingFieldsModal}
-        onClose={() => setShowMissingFieldsModal(false)}
+        onClose={handleMissingFieldsModalClose}
         onSubmit={handleSharedModalSubmit}
         categoryId={selectedCoverageCategory}
         categoryName={coverageDisplayName}
@@ -2252,7 +2555,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       />
 
       {/* Plan Action Dialog */}
-      <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+      <Dialog open={actionDialogOpen} onOpenChange={(open) => {
+        if (!open) closeActionDialog();
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Plan Actions</DialogTitle>
@@ -2282,6 +2587,65 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
               <ResetIcon className="h-4 w-4 mr-2" />
               Remove Selection
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Confirmation Dialog */}
+      <Dialog open={showResetConfirmation} onOpenChange={setShowResetConfirmation}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset Plan Builder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to reset your plan? This will remove all your selected coverage options and you'll need to start over.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancelReset}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmReset}
+              >
+                Yes, Reset Plan
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Selection Confirmation Dialog */}
+      <Dialog open={showRemoveConfirmation} onOpenChange={setShowRemoveConfirmation}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Selection</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to remove this {actionDialogPlan?.type === 'medigap' ? 'Medigap plan option' : 
+                actionDialogPlan?.type === 'drug' ? 'prescription drug plan' :
+                actionDialogPlan?.type === 'dental' ? 'dental, vision & hearing plan' :
+                actionDialogPlan?.type === 'cancer' ? 'cancer insurance plan' : 'plan'} selection?
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancelRemove}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmRemove}
+              >
+                Yes, Remove
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

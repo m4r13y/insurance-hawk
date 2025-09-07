@@ -1019,6 +1019,8 @@ export interface PlanBuilderData {
     selected: boolean;
     description: string;
     quality: string;
+    importance?: string;
+    missingWarning?: string;
   }>;
   totalMonthlyCost: number;
   coverageQuality: string;
