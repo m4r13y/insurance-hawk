@@ -3,12 +3,12 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon } from '@radix-ui/react-icons';
+import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
@@ -130,6 +130,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   
   // Shared missing fields modal state
   const [showMissingFieldsModal, setShowMissingFieldsModal] = useState(false);
+  
+  // Action dialog state for selected plans
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [actionDialogPlan, setActionDialogPlan] = useState<{type: string, data: any} | null>(null);
   
   // Debug: Watch for unexpected modal state changes
   useEffect(() => {
@@ -320,6 +324,69 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     await generateQuotesForCoverageInternal(coverageType, updatedFormData);
   };
   
+  // Action dialog handlers for selected plans
+  const openActionDialog = (planType: string, planData: any) => {
+    setActionDialogPlan({ type: planType, data: planData });
+    setActionDialogOpen(true);
+  };
+  
+  const handleChangePlan = () => {
+    if (!actionDialogPlan) return;
+    
+    // Clear the selected plan to trigger plan selection
+    switch (actionDialogPlan.type) {
+      case 'drug':
+        setSelectedDrugPlan(null);
+        break;
+      case 'medigap':
+        setSelectedPlanOption(null);
+        break;
+      case 'dental':
+        setSelectedDentalPlan(null);
+        break;
+      case 'cancer':
+        setSelectedCancerPlan(null);
+        break;
+    }
+    
+    setActionDialogOpen(false);
+    setActionDialogPlan(null);
+  };
+  
+  const handleRemoveSelection = () => {
+    if (!actionDialogPlan) return;
+    
+    // Remove the selected plan completely
+    switch (actionDialogPlan.type) {
+      case 'drug':
+        setSelectedDrugPlan(null);
+        break;
+      case 'medigap':
+        setSelectedPlanOption(null);
+        break;
+      case 'dental':
+        setSelectedDentalPlan(null);
+        break;
+      case 'cancer':
+        setSelectedCancerPlan(null);
+        break;
+    }
+    
+    setActionDialogOpen(false);
+    setActionDialogPlan(null);
+  };
+  
+  const handleViewDetails = () => {
+    if (!actionDialogPlan) return;
+    
+    // TODO: Implement view details functionality
+    // This could open a detailed view modal or navigate to a details page
+    console.log('View details for:', actionDialogPlan);
+    
+    setActionDialogOpen(false);
+    setActionDialogPlan(null);
+  };
+
   // Load existing quotes from Firestore on component mount
   useEffect(() => {
     const loadStoredQuotes = async () => {
@@ -1123,38 +1190,34 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       {/* Selected Medigap Plan */}
                       {selectedPlanOption ? (
-                        <div className="p-4 border border-green-500 rounded-lg">
+                        <div className="border rounded-lg px-4 py-1 border-green-500">
                           <div className="flex items-center justify-between">
                             <div className='text-md'>
                               <h4 className="font-semibold">
-                                {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')} - Plan {quoteData.plan}
+                                {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}
                               </h4>
-                              <div className='flex items-center gap-2'>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedPlanOption(null)}
-                                className="mt-2"
-                              >
-                                Change Plan
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedPlanOption(null)}
-                                className="mt-2"
-                              >
-                                Info
-                              </Button>
-                              </div>
+                              <p className="text-xs mt-1">
+                                Plan {quoteData.plan}
+                              </p>
                               {selectedPlanOption.description && (
                                 <p className="text-xs mt-1">{selectedPlanOption.description}</p>
                               )}
                             </div>
-                            <div className="text-right">
+                            <div className="flex flex-col items-end justify-start text-right">
+                              <div className="flex items-center gap-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openActionDialog('medigap', selectedPlanOption)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <DotsHorizontalIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
                               <div className="text-xl font-semibold">
                                 ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
                               </div>
+                              <div className='h-2'></div>
                             </div>
                           </div>
                         </div>
@@ -1172,35 +1235,31 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                         </div>
                       )}
                       {selectedDrugPlan && (
-                        <div className="border rounded-lg p-4 border-green-500">
+                        <div className="border rounded-lg px-4 py-1 border-green-500">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <h5 className="font-medium">
-                                {selectedDrugPlan.plan_name || 'Selected Drug Plan'}
+                            <div className='text-md'>
+                              <h5 className="font-semibold">
+                                {selectedDrugPlan.organization_name || 'Selected Drug Plan'}
                               </h5>
-                              <p className="text-sm text-gray-600">
-                                {selectedDrugPlan.organization_name || 'Prescription Drug Coverage'}
+                              <p className="text-xs mt-1">
+                                {selectedDrugPlan.plan_name || 'Prescription Drug Coverage'}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="font-medium text-green-900">
+                            <div className="flex flex-col items-end justify-start text-right">
+                            <div className="flex items-center gap-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openActionDialog('drug', selectedDrugPlan)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <DotsHorizontalIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                              <div className="text-xl font-semibold">
                                 ${((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100).toFixed(2)}/mo
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowDrugPlanModal(true)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Pencil1Icon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <InfoCircledIcon className="h-4 w-4" />
-                              </Button>
+                              <div className='h-2'></div>
                             </div>
                           </div>
                         </div>
@@ -1254,35 +1313,31 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       )}
 
                       {selectedDentalPlan && (
-                        <div className="border rounded-lg p-4 border-green-500">
+                        <div className="border rounded-lg px-4 py-1 border-green-500">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <h5 className="font-medium">
-                                {selectedDentalPlan.planName}
+                            <div className='text-md'>
+                              <h5 className="font-semibold">
+                                {selectedDentalPlan.companyName}
                               </h5>
-                              <p className="text-sm text-gray-600">
-                                {selectedDentalPlan.companyName} - Dental, Vision & Hearing
+                              <p className="text-xs mt-1">
+                                {selectedDentalPlan.planName} - Dental, Vision & Hearing
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="font-medium text-amber-900">
+                            <div className="flex flex-col items-end justify-start text-right">
+                              <div className="flex items-center gap-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openActionDialog('dental', selectedDentalPlan)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <DotsHorizontalIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="text-xl font-semibold">
                                 ${selectedDentalPlan.monthlyPremium.toFixed(2)}/mo
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowDentalModal(true)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Pencil1Icon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <InfoCircledIcon className="h-4 w-4" />
-                              </Button>
+                              <div className='h-2'></div>
                             </div>
                           </div>
                         </div>
@@ -1336,35 +1391,31 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                       )}
 
                       {selectedCancerPlan && (
-                        <div className="border rounded-lg p-4 border-green-500">
+                        <div className="border rounded-lg px-4 py-1 border-green-500">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <h5 className="font-medium">
-                                {selectedCancerPlan.plan_name || 'Selected Cancer Plan'}
+                            <div className='text-md'>
+                              <h5 className="font-semibold">
+                                {selectedCancerPlan.carrier || 'Selected Cancer Plan'}
                               </h5>
-                              <p className="text-sm text-gray-600">
-                                {selectedCancerPlan.carrier || 'Cancer Insurance Coverage'}
+                              <p className="text-xs mt-1">
+                                {selectedCancerPlan.plan_name || 'Cancer Insurance Coverage'}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="font-medium">
+                            <div className="flex flex-col items-end justify-start text-right">
+                              <div className="flex items-center gap-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openActionDialog('cancer', selectedCancerPlan)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <DotsHorizontalIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="text-xl font-semibold">
                                 ${(selectedCancerPlan.monthly_premium || 0).toFixed(2)}/mo
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowCancerModal(true)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Pencil1Icon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <InfoCircledIcon className="h-4 w-4" />
-                              </Button>
+                              <div className='h-2'></div>
                             </div>
                           </div>
                         </div>
@@ -2194,6 +2245,41 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         missingFields={[]} // Will be calculated internally
         initialFormData={initialFormDataForModal}
       />
+
+      {/* Plan Action Dialog */}
+      <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Plan Actions</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              variant="outline"
+              onClick={handleChangePlan}
+              className="justify-start"
+            >
+              <Pencil1Icon className="h-4 w-4 mr-2" />
+              Change Plan
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleViewDetails}
+              className="justify-start"
+            >
+              <InfoCircledIcon className="h-4 w-4 mr-2" />
+              View Details
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleRemoveSelection}
+              className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <ResetIcon className="h-4 w-4 mr-2" />
+              Remove Selection
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </TabsContent>
   );
