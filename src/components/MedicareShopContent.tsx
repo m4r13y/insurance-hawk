@@ -1517,21 +1517,28 @@ function MedicareShopContent() {
     console.log('Current discount state:', applyDiscounts);
     
     try {
-      // Store the data for plan details page
-      const planDetailsData = {
-        carrierGroup: carrierGroup,
-        discountState: applyDiscounts // Include the current discount toggle state
-      };
-      
-      // Store in localStorage for plan details page to access
-      localStorage.setItem('planDetailsData', JSON.stringify(planDetailsData));
-      
       // Store return URL so user can come back to current page
       const currentUrl = window.location.href;
       localStorage.setItem('planDetailsReturnUrl', currentUrl);
       
-      // Navigate to plan details page
-      router.push('/plan-details');
+      // Extract carrier and plan information from carrierGroup
+      const carrierId = carrierGroup.carrierId || carrierGroup.id;
+      const carrierName = carrierGroup.carrierName || carrierGroup.name;
+      const planType = carrierGroup.selectedPlanType;
+      
+      console.log('Navigation data:', { carrierId, carrierName, planType });
+      
+      // Build URL with parameters for specific carrier and plan
+      const params = new URLSearchParams();
+      if (carrierId) params.set('carrier', carrierId);
+      if (carrierName) params.set('carrierName', carrierName);
+      if (planType) params.set('plan', planType);
+      
+      const planDetailsUrl = `/plan-details${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('Navigating to:', planDetailsUrl);
+      
+      // Navigate to plan details page with specific carrier/plan context
+      router.push(planDetailsUrl);
     } catch (error) {
       console.error('Error opening plan details:', error);
       // Could add toast notification here for user feedback

@@ -165,6 +165,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [loadingCoverageTypes, setLoadingCoverageTypes] = useState<string[]>([]);
   const [completedCoverageTypes, setCompletedCoverageTypes] = useState<string[]>([]);
   
+  // State to track if we should prioritize stored plan builder data over passed quoteData
+  const [usePlanBuilderData, setUsePlanBuilderData] = useState(false);
+  const [storedMedigapData, setStoredMedigapData] = useState<any>(null);
+  
   // Additional coverage quotes state
   const [drugPlanQuotes, setDrugPlanQuotes] = useState<any[]>([]);
   const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
@@ -558,6 +562,10 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         const existingPlanBuilder = await loadPlanBuilderData();
         if (existingPlanBuilder) {
           console.log('📖 Loaded existing plan builder data:', existingPlanBuilder);
+          
+          // Use the stored plan builder data
+          setUsePlanBuilderData(true);
+          setStoredMedigapData(existingPlanBuilder.medigapPlan);
           
           // Restore chart data if it exists
           if (existingPlanBuilder.chartData) {
@@ -1557,7 +1565,11 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       {/* Medicare Part D - if not selected */}
                       {!selectedDrugPlan && (
-                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                        <div className={`${
+                          drugPlanQuotes.length > 0 
+                            ? 'border-yellow-500 bg-yellow-50' 
+                            : 'border-red-500'
+                        } border rounded-lg p-4 transition-colors ${
                           chartData.find(item => item.name === 'Medicare A & B')?.selected 
                             ? 'hover:bg-muted/50' 
                             : 'opacity-50 cursor-not-allowed bg-gray-50'
@@ -1569,6 +1581,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                   ? '' 
                                   : 'text-gray-500'
                               }`}>Prescription Drug Plan</h5>
+                              {drugPlanQuotes.length > 0 && (
+                                <p className="text-sm text-yellow-700">Quotes available - select a plan</p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {drugPlanQuotes.length > 0 && (
@@ -1588,13 +1603,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 <Button variant="ghost" size="sm" disabled className="w-10 h-10">
                                   <UpdateIcon className="h-4 w-4 animate-spin" />
                                 </Button>
-                              ) : drugPlanQuotes.length === 0 ? (
+                              ) : drugPlanQuotes.length === 0 && !loadingCoverageTypes.includes('partd') ? (
                                 <Button 
-                                  variant="ghost" 
+                                  variant="outline" 
                                   size="default"
                                   disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
                                   onClick={() => generateQuotesForCoverage('partd')}
-                                  className="text-lg font-bold w-10 h-10"
+                                  className="text-lg font-bold w-10 h-10 border-dashed border-2 hover:border-solid"
                                 >
                                   +
                                 </Button>
@@ -1637,7 +1652,11 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       {/* Dental, Vision & Hearing Coverage - if not selected */}
                       {!selectedDentalPlan && (
-                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                        <div className={`${
+                          dentalQuotes.length > 0 
+                            ? 'border-yellow-500 bg-yellow-50' 
+                            : 'border-red-500'
+                        } border rounded-lg p-4 transition-colors ${
                           chartData.find(item => item.name === 'Medicare A & B')?.selected 
                             ? 'hover:bg-muted/50' 
                             : 'opacity-50 cursor-not-allowed bg-gray-50'
@@ -1649,6 +1668,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                   ? '' 
                                   : 'text-gray-500'
                               }`}>Dental, Vision & Hearing</h5>
+                              {dentalQuotes.length > 0 && (
+                                <p className="text-sm text-yellow-700">Quotes available - select a plan</p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {dentalQuotes.length > 0 && (
@@ -1668,13 +1690,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 <Button variant="ghost" size="sm" disabled className="w-10 h-10">
                                   <UpdateIcon className="h-4 w-4 animate-spin" />
                                 </Button>
-                              ) : dentalQuotes.length === 0 ? (
+                              ) : dentalQuotes.length === 0 && !loadingCoverageTypes.includes('dental-vision-hearing') ? (
                                 <Button 
-                                  variant="ghost" 
+                                  variant="outline" 
                                   size="default"
                                   disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
                                   onClick={() => generateQuotesForCoverage('dental-vision-hearing')}
-                                  className="text-lg font-bold w-10 h-10"
+                                  className="text-lg font-bold w-10 h-10 border-dashed border-2 hover:border-solid"
                                 >
                                   +
                                 </Button>
@@ -1717,7 +1739,11 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       {/* Cancer Insurance - if not selected */}
                       {!selectedCancerPlan && (
-                        <div className={`border-red-500 border rounded-lg p-4 transition-colors ${
+                        <div className={`${
+                          cancerInsuranceQuotes.length > 0 
+                            ? 'border-yellow-500 bg-yellow-50' 
+                            : 'border-red-500'
+                        } border rounded-lg p-4 transition-colors ${
                           chartData.find(item => item.name === 'Medicare A & B')?.selected 
                             ? 'hover:bg-muted/50' 
                             : 'opacity-50 cursor-not-allowed bg-gray-50'
@@ -1729,6 +1755,9 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                   ? '' 
                                   : 'text-gray-500'
                               }`}>Cancer Insurance</h5>
+                              {cancerInsuranceQuotes.length > 0 && (
+                                <p className="text-sm text-yellow-700">Quotes available - select a plan</p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {cancerInsuranceQuotes.length > 0 && (
@@ -1748,13 +1777,13 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 <Button variant="ghost" size="sm" disabled className="w-10 h-10">
                                   <UpdateIcon className="h-4 w-4 animate-spin" />
                                 </Button>
-                              ) : cancerInsuranceQuotes.length === 0 ? (
+                              ) : cancerInsuranceQuotes.length === 0 && !loadingCoverageTypes.includes('cancer') ? (
                                 <Button 
-                                  variant="ghost" 
+                                  variant="outline" 
                                   size="default"
                                   disabled={!chartData.find(item => item.name === 'Medicare A & B')?.selected}
                                   onClick={() => generateQuotesForCoverage('cancer')}
-                                  className="text-lg font-bold w-10 h-10"
+                                  className="text-lg font-bold w-10 h-10 border-dashed border-2 hover:border-solid"
                                 >
                                   +
                                 </Button>

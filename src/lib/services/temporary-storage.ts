@@ -160,7 +160,6 @@ const getSubcollectionName = (key: string): string => {
     'medicare_quote_form_data': 'form_data',
     'medicare_quote_form_completed': 'form_status',
     'medicare_filter_state': 'filter_state',
-    'planDetailsData': 'plan_details',
     'plan_builder_original_medicare': 'plan-builder'
   };
   

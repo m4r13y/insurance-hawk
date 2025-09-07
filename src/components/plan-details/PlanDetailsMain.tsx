@@ -123,126 +123,79 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
 
   React.useEffect(() => {
     const initializeComponent = async () => {
-      // First, try to get data from localStorage (plan details data)
-      const planDetailsDataStr = localStorage.getItem('planDetailsData');
+      console.log('Plan Details - Initializing component...');
       
-      console.log('Plan Details - localStorage data:', planDetailsDataStr);
+      // Get URL parameters for carrier and plan specificity
+      const carrierId = searchParams.get('carrier');
+      const carrierName = searchParams.get('carrierName');
+      const planType = searchParams.get('plan');
       
-      if (planDetailsDataStr) {
-        try {
-          const planDetailsData = JSON.parse(planDetailsDataStr);
-          console.log('Plan Details - parsed data:', planDetailsData);
-          
-          const { carrierGroup } = planDetailsData;
-          console.log('Plan Details - using unified discount state');
-          
-          setCurrentSelection({
-            ratingClass: '', // Will be set based on available quotes
-            discounts: [] // Managed by unified discount state
+      console.log('Plan Details - URL Parameters:', { carrierId, carrierName, planType });
+      
+      setCurrentSelection({
+        ratingClass: '', // Will be set based on available quotes
+        discounts: [] // Managed by unified discount state
+      });
+      
+      // Check for existing medigap quotes
+      console.log('Plan Details - Checking for existing quotes...');
+      const existingQuotes = await loadExistingQuotes();
+      
+      if (existingQuotes.length > 0) {
+        console.log('Plan Details - Found existing quotes, total:', existingQuotes.length);
+        
+        // Filter quotes based on URL parameters if provided
+        let filteredQuotes = existingQuotes;
+        
+        if (carrierId || carrierName || planType) {
+          filteredQuotes = existingQuotes.filter(quote => {
+            const matchesCarrierId = !carrierId || quote.company_base?.key === carrierId || quote.key === carrierId;
+            const matchesCarrierName = !carrierName || 
+              quote.company_base?.name === carrierName || 
+              quote.company === carrierName;
+            const matchesPlan = !planType || quote.plan === planType;
+            
+            console.log('Quote filter check:', {
+              quoteKey: quote.key,
+              quoteCarrierKey: quote.company_base?.key,
+              quoteCarrierName: quote.company_base?.name || quote.company,
+              quotePlan: quote.plan,
+              matchesCarrierId,
+              matchesCarrierName,
+              matchesPlan,
+              overallMatch: matchesCarrierId && matchesCarrierName && matchesPlan
+            });
+            
+            return matchesCarrierId && matchesCarrierName && matchesPlan;
           });
           
-          if (carrierGroup && carrierGroup.quotes && carrierGroup.quotes.length > 0) {
-            console.log('Plan Details - carrierGroup found with quotes:', carrierGroup.quotes.length);
-            console.log('Plan Details - selectedPlanType:', carrierGroup.selectedPlanType);
-            
-            // Use the selected plan type if available, otherwise use the first quote
-            const firstQuote = carrierGroup.quotes[0];
-            const selectedPlanType = carrierGroup.selectedPlanType || firstQuote.plan || 'G';
-            const convertedQuote: QuoteData = {
-            key: firstQuote.key || `quote-${firstQuote.plan}-${carrierGroup.carrierId}`,
-            age: firstQuote.age || 65,
-            age_increases: firstQuote.age_increases || [],
-            company: firstQuote.company || '',
-            company_base: {
-              key: firstQuote.company_base?.key || '',
-              name: carrierGroup.carrierName,
-              name_full: firstQuote.company_base?.name_full || carrierGroup.carrierName,
-              naic: firstQuote.naic || firstQuote.company_base?.naic || '',
-              ambest_rating: firstQuote.company_base?.ambest_rating || 'n/a',
-              ambest_outlook: firstQuote.company_base?.ambest_outlook || 'n/a',
-              sp_rating: firstQuote.company_base?.sp_rating || 'n/a',
-              type: firstQuote.company_base?.type || 'STOCK',
-              established_year: firstQuote.company_base?.established_year || 2000,
-              customer_complaint_ratio: firstQuote.company_base?.customer_complaint_ratio || null,
-              customer_satisfaction_ratio: firstQuote.company_base?.customer_satisfaction_ratio || -1,
-              med_supp_market_data: firstQuote.company_base?.med_supp_market_data || [],
-              parent_company_base: firstQuote.company_base?.parent_company_base
-            },
-            discount_category: firstQuote.discount_category || 'Standard',
-            discounts: firstQuote.discounts || [],
-            e_app_link: firstQuote.e_app_link || '',
-            effective_date: firstQuote.effective_date || new Date().toISOString(),
-            expires_date: firstQuote.expires_date || '2099-12-31T00:00:00',
-            fees: firstQuote.fees || [],
-            gender: firstQuote.gender || 'M',
-            has_brochure: firstQuote.has_brochure || false,
-            has_pdf_app: firstQuote.has_pdf_app || false,
-            plan: selectedPlanType, // Use the selected plan type instead of defaulting to 'G'
-            rate: {
-              annual: firstQuote.rate?.annual || (firstQuote.monthly_premium || 12000) * 12,
-              month: firstQuote.rate?.month || firstQuote.monthly_premium || 12000,
-              quarter: firstQuote.rate?.quarter || (firstQuote.monthly_premium || 12000) * 3,
-              semi_annual: firstQuote.rate?.semi_annual || (firstQuote.monthly_premium || 12000) * 6
-            },
-            rate_increases: firstQuote.rate_increases || [],
-            rate_type: firstQuote.rate_type || 'attained age',
-            rating_class: firstQuote.rating_class || '',
-            riders: firstQuote.riders || [],
-            tobacco: firstQuote.tobacco || false,
-            location_base: firstQuote.location_base || {
-              state: 'TX',
-              zip5: [],
-              county: []
-            }
-          };
-
-          // Convert all quotes for comparison
-          const allQuotes = carrierGroup.quotes.map((quote: any, index: number) => ({
-            ...convertedQuote,
-            key: quote.key || `quote-${quote.plan}-${carrierGroup.carrierId}-${index}`,
-            plan: quote.plan,
-            rate: {
-              annual: quote.rate?.annual || (quote.monthly_premium || 12000) * 12,
-              month: quote.rate?.month || quote.monthly_premium || 12000,
-              quarter: quote.rate?.quarter || (quote.monthly_premium || 12000) * 3,
-              semi_annual: quote.rate?.semi_annual || (quote.monthly_premium || 12000) * 6
-            },
-            discounts: quote.discounts || [],
-            discount_category: quote.discount_category || 'Standard',
-            rating_class: quote.rating_class || ''
-          }));
-
-          console.log('Plan Details - converted quote data:', convertedQuote);
-          setQuoteData(convertedQuote);
-          setCarrierQuotes(allQuotes);
-          setLoading(false);
-          return;
-        } else {
-          console.error('Plan Details - No quotes found in carrier group:', carrierGroup);
+          console.log('Plan Details - Filtered quotes for specific carrier/plan:', {
+            original: existingQuotes.length,
+            filtered: filteredQuotes.length,
+            carrierId,
+            carrierName,
+            planType
+          });
         }
-      } catch (error) {
-        console.error('Plan Details - Error parsing plan details data:', error);
+        
+        if (filteredQuotes.length > 0) {
+          console.log('Plan Details - Using filtered quotes, first quote:', filteredQuotes[0]);
+          setQuoteData(filteredQuotes[0]);
+          setCarrierQuotes(filteredQuotes);
+        } else {
+          console.log('Plan Details - No quotes match URL parameters, showing generate quote option');
+          setShowGenerateQuote(true);
+        }
+      } else {
+        console.log('Plan Details - No existing quotes found, will show generate quote option');
+        setShowGenerateQuote(true);
       }
-    }
-    
-    // If no plan details data, check for existing medigap quotes
-    console.log('Plan Details - No plan details data, checking for existing quotes...');
-    const existingQuotes = await loadExistingQuotes();
-    
-    if (existingQuotes.length > 0) {
-      console.log('Plan Details - Found existing quotes, using first quote:', existingQuotes[0]);
-      setQuoteData(existingQuotes[0]);
-      setCarrierQuotes(existingQuotes);
-    } else {
-      console.log('Plan Details - No existing quotes found, will show generate quote option');
-      setShowGenerateQuote(true);
-    }
-    
-    setLoading(false);
-  };
+      
+      setLoading(false);
+    };
 
-  initializeComponent();
-}, []);
+    initializeComponent();
+  }, [searchParams]); // Add searchParams as dependency
 
   const calculateDiscountedRate = (rate: number, discounts: any[]) => {
     let discountedRate = rate;
