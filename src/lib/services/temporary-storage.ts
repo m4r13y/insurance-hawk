@@ -145,6 +145,12 @@ const getVisitorId = (): string => {
 
 // Map storage keys to subcollection names
 const getSubcollectionName = (key: string): string => {
+  // Handle plan-specific medigap collections
+  if (key.startsWith('medicare_real_quotes_plan_')) {
+    const planType = key.replace('medicare_real_quotes_plan_', '').toUpperCase();
+    return `medigap_${planType}`;
+  }
+  
   const keyMapping: { [key: string]: string } = {
     'medicare_real_quotes': 'medigap_quotes',
     'medicare_quotes': 'medigap_quotes', // Alternative key for real quotes

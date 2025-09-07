@@ -14,7 +14,7 @@ import {
 import Image from 'next/image';
 import { getProperLogoUrl } from "@/lib/carrier-system";
 import { loadTemporaryData } from "@/lib/services/temporary-storage";
-import { REAL_QUOTES_KEY } from "@/components/medicare-shop/shared/storage";
+import { REAL_QUOTES_KEY, getAllMedigapStorageKeys, getMedigapStorageKey } from "@/components/medicare-shop/shared/storage";
 import { getBaseRate } from "@/lib/medigap-utils";
 import { useDiscountState } from "@/lib/services/discount-state";
 
@@ -61,7 +61,9 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   const loadExistingQuotes = async (): Promise<QuoteData[]> => {
     try {
       console.log('Plan Details - Loading existing medigap quotes...');
-      const quotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+      
+      // Use the new plan-specific loading method
+      const quotes = await loadExistingMedigapQuotes();
       if (quotes && Array.isArray(quotes) && quotes.length > 0) {
         console.log('Plan Details - Found existing quotes:', quotes.length);
         return quotes;
@@ -75,21 +77,44 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
   // Load existing medigap quotes the same way as main Medicare shop page
   const loadExistingMedigapQuotes = async (): Promise<QuoteData[]> => {
     try {
-      console.log('Plan Details - Loading existing medigap quotes from storage...');
+      console.log('Plan Details - Loading existing medigap quotes from plan-specific storage...');
       
-      // Use the same storage system as the main Medicare shop page
-      const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
-      
-      console.log('Plan Details - Raw storage data:', {
-        type: typeof savedQuotes,
-        isArray: Array.isArray(savedQuotes),
-        length: savedQuotes?.length,
-        firstItem: savedQuotes?.[0]
+      // Load from all plan-specific collections (F, G, N)
+      const planStorageKeys = getAllMedigapStorageKeys();
+      const loadPromises = planStorageKeys.map(async (storageKey) => {
+        try {
+          const planQuotes = await loadTemporaryData(storageKey, []);
+          return Array.isArray(planQuotes) ? planQuotes : [];
+        } catch (error) {
+          console.warn(`Failed to load quotes from ${storageKey}:`, error);
+          return [];
+        }
       });
       
-      if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
-        console.log('Plan Details - Found existing quotes:', savedQuotes.length);
-        return savedQuotes as QuoteData[];
+      const allPlanQuotes = await Promise.all(loadPromises);
+      const combinedQuotes = allPlanQuotes.flat();
+      
+      console.log('Plan Details - Loaded quotes:', {
+        planStorageKeys,
+        quotesPerPlan: allPlanQuotes.map((quotes, index) => ({ 
+          key: planStorageKeys[index], 
+          count: quotes.length 
+        })),
+        totalQuotes: combinedQuotes.length,
+        firstItem: combinedQuotes?.[0]
+      });
+      
+      if (combinedQuotes.length > 0) {
+        console.log('Plan Details - Found existing quotes:', combinedQuotes.length);
+        return combinedQuotes as QuoteData[];
+      }
+      
+      // Fallback: try loading from old single collection for backward compatibility
+      console.log('Plan Details - No plan-specific quotes found, trying legacy storage...');
+      const legacyQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+      if (legacyQuotes && Array.isArray(legacyQuotes) && legacyQuotes.length > 0) {
+        console.log('Plan Details - Found legacy quotes:', legacyQuotes.length);
+        return legacyQuotes as QuoteData[];
       }
       
       console.log('Plan Details - No existing quotes found');

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { 
   REAL_QUOTES_KEY,
+  getAllMedigapStorageKeys,
   ADVANTAGE_QUOTES_KEY,
   DRUG_PLAN_QUOTES_KEY,
   DENTAL_QUOTES_KEY,
@@ -34,19 +35,44 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
       
       switch (category) {
         case 'medigap':
-          const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
-          console.log('🔍 Raw Firestore data for medigap:', {
-            type: typeof savedQuotes,
-            isArray: Array.isArray(savedQuotes),
-            length: savedQuotes?.length,
-            firstItem: savedQuotes?.[0],
-            keys: savedQuotes?.[0] ? Object.keys(savedQuotes[0]) : 'no first item'
+          // Load from all plan-specific collections (F, G, N)
+          const planStorageKeys = getAllMedigapStorageKeys();
+          const loadPromises = planStorageKeys.map(async (storageKey) => {
+            try {
+              const planQuotes = await loadTemporaryData(storageKey, []);
+              return Array.isArray(planQuotes) ? planQuotes : [];
+            } catch (error) {
+              console.warn(`Failed to load quotes from ${storageKey}:`, error);
+              return [];
+            }
           });
-          if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
-            console.log('✅ Setting realQuotes with', savedQuotes.length, 'quotes');
-            setRealQuotes(savedQuotes);
+          
+          const allPlanQuotes = await Promise.all(loadPromises);
+          const combinedQuotes = allPlanQuotes.flat();
+          
+          console.log('🔍 Loaded medigap quotes from plan-specific storage:', {
+            planStorageKeys,
+            quotesPerPlan: allPlanQuotes.map((quotes, index) => ({ 
+              key: planStorageKeys[index], 
+              count: quotes.length 
+            })),
+            totalQuotes: combinedQuotes.length,
+            firstItem: combinedQuotes?.[0]
+          });
+          
+          if (combinedQuotes.length > 0) {
+            console.log('✅ Setting realQuotes with', combinedQuotes.length, 'quotes');
+            setRealQuotes(combinedQuotes);
           } else {
-            console.log('❌ No valid quotes to set - savedQuotes:', savedQuotes);
+            // Fallback: try loading from legacy storage for backward compatibility
+            console.log('🔍 No plan-specific quotes found, trying legacy storage...');
+            const savedQuotes = await loadTemporaryData(REAL_QUOTES_KEY, []);
+            if (savedQuotes && Array.isArray(savedQuotes) && savedQuotes.length > 0) {
+              console.log('✅ Setting realQuotes from legacy storage with', savedQuotes.length, 'quotes');
+              setRealQuotes(savedQuotes);
+            } else {
+              console.log('❌ No valid quotes found in any storage location');
+            }
           }
           break;
         case 'advantage':

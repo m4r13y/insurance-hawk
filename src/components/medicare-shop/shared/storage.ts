@@ -2,6 +2,12 @@
 export const QUOTE_FORM_DATA_KEY = 'medicare_quote_form_data';
 export const QUOTE_FORM_COMPLETED_KEY = 'medicare_quote_form_completed';
 export const REAL_QUOTES_KEY = 'medicare_real_quotes';
+
+// Individual plan storage keys for better separation
+export const REAL_QUOTES_PLAN_F_KEY = 'medicare_real_quotes_plan_f';
+export const REAL_QUOTES_PLAN_G_KEY = 'medicare_real_quotes_plan_g';
+export const REAL_QUOTES_PLAN_N_KEY = 'medicare_real_quotes_plan_n';
+
 export const ADVANTAGE_QUOTES_KEY = 'medicare_advantage_quotes';
 export const DRUG_PLAN_QUOTES_KEY = 'medicare_drug_plan_quotes';
 export const DENTAL_QUOTES_KEY = 'medicare_dental_quotes';
@@ -9,6 +15,28 @@ export const HOSPITAL_INDEMNITY_QUOTES_KEY = 'medicare_hospital_indemnity_quotes
 export const FINAL_EXPENSE_QUOTES_KEY = 'medicare_final_expense_quotes';
 export const CANCER_INSURANCE_QUOTES_KEY = 'medicare_cancer_insurance_quotes';
 export const FILTER_STATE_KEY = 'medicare_filter_state';
+
+// Helper functions for plan-specific storage
+export const getMedigapStorageKey = (planType: string): string => {
+  const normalizedPlan = planType.toLowerCase().replace(/[^a-z]/g, '');
+  switch (normalizedPlan) {
+    case 'f':
+    case 'planf':
+      return REAL_QUOTES_PLAN_F_KEY;
+    case 'g':
+    case 'plang':
+      return REAL_QUOTES_PLAN_G_KEY;
+    case 'n':
+    case 'plann':
+      return REAL_QUOTES_PLAN_N_KEY;
+    default:
+      return `medicare_real_quotes_${normalizedPlan}`;
+  }
+};
+
+export const getAllMedigapStorageKeys = (): string[] => {
+  return [REAL_QUOTES_PLAN_F_KEY, REAL_QUOTES_PLAN_G_KEY, REAL_QUOTES_PLAN_N_KEY];
+};
 
 // UI state keys - stored in localStorage for instant access
 export const SELECTED_CATEGORIES_KEY = 'medicare_selected_categories';
@@ -211,8 +239,13 @@ export const hasQuotes = (): boolean => {
 // Async version that actually checks Firestore (use sparingly)
 export const hasQuotesAsync = async (): Promise<boolean> => {
   try {
+    // Check medigap quotes from plan-specific collections
+    const planStorageKeys = getAllMedigapStorageKeys();
+    const medigapLoadPromises = planStorageKeys.map(key => loadFromStorage(key, []));
+    const medigapQuotesArrays = await Promise.all(medigapLoadPromises);
+    const realQuotes = medigapQuotesArrays.flat();
+    
     const [
-      realQuotes,
       advantageQuotes,
       drugPlanQuotes,
       dentalQuotes,
@@ -220,7 +253,6 @@ export const hasQuotesAsync = async (): Promise<boolean> => {
       finalExpenseQuotes,
       cancerInsuranceQuotes
     ] = await Promise.all([
-      loadFromStorage(REAL_QUOTES_KEY, []),
       loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
       loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
       loadFromStorage(DENTAL_QUOTES_KEY, []),
@@ -245,8 +277,13 @@ export const hasQuotesAsync = async (): Promise<boolean> => {
 // Get all quotes count (async)
 export const getAllQuotesCount = async (): Promise<number> => {
   try {
+    // Load medigap quotes from plan-specific collections
+    const planStorageKeys = getAllMedigapStorageKeys();
+    const medigapLoadPromises = planStorageKeys.map(key => loadFromStorage(key, []));
+    const medigapQuotesArrays = await Promise.all(medigapLoadPromises);
+    const realQuotes = medigapQuotesArrays.flat();
+    
     const [
-      realQuotes,
       advantageQuotes,
       drugPlanQuotes,
       dentalQuotes,
@@ -254,7 +291,6 @@ export const getAllQuotesCount = async (): Promise<number> => {
       finalExpenseQuotes,
       cancerInsuranceQuotes
     ] = await Promise.all([
-      loadFromStorage(REAL_QUOTES_KEY, []),
       loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
       loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
       loadFromStorage(DENTAL_QUOTES_KEY, []),
@@ -310,9 +346,14 @@ export const clearAllQuotes = async () => {
 // Get Firestore storage info (estimates)
 export const getFirestoreStorageInfo = async () => {
   try {
+    // Load medigap quotes from plan-specific collections
+    const planStorageKeys = getAllMedigapStorageKeys();
+    const medigapLoadPromises = planStorageKeys.map(key => loadFromStorage(key, []));
+    const medigapQuotesArrays = await Promise.all(medigapLoadPromises);
+    const realQuotes = medigapQuotesArrays.flat();
+    
     const [
       formData,
-      realQuotes,
       advantageQuotes,
       drugPlanQuotes,
       dentalQuotes,
@@ -322,7 +363,6 @@ export const getFirestoreStorageInfo = async () => {
       filterState
     ] = await Promise.all([
       loadFromStorage(QUOTE_FORM_DATA_KEY, {}),
-      loadFromStorage(REAL_QUOTES_KEY, []),
       loadFromStorage(ADVANTAGE_QUOTES_KEY, []),
       loadFromStorage(DRUG_PLAN_QUOTES_KEY, []),
       loadFromStorage(DENTAL_QUOTES_KEY, []),
@@ -452,4 +492,51 @@ export const migrateLegacyStorage = async () => {
     console.error('Error during legacy storage migration:', error);
     return { quotesMigrated: 0, uiMigrated: false };
   }
+};
+
+// === PLAN-SPECIFIC STORAGE FUNCTIONS ===
+
+// Get storage key for specific plan type
+export const getPlanStorageKey = (planType: string): string => {
+  switch (planType.toUpperCase()) {
+    case 'F': return REAL_QUOTES_PLAN_F_KEY;
+    case 'G': return REAL_QUOTES_PLAN_G_KEY;
+    case 'N': return REAL_QUOTES_PLAN_N_KEY;
+    default: return REAL_QUOTES_KEY; // Fallback to general key
+  }
+};
+
+// Save quotes for a specific plan type
+export const savePlanQuotes = async (planType: string, quotes: any[]) => {
+  const storageKey = getPlanStorageKey(planType);
+  await saveToStorage(storageKey, quotes);
+  console.log(`💾 Saved ${quotes.length} quotes for Plan ${planType} to ${storageKey}`);
+};
+
+// Load quotes for a specific plan type
+export const loadPlanQuotes = async (planType: string): Promise<any[]> => {
+  const storageKey = getPlanStorageKey(planType);
+  const quotes = await loadFromStorage(storageKey, []);
+  console.log(`📄 Loaded ${quotes.length} quotes for Plan ${planType} from ${storageKey}`);
+  return quotes;
+};
+
+// Load all plan quotes and combine them
+export const loadAllPlanQuotes = async (): Promise<{ all: any[], byPlan: Record<string, any[]> }> => {
+  const planF = await loadPlanQuotes('F');
+  const planG = await loadPlanQuotes('G');
+  const planN = await loadPlanQuotes('N');
+  
+  const byPlan = { F: planF, G: planG, N: planN };
+  const all = [...planF, ...planG, ...planN];
+  
+  console.log(`📊 Loaded quotes - F: ${planF.length}, G: ${planG.length}, N: ${planN.length}, Total: ${all.length}`);
+  return { all, byPlan };
+};
+
+// Clear quotes for a specific plan type
+export const clearPlanQuotes = async (planType: string) => {
+  const storageKey = getPlanStorageKey(planType);
+  await saveToStorage(storageKey, []);
+  console.log(`🧹 Cleared quotes for Plan ${planType}`);
 };

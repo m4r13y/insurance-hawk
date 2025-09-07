@@ -55,6 +55,8 @@ import {
   QUOTE_FORM_DATA_KEY,
   QUOTE_FORM_COMPLETED_KEY,
   REAL_QUOTES_KEY,
+  getMedigapStorageKey,
+  getAllMedigapStorageKeys,
   ADVANTAGE_QUOTES_KEY,
   DRUG_PLAN_QUOTES_KEY,
   DENTAL_QUOTES_KEY,
@@ -204,6 +206,28 @@ function MedicareShopContent() {
   // Single source of truth for plan selections - always use this format
   const [selectedQuotePlans, setSelectedQuotePlans] = useState(['F', 'G', 'N']);
   // Track which plans have quotes available (for checkbox display logic)
+  // Plan-specific state management (like test-multi-plan working pattern)
+  const [planQuotes, setPlanQuotes] = useState<{
+    F: any[];
+    G: any[];
+    N: any[];
+  }>({
+    F: [],
+    G: [],
+    N: []
+  });
+
+  const [planStates, setPlanStates] = useState<{
+    F: { loading: boolean; loaded: boolean; visible: boolean };
+    G: { loading: boolean; loaded: boolean; visible: boolean };
+    N: { loading: boolean; loaded: boolean; visible: boolean };
+  }>({
+    F: { loading: false, loaded: false, visible: false },
+    G: { loading: false, loaded: false, visible: false },
+    N: { loading: false, loaded: false, visible: false }
+  });
+
+  // Legacy state - kept for compatibility with other quote types
   const [availableMedigapPlans, setAvailableMedigapPlans] = useState<Record<string, boolean>>({});
   const [applyDiscounts, setApplyDiscounts] = useDiscountState();
   const [paymentMode, setPaymentMode] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
@@ -359,6 +383,12 @@ function MedicareShopContent() {
 
         if (savedFormData) {
           setQuoteFormData(savedFormData);
+          
+          // Load any existing medigap quotes from storage
+          if (initialCategory === 'medigap') {
+            console.log('🔍 Loading existing medigap quotes from storage...');
+            await loadAllPlanQuotes();
+          }
         }
         if (savedCategories && Array.isArray(savedCategories)) {
           setSelectedFlowCategories(savedCategories);
@@ -439,7 +469,11 @@ function MedicareShopContent() {
   }, []); // Empty dependency array - only run once on mount
 
   const hasQuotesForPlan = (planType: string) => {
-    // Use tracking array for UI consistency, fallback to actual quotes if needed
+    if (selectedCategory === 'medigap') {
+      // Use new plan states pattern for medigap
+      return planStates[planType as 'F' | 'G' | 'N']?.loaded || false;
+    }
+    // Legacy logic for other categories
     return availableMedigapPlans[planType] || realQuotes?.some(quote => quote?.plan === planType) || false;
   };
 
@@ -465,27 +499,86 @@ function MedicareShopContent() {
     updatePlanAvailability(realQuotes);
   }, [realQuotes, updatePlanAvailability]);
 
-  // Clear loading state when all requested plans are available
+  // Clear loading state when all requested plans are available OR when we have some plans to show
   useEffect(() => {
     if (isPlanLoading && selectedQuotePlans.length > 0) {
       const allRequestedPlansAvailable = selectedQuotePlans.every(plan => availableMedigapPlans[plan]);
-      if (allRequestedPlansAvailable) {
+      const hasAnyAvailablePlans = selectedQuotePlans.some(plan => availableMedigapPlans[plan]);
+      
+      // FIXED: Clear loading if we have ANY available plans to show, not just ALL
+      if (allRequestedPlansAvailable || hasAnyAvailablePlans) {
         setIsPlanLoading(false);
       }
     }
   }, [isPlanLoading, selectedQuotePlans, availableMedigapPlans]);
 
-  // Safety: Clear loading state after 5 seconds to prevent infinite loading
+  // Safety: Clear loading state after 2 seconds for individual plan loads (not initial category loads)
   useEffect(() => {
     if (isPlanLoading) {
       const timeout = setTimeout(() => {
-        console.warn('⚠️ Clearing stuck loading state after 5 seconds');
+        console.warn('⚠️ Clearing stuck loading state after 2 seconds');
         setIsPlanLoading(false);
-      }, 5000);
+      }, 2000); // Reduced from 5 seconds to 2 seconds for better UX
       
       return () => clearTimeout(timeout);
     }
   }, [isPlanLoading]);
+
+  // Load quotes from plan-specific storage
+  const loadPlanQuotes = useCallback(async (planType: string) => {
+    try {
+      const storageKey = getMedigapStorageKey(planType);
+      const savedQuotes = await loadFromStorage(storageKey, []);
+      
+      if (savedQuotes && savedQuotes.length > 0) {
+        // Update planQuotes state
+        setPlanQuotes(prev => ({
+          ...prev,
+          [planType]: savedQuotes
+        }));
+        
+        // Update plan states
+        setPlanStates(prev => ({
+          ...prev,
+          [planType]: { ...prev[planType as keyof typeof prev], loaded: true, visible: true }
+        }));
+        
+        // Automatically add to selectedQuotePlans if not already there
+        setSelectedQuotePlans(prev => {
+          if (!prev.includes(planType)) {
+            console.log(`✅ Auto-selecting plan ${planType} after loading quotes`);
+            return [...prev, planType];
+          }
+          return prev;
+        });
+        
+        // Also update legacy realQuotes if this is the first plan loaded
+        setRealQuotes(prevQuotes => {
+          const otherPlans = prevQuotes?.filter(q => q.plan !== planType) || [];
+          return [...otherPlans, ...savedQuotes];
+        });
+        
+        console.log(`📥 Loaded ${savedQuotes.length} quotes for plan ${planType} from storage`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`❌ Failed to load quotes for plan ${planType}:`, error);
+      return false;
+    }
+  }, []);
+
+  // Load all available plan quotes from storage
+  const loadAllPlanQuotes = useCallback(async () => {
+    const planTypes = ['F', 'G', 'N'];
+    const loadPromises = planTypes.map(loadPlanQuotes);
+    const results = await Promise.all(loadPromises);
+    
+    const loadedCount = results.filter(Boolean).length;
+    console.log(`📥 Loaded quotes for ${loadedCount} plans from storage`);
+    
+    return loadedCount > 0;
+  }, [loadPlanQuotes]);
 
   const fetchIndividualPlanQuotes = useCallback(async (planType: string, formData?: any) => {
     setLoadingPlanButton(planType);
@@ -573,14 +666,42 @@ function MedicareShopContent() {
             allPlans: updatedQuotes.map(q => q?.plan).filter(Boolean)
           });
           
-          // Update the quotes state
-          setRealQuotes(updatedQuotes);
+          // FIXED: Update all state values atomically to prevent inconsistent state
+          React.startTransition(() => {
+            // Update the legacy quotes state (for compatibility)
+            setRealQuotes(updatedQuotes);
+            
+            // Update plan-specific quotes state (primary data store)
+            setPlanQuotes(prev => ({
+              ...prev,
+              [planType]: response.quotes
+            }));
+            
+            // Update plan states
+            setPlanStates(prev => ({
+              ...prev,
+              [planType]: { loading: false, loaded: true, visible: true }
+            }));
+            
+            // Update plan availability tracking immediately in same transition
+            setAvailableMedigapPlans(prev => ({
+              ...prev,
+              [planType]: true
+            }));
+            
+            // Automatically add to selectedQuotePlans if not already there
+            setSelectedQuotePlans(prev => {
+              if (!prev.includes(planType)) {
+                console.log(`✅ Auto-selecting plan ${planType} after fetching quotes`);
+                return [...prev, planType];
+              }
+              return prev;
+            });
+          });
           
-          // Update plan availability tracking
-          updatePlanAvailability(updatedQuotes);
-          
-          // Save to storage
-          await saveToStorage(REAL_QUOTES_KEY, updatedQuotes);
+          // Save to plan-specific storage
+          const storageKey = getMedigapStorageKey(planType);
+          await saveToStorage(storageKey, response.quotes);
           
           // Add this plan to selected plans if not already there
           if (!selectedQuotePlans.includes(planType)) {
@@ -631,8 +752,59 @@ function MedicareShopContent() {
           // Update plan availability tracking
           updatePlanAvailability(result.quotes);
           
-          // Save Medigap quotes to Firebase storage
-          await saveToStorage(REAL_QUOTES_KEY, result.quotes);
+          // Save Medigap quotes to plan-specific Firebase collections and update state
+          if (result.quotes && result.quotes.length > 0) {
+            const quotesByPlan = new Map<string, any[]>();
+            
+            // Group quotes by plan type
+            result.quotes.forEach((quote: any) => {
+              const plan = quote?.plan;
+              if (plan) {
+                if (!quotesByPlan.has(plan)) {
+                  quotesByPlan.set(plan, []);
+                }
+                quotesByPlan.get(plan)!.push(quote);
+              }
+            });
+            
+            // Update planQuotes state
+            React.startTransition(() => {
+              const updatedPlanQuotes = { ...planQuotes };
+              const updatedPlanStates = { ...planStates };
+              
+              Array.from(quotesByPlan.entries()).forEach(([plan, quotes]) => {
+                if (plan in updatedPlanQuotes) {
+                  updatedPlanQuotes[plan as keyof typeof updatedPlanQuotes] = quotes;
+                  updatedPlanStates[plan as keyof typeof updatedPlanStates] = {
+                    loading: false,
+                    loaded: true,
+                    visible: true
+                  };
+                }
+              });
+              
+              setPlanQuotes(updatedPlanQuotes);
+              setPlanStates(updatedPlanStates);
+              
+              // Auto-select plans that have quotes loaded
+              setSelectedQuotePlans(prev => {
+                const newPlans = Array.from(quotesByPlan.keys()).filter(plan => !prev.includes(plan));
+                if (newPlans.length > 0) {
+                  console.log(`✅ Auto-selecting plans after bulk loading: ${newPlans.join(', ')}`);
+                  return [...prev, ...newPlans];
+                }
+                return prev;
+              });
+            });
+            
+            // Save each plan's quotes to its own collection
+            const savePromises = Array.from(quotesByPlan.entries()).map(([plan, quotes]) => {
+              const storageKey = getMedigapStorageKey(plan);
+              return saveToStorage(storageKey, quotes);
+            });
+            
+            await Promise.all(savePromises);
+          }
           // Removed auto-switching - only update quotes, let user manually switch tabs
           return result.quotes;
         }
@@ -778,6 +950,24 @@ function MedicareShopContent() {
       cancelAllRequests();
     };
   }, [activeCategory]); // Cancel when category changes
+
+  // Load quotes when selectedQuotePlans changes
+  useEffect(() => {
+    const loadQuotesForSelectedPlans = async () => {
+      if (selectedQuotePlans.length === 0) return;
+      
+      for (const planType of selectedQuotePlans) {
+        // Check if we already have quotes for this plan
+        const currentQuotes = planQuotes[planType as keyof typeof planQuotes];
+        if (!currentQuotes || currentQuotes.length === 0) {
+          console.log(`📥 Loading stored quotes for plan ${planType}...`);
+          await loadPlanQuotes(planType);
+        }
+      }
+    };
+    
+    loadQuotesForSelectedPlans();
+  }, [selectedQuotePlans, loadPlanQuotes, planQuotes]);
 
   // Component unmount cleanup
   useEffect(() => {
@@ -999,10 +1189,61 @@ function MedicareShopContent() {
           // Update plan availability tracking
           updatePlanAvailability(response.quotes);
           
-          // Save Medigap quotes to Firebase storage
+          // Save Medigap quotes to plan-specific Firebase collections
           try {
-            await saveToStorage(REAL_QUOTES_KEY, response.quotes);
-            console.log('💾 Medigap quotes saved to Firebase storage');
+            if (response.quotes && response.quotes.length > 0) {
+              const quotesByPlan = new Map<string, any[]>();
+              
+              // Group quotes by plan type
+              response.quotes.forEach((quote: any) => {
+                const plan = quote?.plan;
+                if (plan) {
+                  if (!quotesByPlan.has(plan)) {
+                    quotesByPlan.set(plan, []);
+                  }
+                  quotesByPlan.get(plan)!.push(quote);
+                }
+              });
+              
+              // Update planQuotes state
+              React.startTransition(() => {
+                const updatedPlanQuotes = { ...planQuotes };
+                const updatedPlanStates = { ...planStates };
+                
+                Array.from(quotesByPlan.entries()).forEach(([plan, quotes]) => {
+                  if (plan in updatedPlanQuotes) {
+                    updatedPlanQuotes[plan as keyof typeof updatedPlanQuotes] = quotes;
+                    updatedPlanStates[plan as keyof typeof updatedPlanStates] = {
+                      loading: false,
+                      loaded: true,
+                      visible: true
+                    };
+                  }
+                });
+                
+                setPlanQuotes(updatedPlanQuotes);
+                setPlanStates(updatedPlanStates);
+                
+                // Auto-select plans that have quotes loaded
+                setSelectedQuotePlans(prev => {
+                  const newPlans = Array.from(quotesByPlan.keys()).filter(plan => !prev.includes(plan));
+                  if (newPlans.length > 0) {
+                    console.log(`✅ Auto-selecting plans after bulk quote fetch: ${newPlans.join(', ')}`);
+                    return [...prev, ...newPlans];
+                  }
+                  return prev;
+                });
+              });
+              
+              // Save each plan's quotes to its own collection
+              const savePromises = Array.from(quotesByPlan.entries()).map(([plan, quotes]) => {
+                const storageKey = getMedigapStorageKey(plan);
+                return saveToStorage(storageKey, quotes);
+              });
+              
+              await Promise.all(savePromises);
+              console.log('💾 Medigap quotes saved to plan-specific Firebase collections');
+            }
           } catch (error) {
             console.error('❌ Failed to save Medigap quotes to Firebase:', error);
           }
@@ -1970,8 +2211,9 @@ function MedicareShopContent() {
     // (i.e., plans that are not currently available in availableMedigapPlans)
     const newPlansNeedingQuotes = plans.some(plan => !availableMedigapPlans[plan]);
     
-    // Only show loading skeleton if new quotes need to be generated
-    if (newPlansNeedingQuotes) {
+    // FIXED: Only show loading skeleton if new quotes need to be generated AND we have no existing plans to show
+    const hasExistingPlansToShow = plans.some(plan => availableMedigapPlans[plan]);
+    if (newPlansNeedingQuotes && !hasExistingPlansToShow) {
       setIsPlanLoading(true);
     }
     
@@ -2008,22 +2250,30 @@ function MedicareShopContent() {
 
   // Display data processing - handle both real quotes types
   const displayData = React.useMemo(() => {
-    if (selectedCategory === 'medigap' && realQuotes?.length > 0) {
-      // Apply preferred carriers filter first if enabled
-      let quotesToProcess = realQuotes;
-      if (showPreferredOnly) {
-        quotesToProcess = filterPreferredCarriers(realQuotes, 'medicare-supplement');
+    if (selectedCategory === 'medigap') {
+      // Use plan-specific quotes from planQuotes state
+      const selectedPlansData = selectedQuotePlans.flatMap(planType => {
+        const quotes = planQuotes[planType as keyof typeof planQuotes] || [];
+        return quotes;
+      });
+      
+      // Only proceed if we have quotes for selected plans
+      if (selectedPlansData.length === 0) {
+        return {
+          type: 'grouped' as const,
+          data: []
+        };
       }
       
-      // Group by carrier for medigap
-      const filteredQuotes = quotesToProcess.filter(quote => {
-        const planType = quote?.plan || '';
-        // Plan must be both available (has quotes) AND selected by user
-        const isAvailable = availableMedigapPlans[planType] || false;
-        const isSelected = selectedQuotePlans?.includes(planType) || false;
-        const matchesPlan = isAvailable && isSelected;
-        
-        if (searchQuery && matchesPlan) {
+      // Apply preferred carriers filter first if enabled
+      let quotesToProcess = selectedPlansData;
+      if (showPreferredOnly) {
+        quotesToProcess = filterPreferredCarriers(selectedPlansData, 'medicare-supplement');
+      }
+      
+      // Group by carrier for medigap - simplified filtering like test-multi-plan
+      const filteredQuotes = quotesToProcess.filter(quote => {        
+        if (searchQuery) {
           const carrierName = quote?.carrier?.name || 
                              quote?.company_base?.name ||
                              quote?.company ||
@@ -2034,7 +2284,7 @@ function MedicareShopContent() {
           return carrierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                  displayName.toLowerCase().includes(searchQuery.toLowerCase());
         }
-        return matchesPlan;
+        return true; // No complex availability checks - if quote exists in selectedPlansData, show it
       });
 
       const groupedByCarrier = filteredQuotes.reduce((groups: Record<string, any>, quote: any) => {
@@ -2177,7 +2427,7 @@ function MedicareShopContent() {
       type: 'individual' as const,
       data: []
     };
-  }, [selectedCategory, realQuotes, advantageQuotes, drugPlanQuotes, selectedQuotePlans, searchQuery, availableMedigapPlans, showPreferredOnly, applyDiscounts]);
+  }, [selectedCategory, planQuotes, advantageQuotes, drugPlanQuotes, selectedQuotePlans, searchQuery, showPreferredOnly, applyDiscounts]);
 
   // Memoized pagination calculations to prevent unnecessary re-computations
   const paginationData = React.useMemo(() => {
