@@ -41,9 +41,9 @@ export function MedicareAdvantageShopContent({
   // Carousel pages configuration
   const carouselPages: CarouselPage[] = [
     { title: 'Summary', id: 'field-mapping' },
-    { title: 'Specialty & Benefits', id: 'specialty-benefits' },
-    { title: 'Outpatient Services', id: 'outpatient-services' },
     { title: 'Inpatient/Facility', id: 'inpatient-facility' },
+    { title: 'Outpatient Services', id: 'outpatient-services' },
+    { title: 'Specialty & Benefits', id: 'specialty-benefits' },
     { title: 'Prescriptions', id: 'prescriptions' }
   ];
 

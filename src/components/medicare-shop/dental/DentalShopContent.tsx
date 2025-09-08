@@ -90,7 +90,6 @@ export default function DentalShopContent({
                     </div>
                     
                     <p className="text-gray-600 mb-2">{selectedQuote.companyFullName}</p>
-                    <p className="text-sm text-gray-500">NAIC: {selectedQuote.naic}</p>
                   </div>
                   
                   <div className="text-right">

@@ -184,13 +184,12 @@ export const PlanCarousel: React.FC<PlanCarouselProps> = ({
           <FieldMappingTable selectedPlan={selectedPlan} />
         )}
         
-        {/* Specialty & Benefits Page */}
+        {/* Inpatient/Facility Page */}
         {currentCarouselPage === 1 && selectedPlan && (
           <BenefitCategory 
             selectedPlan={selectedPlan}
-            benefitTypes={specialtyBenefits}
-            displayNameMap={specialtyDisplayNameMap}
-            benefitPriority={specialtyBenefitPriority}
+            benefitTypes={inpatientFacility}
+            benefitPriority={inpatientBenefitPriority}
           />
         )}
         
@@ -204,12 +203,13 @@ export const PlanCarousel: React.FC<PlanCarouselProps> = ({
           />
         )}
         
-        {/* Inpatient/Facility Page */}
+        {/* Specialty & Benefits Page */}
         {currentCarouselPage === 3 && selectedPlan && (
           <BenefitCategory 
             selectedPlan={selectedPlan}
-            benefitTypes={inpatientFacility}
-            benefitPriority={inpatientBenefitPriority}
+            benefitTypes={specialtyBenefits}
+            displayNameMap={specialtyDisplayNameMap}
+            benefitPriority={specialtyBenefitPriority}
           />
         )}
         

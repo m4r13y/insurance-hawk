@@ -6,6 +6,7 @@ export { ImprovedAllPlansTab } from './ImprovedAllPlansTab';
 export { CompanyTab } from './CompanyTab';
 export { PlanDetailsTab } from './PlanDetailsTab';
 export { UnderwritingTab } from './UnderwritingTab';
+export { AgeBasedRateChart } from './AgeBasedRateChart';
 export { LoadingState } from './LoadingState';
 export { ErrorState } from './ErrorState';
 export type { QuoteData } from './types';

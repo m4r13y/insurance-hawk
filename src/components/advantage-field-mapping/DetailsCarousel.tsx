@@ -87,9 +87,9 @@ export default function DetailsCarousel({
 }: DetailsCarouselProps) {
   const carouselPages = [
     { title: 'Field Mapping', id: 'field-mapping' },
-    { title: 'Specialty & Benefits', id: 'specialty-benefits' },
-    { title: 'Outpatient Services', id: 'outpatient-services' },
     { title: 'Inpatient/Facility', id: 'inpatient-facility' },
+    { title: 'Outpatient Services', id: 'outpatient-services' },
+    { title: 'Specialty & Benefits', id: 'specialty-benefits' },
     { title: 'Prescriptions', id: 'prescriptions' }
   ];
 
@@ -185,52 +185,37 @@ export default function DetailsCarousel({
           </Table>
         )}
         
-        {/* Specialty & Benefits Page */}
+        {/* Inpatient/Facility Page */}
         {currentCarouselPage === 1 && selectedPlan && (
           <div className="space-y-4">
             {(() => {
-              const specialtyBenefits = [
-                'Vision',
-                'Hearing services',
-                'Mental health care',
-                'Foot care (podiatry services)',
-                'Comprehensive Dental Service',
-                'Preventive Dental Service',
-                'Transportation',
-                'Transportation Services',
-                'Wellness Programs',
-                'Meal Benefit',
-                'Otc Items',
-                'Defined Supplemental Benefits',
-                'Optional Supplemental Benefits',
-                'Worldwide Emergency Urgent Coverage'
+              const inpatientFacility = [
+                'Inpatient Hospital',
+                'Skilled Nursing Facility (SNF)',
+                'Dialysis Services',
+                'Medical Equipment',
+                'Health Plan Deductible',
+                'Other Deductibles',
+                'Medicare Part B',
+                'Non Opioid Pain Management',
+                'Opioid Treatment Services'
               ];
 
-              const displayNameMap: Record<string, string> = {
-                'Comprehensive Dental Service': 'Dental (Comprehensive)',
-                'Preventive Dental Service': 'Dental (Preventive)'
-              };
-
               const benefitPriority: Record<string, number> = {
-                'Preventive Dental Service': 1,
-                'Comprehensive Dental Service': 2,
-                'Vision': 3,
-                'Hearing services': 4,
-                'Otc Items': 5,
-                'Transportation': 6,
-                'Transportation Services': 7,
-                'Meal Benefit': 8,
-                'Wellness Programs': 9,
-                'Foot care (podiatry services)': 10,
-                'Mental health care': 11,
-                'Defined Supplemental Benefits': 12,
-                'Optional Supplemental Benefits': 13,
-                'Worldwide Emergency Urgent Coverage': 14
+                'Inpatient Hospital': 1,
+                'Skilled Nursing Facility (SNF)': 2,
+                'Dialysis Services': 3,
+                'Medical Equipment': 4,
+                'Health Plan Deductible': 5,
+                'Other Deductibles': 6,
+                'Medicare Part B': 7,
+                'Non Opioid Pain Management': 8,
+                'Opioid Treatment Services': 9
               };
 
               const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
               const benefitObjects = allBenefitTypes
-                .filter(benefitType => specialtyBenefits.includes(benefitType))
+                .filter(benefitType => inpatientFacility.includes(benefitType))
                 .map((benefitType, index) => {
                   const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
                   const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
@@ -241,8 +226,8 @@ export default function DetailsCarousel({
                   
                   return {
                     benefitType,
-                    displayName: displayNameMap[benefitType] || benefitType,
-                    index: `specialty-${index}`,
+                    displayName: benefitType,
+                    index: `inpatient-${index}`,
                     statusDisplay,
                     benefitData,
                     benefit,
@@ -427,37 +412,52 @@ export default function DetailsCarousel({
           </div>
         )}
         
-        {/* Inpatient/Facility Page */}
+        {/* Specialty & Benefits Page */}
         {currentCarouselPage === 3 && selectedPlan && (
           <div className="space-y-4">
             {(() => {
-              const inpatientFacility = [
-                'Inpatient Hospital',
-                'Skilled Nursing Facility (SNF)',
-                'Dialysis Services',
-                'Medical Equipment',
-                'Health Plan Deductible',
-                'Other Deductibles',
-                'Medicare Part B',
-                'Non Opioid Pain Management',
-                'Opioid Treatment Services'
+              const specialtyBenefits = [
+                'Vision',
+                'Hearing services',
+                'Mental health care',
+                'Foot care (podiatry services)',
+                'Comprehensive Dental Service',
+                'Preventive Dental Service',
+                'Transportation',
+                'Transportation Services',
+                'Wellness Programs',
+                'Meal Benefit',
+                'Otc Items',
+                'Defined Supplemental Benefits',
+                'Optional Supplemental Benefits',
+                'Worldwide Emergency Urgent Coverage'
               ];
 
+              const displayNameMap: Record<string, string> = {
+                'Comprehensive Dental Service': 'Dental (Comprehensive)',
+                'Preventive Dental Service': 'Dental (Preventive)'
+              };
+
               const benefitPriority: Record<string, number> = {
-                'Inpatient Hospital': 1,
-                'Skilled Nursing Facility (SNF)': 2,
-                'Dialysis Services': 3,
-                'Medical Equipment': 4,
-                'Health Plan Deductible': 5,
-                'Other Deductibles': 6,
-                'Medicare Part B': 7,
-                'Non Opioid Pain Management': 8,
-                'Opioid Treatment Services': 9
+                'Preventive Dental Service': 1,
+                'Comprehensive Dental Service': 2,
+                'Vision': 3,
+                'Hearing services': 4,
+                'Otc Items': 5,
+                'Transportation': 6,
+                'Transportation Services': 7,
+                'Meal Benefit': 8,
+                'Wellness Programs': 9,
+                'Foot care (podiatry services)': 10,
+                'Mental health care': 11,
+                'Defined Supplemental Benefits': 12,
+                'Optional Supplemental Benefits': 13,
+                'Worldwide Emergency Urgent Coverage': 14
               };
 
               const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
               const benefitObjects = allBenefitTypes
-                .filter(benefitType => inpatientFacility.includes(benefitType))
+                .filter(benefitType => specialtyBenefits.includes(benefitType))
                 .map((benefitType, index) => {
                   const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
                   const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
@@ -468,8 +468,8 @@ export default function DetailsCarousel({
                   
                   return {
                     benefitType,
-                    displayName: benefitType,
-                    index: `inpatient-${index}`,
+                    displayName: displayNameMap[benefitType] || benefitType,
+                    index: `specialty-${index}`,
                     statusDisplay,
                     benefitData,
                     benefit,

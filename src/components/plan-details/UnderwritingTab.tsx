@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { QuoteData } from './types.js';
+import { AgeBasedRateChart } from './AgeBasedRateChart';
 
 interface UnderwritingTabProps {
   quoteData: QuoteData;
@@ -80,18 +81,16 @@ export const UnderwritingTab: React.FC<UnderwritingTabProps> = ({
               <Separator />
               <div>
                 <h4 className="font-medium mb-3">Age-Based Rate Increases</h4>
-                <div className="text-sm text-muted-foreground mb-2">
+                <div className="text-sm text-muted-foreground mb-4">
                   Projected annual rate increases based on age progression
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {quoteData.age_increases.map((increase, index) => (
-                    <div key={index} className="text-center p-2 border rounded">
-                      <div className="text-sm text-muted-foreground">Year {index + 1}</div>
-                      <div className="font-medium">
-                        {increase > 0 ? `+${(increase * 100).toFixed(1)}%` : '0%'}
-                      </div>
-                    </div>
-                  ))}
+                
+                {/* Visual Chart */}
+                <div>
+                  <AgeBasedRateChart 
+                    ageIncreases={quoteData.age_increases} 
+                    currentAge={quoteData.age} 
+                  />
                 </div>
               </div>
             </>

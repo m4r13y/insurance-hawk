@@ -235,10 +235,10 @@ export const BenefitsOverview: React.FC<BenefitsOverviewProps> = ({ selectedPlan
           
           {/* Grid layout for other benefits - organized by service setting */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Specialty & Benefits Column */}
+            {/* Inpatient/Facility Column */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Specialty & Benefits</h3>
-              {specialtyCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
+              <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Inpatient/Facility</h3>
+              {inpatientCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
                 <div key={index} className="p-3 border rounded border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -273,8 +273,14 @@ export const BenefitsOverview: React.FC<BenefitsOverviewProps> = ({ selectedPlan
                           </div>
                         </div>
                       )}
-                      {!benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-gray-500">
+                      {/* Fallback to combined data if separate network data isn't available */}
+                      {(statusDisplay.status === 'covered' || statusDisplay.status === 'unclear') && !benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                        <div className="mt-2">
+                          {formatBenefitText(benefitData)}
+                        </div>
+                      )}
+                      {statusDisplay.status !== 'covered' && benefit && (
+                        <div className={`italic ${statusDisplay.textColor}`}>
                           {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
                            statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
                            'Benefit information not available'}
@@ -343,10 +349,10 @@ export const BenefitsOverview: React.FC<BenefitsOverviewProps> = ({ selectedPlan
               ))}
             </div>
 
-            {/* Inpatient/Facility Column */}
+            {/* Specialty & Benefits Column */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Inpatient/Facility</h3>
-              {inpatientCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
+              <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Specialty & Benefits</h3>
+              {specialtyCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
                 <div key={index} className="p-3 border rounded border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -381,14 +387,8 @@ export const BenefitsOverview: React.FC<BenefitsOverviewProps> = ({ selectedPlan
                           </div>
                         </div>
                       )}
-                      {/* Fallback to combined data if separate network data isn't available */}
-                      {(statusDisplay.status === 'covered' || statusDisplay.status === 'unclear') && !benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
-                        <div className="mt-2">
-                          {formatBenefitText(benefitData)}
-                        </div>
-                      )}
-                      {statusDisplay.status !== 'covered' && benefit && (
-                        <div className={`italic ${statusDisplay.textColor}`}>
+                      {!benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-gray-500">
                           {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
                            statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
                            'Benefit information not available'}
