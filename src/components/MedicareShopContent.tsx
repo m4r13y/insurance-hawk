@@ -2221,33 +2221,6 @@ function MedicareShopContent() {
     setSelectedQuotePlans(plans);
   }, [availableMedigapPlans]);
 
-  // Transform drug plan API data to component format
-  const transformDrugPlanData = React.useCallback((apiQuotes: any[]) => {
-    return apiQuotes.map((quote: any, index: number) => {
-      // Extract benefits from the benefits array if available
-      const benefits = quote.benefits?.map((benefit: any) => {
-        return benefit.benefit_type || 'Coverage Available';
-      }) || ['Prescription Drug Coverage'];
-
-      return {
-        id: quote.key || quote.plan_id || index.toString(),
-        planName: quote.plan_name || 'Drug Plan',
-        carrierName: quote.company_base?.name || quote.organization_name || 'Unknown Carrier',
-        monthlyPremium: Math.round((quote.month_rate || quote.part_d_rate || 0) / 100), // Convert cents to dollars
-        annualDeductible: Math.round((quote.annual_drug_deductible || 0) / 100), // Convert cents to dollars  
-        coverageGap: quote.additional_coverage_offered_in_the_gap ? 'Enhanced Coverage' : 'Standard Coverage',
-        formularyTier: 'Multi-Tier Formulary', // Default since API doesn't specify
-        pharmacyNetwork: ['Retail', 'Mail Order'], // Default networks
-        rating: quote.overall_star_rating || 0,
-        benefits: benefits,
-        limitations: [], // API doesn't provide this info
-        carrierLogo: undefined, // Will be handled by existing logo logic
-        planType: (quote.medicare_type === 'pdp' ? 'pdp' : 'mapd') as 'pdp' | 'mapd',
-        specialNeeds: quote.special_needs_plan_type !== null
-      };
-    });
-  }, []);
-
   // Display data processing - handle both real quotes types
   const displayData = React.useMemo(() => {
     if (selectedCategory === 'medigap') {
@@ -2539,6 +2512,9 @@ function MedicareShopContent() {
               isExternallyLoading={false}
               externalQuotes={advantageQuotes}
             />
+          ) : selectedCategory === 'drug-plan' || activeCategory === 'drug-plan' ? (
+            /* Route to dedicated Drug Plan component */
+            <DrugPlanShopContent />
           ) : (
             <>
               {/* Show content based on form completion and flow state */}
@@ -2646,21 +2622,6 @@ function MedicareShopContent() {
                     ) ? (
                       /* Skeleton for Medigap */
                       <PlanCardsSkeleton count={6} title="Medicare Supplement Plans" />
-                    ) : selectedCategory === 'drug-plan' && isCategoryLoading('drug-plan') ? (
-                      /* Loading Screen for Drug Plan Quotes */
-                      <GenericQuoteLoading 
-                        title="Getting Your Drug Plan Quotes"
-                        message="Searching for Drug Plan (PDP) coverage in your area..."
-                      />
-                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length === 0 && !isCategoryLoading('drug-plan') ? (
-                      /* Skeleton for Drug Plans */
-                      <PlanCardsSkeleton count={4} title="Prescription Drug Plans" />
-                    ) : selectedCategory === 'drug-plan' && drugPlanQuotes.length > 0 ? (
-                      /* Display Drug Plans */
-                      <DrugPlanShopContent 
-                        quotes={transformDrugPlanData(drugPlanQuotes)} 
-                        loading={false} 
-                      />
                     ) : selectedCategory === 'dental' && isCategoryLoading('dental') ? (
                       /* Loading Screen for Dental Quotes */
                       <GenericQuoteLoading 
