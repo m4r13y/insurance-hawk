@@ -5,7 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckIcon as Check, Cross1Icon as X } from "@radix-ui/react-icons";
+import { CheckIcon as Check, Cross1Icon as X, ExclamationTriangleIcon as Warning, StarIcon as Star, StarFilledIcon as StarFilled } from "@radix-ui/react-icons";
+import { 
+  FaStethoscope, FaHospital, FaAmbulance, FaPhone, FaEye, FaHeadphones, FaBrain, FaWalking,
+  FaPills, FaHeart, FaCar, FaUtensils, FaDumbbell, FaSyringe, FaVials, FaChartLine,
+  FaShieldAlt, FaBolt, FaGlobe, FaMapMarkerAlt, FaGift, FaCalendarAlt,
+  FaUserMd, FaBuilding, FaCreditCard, FaDollarSign, FaClipboardList, FaTruck,
+  FaThermometerHalf, FaBandAid, FaBroadcastTower, FaTooth, FaGamepad, FaFlask, FaHandHoldingMedical,
+  FaChevronLeft, FaChevronRight, FaCheck, FaTimes
+} from "react-icons/fa";
 import { loadFromStorage, ADVANTAGE_QUOTES_KEY } from '@/lib/services/storage-bridge';
 
 // Copy the interface and helper functions from the main component
@@ -22,6 +30,9 @@ interface MedicareAdvantageQuote {
   month_rate: number;
   in_network_moop: string;
   annual_drug_deductible: number;
+  contract_id: string;
+  plan_id: string;
+  segment_id: string;
   benefits: Array<{
     benefit_type: string;
     full_description: string;
@@ -57,6 +68,7 @@ interface MedicareAdvantageQuote {
   additional_drug_coverage_offered_in_the_gap?: boolean;
   contract_year: string;
   effective_date: string;
+  part_b_reduction?: string;
 }
 
 // Helper functions for data extraction
@@ -78,11 +90,64 @@ const getMedicalDeductible = (plan: MedicareAdvantageQuote): string => {
 };
 
 const getDrugDeductible = (plan: MedicareAdvantageQuote): string => {
-  // Use the direct API field if available
+  // Use the direct API field if available (convert from cents to dollars)
   if (plan.annual_drug_deductible !== undefined) {
-    return plan.annual_drug_deductible === 0 ? '$0' : `$${plan.annual_drug_deductible}`;
+    const deductibleInDollars = plan.annual_drug_deductible / 100;
+    return deductibleInDollars === 0 ? '$0' : `$${deductibleInDollars.toFixed(2)}`;
   }
   return 'Contact Plan';
+};
+
+const hasDrugCoverage = (plan: MedicareAdvantageQuote): boolean => {
+  // Find prescription/drug benefits
+  const drugBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase().includes('prescription') || 
+    b.benefit_type.toLowerCase().includes('drug')
+  );
+  
+  if (!drugBenefit) {
+    return false;
+  }
+  
+  // Check if the benefit contains pharmaceutical data with tiers
+  const benefitText = drugBenefit.full_description;
+  const isPharmaData = benefitText.includes('Tier ') && benefitText.includes('<table>');
+  
+  if (!isPharmaData) {
+    return false;
+  }
+  
+  // Parse the pharmaceutical data to check if all values are "Not Covered" or "Not Supported"
+  const tierPattern = /<p><b>Tier \d+ \([^)]+\)<\/b><\/p><table>[\s\S]*?<\/table>/g;
+  const tableData: any[] = [];
+  let tierMatch;
+  
+  while ((tierMatch = tierPattern.exec(benefitText)) !== null) {
+    const tierHtml = tierMatch[0];
+    const rowPattern = /<tr><td>([^<]+?):<\/td><td>([^<]*?)<\/td><td>([^<]*?)<\/td><td>([^<]*?)<\/td><\/tr>/g;
+    let rowMatch;
+    
+    while ((rowMatch = rowPattern.exec(tierHtml)) !== null) {
+      tableData.push({
+        thirtyDay: rowMatch[2] || 'N/A',
+        sixtyDay: rowMatch[3] || 'N/A', 
+        ninetyDay: rowMatch[4] || 'N/A'
+      });
+    }
+  }
+  
+  if (tableData.length === 0) {
+    return false;
+  }
+  
+  // Check if all values are "Not Covered" or "Not Supported"
+  const allNotCovered = tableData.every(row => 
+    (row.thirtyDay === 'Not Supported' || row.thirtyDay === 'Not Covered') &&
+    (row.sixtyDay === 'Not Supported' || row.sixtyDay === 'Not Covered') &&
+    (row.ninetyDay === 'Not Supported' || row.ninetyDay === 'Not Covered')
+  );
+  
+  return !allNotCovered;
 };
 
 const getPrimaryCareData = (plan: MedicareAdvantageQuote): string => {
@@ -103,13 +168,13 @@ const getPrimaryCareData = (plan: MedicareAdvantageQuote): string => {
 const getSpecialistCareData = (plan: MedicareAdvantageQuote): string => {
   const doctorVisitBenefit = plan.benefits.find(b => 
     b.benefit_type.toLowerCase().includes("doctor's office visits") ||
-    b.benefit_type.toLowerCase().includes("specialist")
+    b.benefit_type.toLowerCase().includes("primary care")
   );
   
   if (doctorVisitBenefit?.summary_description?.in_network) {
     const summary = doctorVisitBenefit.summary_description.in_network;
-    // Extract specialist copay from text
-    const specialistMatch = summary.match(/\$\d+\s+copay.*specialist/i);
+    // Extract specialist copay from text like "$0 copay for Primary. $35 copay per visit for Specialist"
+    const specialistMatch = summary.match(/\$[\d\-]+\s+copay\s+(?:per\s+visit\s+)?for\s+Specialist/i);
     return specialistMatch ? specialistMatch[0] : summary;
   }
   return 'Contact Plan';
@@ -137,6 +202,92 @@ const getOTCBenefit = (plan: MedicareAdvantageQuote): string => {
     }
   }
   return 'Not Covered';
+};
+
+const getMOOPData = (plan: MedicareAdvantageQuote): { inNetwork: string; combined: string } => {
+  const moopBenefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase() === 'maximum oopc' ||
+    b.benefit_type.toLowerCase().includes('maximum out-of-pocket') ||
+    b.benefit_type.toLowerCase().includes('maximum out of pocket')
+  );
+  
+  const planType = plan.plan_type?.toLowerCase() || '';
+  
+  if (moopBenefit) {
+    // First try summary_description if available
+    if (moopBenefit.summary_description?.in_network && moopBenefit.summary_description.in_network.trim()) {
+      const inNetwork = moopBenefit.summary_description.in_network;
+      const outNetwork = moopBenefit.summary_description.out_network || '';
+      
+      if (planType.includes('hmo') || !outNetwork) {
+        return {
+          inNetwork: inNetwork,
+          combined: 'N/A'
+        };
+      } else {
+        return {
+          inNetwork: inNetwork,
+          combined: outNetwork
+        };
+      }
+    }
+    
+    // If summary_description is empty, parse full_description
+    if (moopBenefit.full_description) {
+      const cleanDesc = moopBenefit.full_description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      // Parse patterns like "$11,300 In and Out-of-network $6,700 In-network"
+      const combinedMatch = cleanDesc.match(/\$[\d,]+(?=\s+In\s+and\s+Out-of-network)/i);
+      const inNetworkMatch = cleanDesc.match(/\$[\d,]+(?=\s+In-network)/i);
+      
+      const inNetwork = inNetworkMatch ? inNetworkMatch[0] : 'Contact Plan';
+      const combined = combinedMatch ? combinedMatch[0] : 'N/A';
+      
+      if (planType.includes('hmo')) {
+        return {
+          inNetwork: inNetwork,
+          combined: 'N/A' // HMO doesn't typically have out-of-network
+        };
+      } else {
+        return {
+          inNetwork: inNetwork,
+          combined: combined
+        };
+      }
+    }
+  }
+  
+  // Fallback to the API field - handle PFFS and other plan types
+  if (plan.in_network_moop) {
+    // Check if it's a combined MOOP (contains "In and Out-of-network")
+    if (plan.in_network_moop.toLowerCase().includes('in and out-of-network') || planType.includes('pffs')) {
+      // Extract just the dollar amount for PFFS/combined MOOP
+      const amountMatch = plan.in_network_moop.match(/\$[\d,]+/);
+      const amount = amountMatch ? amountMatch[0] : plan.in_network_moop;
+      
+      return {
+        inNetwork: 'N/A', // PFFS doesn't distinguish in-network
+        combined: amount
+      };
+    } else if (planType.includes('hmo')) {
+      // HMO only has in-network
+      return {
+        inNetwork: plan.in_network_moop,
+        combined: 'N/A'
+      };
+    } else {
+      // PPO - treat as in-network if no other info available
+      return {
+        inNetwork: plan.in_network_moop,
+        combined: 'Contact Plan'
+      };
+    }
+  }
+  
+  return {
+    inNetwork: 'Contact Plan',
+    combined: 'Contact Plan'
+  };
 };
 
 const hasBenefitType = (plan: MedicareAdvantageQuote, benefitType: string): boolean => {
@@ -255,6 +406,157 @@ const hasBenefitType = (plan: MedicareAdvantageQuote, benefitType: string): bool
   
   console.log(`${benefit.benefit_type}: No indicators found - ${allText}`);
   return false;
+};
+
+const getBenefitStatusDisplay = (plan: MedicareAdvantageQuote, benefitType: string) => {
+  const benefit = plan.benefits.find(b => 
+    b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+    b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+  );
+  
+  if (!benefit) {
+    return {
+      status: 'not-found',
+      icon: <X className="w-5 h-5 text-gray-600" />,
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-200',
+      textColor: 'text-gray-600'
+    };
+  }
+  
+  // Get all text content and clean HTML
+  const fullDesc = (benefit.full_description || '').replace(/<[^>]*>/g, ' ').toLowerCase();
+  const inNetwork = (benefit.summary_description?.in_network || '').toLowerCase();
+  const outNetwork = (benefit.summary_description?.out_network || '').toLowerCase();
+  const allText = `${fullDesc} ${inNetwork} ${outNetwork}`.replace(/\s+/g, ' ').trim();
+  
+  console.log(`Analyzing ${benefitType}:`, { fullDesc: fullDesc.substring(0, 100), allText: allText.substring(0, 100) });
+  
+  // Priority check: If benefit has in-network or out-of-network coverage data, it has coverage
+  const hasNetworkCoverage = (benefit.summary_description?.in_network && benefit.summary_description.in_network.trim().length > 0) ||
+                             (benefit.summary_description?.out_network && benefit.summary_description.out_network.trim().length > 0);
+  
+  if (hasNetworkCoverage) {
+    console.log(`${benefitType}: Has network coverage data - marking as covered`);
+    return {
+      status: 'covered',
+      icon: <Check className="w-5 h-5 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700'
+    };
+  }
+  
+  // Check for explicit "not covered" indicators - be more specific
+  const strongNegativeIndicators = [
+    'not covered', 'no coverage', 'not available', 'excluded', 'not included', 
+    'no benefit', ': not covered', 'benefit: not covered', 'not supported'
+  ];
+  
+  const hasStrongNegative = strongNegativeIndicators.some(indicator => allText.includes(indicator));
+  
+  // Check for vague/unclear indicators that should be yellow
+  const unclearIndicators = [
+    'some coverage', 'contact plan', 'see plan', 'varies', 'may be covered'
+  ];
+  
+  const hasUnclearIndicators = unclearIndicators.some(indicator => allText.includes(indicator));
+  
+  // Check for positive coverage indicators (specific dollar amounts, copays, etc.)
+  const positiveIndicators = [
+    '$0', '$', 'copay', 'coinsurance', 'per visit', 'per day', 
+    'per year', 'included', 'available', 'deductible', 'maximum', 'limit', 'allowance',
+    'in-network', 'out-of-network', 'days 1', 'tier 1', 'fitting evaluation', 'hearing exam',
+    'contact lenses', 'eyeglasses frames', 'routine eye exam', 'foot exams'
+  ];
+  
+  const hasPositiveIndicators = positiveIndicators.some(indicator => 
+    allText.includes(indicator) && !allText.includes(`${indicator} not covered`) && !allText.includes(`not covered ${indicator}`)
+  );
+  
+  // Enhanced check for concrete coverage values (dollar amounts, percentages, specific copays)
+  const hasConcreteCoverage = /\$\d+[-\d]*|\d+%|copay|coinsurance|deductible|\$\d+\-\$\d+/.test(allText);
+  
+  // Special logic for pharmaceutical benefits - if we have dollar amounts and tiers, it's covered
+  const isPharmaceutical = benefitType.toLowerCase().includes('prescription') || benefitType.toLowerCase().includes('drug');
+  const hasDollarAmounts = /\$\d+/.test(allText);
+  const hasTiers = /tier \d+/i.test(allText);
+  
+  if (isPharmaceutical && hasDollarAmounts && hasTiers) {
+    console.log(`${benefitType}: Pharmaceutical with dollar amounts and tiers detected - marking as covered`);
+    return {
+      status: 'covered',
+      icon: <Check className="w-5 h-5 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700'
+    };
+  }
+  
+  console.log(`${benefitType}: hasStrongNegative=${hasStrongNegative}, hasUnclearIndicators=${hasUnclearIndicators}, hasPositiveIndicators=${hasPositiveIndicators}, hasConcreteCoverage=${hasConcreteCoverage}`);
+  
+  // Determine status - prioritize concrete coverage values over unclear language
+  if (hasConcreteCoverage && !hasStrongNegative) {
+    // Has concrete coverage values (dollar amounts, percentages) - mark as covered
+    return {
+      status: 'covered',
+      icon: <Check className="w-5 h-5 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700'
+    };
+  } else if (hasPositiveIndicators && !hasStrongNegative) {
+    // Clear positive coverage
+    return {
+      status: 'covered',
+      icon: <Check className="w-5 h-5 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700'
+    };
+  } else if ((hasPositiveIndicators || hasConcreteCoverage) && hasStrongNegative) {
+    // Mixed coverage - has some positive but also some negatives
+    return {
+      status: 'unclear',
+      icon: <Warning className="w-5 h-5 text-yellow-600" />,
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-yellow-700'
+    };
+  } else if (hasStrongNegative) {
+    // Only negatives, no positives
+    return {
+      status: 'not-covered',
+      icon: <X className="w-5 h-5 text-red-600" />,
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      textColor: 'text-red-700'
+    };
+  } else if (hasUnclearIndicators) {
+    return {
+      status: 'unclear',
+      icon: <Warning className="w-5 h-5 text-yellow-600" />,
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-yellow-700'
+    };
+  } else if (hasPositiveIndicators) {
+    return {
+      status: 'covered',
+      icon: <Check className="w-5 h-5 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700'
+    };
+  } else {
+    return {
+      status: 'unclear',
+      icon: <Warning className="w-5 h-5 text-yellow-600" />,
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-yellow-700'
+    };
+  }
 };
 
 const getBenefitData = (plan: MedicareAdvantageQuote, benefitType: string): string => {
@@ -411,13 +713,72 @@ const formatBenefitText = (text: string): React.ReactNode => {
         return acc;
       }, {} as Record<string, PharmaTableData[]>);
       
-      return (
-        <div className="space-y-4">
-          {Object.entries(tierGroups).map(([tier, data]) => (
-            <div key={tier} className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-100 px-3 py-2 font-semibold text-sm">
-                {tier} ({data[0].tierType})
+      // Convert to array for easier navigation
+      const tierEntries = Object.entries(tierGroups);
+      
+      // Check if all values across all tiers are "Not Covered"
+      const allNotCovered = tierEntries.every(([_, tierData]) => 
+        tierData.every(row => 
+          (row.thirtyDay === 'Not Supported' || row.thirtyDay === 'Not Covered') &&
+          (row.sixtyDay === 'Not Supported' || row.sixtyDay === 'Not Covered') &&
+          (row.ninetyDay === 'Not Supported' || row.ninetyDay === 'Not Covered')
+        )
+      );
+      
+      // If all values are not covered, show simple message
+      if (allNotCovered) {
+        return (
+          <div className="text-center py-4 text-gray-600">
+            <div className="text-sm font-medium">No Drug Coverage</div>
+          </div>
+        );
+      }
+      
+      // Create a carousel component
+      const PharmacyCarousel = () => {
+        const [currentTierIndex, setCurrentTierIndex] = useState(0);
+        
+        const nextTier = () => {
+          setCurrentTierIndex((prev) => (prev + 1) % tierEntries.length);
+        };
+        
+        const prevTier = () => {
+          setCurrentTierIndex((prev) => (prev - 1 + tierEntries.length) % tierEntries.length);
+        };
+        
+        if (tierEntries.length === 0) return null;
+        
+        const [currentTier, currentData] = tierEntries[currentTierIndex];
+        
+        return (
+          <div className="space-y-3">
+            {/* Carousel Header with Navigation - Compact Row */}
+            <div className="bg-blue-50 px-3 py-2 rounded-lg flex items-center justify-between gap-2 min-w-80 w-fit">
+              <div className="font-semibold text-sm">
+                {currentTier} ({currentData[0].tierType})
               </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={prevTier}
+                  disabled={tierEntries.length <= 1}
+                  className="p-0.5 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Previous tier"
+                >
+                  <FaChevronLeft className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={nextTier}
+                  disabled={tierEntries.length <= 1}
+                  className="p-0.5 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Next tier"
+                >
+                  <FaChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Current Tier Table */}
+            <div className="border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs border-collapse">
                   <thead>
@@ -429,7 +790,7 @@ const formatBenefitText = (text: string): React.ReactNode => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((row, index) => (
+                    {currentData.map((row, index) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="border border-gray-300 px-2 py-1 font-medium">{row.pharmacyType}</td>
                         <td className="border border-gray-300 px-2 py-1 text-center">
@@ -465,15 +826,34 @@ const formatBenefitText = (text: string): React.ReactNode => {
                 </table>
               </div>
             </div>
-          ))}
-          
-          {/* Debug information */}
-          <details className="mt-4 text-xs">
-            <summary className="cursor-pointer text-blue-600">Debug: View Original HTML</summary>
-            <pre className="mt-2 p-2 bg-gray-100 rounded overflow-x-auto whitespace-pre-wrap text-xs">
-              {text}
-            </pre>
-          </details>
+            
+            {/* Tier Indicators */}
+            {tierEntries.length > 1 && (
+              <div className="relative flex justify-center">
+                <div className="flex space-x-2">
+                  {tierEntries.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentTierIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === currentTierIndex ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      title={`Go to ${tierEntries[index][0]}`}
+                    />
+                  ))}
+                </div>
+                <div className="absolute right-0 text-xs text-gray-600">
+                  {currentTierIndex + 1} of {tierEntries.length} tiers
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      return (
+        <div className="space-y-4">
+          <PharmacyCarousel />
         </div>
       );
     } else {
@@ -484,12 +864,6 @@ const formatBenefitText = (text: string): React.ReactNode => {
             <strong>Pharmaceutical Data Parsing Failed</strong>
             <p className="text-sm mt-1">Could not parse tier data from HTML structure.</p>
           </div>
-          <details className="text-xs">
-            <summary className="cursor-pointer text-blue-600">Debug: View Raw HTML</summary>
-            <pre className="mt-2 p-2 bg-gray-100 rounded overflow-x-auto whitespace-pre-wrap text-xs">
-              {text}
-            </pre>
-          </details>
         </div>
       );
     }
@@ -498,11 +872,14 @@ const formatBenefitText = (text: string): React.ReactNode => {
   // Clean HTML tags for non-pharmaceutical data
   let cleanText = text.replace(/<[^>]*>/g, '').trim();
   
-  // Add space between number and dollar sign for better separation (e.g., "5$0" -> "5 $0")
-  cleanText = cleanText.replace(/(\d)(\$)/g, '$1 $2');
+  // Replace "In and Out-of-network" with "Combined"
+  cleanText = cleanText.replace(/In and Out-of-network/gi, 'Combined');
   
-  // Add line breaks between separate dollar amounts (e.g., "20 $214" -> "20\n$214")
-  cleanText = cleanText.replace(/(\d+)\s+(\$[\d,]+)/g, '$1\n$2');
+  // Add line breaks before dollar amounts that follow text or numbers, but not before network types
+  cleanText = cleanText.replace(/([a-zA-Z0-9])\s*(\$[\d,]+)(?!\s*(In-network|Out-of-network))/gi, '$1\n$2');
+  
+  // Add line breaks between different dollar amounts with network types
+  cleanText = cleanText.replace(/(\$[\d,]+\s*(?:In-network|Out-of-network|Combined))\s*(\$[\d,]+)/gi, '$1\n$2');
   
   // Split by periods and filter out empty strings
   const sentences = cleanText.split('.').filter(sentence => sentence.trim().length > 0);
@@ -525,14 +902,14 @@ const formatBenefitText = (text: string): React.ReactNode => {
               // - Dollar amounts: $0, $15, $1,500.00
               // - Dollar ranges: $0-$50, $10-$100, $0-200 (without second $)
               // - Percentages: 20%, 0%, 100%
-              // - Percentage ranges: 0-20%, 10-50%
-              const parts = line.split(/(\$[\d,]+(?:\.\d{2})?(?:-(?:\$)?[\d,]+(?:\.\d{2})?)?|\d+-?\d*%)/g);
+              // - Percentage ranges: 0-20%, 10-50%, 0 - 50% (with spaces)
+              const parts = line.split(/(\$[\d,]+(?:\.\d{2})?(?:\s*-\s*(?:\$)?[\d,]+(?:\.\d{2})?)?|\d+\s*-?\s*\d*%|\d+%)/g);
               
               return (
                 <div key={lineIndex}>
                   {parts.map((part, partIndex) => {
                     // Check if this part is a dollar amount, dollar range, percentage, or percentage range
-                    if (/^(\$[\d,]+(?:\.\d{2})?(?:-(?:\$)?[\d,]+(?:\.\d{2})?)?|\d+-?\d*%)$/.test(part)) {
+                    if (/^(\$[\d,]+(?:\.\d{2})?(?:\s*-\s*(?:\$)?[\d,]+(?:\.\d{2})?)?|\d+\s*-\s*\d*%|\d+%)$/.test(part)) {
                       return <strong key={partIndex} className="font-semibold text-green-700">{part}</strong>;
                     }
                     return part;
@@ -550,7 +927,70 @@ const formatBenefitText = (text: string): React.ReactNode => {
 export default function AdvantageFieldMappingPage() {
   const [plans, setPlans] = useState<MedicareAdvantageQuote[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<MedicareAdvantageQuote | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const plansPerPage = 5; // Show 5 plans at a time
   const [loading, setLoading] = useState(true);
+  const [currentCarouselPage, setCurrentCarouselPage] = useState(0);
+
+  // Carousel pages configuration
+  const carouselPages = [
+    { title: 'Field Mapping', id: 'field-mapping' },
+    { title: 'Specialty & Benefits', id: 'specialty-benefits' },
+    { title: 'Outpatient Services', id: 'outpatient-services' },
+    { title: 'Inpatient/Facility', id: 'inpatient-facility' },
+    { title: 'Prescriptions', id: 'prescriptions' }
+  ];
+
+  // Categorize benefit types
+  const getBenefitsByCategory = (category: string) => {
+    if (!selectedPlan) return [];
+    
+    const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
+    
+    switch (category) {
+      case 'specialty-benefits':
+        return allBenefitTypes.filter(type => 
+          type.toLowerCase().includes('dental') ||
+          type.toLowerCase().includes('vision') ||
+          type.toLowerCase().includes('hearing') ||
+          type.toLowerCase().includes('transportation') ||
+          type.toLowerCase().includes('meal') ||
+          type.toLowerCase().includes('otc') ||
+          type.toLowerCase().includes('over-the-counter') ||
+          type.toLowerCase().includes('fitness') ||
+          type.toLowerCase().includes('wellness')
+        );
+      case 'outpatient-services':
+        return allBenefitTypes.filter(type => 
+          type.toLowerCase().includes('doctor') ||
+          type.toLowerCase().includes('office visits') ||
+          type.toLowerCase().includes('preventive') ||
+          type.toLowerCase().includes('diagnostic') ||
+          type.toLowerCase().includes('lab') ||
+          type.toLowerCase().includes('x-ray') ||
+          type.toLowerCase().includes('outpatient') ||
+          type.toLowerCase().includes('ambulatory')
+        );
+      case 'inpatient-facility':
+        return allBenefitTypes.filter(type => 
+          type.toLowerCase().includes('inpatient') ||
+          type.toLowerCase().includes('hospital') ||
+          type.toLowerCase().includes('facility') ||
+          type.toLowerCase().includes('skilled nursing') ||
+          type.toLowerCase().includes('rehab') ||
+          type.toLowerCase().includes('emergency')
+        );
+      case 'prescriptions':
+        return allBenefitTypes.filter(type => 
+          type.toLowerCase().includes('prescription') ||
+          type.toLowerCase().includes('drug') ||
+          type.toLowerCase().includes('pharmacy') ||
+          type.toLowerCase().includes('formulary')
+        );
+      default:
+        return [];
+    }
+  };
 
   useEffect(() => {
     // Load plans from Firestore instead of localStorage
@@ -596,73 +1036,125 @@ export default function AdvantageFieldMappingPage() {
     loadPlans();
   }, []);
 
-  const fieldMappings = [
-    {
-      column: 'Plan Info',
-      field: 'plan_name + organization_name + rating',
-      value: selectedPlan ? `${selectedPlan.plan_name} | ${selectedPlan.organization_name} | ${selectedPlan.overall_star_rating}⭐` : 'N/A'
-    },
-    {
-      column: 'Monthly Premium',
-      field: 'month_rate',
-      value: selectedPlan ? formatCurrency(selectedPlan.month_rate) : 'N/A'
-    },
-    {
-      column: 'Annual Cost',
-      field: 'month_rate * 12',
-      value: selectedPlan ? formatCurrency(selectedPlan.month_rate * 12) : 'N/A'
-    },
-    {
-      column: 'Max Out-of-Pocket',
-      field: 'in_network_moop',
-      value: selectedPlan ? selectedPlan.in_network_moop : 'N/A'
-    },
-    {
-      column: 'Drug Deductible',
-      field: 'annual_drug_deductible',
-      value: selectedPlan ? getDrugDeductible(selectedPlan) : 'N/A'
-    },
-    {
-      column: 'Medical Deductible',
-      field: 'benefits["Health Plan Deductible"]',
-      value: selectedPlan ? getMedicalDeductible(selectedPlan) : 'N/A'
-    },
-    {
-      column: 'Primary Care Co-pay',
-      field: 'benefits["Doctor\'s office visits"]',
-      value: selectedPlan ? getPrimaryCareData(selectedPlan) : 'N/A'
-    },
-    {
-      column: 'Specialist Co-pay',
-      field: 'benefits["Doctor\'s office visits"]',
-      value: selectedPlan ? getSpecialistCareData(selectedPlan) : 'N/A'
-    },
-    {
-      column: 'OTC Benefit',
-      field: 'benefits["Otc Items"]',
-      value: selectedPlan ? getOTCBenefit(selectedPlan) : 'N/A'
-    },
-    {
-      column: 'Dental',
-      field: 'benefits["Comprehensive Dental Service"]',
-      value: selectedPlan ? (hasBenefitType(selectedPlan, 'Comprehensive Dental Service') ? '✅' : '❌') : 'N/A'
-    },
-    {
-      column: 'Vision',
-      field: 'benefits["Vision"]',
-      value: selectedPlan ? (hasBenefitType(selectedPlan, 'Vision') ? '✅' : '❌') : 'N/A'
-    },
-    {
-      column: 'Hearing',
-      field: 'benefits["Hearing services"]',
-      value: selectedPlan ? (hasBenefitType(selectedPlan, 'Hearing services') ? '✅' : '❌') : 'N/A'
-    },
-    {
-      column: 'Transport',
-      field: 'benefits["Transportation"]',
-      value: selectedPlan ? (hasBenefitType(selectedPlan, 'Transportation') ? '✅' : '❌') : 'N/A'
-    }
-  ];
+  // Dynamic field mappings based on plan type
+  const getFieldMappings = () => {
+    if (!selectedPlan) return [];
+    
+    const planType = selectedPlan.plan_type?.toLowerCase() || '';
+    const moopData = getMOOPData(selectedPlan);
+    
+    // Always include all possible fields for consistency
+    return [
+      {
+        column: 'Monthly Premium',
+        field: 'month_rate',
+        value: formatCurrency(selectedPlan.month_rate / 100)
+      },
+      {
+        column: 'Annual Cost',
+        field: 'month_rate * 12',
+        value: formatCurrency((selectedPlan.month_rate / 100) * 12)
+      },
+      {
+        column: 'MOOP In-Network',
+        field: 'benefits["Maximum Oopc"].summary_description.in_network',
+        value: moopData.inNetwork !== 'N/A' && moopData.inNetwork !== 'Contact Plan' ? moopData.inNetwork : 'N/A'
+      },
+      {
+        column: 'MOOP Combined',
+        field: 'benefits["Maximum Oopc"].summary_description.out_network',
+        value: moopData.combined !== 'N/A' && moopData.combined !== 'Contact Plan' ? moopData.combined : 'N/A'
+      },
+      {
+        column: 'Drug Deductible',
+        field: 'annual_drug_deductible',
+        value: hasDrugCoverage(selectedPlan) ? getDrugDeductible(selectedPlan) : 'No Drug Coverage'
+      },
+      {
+        column: 'Medical Deductible',
+        field: 'benefits["Health Plan Deductible"]',
+        value: getMedicalDeductible(selectedPlan)
+      },
+      {
+        column: 'Primary Care Co-pay',
+        field: 'benefits["Doctor\'s office visits"]',
+        value: getPrimaryCareData(selectedPlan)
+      },
+      {
+        column: 'Specialist Co-pay',
+        field: 'benefits["Doctor\'s office visits"]',
+        value: getSpecialistCareData(selectedPlan)
+      },
+      {
+        column: 'OTC Benefit',
+        field: 'benefits["Otc Items"]',
+        value: getOTCBenefit(selectedPlan)
+      },
+      {
+        column: 'Dental',
+        field: 'benefits["Comprehensive Dental Service"]',
+        value: hasBenefitType(selectedPlan, 'Comprehensive Dental Service') ? <FaCheck className="w-4 h-4 text-green-600" /> : <FaTimes className="w-4 h-4 text-red-600" />
+      },
+      {
+        column: 'Vision',
+        field: 'benefits["Vision"]',
+        value: hasBenefitType(selectedPlan, 'Vision') ? <FaCheck className="w-4 h-4 text-green-600" /> : <FaTimes className="w-4 h-4 text-red-600" />
+      },
+      {
+        column: 'Hearing',
+        field: 'benefits["Hearing services"]',
+        value: hasBenefitType(selectedPlan, 'Hearing services') ? <FaCheck className="w-4 h-4 text-green-600" /> : <FaTimes className="w-4 h-4 text-red-600" />
+      },
+      {
+        column: 'Transport',
+        field: 'benefits["Transportation"]',
+        value: hasBenefitType(selectedPlan, 'Transportation') ? <FaCheck className="w-4 h-4 text-green-600" /> : <FaTimes className="w-4 h-4 text-red-600" />
+      }
+    ];
+  };
+
+  const fieldMappings = getFieldMappings();
+
+  // Icon mapping for each benefit type
+  const getBenefitIcon = (benefitType: string) => {
+    const iconMap: Record<string, JSX.Element> = {
+      'Additional Telehealth Services': <FaPhone className="w-4 h-4" />,
+      'Ambulance': <FaAmbulance className="w-4 h-4" />,
+      'Annual Physical Exam': <FaUserMd className="w-4 h-4" />,
+      'Comprehensive Dental Service': <FaTooth className="w-4 h-4" />,
+      'Defined Supplemental Benefits': <FaGift className="w-4 h-4" />,
+      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': <FaVials className="w-4 h-4" />,
+      'Dialysis Services': <FaHandHoldingMedical className="w-4 h-4" />,
+      'Doctor\'s office visits': <FaStethoscope className="w-4 h-4" />,
+      'Emergency Care': <FaAmbulance className="w-4 h-4" />,
+      'Foot care (podiatry services)': <FaWalking className="w-4 h-4" />,
+      'Health Plan Deductible': <FaDollarSign className="w-4 h-4" />,
+      'Hearing services': <FaHeadphones className="w-4 h-4" />,
+      'Inpatient Hospital': <FaHospital className="w-4 h-4" />,
+      'Meal Benefit': <FaUtensils className="w-4 h-4" />,
+      'Medical Equipment': <FaFlask className="w-4 h-4" />,
+      'Medicare Part B': <FaClipboardList className="w-4 h-4" />,
+      'Mental health care': <FaBrain className="w-4 h-4" />,
+      'Non Opioid Pain Management': <FaBandAid className="w-4 h-4" />,
+      'Opioid Treatment Services': <FaBandAid className="w-4 h-4" />,
+      'Optional Supplemental Benefits': <FaGift className="w-4 h-4" />,
+      'Otc Items': <FaPills className="w-4 h-4" />,
+      'Other Deductibles': <FaDollarSign className="w-4 h-4" />,
+      'Outpatient Hospital': <FaBuilding className="w-4 h-4" />,
+      'Outpatient prescription drugs': <FaPills className="w-4 h-4" />,
+      'Outpatient rehabilitation': <FaChartLine className="w-4 h-4" />,
+      'Preventive Care': <FaShieldAlt className="w-4 h-4" />,
+      'Preventive Dental Service': <FaTooth className="w-4 h-4" />,
+      'Skilled Nursing Facility (SNF)': <FaBuilding className="w-4 h-4" />,
+      'Transportation': <FaCar className="w-4 h-4" />,
+      'Transportation Services': <FaCar className="w-4 h-4" />,
+      'Vision': <FaEye className="w-4 h-4" />,
+      'Wellness Programs': <FaHeart className="w-4 h-4" />,
+      'Worldwide Emergency Urgent Coverage': <FaGlobe className="w-4 h-4" />
+    };
+    
+    return iconMap[benefitType] || <FaClipboardList className="w-4 h-4" />;
+  };
 
   // All available benefit types from the API
   const allBenefitTypes = [
@@ -711,14 +1203,7 @@ export default function AdvantageFieldMappingPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Medicare Advantage Field Mapping Test</h1>
-        <Badge variant="outline">
-          {plans.length} Plans Loaded
-        </Badge>
-      </div>
-
+    <div className="container mt-20 mx-auto p-6 space-y-6">
       {plans.length === 0 ? (
         <Card>
           <CardContent className="p-6">
@@ -729,15 +1214,12 @@ export default function AdvantageFieldMappingPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col xl:grid xl:grid-cols-2 gap-6">
           {/* Plan Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Select a Plan to Test</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {plans.map((plan) => {
+          <div>
+            <div className="flex flex-col min-h-96">
+              <div className="flex-1 space-y-2">
+                {plans.slice(currentPage * plansPerPage, (currentPage + 1) * plansPerPage).map((plan) => {
                   // Check if this plan has pharmaceutical data with dollar amounts or percentages
                   const pharmaData = plan.benefits.find(b => b.benefit_type === 'Outpatient prescription drugs')?.full_description || '';
                   const hasDollarAmounts = pharmaData.includes('$') && pharmaData.match(/\$[1-9]\d*/);
@@ -748,173 +1230,648 @@ export default function AdvantageFieldMappingPage() {
                     <Button
                       key={plan.key}
                       variant={selectedPlan?.key === plan.key ? "default" : "outline"}
-                      className="w-full justify-start text-left h-auto p-3"
+                      className="w-full justify-start text-left h-auto p-3 sm:p-4"
                       onClick={() => setSelectedPlan(plan)}
                     >
                       <div className="w-full">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">{plan.plan_name}</div>
-                          {hasRealValues && (
-                            <span className="text-green-600 text-xs">
-                              💊{hasDollarAmounts ? '$' : ''}{hasPercentages ? '%' : ''}
-                            </span>
-                          )}
+                        {/* Mobile Layout (stacked) */}
+                        <div className="block sm:hidden space-y-3">
+                          <div className="space-y-1">
+                            <div className={`font-semibold text-sm ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
+                              {plan.plan_name}
+                            </div>
+                            <div className={`text-xs font-mono ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>
+                              {plan.contract_id}-{plan.plan_id}-{plan.segment_id} ({plan.contract_year})
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => 
+                                  i < plan.overall_star_rating ? (
+                                    <StarFilled 
+                                      key={i} 
+                                      className="w-3 h-3 text-yellow-500" 
+                                    />
+                                  ) : (
+                                    <Star 
+                                      key={i} 
+                                      className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-300'}`}
+                                    />
+                                  )
+                                )}
+                              </div>
+                              <div className={`text-xs ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
+                                {plan.organization_name}
+                              </div>
+                            </div>
+                            
+                            <div className="text-right">
+                              <div className={`text-lg font-bold ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
+                                {formatCurrency(plan.month_rate / 100)}/mo
+                              </div>
+                              {plan.part_b_reduction && plan.part_b_reduction !== "0" && (
+                                <div className="text-green-400 font-medium text-xs">Giveback: ${plan.part_b_reduction}</div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {getBenefitStatusDisplay(plan, 'Comprehensive Dental Service').status === 'covered' && (
+                                <FaTooth className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Dental" />
+                              )}
+                              {getBenefitStatusDisplay(plan, 'Vision').status === 'covered' && (
+                                <FaEye className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
+                              )}
+                              {getBenefitStatusDisplay(plan, 'Hearing services').status === 'covered' && (
+                                <FaHeadphones className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
+                              )}
+                              {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
+                                <FaCar className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
+                              )}
+                              {getBenefitStatusDisplay(plan, 'Meal Benefit').status === 'covered' && (
+                                <FaUtensils className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Meal Benefit" />
+                              )}
+                            </div>
+                            
+                            <div className={`text-xs space-y-1 ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
+                              <div className="flex items-center justify-end gap-1">
+                                <FaStethoscope className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <span className="font-medium text-xs">{getMedicalDeductible(plan)}</span>
+                                {hasDrugCoverage(plan) && (
+                                  <>
+                                    <span className={`${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
+                                    <FaPills className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
+                                    <span className="font-medium text-xs">{getDrugDeductible(plan)}</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              <div className="font-medium text-xs text-right">
+                                <span className={`${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>MOOP:</span>
+                                {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' && (
+                                  <span className="ml-1">{getMOOPData(plan).inNetwork}</span>
+                                )}
+                                {getMOOPData(plan).combined !== 'N/A' && getMOOPData(plan).combined !== 'Contact Plan' && (
+                                  <span>
+                                    {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' ? (
+                                      <span className={`mx-1 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
+                                    ) : ' '}
+                                    {getMOOPData(plan).combined}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">{plan.organization_name}</div>
-                        <div className="text-xs">{plan.overall_star_rating}⭐ | {formatCurrency(plan.month_rate)}/mo</div>
+                        
+                        {/* Desktop Layout (grid) */}
+                        <div className="hidden sm:block">
+                          <div className="grid grid-cols-3 gap-4 lg:gap-6">
+                            <div className="col-span-2 space-y-2">
+                              <div>
+                                <div className={`font-semibold text-base lg:text-lg ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
+                                  {plan.plan_name}
+                                </div>
+                                <div className={`text-xs mt-0.5 font-mono ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>
+                                  {plan.contract_id}-{plan.plan_id}-{plan.segment_id} ({plan.contract_year})
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => 
+                                  i < plan.overall_star_rating ? (
+                                    <StarFilled 
+                                      key={i} 
+                                      className="w-4 h-4 text-yellow-500" 
+                                    />
+                                  ) : (
+                                    <Star 
+                                      key={i} 
+                                      className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-300'}`}
+                                    />
+                                  )
+                                )}
+                              </div>
+                              
+                              <div className={`text-sm font-medium ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
+                                {plan.organization_name}
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                {getBenefitStatusDisplay(plan, 'Comprehensive Dental Service').status === 'covered' && (
+                                  <FaTooth className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Dental" />
+                                )}
+                                {getBenefitStatusDisplay(plan, 'Vision').status === 'covered' && (
+                                  <FaEye className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
+                                )}
+                                {getBenefitStatusDisplay(plan, 'Hearing services').status === 'covered' && (
+                                  <FaHeadphones className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
+                                )}
+                                {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
+                                  <FaCar className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
+                                )}
+                                {getBenefitStatusDisplay(plan, 'Meal Benefit').status === 'covered' && (
+                                  <FaUtensils className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Meal Benefit" />
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="col-span-1 text-right flex flex-col justify-between h-full py-1">
+                              <div className={`text-xl font-bold ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
+                                {formatCurrency(plan.month_rate / 100)}/mo
+                              </div>
+                              
+                              <div className={`text-sm space-y-1 ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
+                                {/* Show giveback if available */}
+                                {plan.part_b_reduction && plan.part_b_reduction !== "0" && (
+                                  <div className="text-green-400 font-medium">Giveback: ${plan.part_b_reduction}</div>
+                                )}
+                                
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <FaStethoscope className={`w-3.5 h-3.5 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
+                                  <span className="font-medium">{getMedicalDeductible(plan)}</span>
+                                  {/* Only show drug deductible if plan has drug coverage */}
+                                  {hasDrugCoverage(plan) && (
+                                    <>
+                                      <span className={`${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
+                                      <FaPills className={`w-3.5 h-3.5 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
+                                      <span className="font-medium">{getDrugDeductible(plan)}</span>
+                                    </>
+                                  )}
+                                </div>
+                                
+                                <div className="font-medium">
+                                  <span className={`${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>MOOP:</span>
+                                  {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' && (
+                                    <span className="ml-1">{getMOOPData(plan).inNetwork}</span>
+                                  )}
+                                  {getMOOPData(plan).combined !== 'N/A' && getMOOPData(plan).combined !== 'Contact Plan' && (
+                                    <span>
+                                      {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' ? (
+                                        <span className={`mx-1 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
+                                      ) : ' '}
+                                      {getMOOPData(plan).combined}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </Button>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+              
+              {/* Pagination */}
+              {plans.length > plansPerPage && (
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                    disabled={currentPage === 0}
+                    className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {currentPage + 1} of {Math.ceil(plans.length / plansPerPage)}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(plans.length / plansPerPage) - 1, prev + 1))}
+                    disabled={currentPage >= Math.ceil(plans.length / plansPerPage) - 1}
+                    className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Field Mapping Results */}
+          {/* Carousel Results */}
           <Card>
             <CardHeader>
-              <CardTitle>Field Mapping Analysis</CardTitle>
+              <CardTitle>
+                {selectedPlan ? (
+                  <div>
+                    <div>{selectedPlan.plan_name}</div>
+                    <div className="text-sm font-normal text-gray-600 mt-1 flex items-center gap-2">
+                      <span>{selectedPlan.organization_name}</span>
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => 
+                          i < selectedPlan.overall_star_rating ? (
+                            <StarFilled 
+                              key={i} 
+                              className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500" 
+                            />
+                          ) : (
+                            <Star 
+                              key={i} 
+                              className="w-3 h-3 lg:w-4 lg:h-4 text-gray-300" 
+                            />
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  'Plan Details'
+                )}
+              </CardTitle>
+              
+              {/* Carousel Navigation - moved below stars */}
+              <div className="flex items-center gap-2 mt-3 min-w-100 justify-end">
+                <button
+                  onClick={() => setCurrentCarouselPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentCarouselPage === 0}
+                  className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <div className="text-sm font-medium px-3 py-1 bg-gray-100 rounded">
+                  {carouselPages[currentCarouselPage]?.title}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentCarouselPage(prev => Math.min(carouselPages.length - 1, prev + 1))}
+                  disabled={currentCarouselPage === carouselPages.length - 1}
+                  className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </CardHeader>
+            
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Column</TableHead>
-                    <TableHead>API Field</TableHead>
-                    <TableHead>Extracted Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fieldMappings.map((mapping, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{mapping.column}</TableCell>
-                      <TableCell className="text-xs font-mono">{mapping.field}</TableCell>
-                      <TableCell>{mapping.value}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {/* Field Mapping Page */}
+              {currentCarouselPage === 0 && (
+                <Table>
+                  <TableBody>
+                    {fieldMappings.map((mapping, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{mapping.column}</TableCell>
+                        <TableCell>{mapping.value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              
+              {/* Specialty & Benefits Page */}
+              {currentCarouselPage === 1 && selectedPlan && (
+                <div className="space-y-4">
+                  {(() => {
+                    const specialtyBenefits = [
+                      'Vision',
+                      'Hearing services',
+                      'Mental health care',
+                      'Foot care (podiatry services)',
+                      'Comprehensive Dental Service',
+                      'Preventive Dental Service',
+                      'Transportation',
+                      'Transportation Services',
+                      'Wellness Programs',
+                      'Meal Benefit',
+                      'Otc Items',
+                      'Defined Supplemental Benefits',
+                      'Optional Supplemental Benefits',
+                      'Worldwide Emergency Urgent Coverage'
+                    ];
+
+                    const displayNameMap: Record<string, string> = {
+                      'Comprehensive Dental Service': 'Dental (Comprehensive)',
+                      'Preventive Dental Service': 'Dental (Preventive)'
+                    };
+
+                    const benefitPriority: Record<string, number> = {
+                      'Preventive Dental Service': 1,
+                      'Comprehensive Dental Service': 2,
+                      'Vision': 3,
+                      'Hearing services': 4,
+                      'Otc Items': 5,
+                      'Transportation': 6,
+                      'Transportation Services': 7,
+                      'Meal Benefit': 8,
+                      'Wellness Programs': 9,
+                      'Foot care (podiatry services)': 10,
+                      'Mental health care': 11,
+                      'Defined Supplemental Benefits': 12,
+                      'Optional Supplemental Benefits': 13,
+                      'Worldwide Emergency Urgent Coverage': 14
+                    };
+
+                    const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
+                    const benefitObjects = allBenefitTypes
+                      .filter(benefitType => specialtyBenefits.includes(benefitType))
+                      .map((benefitType, index) => {
+                        const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
+                        const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
+                        const benefit = selectedPlan.benefits.find(b => 
+                          b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+                          b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+                        );
+                        
+                        return {
+                          benefitType,
+                          displayName: displayNameMap[benefitType] || benefitType,
+                          index: `specialty-${index}`,
+                          statusDisplay,
+                          benefitData,
+                          benefit,
+                          priority: benefitPriority[benefitType] || 999
+                        };
+                      });
+
+                    const statusOrder: Record<string, number> = { 'covered': 1, 'unclear': 2, 'not-covered': 3, 'not-found': 4 };
+                    const sortedBenefits = benefitObjects.sort((a, b) => {
+                      const statusDiff = (statusOrder[a.statusDisplay.status] || 999) - (statusOrder[b.statusDisplay.status] || 999);
+                      if (statusDiff !== 0) return statusDiff;
+                      return a.priority - b.priority;
+                    });
+
+                    return sortedBenefits.map(({ benefitType, displayName, index, statusDisplay, benefitData, benefit }) => (
+                      <div key={index} className="p-3 border rounded border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {getBenefitIcon(benefitType)}
+                            <span className="text-sm font-medium">{displayName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {statusDisplay.icon}
+                          </div>
+                        </div>
+                        {benefit && (
+                          <div className="text-xs text-gray-600">
+                            {/* Show separate In-Network and Out-of-Network sections */}
+                            {benefit.summary_description?.in_network && (
+                              <div className="mt-2 p-2 bg-green-50 rounded">
+                                <strong>In-Network:</strong>
+                                <div className="mt-1">
+                                  {formatBenefitText(benefit.summary_description.in_network)}
+                                </div>
+                              </div>
+                            )}
+                            {benefit.summary_description?.out_network && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded">
+                                <strong>Out-of-Network:</strong>
+                                <div className="mt-1">
+                                  {formatBenefitText(benefit.summary_description.out_network)}
+                                </div>
+                              </div>
+                            )}
+                            {!benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                              <div className="mt-2 p-2 bg-gray-50 rounded text-gray-500">
+                                {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
+                                 statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
+                                 'Benefit information not available'}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {!benefit && (
+                          <div className="text-xs text-gray-500">Not available in this plan</div>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+              
+              {/* Outpatient Services Page */}
+              {currentCarouselPage === 2 && selectedPlan && (
+                <div className="space-y-4">
+                  {(() => {
+                    const outpatientServices = [
+                      'Doctor\'s office visits',
+                      'Annual Physical Exam', 
+                      'Preventive Care',
+                      'Outpatient Hospital',
+                      'Outpatient rehabilitation',
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)',
+                      'Additional Telehealth Services',
+                      'Emergency Care',
+                      'Ambulance'
+                    ];
+
+                    const displayNameMap: Record<string, string> = {
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 'Diagnostic Services'
+                    };
+
+                    const benefitPriority: Record<string, number> = {
+                      'Doctor\'s office visits': 1,
+                      'Annual Physical Exam': 2,
+                      'Preventive Care': 3,
+                      'Emergency Care': 4,
+                      'Ambulance': 5,
+                      'Outpatient Hospital': 6,
+                      'Outpatient rehabilitation': 7,
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 8,
+                      'Additional Telehealth Services': 9
+                    };
+
+                    const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
+                    const benefitObjects = allBenefitTypes
+                      .filter(benefitType => outpatientServices.includes(benefitType))
+                      .map((benefitType, index) => {
+                        const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
+                        const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
+                        const benefit = selectedPlan.benefits.find(b => 
+                          b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+                          b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+                        );
+                        
+                        return {
+                          benefitType,
+                          displayName: displayNameMap[benefitType] || benefitType,
+                          index: `outpatient-${index}`,
+                          statusDisplay,
+                          benefitData,
+                          benefit,
+                          priority: benefitPriority[benefitType] || 999
+                        };
+                      });
+
+                    const statusOrder: Record<string, number> = { 'covered': 1, 'unclear': 2, 'not-covered': 3, 'not-found': 4 };
+                    const sortedBenefits = benefitObjects.sort((a, b) => {
+                      const statusDiff = (statusOrder[a.statusDisplay.status] || 999) - (statusOrder[b.statusDisplay.status] || 999);
+                      if (statusDiff !== 0) return statusDiff;
+                      return a.priority - b.priority;
+                    });
+
+                    return sortedBenefits.map(({ benefitType, displayName, index, statusDisplay, benefitData, benefit }) => (
+                      <div key={index} className="p-3 border rounded border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {getBenefitIcon(benefitType)}
+                            <span className="text-sm font-medium">{displayName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {statusDisplay.icon}
+                          </div>
+                        </div>
+                        {benefit && (
+                          <div className="text-xs text-gray-600">
+                            {benefitData && benefitData !== 'Not Available' ? (
+                              <div>
+                                {formatBenefitText(benefitData)}
+                              </div>
+                            ) : (
+                              <div className="text-gray-500">No coverage details available</div>
+                            )}
+                          </div>
+                        )}
+                        {!benefit && (
+                          <div className="text-xs text-gray-500">Not available in this plan</div>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+              
+              {/* Inpatient/Facility Page */}
+              {currentCarouselPage === 3 && selectedPlan && (
+                <div className="space-y-4">
+                  {(() => {
+                    const inpatientFacility = [
+                      'Inpatient Hospital',
+                      'Skilled Nursing Facility (SNF)',
+                      'Dialysis Services',
+                      'Medical Equipment',
+                      'Health Plan Deductible',
+                      'Other Deductibles',
+                      'Medicare Part B',
+                      'Non Opioid Pain Management',
+                      'Opioid Treatment Services'
+                    ];
+
+                    const benefitPriority: Record<string, number> = {
+                      'Inpatient Hospital': 1,
+                      'Skilled Nursing Facility (SNF)': 2,
+                      'Dialysis Services': 3,
+                      'Medical Equipment': 4,
+                      'Health Plan Deductible': 5,
+                      'Other Deductibles': 6,
+                      'Medicare Part B': 7,
+                      'Non Opioid Pain Management': 8,
+                      'Opioid Treatment Services': 9
+                    };
+
+                    const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
+                    const benefitObjects = allBenefitTypes
+                      .filter(benefitType => inpatientFacility.includes(benefitType))
+                      .map((benefitType, index) => {
+                        const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
+                        const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
+                        const benefit = selectedPlan.benefits.find(b => 
+                          b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+                          b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+                        );
+                        
+                        return {
+                          benefitType,
+                          displayName: benefitType,
+                          index: `inpatient-${index}`,
+                          statusDisplay,
+                          benefitData,
+                          benefit,
+                          priority: benefitPriority[benefitType] || 999
+                        };
+                      });
+
+                    const statusOrder: Record<string, number> = { 'covered': 1, 'unclear': 2, 'not-covered': 3, 'not-found': 4 };
+                    const sortedBenefits = benefitObjects.sort((a, b) => {
+                      const statusDiff = (statusOrder[a.statusDisplay.status] || 999) - (statusOrder[b.statusDisplay.status] || 999);
+                      if (statusDiff !== 0) return statusDiff;
+                      return a.priority - b.priority;
+                    });
+
+                    return sortedBenefits.map(({ benefitType, displayName, index, statusDisplay, benefitData, benefit }) => (
+                      <div key={index} className="p-3 border rounded border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {getBenefitIcon(benefitType)}
+                            <span className="text-sm font-medium">{displayName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {statusDisplay.icon}
+                          </div>
+                        </div>
+                        {benefit && (
+                          <div className="text-xs text-gray-600">
+                            {benefitData && benefitData !== 'Not Available' ? (
+                              <div>
+                                {formatBenefitText(benefitData)}
+                              </div>
+                            ) : (
+                              <div className="text-gray-500">No coverage details available</div>
+                            )}
+                          </div>
+                        )}
+                        {!benefit && (
+                          <div className="text-xs text-gray-500">Not available in this plan</div>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+              
+              {/* Prescriptions Page */}
+              {currentCarouselPage === 4 && selectedPlan && (
+                <div className="space-y-4">
+                  {/* Pharmaceutical data - full width */}
+                  {(() => {
+                    const allBenefitTypes = selectedPlan.benefits.map(b => b.benefit_type);
+                    return allBenefitTypes.filter(benefitType => benefitType === 'Outpatient prescription drugs').map((benefitType, index) => {
+                      const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
+                      const benefit = selectedPlan.benefits.find(b => 
+                        b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+                        b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+                      );
+                      
+                      const benefitData = benefit ? benefit.full_description : 'Not Available';
+                      
+                      return (
+                        <div key={`pharma-${index}`} className="p-3 border rounded w-full border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getBenefitIcon(benefitType)}
+                              <span className="text-sm font-medium">{benefitType}</span>
+                            </div>
+                          </div>
+                          {benefit && (
+                            <div className="text-xs text-gray-600">
+                              {benefitData && benefitData !== 'Not Available' ? (
+                                <div>
+                                  {formatBenefitText(benefitData)}
+                                </div>
+                              ) : (
+                                <div className="p-3 text-center text-gray-500">
+                                  No drug coverage available
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {!benefit && (
+                            <div className="p-3 text-center text-gray-500">
+                              No drug coverage available
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
-      )}
-
-      {/* Raw Benefit Types Analysis */}
-      {selectedPlan && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Raw Benefit Types in Selected Plan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {selectedPlan.benefits.map((benefit, index) => {
-                // Check if this is pharmaceutical data that needs wider display
-                const isPharmaData = benefit.benefit_type === 'Outpatient prescription drugs' || 
-                                   (benefit.full_description && benefit.full_description.includes('Tier ') && benefit.full_description.includes('Not Supported'));
-                
-                return (
-                  <div key={index} className={`p-3 border rounded ${isPharmaData ? 'col-span-full' : ''}`}>
-                    <div className="font-medium text-sm">{benefit.benefit_type}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      PD Display: {benefit.pd_view_display ? '✅' : '❌'}
-                    </div>
-                    {benefit.summary_description?.in_network && (
-                      <div className="text-xs mt-1 p-2 bg-green-50 rounded">
-                        <strong>In-Network:</strong>
-                        <div className="mt-1">
-                          {formatBenefitText(benefit.summary_description.in_network)}
-                        </div>
-                      </div>
-                    )}
-                    {benefit.summary_description?.out_network && (
-                      <div className="text-xs mt-1 p-2 bg-blue-50 rounded">
-                        <strong>Out-Network:</strong>
-                        <div className="mt-1">
-                          {formatBenefitText(benefit.summary_description.out_network)}
-                        </div>
-                      </div>
-                    )}
-                    <details className="mt-2">
-                      <summary className="text-xs cursor-pointer text-blue-600">View Full Description</summary>
-                      <div className="text-xs mt-1 p-2 bg-gray-50 rounded">
-                        {formatBenefitText(benefit.full_description)}
-                      </div>
-                    </details>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Benefit Detection Logic Analysis */}
-      {selectedPlan && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Benefit Detection Logic Test</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-sm text-gray-600 mb-4">
-                <p><strong>Legend:</strong></p>
-                <p>✅ = Has actual coverage | ⚠️ = Listed but no coverage | ❌ = Not listed</p>
-                <p>PD: T/F = pd_view_display true/false</p>
-              </div>
-              
-              {/* Test specific benefits known to have edge cases */}
-              {['Vision', 'Dental', 'Comprehensive Dental Service', 'Otc Items', 'Transportation', 'Hearing services'].map(testBenefit => {
-                const benefit = selectedPlan.benefits.find(b => 
-                  b.benefit_type.toLowerCase() === testBenefit.toLowerCase() ||
-                  b.benefit_type.toLowerCase().includes(testBenefit.toLowerCase())
-                );
-                
-                if (!benefit) return null;
-                
-                const hasActualCoverage = hasBenefitType(selectedPlan, testBenefit);
-                
-                return (
-                  <div key={testBenefit} className="border rounded p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{benefit.benefit_type}</span>
-                      <div className="flex items-center gap-2">
-                        <span>{hasActualCoverage ? '✅ Has Coverage' : '⚠️ No Coverage'}</span>
-                        <span className="text-xs bg-blue-100 px-1 rounded">
-                          PD: {benefit.pd_view_display ? 'True' : 'False'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="text-xs space-y-1">
-                      {benefit.summary_description?.in_network && (
-                        <div className="p-2 bg-green-50 rounded">
-                          <strong>In-Network Summary:</strong>
-                          <div className="mt-1">
-                            {formatBenefitText(benefit.summary_description.in_network)}
-                          </div>
-                        </div>
-                      )}
-                      {benefit.summary_description?.out_network && (
-                        <div className="p-2 bg-blue-50 rounded">
-                          <strong>Out-Network Summary:</strong>
-                          <div className="mt-1">
-                            {formatBenefitText(benefit.summary_description.out_network)}
-                          </div>
-                        </div>
-                      )}
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-600">View Full Description</summary>
-                        <div className="mt-1 p-2 bg-gray-50 rounded">
-                          {formatBenefitText(benefit.full_description)}
-                        </div>
-                      </details>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* All Available Benefit Types Analysis */}
@@ -927,102 +1884,353 @@ export default function AdvantageFieldMappingPage() {
             <div className="space-y-4">
               {/* Full-width items for pharmaceutical data */}
               {allBenefitTypes.filter(benefitType => benefitType === 'Outpatient prescription drugs').map((benefitType, index) => {
-                const isAvailable = hasBenefitType(selectedPlan, benefitType);
+                const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
                 const benefit = selectedPlan.benefits.find(b => 
                   b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
                   b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
                 );
                 
-                // For pharmaceutical data, use the original full_description with HTML intact
-                const benefitData = isAvailable && benefit ? benefit.full_description : 'Not Available';
-                
-                // Debug pharmaceutical data
-                if (benefit) {
-                  console.log('=== PHARMACEUTICAL BENEFIT DEBUG ===');
-                  console.log('Benefit type:', benefit.benefit_type);
-                  console.log('Full description length:', benefit.full_description?.length);
-                  console.log('Full description preview:', benefit.full_description?.substring(0, 500));
-                  console.log('Summary description:', benefit.summary_description);
-                  console.log('PD view display:', benefit.pd_view_display);
-                }
+                // For pharmaceutical data, always use the full_description when available
+                const benefitData = benefit ? benefit.full_description : 'Not Available';
                 
                 return (
-                  <div key={`pharma-${index}`} className={`p-3 border rounded w-full ${isAvailable ? 'bg-green-50 border-green-200' : benefit ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div key={`pharma-${index}`} className="p-3 border rounded w-full border-gray-200">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{benefitType}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{isAvailable ? '✅' : benefit ? '⚠️' : '❌'}</span>
-                        {benefit && (
-                          <span className="text-xs bg-blue-100 px-1 rounded">
-                            PD: {benefit.pd_view_display ? 'T' : 'F'}
-                          </span>
-                        )}
+                        {getBenefitIcon(benefitType)}
+                        <span className="text-sm font-medium">{benefitType}</span>
                       </div>
                     </div>
                     {benefit && (
                       <div className="text-xs text-gray-600">
-                        <div className="mb-1">
-                          <strong>Status:</strong> {isAvailable ? 'Has Coverage' : 'Listed but No Coverage'}
-                        </div>
-                        {isAvailable && (
+                        {/* Show pharmaceutical table if available, otherwise show no coverage message */}
+                        {benefitData && benefitData !== 'Not Available' ? (
                           <div>
                             {formatBenefitText(benefitData)}
                           </div>
-                        )}
-                        {!isAvailable && benefit && (
-                          <div className="text-gray-500 italic">
-                            Benefit listed but appears to have no coverage based on content analysis
+                        ) : (
+                          <div className="p-3 text-center text-gray-500">
+                            No drug coverage available
                           </div>
                         )}
+                      </div>
+                    )}
+                    {!benefit && (
+                      <div className="p-3 text-center text-gray-500">
+                        No drug coverage available
                       </div>
                     )}
                   </div>
                 );
               })}
               
-              {/* Grid layout for other benefits */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allBenefitTypes.filter(benefitType => benefitType !== 'Outpatient prescription drugs').map((benefitType, index) => {
-                  const isAvailable = hasBenefitType(selectedPlan, benefitType);
-                  const benefitData = isAvailable ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
-                  const benefit = selectedPlan.benefits.find(b => 
-                    b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
-                    b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
-                  );
+              {/* Grid layout for other benefits - organized by service setting */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {(() => {
+                  // Categorize benefits by service setting
+                  const outpatientServices = [
+                    'Doctor\'s office visits',
+                    'Annual Physical Exam', 
+                    'Preventive Care',
+                    'Outpatient Hospital',
+                    'Outpatient rehabilitation',
+                    'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)',
+                    'Additional Telehealth Services',
+                    'Emergency Care',
+                    'Ambulance'
+                  ];
                   
+                  const inpatientFacility = [
+                    'Inpatient Hospital',
+                    'Skilled Nursing Facility (SNF)',
+                    'Dialysis Services',
+                    'Medical Equipment',
+                    'Health Plan Deductible',
+                    'Other Deductibles',
+                    'Medicare Part B',
+                    'Non Opioid Pain Management',
+                    'Opioid Treatment Services'
+                  ];
+                  
+                  const specialtyBenefits = [
+                    'Vision',
+                    'Hearing services',
+                    'Mental health care',
+                    'Foot care (podiatry services)',
+                    'Comprehensive Dental Service',
+                    'Preventive Dental Service',
+                    'Transportation',
+                    'Transportation Services',
+                    'Wellness Programs',
+                    'Meal Benefit',
+                    'Otc Items',
+                    'Defined Supplemental Benefits',
+                    'Optional Supplemental Benefits',
+                    'Worldwide Emergency Urgent Coverage'
+                  ];
+
+                  // Create benefit objects for each category
+                  const createBenefitCards = (categoryBenefits: string[], categoryName: string) => {
+                    // Display name mappings for better UX
+                    const displayNameMap: Record<string, string> = {
+                      'Comprehensive Dental Service': 'Dental (Comprehensive)',
+                      'Preventive Dental Service': 'Dental (Preventive)',
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 'Diagnostic Services'
+                    };
+                    
+                    // Description mappings for benefits that need additional context
+                    const descriptionMap: Record<string, string> = {
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 'Costs for these services may be different if received in an outpatient surgery setting'
+                    };
+                    
+                    // Priority order within each category (lower number = higher priority)
+                    const benefitPriority: Record<string, number> = {
+                      // Specialty & Benefits priority order
+                      'Preventive Dental Service': 1,
+                      'Comprehensive Dental Service': 2,
+                      'Vision': 3,
+                      'Hearing services': 4,
+                      'Otc Items': 5,
+                      'Transportation': 6,
+                      'Transportation Services': 7,
+                      'Meal Benefit': 8,
+                      'Wellness Programs': 9,
+                      'Foot care (podiatry services)': 10,
+                      'Mental health care': 11,
+                      'Defined Supplemental Benefits': 12,
+                      'Optional Supplemental Benefits': 13,
+                      'Worldwide Emergency Urgent Coverage': 14,
+                      
+                      // Outpatient Services priority order
+                      'Doctor\'s office visits': 1,
+                      'Annual Physical Exam': 2,
+                      'Preventive Care': 3,
+                      'Emergency Care': 4,
+                      'Ambulance': 5,
+                      'Outpatient Hospital': 6,
+                      'Outpatient rehabilitation': 7,
+                      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 8,
+                      'Additional Telehealth Services': 9,
+                      
+                      // Inpatient/Facility priority order
+                      'Inpatient Hospital': 1,
+                      'Skilled Nursing Facility (SNF)': 2,
+                      'Dialysis Services': 3,
+                      'Medical Equipment': 4,
+                      'Health Plan Deductible': 5,
+                      'Other Deductibles': 6,
+                      'Medicare Part B': 7,
+                      'Non Opioid Pain Management': 8,
+                      'Opioid Treatment Services': 9
+                    };
+                    
+                    const benefitObjects = allBenefitTypes
+                      .filter(benefitType => benefitType !== 'Outpatient prescription drugs' && categoryBenefits.includes(benefitType))
+                      .map((benefitType, index) => {
+                        const statusDisplay = getBenefitStatusDisplay(selectedPlan, benefitType);
+                        const benefitData = statusDisplay.status === 'covered' ? getBenefitData(selectedPlan, benefitType) : 'Not Available';
+                        const benefit = selectedPlan.benefits.find(b => 
+                          b.benefit_type.toLowerCase() === benefitType.toLowerCase() ||
+                          b.benefit_type.toLowerCase().includes(benefitType.toLowerCase())
+                        );
+                        
+                        return {
+                          benefitType,
+                          displayName: displayNameMap[benefitType] || benefitType,
+                          description: descriptionMap[benefitType],
+                          index: `${categoryName}-${index}`,
+                          statusDisplay,
+                          benefitData,
+                          benefit,
+                          priority: benefitPriority[benefitType] || 999
+                        };
+                      });
+                    
+                    // Sort by status within each category, then by priority within status
+                    const statusOrder: Record<string, number> = { 'covered': 1, 'unclear': 2, 'not-covered': 3, 'not-found': 4 };
+                    return benefitObjects.sort((a, b) => {
+                      // First sort by coverage status
+                      const statusDiff = (statusOrder[a.statusDisplay.status] || 999) - (statusOrder[b.statusDisplay.status] || 999);
+                      if (statusDiff !== 0) return statusDiff;
+                      
+                      // Then sort by priority within the same status
+                      return a.priority - b.priority;
+                    });
+                  };
+
+                  const outpatientCards = createBenefitCards(outpatientServices, 'outpatient');
+                  const inpatientCards = createBenefitCards(inpatientFacility, 'inpatient');
+                  const specialtyCards = createBenefitCards(specialtyBenefits, 'specialty');
+
                   return (
-                    <div key={index} className={`p-3 border rounded ${isAvailable ? 'bg-green-50 border-green-200' : benefit ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{benefitType}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{isAvailable ? '✅' : benefit ? '⚠️' : '❌'}</span>
-                        {benefit && (
-                          <span className="text-xs bg-blue-100 px-1 rounded">
-                            PD: {benefit.pd_view_display ? 'T' : 'F'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {benefit && (
-                      <div className="text-xs text-gray-600">
-                        <div className="mb-1">
-                          <strong>Status:</strong> {isAvailable ? 'Has Coverage' : 'Listed but No Coverage'}
-                        </div>
-                        {isAvailable && (
-                          <div>
-                            {formatBenefitText(benefitData)}
+                    <>
+                      {/* Specialty & Benefits Column */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Specialty & Benefits</h3>
+                        {specialtyCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
+                          <div key={index} className="p-3 border rounded border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                {getBenefitIcon(benefitType)}
+                                <span className="text-sm font-medium">{displayName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {statusDisplay.icon}
+                              </div>
+                            </div>
+                            {description && (
+                              <div className="text-xs text-gray-500 mb-2 italic">
+                                {description}
+                              </div>
+                            )}
+                            {benefit && (
+                              <div className="text-xs text-gray-600">
+                                {/* Show separate In-Network and Out-of-Network sections */}
+                                {benefit.summary_description?.in_network && (
+                                  <div className="mt-2 p-2 bg-green-50 rounded">
+                                    <strong>In-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.in_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {benefit.summary_description?.out_network && (
+                                  <div className="mt-2 p-2 bg-blue-50 rounded">
+                                    <strong>Out-of-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.out_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {!benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                                  <div className="mt-2 p-2 bg-gray-50 rounded text-gray-500">
+                                    {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
+                                     statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
+                                     'Benefit information not available'}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {!isAvailable && benefit && (
-                          <div className="text-gray-500 italic">
-                            Benefit listed but appears to have no coverage based on content analysis
-                          </div>
-                        )}
+                        ))}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {/* Outpatient Services Column */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Outpatient Services</h3>
+                        {outpatientCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
+                          <div key={index} className="p-3 border rounded border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                {getBenefitIcon(benefitType)}
+                                <span className="text-sm font-medium">{displayName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {statusDisplay.icon}
+                              </div>
+                            </div>
+                            {description && (
+                              <div className="text-xs text-gray-500 mb-2 italic">
+                                {description}
+                              </div>
+                            )}
+                            {benefit && (
+                              <div className="text-xs text-gray-600">
+                                {/* Show separate In-Network and Out-of-Network sections */}
+                                {benefit.summary_description?.in_network && (
+                                  <div className="mt-2 p-2 bg-green-50 rounded">
+                                    <strong>In-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.in_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {benefit.summary_description?.out_network && (
+                                  <div className="mt-2 p-2 bg-blue-50 rounded">
+                                    <strong>Out-of-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.out_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Fallback to combined data if separate network data isn't available */}
+                                {(statusDisplay.status === 'covered' || statusDisplay.status === 'unclear') && !benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                                  <div className="mt-2">
+                                    {formatBenefitText(benefitData)}
+                                  </div>
+                                )}
+                                {statusDisplay.status !== 'covered' && benefit && (
+                                  <div className={`italic ${statusDisplay.textColor}`}>
+                                    {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
+                                     statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
+                                     'Benefit information not available'}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Inpatient/Facility Column */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-lg text-gray-800 border-b pb-2">Inpatient/Facility</h3>
+                        {inpatientCards.map(({ benefitType, displayName, description, index, statusDisplay, benefitData, benefit }) => (
+                          <div key={index} className="p-3 border rounded border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                {getBenefitIcon(benefitType)}
+                                <span className="text-sm font-medium">{displayName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {statusDisplay.icon}
+                              </div>
+                            </div>
+                            {description && (
+                              <div className="text-xs text-gray-500 mb-2 italic">
+                                {description}
+                              </div>
+                            )}
+                            {benefit && (
+                              <div className="text-xs text-gray-600">
+                                {/* Show separate In-Network and Out-of-Network sections */}
+                                {benefit.summary_description?.in_network && (
+                                  <div className="mt-2 p-2 bg-green-50 rounded">
+                                    <strong>In-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.in_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {benefit.summary_description?.out_network && (
+                                  <div className="mt-2 p-2 bg-blue-50 rounded">
+                                    <strong>Out-of-Network:</strong>
+                                    <div className="mt-1">
+                                      {formatBenefitText(benefit.summary_description.out_network)}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Fallback to combined data if separate network data isn't available */}
+                                {(statusDisplay.status === 'covered' || statusDisplay.status === 'unclear') && !benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                                  <div className="mt-2">
+                                    {formatBenefitText(benefitData)}
+                                  </div>
+                                )}
+                                {statusDisplay.status !== 'covered' && benefit && (
+                                  <div className={`italic ${statusDisplay.textColor}`}>
+                                    {statusDisplay.status === 'not-covered' ? 'This benefit is not covered by this plan' :
+                                     statusDisplay.status === 'unclear' ? 'Coverage details are unclear - contact plan for details' :
+                                     'Benefit information not available'}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
