@@ -4,7 +4,7 @@ import { StarIcon as Star, StarFilledIcon as StarFilled } from "@radix-ui/react-
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { MedicareAdvantageQuote, CarouselPage } from '@/types/medicare-advantage';
 import { FieldMappingTable } from './field-mapping-table';
-import { BenefitCategory } from './benefit-category';
+import { BenefitCategory } from './medicare-shop/advantage/benefit-category';
 import { PrescriptionsComponent } from './prescriptions-component';
 
 interface PlanCarouselProps {

@@ -9,7 +9,7 @@ import { formatCurrency, hasDrugCoverage } from '@/utils/medicare-advantage-data
 import { getBenefitStatusDisplay } from '@/utils/benefit-status';
 import { PlanSelector } from '@/components/plan-selector';
 import { PlanCarousel } from '@/components/plan-carousel';
-import { BenefitsOverview } from '@/components/benefits-overview';
+import { BenefitsOverview } from '@/components/medicare-shop/advantage/benefits-overview';
 
 export default function AdvantageFieldMappingPage() {
   const [plans, setPlans] = useState<MedicareAdvantageQuote[]>([]);

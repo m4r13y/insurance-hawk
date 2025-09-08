@@ -1,7 +1,7 @@
 import React from 'react';
 import { MedicareAdvantageQuote } from '@/types/medicare-advantage';
 import { getBenefitIcon } from '@/utils/benefit-icons';
-import { formatBenefitText } from '@/components/benefit-formatter';
+import { formatBenefitText } from '@/components/medicare-shop/advantage/benefit-formatter';
 
 interface PrescriptionsComponentProps {
   selectedPlan: MedicareAdvantageQuote;

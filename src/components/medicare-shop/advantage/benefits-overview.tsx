@@ -4,7 +4,7 @@ import { MedicareAdvantageQuote } from '@/types/medicare-advantage';
 import { getBenefitStatusDisplay } from '@/utils/benefit-status';
 import { getBenefitData } from '@/utils/medicare-advantage-data';
 import { getBenefitIcon } from '@/utils/benefit-icons';
-import { formatBenefitText } from '@/components/benefit-formatter';
+import { formatBenefitText } from '@/components/medicare-shop/advantage/benefit-formatter';
 
 interface BenefitsOverviewProps {
   selectedPlan: MedicareAdvantageQuote;

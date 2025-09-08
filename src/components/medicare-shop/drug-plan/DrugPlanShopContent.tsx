@@ -15,8 +15,8 @@ import {
   getTier1Copay,
   getTier3Copay
 } from '@/utils/drug-plan-data';
-import { DrugPlanSelector } from '@/components/drug-plan-selector';
-import DrugPlanTiersChart from '@/components/drug-plan-tiers-chart';
+import { DrugPlanSelector } from '@/components/medicare-shop/drug-plan/drug-plan-selector';
+import DrugPlanTiersChart from '@/components/medicare-shop/drug-plan/drug-plan-tiers-chart';
 
 export default function PDPFieldMappingPage() {
   const [plans, setPlans] = useState<DrugPlanQuote[]>([]);
