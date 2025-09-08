@@ -111,12 +111,12 @@ export default function MedicareLayout({ children }: MedicareLayoutProps) {
       {!pathname.startsWith('/medicare/shop') && (
         <div className="sticky top-20 z-40 bg-background/98 pb-2 backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="flex items-center justify-end py-3">
+            <div className="flex items-center justify-end py-0">
               {/* Navigation moved to individual Learn and Resources pages */}
             </div>
           </div>
         </div>
-      )}
+      )} 
 
       {/* Main Content */}
       <main className="relative">

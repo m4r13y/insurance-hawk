@@ -288,7 +288,7 @@ export default function MedicareShopLayout({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+    <div className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0 relative">
       {/* Show Shopping Header Only When There Are Quotes */}
       {hasQuotes && (
         <div className="mb-8">

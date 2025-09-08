@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SimpleHeader } from "@/components/library/layout/simple-header";
+import { MedicareHeader } from "@/components/medicare-header";
 import AnimatedFooter from "@/components/animated-footer";
 import AdaAccessibilityWidget from "@/components/ada-accessibility-widget";
 import CookieConsentBanner from "@/components/cookie-consent-banner";
@@ -32,8 +33,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" />
       </head>
       <body className={cn("font-sans antialiased gradient-bg text-foreground min-h-screen flex flex-col", inter.variable)}>
-        {/* Main Header */}
-        <SimpleHeader />
+        {/* Main Header - Temporarily hidden */}
+        {/* <SimpleHeader /> */}
+        
+        {/* Medicare-specific Header - Temporarily visible */}
+        <MedicareHeader />
         
         {/* Add padding top to account for fixed header */}
         <main className={cn(

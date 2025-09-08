@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import Image from "next/image";
 import MedicareDisclaimer from "@/components/medicare-disclaimer";
 import MedicareQuoteFlow from "@/components/MedicareQuoteFlow";
-import { MedicareAdvantageShopContent } from "@/components/medicare-shop/advantage";
+import { MedicareAdvantageShopContent } from "@/components/medicare-shop/advantage/MedicareAdvantageShopContentNew";
 import MedicareQuoteLoadingPage from "@/components/MedicareQuoteLoadingPage";
 import GenericQuoteLoading from "@/components/GenericQuoteLoading";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
