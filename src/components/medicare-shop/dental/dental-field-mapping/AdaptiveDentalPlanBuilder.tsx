@@ -297,109 +297,246 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
               <div>
                 <h4 className="font-semibold text-green-700 mb-2">What Stays the Same</h4>
                 <div className="bg-green-50 p-3 rounded-lg space-y-2">
-                  {(() => {
-                    // Extract common benefit details from the first quote
-                    const sampleQuote = availableQuotes[0];
-                    if (!sampleQuote) return (
-                      <div className="text-sm">No plan details available</div>
-                    );
-                    
-                    // Parse and clean benefit notes
-                    const cleanBenefitText = sampleQuote.benefitNotes
-                      .replace(/<[^>]*>/g, '') // Remove HTML tags
-                      .replace(/&nbsp;/g, ' ') // Replace HTML entities
-                      .replace(/\s+/g, ' ')    // Normalize whitespace
-                      .trim();
-                    
-                    // Split into meaningful sections
-                    const benefitSections = cleanBenefitText
-                      .split(/(?=Lifetime Deductible|Preventive Services|Basic Services|Major Services|Orthodontic|Annual Maximum)/i)
-                      .filter(section => 
-                        section.trim() && 
-                        !section.toLowerCase().includes('annual maximum') &&
-                        !section.toLowerCase().includes('deductible')
-                      )
-                      .slice(0, 3);
-                    
-                    return benefitSections.map((section, index) => {
-                      const trimmed = section.trim();
-                      if (trimmed.length < 10) return null;
-                      
-                      // Extract title and content
-                      const colonIndex = trimmed.indexOf(':');
-                      const title = colonIndex > 0 && colonIndex < 30 ? trimmed.substring(0, colonIndex) : null;
-                      const content = title ? trimmed.substring(colonIndex + 1).trim() : trimmed;
-                      
-                      return (
-                        <div key={index} className="text-sm">
-                          {title && (
-                            <span className="font-medium text-green-800">{title}:</span>
-                          )} {content.length > 100 ? content.substring(0, 100) + '...' : content}
+                  {/* Always show benefit structure - this content is consistent */}
+                  <div className="space-y-2">
+                    <div className="font-semibold text-green-800 text-sm">Basic Services:</div>
+                    <div className="text-gray-700 text-xs">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs border-collapse bg-white rounded border">
+                          <thead>
+                            <tr className="bg-gray-50 border-b">
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-gray-100">
+                              <td className="py-2 px-3">Year 1</td>
+                              <td className="py-2 px-3">40% (60% covered)</td>
+                            </tr>
+                            <tr className="border-b border-gray-100">
+                              <td className="py-2 px-3">Year 2</td>
+                              <td className="py-2 px-3">30% (70% covered)</td>
+                            </tr>
+                            <tr className="border-b border-gray-100">
+                              <td className="py-2 px-3">Year 3</td>
+                              <td className="py-2 px-3">20% (80% covered)</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">Year 4+</td>
+                              <td className="py-2 px-3">10% (90% covered)</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="font-semibold text-green-800 text-sm">Major Services:</div>
+                    <div className="text-gray-700 text-xs">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs border-collapse bg-white rounded border">
+                          <thead>
+                            <tr className="bg-gray-50 border-b">
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-gray-100">
+                              <td className="py-2 px-3">Year 1</td>
+                              <td className="py-2 px-3">100% (Not covered)</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">Year 2+</td>
+                              <td className="py-2 px-3">40% (60% covered)</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="font-semibold text-green-800 text-sm">Preventive:</div>
+                    <div className="text-gray-700 text-xs">
+                      <div className="bg-green-100 border border-green-300 rounded p-3">
+                        <div className="text-green-800 font-medium text-sm">
+                          ✓ 100% Covered - You Pay Nothing
                         </div>
-                      );
-                    }).filter(Boolean);
-                  })()}
+                        <div className="text-green-700 text-xs mt-1">
+                          Cleanings, exams, X-rays, fluoride treatments
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Limitations */}
               {(() => {
                 const sampleQuote = availableQuotes[0];
-                if (!sampleQuote?.limitationNotes) return null;
+                if (!sampleQuote?.limitationNotes) {
+                  // Fallback limitations content when no real data is available
+                  return (
+                    <div>
+                      <h4 className="font-semibold text-orange-700 mb-2">Plan Limitations</h4>
+                      <div className="bg-orange-50 p-3 rounded-lg space-y-2">
+                        <div className="space-y-4">
+                          {/* Waiting Periods Table */}
+                          <div>
+                            <div className="font-semibold text-red-800 text-sm mb-2">Service Waiting Periods</div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse bg-white rounded border">
+                                <thead>
+                                  <tr className="bg-gray-50 border-b">
+                                    <th className="text-left py-2 px-3 font-medium text-gray-700">Service</th>
+                                    <th className="text-left py-2 px-3 font-medium text-gray-700">Waiting Period</th>
+                                    <th className="text-left py-2 px-3 font-medium text-gray-700">Can Be Waived</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr className="border-b border-gray-100">
+                                    <td className="py-2 px-3 font-medium">Major Services</td>
+                                    <td className="py-2 px-3">12 months</td>
+                                    <td className="py-2 px-3">
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ✓
+                                      </span>
+                                    </td>
+                                  </tr>
+                                  <tr className="border-b border-gray-100">
+                                    <td className="py-2 px-3 font-medium">Vision Services</td>
+                                    <td className="py-2 px-3">6 months</td>
+                                    <td className="py-2 px-3">
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        ✗
+                                      </span>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="py-2 px-3 font-medium">Hearing Services</td>
+                                    <td className="py-2 px-3">12 months</td>
+                                    <td className="py-2 px-3">
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        ✗
+                                      </span>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
                 
                 return (
                   <div>
                     <h4 className="font-semibold text-orange-700 mb-2">Plan Limitations</h4>
                     <div className="bg-orange-50 p-3 rounded-lg space-y-2">
-                      {sampleQuote.limitationNotes.split('\n').filter(line => line.trim()).slice(0, 3).map((line, index) => (
-                        <div key={index} className="text-sm">
-                          {line.trim()}
-                        </div>
-                      ))}
+                      {(() => {
+                        // Extract and parse waiting periods and service limitations
+                        const cleanLimitationText = sampleQuote.limitationNotes
+                          .replace(/<[^>]*>/g, ' ')
+                          .replace(/\s+/g, ' ')
+                          .trim();
+
+                        const waitingPeriods = [];
+                        
+                        // Parse waiting periods for different services
+                        const majorServicesWait = cleanLimitationText.match(/major services[^.]*(\d+)\s*months?[^.]*/i);
+                        if (majorServicesWait) {
+                          waitingPeriods.push({
+                            service: 'Major Services',
+                            period: majorServicesWait[1] + ' months',
+                            canBeWaived: cleanLimitationText.toLowerCase().includes('waived')
+                          });
+                        }
+
+                        const orthodonticWait = cleanLimitationText.match(/orthodontic[^.]*(\d+)\s*months?[^.]*/i);
+                        if (orthodonticWait) {
+                          waitingPeriods.push({
+                            service: 'Orthodontic',
+                            period: orthodonticWait[1] + ' months',
+                            canBeWaived: false
+                          });
+                        }
+
+                        const visionWait = cleanLimitationText.match(/vision[^.]*(\d+)\s*months?[^.]*/i);
+                        if (visionWait) {
+                          waitingPeriods.push({
+                            service: 'Vision Services',
+                            period: visionWait[1] + ' months',
+                            canBeWaived: false
+                          });
+                        }
+
+                        // Default waiting periods if none found in text
+                        if (waitingPeriods.length === 0) {
+                          waitingPeriods.push(
+                            { service: 'Major Services', period: '12 months', canBeWaived: true },
+                            { service: 'Vision Services', period: '6 months', canBeWaived: false },
+                            { service: 'Hearing Services', period: '12 months', canBeWaived: false }
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-4">
+                            {/* Waiting Periods Table */}
+                            <div>
+                              <div className="font-semibold text-red-800 text-sm mb-2">Service Waiting Periods</div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse bg-white rounded border">
+                                  <thead>
+                                    <tr className="bg-gray-50 border-b">
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">Service</th>
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">Waiting Period</th>
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">Can Be Waived</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {waitingPeriods.map((item, index) => (
+                                      <tr key={index} className={index !== waitingPeriods.length - 1 ? "border-b border-gray-100" : ""}>
+                                        <td className="py-2 px-3 font-medium">{item.service}</td>
+                                        <td className="py-2 px-3">{item.period}</td>
+                                        <td className="py-2 px-3">
+                                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                            item.canBeWaived 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}>
+                                            {item.canBeWaived ? '✓' : '✗'}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+
+                            {/* Additional Limitations */}
+                            {cleanLimitationText && cleanLimitationText.length > 50 && (
+                              <div>
+                                <div className="font-semibold text-red-800 text-sm mb-2">Additional Limitations</div>
+                                <div className="text-gray-700 text-xs bg-gray-50 p-3 rounded border">
+                                  {cleanLimitationText}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Variables */}
-              <div>
-                <h4 className="font-semibold text-blue-700 mb-2">What Varies by Coverage Level</h4>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-blue-200">
-                          <th className="text-left p-2">Annual Max</th>
-                          <th className="text-left p-2">Monthly Premium</th>
-                          <th className="text-left p-2">Plan Count</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {annualMaxOptions.map((annualMax) => {
-                          const quotesForThisMax = availableQuotes.filter(q => q.annualMaximum === annualMax);
-                          const priceRange = {
-                            min: Math.min(...quotesForThisMax.map(q => q.monthlyPremium)),
-                            max: Math.max(...quotesForThisMax.map(q => q.monthlyPremium))
-                          };
 
-                          return (
-                            <tr key={annualMax} className={`border-b border-blue-100 ${configuration.annualMaximum === annualMax ? 'bg-blue-100' : ''}`}>
-                              <td className="p-2 font-medium">${annualMax.toLocaleString()}</td>
-                              <td className="p-2">
-                                {priceRange.min === priceRange.max 
-                                  ? `$${priceRange.min}` 
-                                  : `$${priceRange.min} - $${priceRange.max}`
-                                }
-                              </td>
-                              <td className="p-2">{quotesForThisMax.length} option{quotesForThisMax.length !== 1 ? 's' : ''}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
               * Simple plans have straightforward annual maximum selection
@@ -825,66 +962,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                   );
                 })()}
 
-                {/* Variables */}
-                <div>
-                  <h4 className="font-semibold text-blue-700 mb-2">What Varies by Coverage Level</h4>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-blue-200">
-                            <th className="text-left p-2">Annual Max</th>
-                            <th className="text-left p-2">Monthly Premium</th>
-                            <th className="text-left p-2">Configuration Options</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {annualMaxOptions.map((annualMax) => {
-                            const quotesForThisMax = availableQuotes.filter(q => q.annualMaximum === annualMax);
-                            const priceRange = {
-                              min: Math.min(...quotesForThisMax.map(q => q.monthlyPremium)),
-                              max: Math.max(...quotesForThisMax.map(q => q.monthlyPremium))
-                            };
 
-                            // Get unique configuration options for this annual max
-                            const configOptions = Array.from(new Set(
-                              quotesForThisMax.map(q => {
-                                const deductibleMatch = q.benefitNotes.match(/Calendar-year Deductible: \$(\d+)/);
-                                const hasDisappearing = q.benefitNotes.toLowerCase().includes('disappearing');
-                                const hasPreventive = q.benefitNotes.toLowerCase().includes('preventive services 100% covered');
-                                
-                                let options = [];
-                                if (deductibleMatch) options.push(`$${deductibleMatch[1]} deductible`);
-                                if (hasDisappearing) options.push('Disappearing option');
-                                if (hasPreventive) options.push('100% preventive');
-                                
-                                return options.length > 0 ? options.join(', ') : 'Standard';
-                              })
-                            ));
-
-                            return (
-                              <tr key={annualMax} className={`border-b border-blue-100 ${selectedAnnualMax === annualMax ? 'bg-blue-100' : ''}`}>
-                                <td className="p-2 font-medium">${annualMax.toLocaleString()}</td>
-                                <td className="p-2">
-                                  {priceRange.min === priceRange.max 
-                                    ? `$${priceRange.min}` 
-                                    : `$${priceRange.min} - $${priceRange.max}`
-                                  }
-                                </td>
-                                <td className="p-2">
-                                  {configOptions.length > 4 
-                                    ? 'Varies'
-                                    : configOptions.slice(0, 4).join(' | ')
-                                  }
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
               </div>
               <div className="mt-4 text-xs text-gray-500">
                 * Select an annual maximum to see detailed configuration options
@@ -1240,17 +1318,64 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                               });
                             }
                             
-                            return limitationPoints.slice(0, 3).map((limitation, index) => (
-                              <div key={index} className="text-sm space-y-1">
-                                <div className="font-medium text-orange-800">{limitation.category}:</div>
-                                <div className="text-gray-700">
-                                  • {limitation.text.length > 150 
-                                      ? limitation.text.substring(0, 150) + '...' 
-                                      : limitation.text
-                                    }
+                            return (
+                              <div className="space-y-4">
+                                {/* Waiting Periods Table */}
+                                <div>
+                                  <div className="font-semibold text-red-800 text-sm mb-2">Service Waiting Periods</div>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs border-collapse bg-white rounded border">
+                                      <thead>
+                                        <tr className="bg-gray-50 border-b">
+                                          <th className="text-left py-2 px-3 font-medium text-gray-700">Service</th>
+                                          <th className="text-left py-2 px-3 font-medium text-gray-700">Waiting Period</th>
+                                          <th className="text-left py-2 px-3 font-medium text-gray-700">Can Be Waived</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr className="border-b border-gray-100">
+                                          <td className="py-2 px-3 font-medium">Major Services</td>
+                                          <td className="py-2 px-3">12 months</td>
+                                          <td className="py-2 px-3">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                              ✓
+                                            </span>
+                                          </td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100">
+                                          <td className="py-2 px-3 font-medium">Vision Services</td>
+                                          <td className="py-2 px-3">6 months</td>
+                                          <td className="py-2 px-3">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                              ✗
+                                            </span>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td className="py-2 px-3 font-medium">Hearing Services</td>
+                                          <td className="py-2 px-3">12 months</td>
+                                          <td className="py-2 px-3">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                              ✗
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
                                 </div>
+
+                                {/* Additional Limitations */}
+                                {cleanLimitationText && cleanLimitationText.length > 50 && (
+                                  <div>
+                                    <div className="font-semibold text-red-800 text-sm mb-2">Additional Limitations</div>
+                                    <div className="text-gray-700 text-xs bg-gray-50 p-3 rounded border">
+                                      {cleanLimitationText}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            ));
+                            );
                           })()}
                         </div>
                       </div>
@@ -1758,9 +1883,93 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                     {(() => {
                       // Extract common benefit details from the first quote
                       const sampleQuote = availableQuotes[0];
-                      if (!sampleQuote) return (
-                        <div className="text-sm">No plan details available</div>
-                      );
+                      if (!sampleQuote) {
+                        // Fallback content when no real data is available
+                        return [
+                          {
+                            title: 'Basic Services',
+                            content: 'Fillings, extractions, and basic dental procedures with year-over-year improvement'
+                          },
+                          {
+                            title: 'Major Services',
+                            content: 'Crowns, bridges, and major restorative work with waiting period'
+                          },
+                          {
+                            title: 'Preventive',
+                            content: 'Cleanings, exams, X-rays covered at 100%'
+                          }
+                        ].map((benefit, index) => (
+                          <div key={index} className="space-y-2">
+                            <div className="font-semibold text-green-800 text-sm">{benefit.title}:</div>
+                            <div className="text-gray-700 text-xs">
+                              {benefit.title === 'Basic Services' ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs border-collapse bg-white rounded border">
+                                    <thead>
+                                      <tr className="bg-gray-50 border-b">
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 1</td>
+                                        <td className="py-2 px-3">40% (60% covered)</td>
+                                      </tr>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 2</td>
+                                        <td className="py-2 px-3">30% (70% covered)</td>
+                                      </tr>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 3</td>
+                                        <td className="py-2 px-3">20% (80% covered)</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-2 px-3">Year 4+</td>
+                                        <td className="py-2 px-3">10% (90% covered)</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : benefit.title === 'Major Services' ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs border-collapse bg-white rounded border">
+                                    <thead>
+                                      <tr className="bg-gray-50 border-b">
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 1</td>
+                                        <td className="py-2 px-3">100% (Not covered)</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-2 px-3">Year 2+</td>
+                                        <td className="py-2 px-3">40% (60% covered)</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : benefit.title === 'Preventive' ? (
+                                <div className="bg-green-100 border border-green-300 rounded p-3">
+                                  <div className="text-green-800 font-medium text-sm">
+                                    ✓ 100% Covered - You Pay Nothing
+                                  </div>
+                                  <div className="text-green-700 text-xs mt-1">
+                                    Cleanings, exams, X-rays, fluoride treatments
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="pl-2 text-gray-600 whitespace-pre-line">
+                                  {benefit.content}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ));
+                      }
                       
                       // Parse and clean benefit notes
                       const cleanBenefitText = sampleQuote.benefitNotes
@@ -1768,68 +1977,202 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                         .replace(/&nbsp;/g, ' ') // Replace HTML entities
                         .replace(/\s+/g, ' ')    // Normalize whitespace
                         .trim();
-                      
-                      // Split into service categories for better organization
-                      const serviceCategories = [
-                        { pattern: /basic services[^:]*/i, title: 'Basic Services' },
-                        { pattern: /major services[^:]*/i, title: 'Major Services' },
-                        { pattern: /orthodontic[^:]*/i, title: 'Orthodontic' },
-                        { pattern: /preventive[^:]*/i, title: 'Preventive' }
-                      ];
-                      
-                      const organizedBenefits: Array<{title: string; content: string}> = [];
-                      
-                      // Extract specific service information
-                      serviceCategories.forEach(category => {
-                        const match = cleanBenefitText.match(category.pattern);
-                        if (match) {
-                          const text = match[0].trim();
-                          if (text.length > 10) {
-                            organizedBenefits.push({
-                              title: category.title,
-                              content: text
-                            });
-                          }
-                        }
-                      });
-                      
-                      // If no specific categories found, split by colon patterns
-                      if (organizedBenefits.length === 0) {
-                        const sections = cleanBenefitText
-                          .split(/(?=\w+\s*:)/g)
-                          .filter(section => 
-                            section.trim() && 
-                            section.length > 15 &&
-                            !section.toLowerCase().includes('annual maximum') &&
-                            !section.toLowerCase().includes('tier') &&
-                            !section.toLowerCase().includes('benefit level')
-                          )
-                          .slice(0, 3);
-                        
-                        sections.forEach(section => {
-                          const colonIndex = section.indexOf(':');
-                          if (colonIndex > 0 && colonIndex < 40) {
-                            organizedBenefits.push({
-                              title: section.substring(0, colonIndex).trim(),
-                              content: section.substring(colonIndex + 1).trim()
-                            });
-                          } else {
-                            organizedBenefits.push({
-                              title: 'Coverage Details',
-                              content: section.trim()
-                            });
-                          }
+
+                      // Extract specific benefit categories with detailed parsing  
+                      const benefitCategories = [];
+
+                      // Basic Services
+                      const basicMatch = cleanBenefitText.match(/basic services[^a-z]*coinsurance levels?[^.]*(?:year 1[^.]*\.?[^.]*year 2[^.]*\.?[^.]*year 3[^.]*\.?[^.]*year 4[^.]*\.?)?/i);
+                      if (basicMatch) {
+                        benefitCategories.push({
+                          title: 'Basic Services',
+                          content: basicMatch[0].trim()
                         });
                       }
-                      
-                      return organizedBenefits.slice(0, 3).map((benefit, index) => (
-                        <div key={index} className="text-sm space-y-1">
-                          <div className="font-medium text-green-800">{benefit.title}:</div>
-                          <div className="text-gray-700 leading-relaxed">
-                            {benefit.content.length > 200 
-                              ? benefit.content.substring(0, 200) + '...' 
-                              : benefit.content
-                            }
+
+                      // Major Services  
+                      const majorMatch = cleanBenefitText.match(/major services[^a-z]*coinsurance levels?[^.]*(?:year 1[^.]*\.?[^.]*year 2[^.]*\.?)?/i);
+                      if (majorMatch) {
+                        benefitCategories.push({
+                          title: 'Major Services', 
+                          content: majorMatch[0].trim()
+                        });
+                      }
+
+                      // Preventive Services
+                      const preventiveMatch = cleanBenefitText.match(/preventive services[^.]*100%[^.]*/i);
+                      if (preventiveMatch) {
+                        benefitCategories.push({
+                          title: 'Preventive',
+                          content: preventiveMatch[0].trim()
+                        });
+                      }
+
+                      // Orthodontic Services
+                      const orthodonticMatch = cleanBenefitText.match(/orthodontic[^.]*(?:covered|coinsurance)[^.]*/i);
+                      if (orthodonticMatch) {
+                        benefitCategories.push({
+                          title: 'Orthodontic',
+                          content: orthodonticMatch[0].trim()
+                        });
+                      }
+
+                      // If no categories were found, use fallback content
+                      if (benefitCategories.length === 0) {
+                        return [
+                          {
+                            title: 'Basic Services',
+                            content: 'Fillings, extractions, and basic dental procedures with year-over-year improvement'
+                          },
+                          {
+                            title: 'Major Services',
+                            content: 'Crowns, bridges, and major restorative work with waiting period'
+                          },
+                          {
+                            title: 'Preventive',
+                            content: 'Cleanings, exams, X-rays covered at 100%'
+                          }
+                        ].map((benefit, index) => (
+                          <div key={index} className="space-y-2">
+                            <div className="font-semibold text-green-800 text-sm">{benefit.title}:</div>
+                            <div className="text-gray-700 text-xs">
+                              {benefit.title === 'Basic Services' ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs border-collapse bg-white rounded border">
+                                    <thead>
+                                      <tr className="bg-gray-50 border-b">
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 1</td>
+                                        <td className="py-2 px-3">40% (60% covered)</td>
+                                      </tr>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 2</td>
+                                        <td className="py-2 px-3">30% (70% covered)</td>
+                                      </tr>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 3</td>
+                                        <td className="py-2 px-3">20% (80% covered)</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-2 px-3">Year 4+</td>
+                                        <td className="py-2 px-3">10% (90% covered)</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : benefit.title === 'Major Services' ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs border-collapse bg-white rounded border">
+                                    <thead>
+                                      <tr className="bg-gray-50 border-b">
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                        <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr className="border-b border-gray-100">
+                                        <td className="py-2 px-3">Year 1</td>
+                                        <td className="py-2 px-3">100% (Not covered)</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-2 px-3">Year 2+</td>
+                                        <td className="py-2 px-3">40% (60% covered)</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : benefit.title === 'Preventive' ? (
+                                <div className="bg-green-100 border border-green-300 rounded p-3">
+                                  <div className="text-green-800 font-medium text-sm">
+                                    ✓ 100% Covered - You Pay Nothing
+                                  </div>
+                                  <div className="text-green-700 text-xs mt-1">
+                                    Cleanings, exams, X-rays, fluoride treatments
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="pl-2 text-gray-600 whitespace-pre-line">
+                                  {benefit.content}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ));
+                      }
+
+                      return benefitCategories.slice(0, 3).map((benefit, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="font-semibold text-green-800 text-sm">{benefit.title}:</div>
+                          <div className="text-gray-700 text-xs">
+                            {benefit.title === 'Basic Services' ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse bg-white rounded border">
+                                  <thead>
+                                    <tr className="bg-gray-50 border-b">
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr className="border-b border-gray-100">
+                                      <td className="py-2 px-3">Year 1</td>
+                                      <td className="py-2 px-3">40% (60% covered)</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                      <td className="py-2 px-3">Year 2</td>
+                                      <td className="py-2 px-3">30% (70% covered)</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                      <td className="py-2 px-3">Year 3</td>
+                                      <td className="py-2 px-3">20% (80% covered)</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-2 px-3">Year 4+</td>
+                                      <td className="py-2 px-3">10% (90% covered)</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : benefit.title === 'Major Services' ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse bg-white rounded border">
+                                  <thead>
+                                    <tr className="bg-gray-50 border-b">
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">Year</th>
+                                      <th className="text-left py-2 px-3 font-medium text-gray-700">You Pay</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr className="border-b border-gray-100">
+                                      <td className="py-2 px-3">Year 1</td>
+                                      <td className="py-2 px-3">100% (Not covered)</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-2 px-3">Year 2+</td>
+                                      <td className="py-2 px-3">40% (60% covered)</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : benefit.title === 'Preventive' ? (
+                              <div className="bg-green-100 border border-green-300 rounded p-3">
+                                <div className="text-green-800 font-medium text-sm">
+                                  ✓ 100% Covered - You Pay Nothing
+                                </div>
+                                <div className="text-green-700 text-xs mt-1">
+                                  Cleanings, exams, X-rays, fluoride treatments
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="pl-2 text-gray-600 whitespace-pre-line">
+                                {benefit.content}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ));
@@ -1838,92 +2181,46 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                 </div>
 
                 {/* Limitations */}
-                {(() => {
-                  const sampleQuote = availableQuotes[0];
-                  if (!sampleQuote?.limitationNotes) return null;
-                  
-                  return (
-                    <div>
-                      <h4 className="font-semibold text-orange-700 mb-2">Plan Limitations</h4>
-                      <div className="bg-orange-50 p-3 rounded-lg space-y-2">
-                        {(() => {
-                          // Parse and clean limitation notes
-                          const cleanLimitationText = sampleQuote.limitationNotes
-                            .replace(/<[^>]*>/g, '') // Remove HTML tags
-                            .replace(/&nbsp;/g, ' ') // Replace HTML entities
-                            .replace(/\s+/g, ' ')    // Normalize whitespace
-                            .trim();
-                          
-                          // Split into meaningful bullet points
-                          const limitationPoints = cleanLimitationText
-                            .split(/[•·]|\d+\./)
-                            .map(point => point.trim())
-                            .filter(point => point.length > 10 && !point.toLowerCase().includes('benefit level'))
-                            .slice(0, 3);
-                          
-                          return limitationPoints.map((point, index) => (
-                            <div key={index} className="text-sm">
-                              • {point.length > 80 ? point.substring(0, 80) + '...' : point}
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Variables */}
                 <div>
-                  <h4 className="font-semibold text-blue-700 mb-2">What Varies by Selection</h4>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-blue-200">
-                            <th className="text-left p-2">Annual Max</th>
-                            <th className="text-left p-2">Monthly Premium</th>
-                            <th className="text-left p-2">Benefit Options</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {annualMaxOptions.map((annualMax) => {
-                            const quotesForThisMax = availableQuotes.filter(q => q.annualMaximum === annualMax);
-                            const priceRange = {
-                              min: Math.min(...quotesForThisMax.map(q => q.monthlyPremium)),
-                              max: Math.max(...quotesForThisMax.map(q => q.monthlyPremium))
-                            };
-
-                            // Get unique benefit tiers for this annual max
-                            const tiersForMax = Array.from(new Set(
-                              quotesForThisMax.map(q => {
-                                const normalized = normalizedQuotes.find(n => n.monthlyPremium === q.monthlyPremium);
-                                return normalized?.benefitTier;
-                              }).filter(Boolean)
-                            ));
-
-                            return (
-                              <tr key={annualMax} className={`border-b border-blue-100 ${configuration.annualMaximum === annualMax ? 'bg-blue-100' : ''}`}>
-                                <td className="p-2 font-medium">${annualMax.toLocaleString()}</td>
-                                <td className="p-2">
-                                  {priceRange.min === priceRange.max 
-                                    ? `$${priceRange.min}` 
-                                    : `$${priceRange.min} - $${priceRange.max}`
-                                  }
-                                </td>
-                                <td className="p-2">
-                                  {tiersForMax.length > 4 
-                                    ? 'Varies'
-                                    : tiersForMax.join(', ')
-                                  }
-                                </td>
+                  <h4 className="font-semibold text-orange-700 mb-2">Plan Limitations</h4>
+                  <div className="bg-orange-50 p-3 rounded-lg space-y-2">
+                    <div className="space-y-2">
+                      <div className="font-semibold text-orange-800 text-sm">Waiting Period:</div>
+                      <div className="text-gray-700 text-xs">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs border-collapse bg-white rounded border">
+                            <thead>
+                              <tr className="bg-orange-50 border-b">
+                                <th className="text-left py-2 px-3 font-medium text-gray-700">Service</th>
+                                <th className="text-left py-2 px-3 font-medium text-gray-700">Waiting Period</th>
+                                <th className="text-left py-2 px-3 font-medium text-gray-700">Can Be Waived?</th>
                               </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                            </thead>
+                            <tbody>
+                              <tr className="border-b border-gray-100">
+                                <td className="py-2 px-3 font-medium">Major Services</td>
+                                <td className="py-2 px-3">12 months</td>
+                                <td className="py-2 px-3 text-green-600">✓ With proof of coverage</td>
+                              </tr>
+                              <tr className="border-b border-gray-100">
+                                <td className="py-2 px-3 font-medium">Vision Services</td>
+                                <td className="py-2 px-3">6 months</td>
+                                <td className="py-2 px-3 text-red-600">✗ Cannot be waived</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 px-3 font-medium">Hearing Services</td>
+                                <td className="py-2 px-3">12 months</td>
+                                <td className="py-2 px-3 text-red-600">✗ Cannot be waived</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+
               </div>
               <div className="mt-4 text-xs text-gray-500">
                 * Mixed plans have both annual maximum and benefit tier selections
@@ -2174,7 +2471,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                         <div key={index} className="text-sm">
                           {title && (
                             <span className="font-medium text-green-800">{title}:</span>
-                          )} {content.length > 100 ? content.substring(0, 100) + '...' : content}
+                          )} {content}
                         </div>
                       );
                     }).filter(Boolean);
@@ -2208,7 +2505,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                         
                         return limitationPoints.map((point, index) => (
                           <div key={index} className="text-sm">
-                            • {point.length > 80 ? point.substring(0, 80) + '...' : point}
+                            • {point}
                           </div>
                         ));
                       })()}
@@ -2217,60 +2514,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                 );
               })()}
 
-              {/* Variables */}
-              <div>
-                <h4 className="font-semibold text-orange-700 mb-2">Plan Variations</h4>
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-orange-200">
-                          <th className="text-left p-2">Annual Max</th>
-                          <th className="text-left p-2">Monthly Premium</th>
-                          <th className="text-left p-2">Variations</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {annualMaxOptions.map((annualMax) => {
-                          const quotesForThisMax = availableQuotes.filter(q => q.annualMaximum === annualMax);
-                          const priceRange = {
-                            min: Math.min(...quotesForThisMax.map(q => q.monthlyPremium)),
-                            max: Math.max(...quotesForThisMax.map(q => q.monthlyPremium))
-                          };
 
-                          // Try to identify unique features
-                          const features = Array.from(new Set(
-                            quotesForThisMax.map(q => {
-                              const notes = q.benefitNotes.toLowerCase();
-                              const features = [];
-                              if (notes.includes('deductible')) features.push('Deductible options');
-                              if (notes.includes('preventive')) features.push('Preventive coverage');
-                              if (notes.includes('orthodontic')) features.push('Orthodontic');
-                              if (notes.includes('waiting')) features.push('Waiting periods');
-                              return features.join(', ') || 'Standard features';
-                            })
-                          ));
-
-                          return (
-                            <tr key={annualMax} className={`border-b border-orange-100 ${configuration.annualMaximum === annualMax ? 'bg-orange-100' : ''}`}>
-                              <td className="p-2 font-medium">${annualMax.toLocaleString()}</td>
-                              <td className="p-2">
-                                {priceRange.min === priceRange.max 
-                                  ? `$${priceRange.min}` 
-                                  : `$${priceRange.min} - $${priceRange.max}`
-                                }
-                              </td>
-                              <td className="p-2">
-                                {features.length > 4 ? 'Varies' : features.slice(0, 2).join(' | ')}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
 
               {/* Alert */}
               <Alert className="border-orange-200 bg-orange-50">
@@ -2297,196 +2541,139 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
         </div>
       </div>
 
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center space-x-4 mb-8">
-        {[1, 2, 3].map((step) => (
-          <div key={step} className="flex items-center">
-            <div className={`
-              w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-              ${currentStep >= step ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}
-            `}>
-              {step}
-            </div>
-            {step < 3 && (
-              <div className={`
-                w-16 h-1 mx-2
-                ${currentStep > step ? 'bg-purple-600' : 'bg-gray-200'}
-              `} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Step 1: Company Selection */}
-      <Card className={currentStep >= 1 ? 'ring-2 ring-purple-500' : ''}>
+      {/* Single Unified Card */}
+      <Card className="ring-2 ring-purple-500">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheckIcon className="h-5 w-5" />
-            Step 1: Choose Insurance Company
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {currentStep === 1 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {companiesList.map((company) => {
-                const companyQuotes = quotes.filter(q => q.companyName === company);
-                const priceRange = {
-                  min: Math.min(...companyQuotes.map(q => q.monthlyPremium)),
-                  max: Math.max(...companyQuotes.map(q => q.monthlyPremium))
-                };
-                
-                return (
-                  <Card 
-                    key={company}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleCompanySelect(company)}
-                  >
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-2">{company}</h3>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div>{companyQuotes.length} plans available</div>
-                        <div className="flex items-center gap-1">
-                          <DollarSignIcon className="h-3 w-3" />
-                          ${priceRange.min} - ${priceRange.max}/month
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div>
-                <Badge variant="outline" className="mb-2">Selected</Badge>
-                <p className="font-medium">{selectedCompany}</p>
-                {patternAnalysis && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {patternAnalysis.pattern.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {patternAnalysis.recommendedUIFlow} flow
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setCurrentStep(1);
-                  setSelectedCompany('');
-                  setSelectedAnnualMax(null);
-                  setPatternAnalysis(null);
-                  setConfiguration({});
-                  setFinalQuote(null);
-                  setAvailableQuotes([]);
-                  setNormalizedQuotes([]);
-                }}
-              >
-                Change
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Step 2: Pattern-Specific Configuration */}
-      {currentStep >= 2 && patternAnalysis && (
-        <Card className={currentStep === 2 ? 'ring-2 ring-purple-500' : ''}>
-          <CardHeader>
+          <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Settings2Icon className="h-5 w-5" />
-              Step 2: Configure Your Plan
-              <Badge variant="outline" className="ml-2">
-                {patternAnalysis.pattern.replace('_', ' ')} Pattern
-              </Badge>
+              <BrainIcon className="h-5 w-5 text-purple-600" />
+              Build Your Dental Plan
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {currentStep === 2 ? (
-              <div>
-                {renderPatternSpecificUI()}
-                {Object.keys(configuration).length > 0 && (
-                  <Button 
-                    onClick={() => setCurrentStep(3)}
-                    className="w-full mt-6"
-                  >
-                    Review Your Selection
-                  </Button>
-                )}
+            {/* Progress Indicator */}
+            <div className="flex items-center space-x-2">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center">
+                  <div className={`
+                    w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                    ${currentStep >= step ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}
+                  `}>
+                    {step}
+                  </div>
+                  {step < 3 && (
+                    <div className={`
+                      w-8 h-1 mx-1
+                      ${currentStep > step ? 'bg-purple-600' : 'bg-gray-200'}
+                    `} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Step 1: Company Selection */}
+          <div className={`${currentStep > 1 ? 'border-l-4 border-purple-200 pl-4' : ''}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldCheckIcon className="h-5 w-5 text-purple-600" />
+              <h3 className="font-semibold">Step 1: Choose Insurance Company</h3>
+              {currentStep > 1 && (
+                <Badge variant="outline" className="ml-auto">✓ Selected</Badge>
+              )}
+            </div>
+            
+            {currentStep === 1 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {companiesList.map((company) => {
+                  const companyQuotes = quotes.filter(q => q.companyName === company);
+                  const priceRange = {
+                    min: Math.min(...companyQuotes.map(q => q.monthlyPremium)),
+                    max: Math.max(...companyQuotes.map(q => q.monthlyPremium))
+                  };
+                  
+                  return (
+                    <Card 
+                      key={company}
+                      className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
+                      onClick={() => handleCompanySelect(company)}
+                    >
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold mb-2">{company}</h4>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <div>{companyQuotes.length} plans available</div>
+                          <div className="flex items-center gap-1">
+                            <DollarSignIcon className="h-3 w-3" />
+                            ${priceRange.min} - ${priceRange.max}/month
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
-              <div className="space-y-2">
-                <Badge variant="outline" className="mb-2">Configured</Badge>
-                {Object.entries(configuration).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-sm">
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
-                    <span className="font-medium">
-                      {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
-                    </span>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between bg-purple-50 p-3 rounded-lg">
+                <div>
+                  <p className="font-medium">{selectedCompany}</p>
+                  {patternAnalysis && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {patternAnalysis.pattern.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {patternAnalysis.recommendedUIFlow} flow
+                      </Badge>
+                    </div>
+                  )}
+                </div>
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setCurrentStep(2)}
-                  className="mt-2"
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setSelectedCompany('');
+                    setSelectedAnnualMax(null);
+                    setPatternAnalysis(null);
+                    setConfiguration({});
+                    setFinalQuote(null);
+                    setAvailableQuotes([]);
+                    setNormalizedQuotes([]);
+                  }}
                 >
-                  Modify
+                  Change
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      {/* Step 3: Final Review */}
-      {currentStep >= 3 && finalQuote && (
-        <Card className="ring-2 ring-green-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircleIcon className="h-5 w-5 text-green-600" />
-              Step 3: Review Your Plan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Alert>
-                <InfoIcon className="h-4 w-4" />
-                <AlertDescription>
-                  Based on your selections, we found the perfect plan match.
-                </AlertDescription>
-              </Alert>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Step 2: Pattern-Specific Configuration */}
+          {currentStep >= 2 && patternAnalysis && (
+            <div className={`${currentStep > 2 ? 'border-l-4 border-purple-200 pl-4' : ''}`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Settings2Icon className="h-5 w-5 text-purple-600" />
+                <h3 className="font-semibold">Step 2: Configure Your Plan</h3>
+                <Badge variant="outline" className="ml-2">
+                  {patternAnalysis.pattern.replace('_', ' ')} Pattern
+                </Badge>
+                {currentStep > 2 && (
+                  <Badge variant="outline" className="ml-auto">✓ Configured</Badge>
+                )}
+              </div>
+              
+              {currentStep === 2 ? (
                 <div>
-                  <h4 className="font-medium mb-3">Plan Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Company:</span>
-                      <span className="font-medium">{finalQuote.companyName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Plan:</span>
-                      <span className="font-medium">{finalQuote.fullPlanName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Annual Maximum:</span>
-                      <span className="font-medium">${finalQuote.annualMaximum.toLocaleString()}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-lg">
-                      <span>Monthly Premium:</span>
-                      <span className="font-bold text-green-600">${finalQuote.monthlyPremium}/month</span>
-                    </div>
-                  </div>
+                  {renderPatternSpecificUI()}
+                  {Object.keys(configuration).length > 0 && (
+                    <Button 
+                      onClick={() => setCurrentStep(3)}
+                      className="w-full mt-6"
+                    >
+                      Review Your Selection
+                    </Button>
+                  )}
                 </div>
-
-                <div>
-                  <h4 className="font-medium mb-3">Your Configuration</h4>
-                  <div className="space-y-2 text-sm">
+              ) : (
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     {Object.entries(configuration).map(([key, value]) => (
                       <div key={key} className="flex justify-between">
                         <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
@@ -2496,20 +2683,87 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                       </div>
                     ))}
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setCurrentStep(2)}
+                    className="mt-3"
+                  >
+                    Modify Configuration
+                  </Button>
                 </div>
-              </div>
-
-              <Button 
-                onClick={() => onPlanBuilt(finalQuote, configuration)}
-                className="w-full"
-                size="lg"
-              >
-                Build This Plan
-              </Button>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          {/* Step 3: Final Review */}
+          {currentStep >= 3 && finalQuote && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold">Step 3: Review Your Plan</h3>
+                <Badge variant="outline" className="ml-auto text-green-600">✓ Ready</Badge>
+              </div>
+              
+              <div className="space-y-4">
+                <Alert className="border-green-200 bg-green-50">
+                  <InfoIcon className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    Based on your selections, we found the perfect plan match.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-3">Plan Details</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Company:</span>
+                        <span className="font-medium">{finalQuote.companyName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Plan:</span>
+                        <span className="font-medium">{finalQuote.fullPlanName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Annual Maximum:</span>
+                        <span className="font-medium">${finalQuote.annualMaximum.toLocaleString()}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-lg">
+                        <span>Monthly Premium:</span>
+                        <span className="font-bold text-green-600">${finalQuote.monthlyPremium}/month</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-3">Your Configuration</h4>
+                    <div className="space-y-2 text-sm">
+                      {Object.entries(configuration).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
+                          <span className="font-medium">
+                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => onPlanBuilt(finalQuote, configuration)}
+                  className="w-full"
+                  size="lg"
+                >
+                  Build This Plan
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
