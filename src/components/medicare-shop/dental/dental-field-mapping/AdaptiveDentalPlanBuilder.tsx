@@ -643,7 +643,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                                     <tr className="border-b border-gray-100">
                                       <td className="py-2 px-3">Year 1</td>
                                       <td className="py-2 px-3">40% (60% covered)</td>
-                                      <td className="py-2 px-3 rowspan-4">$200</td>
+                                      <td className="py-2 px-3" rowSpan={4}>$200</td>
                                     </tr>
                                     <tr className="border-b border-gray-100">
                                       <td className="py-2 px-3">Year 2</td>
@@ -674,7 +674,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                                     <tr className="border-b border-gray-100">
                                       <td className="py-2 px-3">Year 1</td>
                                       <td className="py-2 px-3">100% (Not covered)</td>
-                                      <td className="py-2 px-3 rowspan-4">$500</td>
+                                      <td className="py-2 px-3" rowSpan={4}>$500</td>
                                     </tr>
                                     <tr className="border-b border-gray-100">
                                       <td className="py-2 px-3">Year 2</td>
@@ -1777,7 +1777,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
                         { pattern: /preventive[^:]*/i, title: 'Preventive' }
                       ];
                       
-                      const organizedBenefits = [];
+                      const organizedBenefits: Array<{title: string; content: string}> = [];
                       
                       // Extract specific service information
                       serviceCategories.forEach(category => {
