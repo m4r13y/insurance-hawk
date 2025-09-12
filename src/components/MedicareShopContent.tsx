@@ -2746,7 +2746,7 @@ function MedicareShopContent() {
             </div>
           ) : (
             /* Landing Page with Flow Options */
-            <div className="min-h-screen -mt-6 -mx-4 sm:-mx-6 lg:-mx-8">
+            <div className="mt-8 -mx-4 sm:-mx-6 lg:-mx-8">
               <div className="px-4 sm:px-6 lg:px-8 py-12">
                 <div className="max-w-4xl mx-auto">
                   
@@ -2799,7 +2799,7 @@ function MedicareShopContent() {
                             setMedicareFlowMode('quick');
                             setShowMedicareFlow(true);
                           }}
-                          className="w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                          className="w-full border border-border bg-card hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
                           Get Quick Quotes
                         </button>

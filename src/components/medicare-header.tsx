@@ -16,7 +16,7 @@ export function MedicareHeader() {
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-[5%]">
       <header className="w-full max-w-7xl">
-        <nav className="relative backdrop-blur-md bg-card dark:card border border-border/60 dark:border-gray-700/60 rounded-2xl shadow-lg">
+        <nav className="relative backdrop-blur-md bg-card/60 dark:card/60 border border-border/20 dark:border-gray-700/60 rounded-2xl shadow-lg">
         <div className="relative z-10 px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
@@ -24,7 +24,7 @@ export function MedicareHeader() {
                 <Logo className="h-10 w-auto" />
               </Link>
               
-              <div className="hidden lg:flex items-center space-x-8">
+              <div className="hidden lg:flex items-center space-x-1">
                 <Link 
                   href="/medicare/" 
                   className="px-4 py-2 text-sm font-medium text-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-xl transition-all duration-300"

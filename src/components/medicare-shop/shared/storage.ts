@@ -154,8 +154,13 @@ export const compressQuoteData = (quotes: any[]): any[] => {
     delete compressed.underwritingGuidelines;
     
     // Truncate very long string fields but keep the structure
+    // However, preserve important fields that users need to see in full
+    const preserveFullContent = ['benefitNotes', 'limitationNotes', 'benefit_notes', 'limitation_notes'];
+    
     Object.keys(compressed).forEach(key => {
-      if (typeof compressed[key] === 'string' && compressed[key].length > 500) {
+      if (typeof compressed[key] === 'string' && 
+          compressed[key].length > 500 && 
+          !preserveFullContent.includes(key)) {
         compressed[key] = compressed[key].substring(0, 500) + '...';
       }
     });

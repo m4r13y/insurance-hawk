@@ -9,11 +9,11 @@
     --total-scrollbar-space: calc(var(--scrollbar-width) + var(--scrollbar-gutter)); /* Total space needed */
     --background: 220 6% 98%; /* Cool but very light off-white */
     --foreground: 222.2 84% 4.9%;
-    --card: 220 14% 98%; /* Solid background instead of transparent */
+    --card: 220 100% 99%; /* Solid background instead of transparent */
     --card-foreground: 222.2 84% 4.9%;
     --popover: 220 6% 99%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 220 27% 24%;
     --primary-foreground: 210 40% 98%;
     --secondary: 220 4% 94%;
     --secondary-foreground: 222.2 84% 4.9%;

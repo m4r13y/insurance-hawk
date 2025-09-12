@@ -22,7 +22,8 @@ import {
   PersonIcon,
   ArchiveIcon,
   CalendarIcon,
-  AvatarIcon
+  AvatarIcon,
+  ArrowLeftIcon
 } from '@radix-ui/react-icons';
 import { resourcesList } from "@/resources/resourcesList";
 
@@ -39,7 +40,11 @@ const getRelevantArticles = (planType: string, maxArticles: number = 9) => {
     'HMO Plans': 'hmo',
     'PPO Plans': 'ppo',
     'Special Needs Plans': 'snp',
-    'drug': 'pdp'
+    'drug': 'pdp',
+    'cancer': 'cancer',
+    'dental': 'dvh',
+    'final-expense': 'cancer', // Use cancer as proxy since no specific final-expense key
+    'hospital-indemnity': 'hip'
   };
 
   const productKey = productKeyMap[planType] || 'ogMedicare';
@@ -91,7 +96,7 @@ const planCategories: PlanCategory[] = [
     id: "original",
     name: "Original Medicare",
     description: "Traditional Medicare Parts A & B",
-    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
+    videoUrl: "https://www.youtube.com/embed/1bLmRqoBjJ0",
     videoDuration: "5:30",
     plans: [
       {
@@ -107,6 +112,13 @@ const planCategories: PlanCategory[] = [
         description: "Doctor visits, outpatient care, medical equipment",
         premiumRange: "$174.70/mo",
         features: ["Doctor visits", "Outpatient care", "Preventive services", "Medical equipment"]
+      },
+      {
+        id: "drug",
+        name: "Part D (Drugs)",
+        description: "Prescription drug coverage",
+        premiumRange: "$15-80/mo",
+        features: ["Prescription coverage", "Various formularies", "Annual changes", "Coverage gap protection"]
       }
     ],
     keyDetails: [
@@ -142,7 +154,7 @@ const planCategories: PlanCategory[] = [
     id: "medigap",
     name: "Medigap (Supplement)",
     description: "Fill the gaps in Original Medicare",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    videoUrl: "https://www.youtube.com/embed/eW5uW9Z3euc",
     videoDuration: "7:45",
     plans: [
       {
@@ -194,7 +206,7 @@ const planCategories: PlanCategory[] = [
     id: "advantage",
     name: "Medicare Advantage",
     description: "All-in-one Medicare alternative",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
     videoDuration: "6:15",
     plans: [
       {
@@ -242,46 +254,68 @@ const planCategories: PlanCategory[] = [
     ]
   },
   {
-    id: "part-d",
-    name: "Part D (Drug Plans)",
-    description: "Prescription drug coverage",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    videoDuration: "4:50",
+    id: "add-ons",
+    name: "Add-Ons",
+    description: "Additional insurance products to enhance your coverage",
+    videoUrl: "https://www.youtube.com/embed/Koy7CZDHYO0",
+    videoDuration: "6:30",
     plans: [
       {
-        id: "standalone",
-        name: "Standalone PDP",
-        description: "Standalone prescription drug plans",
-        premiumRange: "$15-80/mo",
-        features: ["Works with Original Medicare", "Various formularies", "Different cost structures", "Annual changes"]
+        id: "cancer",
+        name: "Cancer Insurance",
+        description: "Specialized coverage for cancer diagnosis and treatment",
+        premiumRange: "$20-100/mo",
+        features: ["Lump sum benefits", "Treatment coverage", "Income replacement", "No network restrictions"]
+      },
+      {
+        id: "dental",
+        name: "Dental Insurance",
+        description: "Comprehensive dental care coverage",
+        premiumRange: "$15-50/mo",
+        features: ["Preventive care", "Basic procedures", "Major services", "Orthodontics options"]
+      },
+      {
+        id: "final-expense",
+        name: "Final Expense",
+        description: "Life insurance to cover end-of-life expenses",
+        premiumRange: "$30-150/mo",
+        features: ["Guaranteed acceptance", "Fixed premiums", "Immediate coverage", "No medical exam"]
+      },
+      {
+        id: "hospital-indemnity",
+        name: "Hospital Indemnity",
+        description: "Cash benefits for hospital stays",
+        premiumRange: "$25-75/mo",
+        features: ["Daily cash benefits", "No network restrictions", "Covers deductibles", "Additional income"]
       }
     ],
     keyDetails: [
-      "Part D covers prescription drugs and is offered by private insurance companies",
-      "You can add Part D to Original Medicare or get it included in Medicare Advantage",
-      "Each plan has a formulary (list of covered drugs) that can change annually",
-      "Coverage gap ('donut hole') affects costs when you reach certain spending levels",
-      "Late enrollment penalty applies if you don't sign up when first eligible"
+      "Add-on insurance products provide extra protection beyond Medicare",
+      "These plans can work with both Original Medicare and Medicare Advantage",
+      "Cancer insurance provides financial protection for a costly diagnosis",
+      "Dental coverage fills a major gap not covered by Medicare",
+      "Final expense insurance helps protect your family from burial costs",
+      "Hospital indemnity provides cash when you're hospitalized"
     ],
     relatedArticles: [
       {
-        title: "Understanding Medicare Part D Coverage",
-        excerpt: "How prescription drug plans work and what they cover",
-        readTime: "6 min read",
-        category: "Overview"
-      },
-      {
-        title: "Avoiding the Medicare Part D Late Penalty",
-        excerpt: "When and how to enroll in Part D to avoid penalties",
-        readTime: "4 min read",
-        category: "Enrollment",
+        title: "Cancer Insurance: Do You Need It with Medicare?",
+        excerpt: "Understanding when cancer insurance makes sense for Medicare beneficiaries",
+        readTime: "7 min read",
+        category: "Overview",
         isPopular: true
       },
       {
-        title: "Medicare Part D Coverage Gap Explained",
-        excerpt: "Understanding the 'donut hole' and how it affects your costs",
+        title: "Medicare Dental Coverage Options",
+        excerpt: "How to get dental coverage when Medicare doesn't provide it",
         readTime: "5 min read",
-        category: "Costs"
+        category: "Coverage"
+      },
+      {
+        title: "Final Expense Insurance vs Life Insurance",
+        excerpt: "Understanding the differences and which option is right for you",
+        readTime: "6 min read",
+        category: "Comparison"
       }
     ]
   }
@@ -296,6 +330,7 @@ export default function MedicareLearnContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'overview' | 'plan'>('overview');
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
+  const [sidebarCategory, setSidebarCategory] = useState("original"); // Keep sidebar stable
   
   // Update state based on URL params on mount and URL changes
   useEffect(() => {
@@ -315,6 +350,8 @@ export default function MedicareLearnContent() {
       setCurrentView('overview');
       setSelectedPlan(null);
       setSelectedPlanData(null);
+      // Update sidebar category only when in overview mode
+      setSidebarCategory(categoryParam || selectedCategory);
     }
   }, [searchParams]);
   
@@ -324,6 +361,7 @@ export default function MedicareLearnContent() {
     setSelectedPlan(null);
     setSelectedPlanData(null);
     setCurrentView('overview');
+    setSidebarCategory(categoryId); // Update sidebar category
     
     // Update URL
     const params = new URLSearchParams(searchParams.toString());
@@ -336,10 +374,12 @@ export default function MedicareLearnContent() {
   
   // Handle plan selection from quick links
   const handlePlanSelect = (planName: string, categoryId: string) => {
+    // Navigate to specific plan
     const planData = getPlanSpecificData(planName, categoryId);
     setSelectedPlanData(planData);
     setCurrentView('plan');
     setSelectedPlan(planName);
+    setSelectedCategory(categoryId);
     
     // Update URL
     const params = new URLSearchParams(searchParams.toString());
@@ -351,11 +391,145 @@ export default function MedicareLearnContent() {
   // Get plan-specific data for dedicated learn interface
   const getPlanSpecificData = (planName: string, categoryId: string) => {
     const planDataMap: Record<string, any> = {
+      // Main Categories
+      "Original Medicare": {
+        name: "Original Medicare",
+        description: "Traditional Medicare Parts A & B",
+        videoUrl: "https://www.youtube.com/embed/1bLmRqoBjJ0",
+        videoDuration: "5:30",
+        keyDetails: [
+          "Original Medicare consists of Part A (Hospital Insurance) and Part B (Medical Insurance)",
+          "Part A is free for most people who worked and paid Medicare taxes for 10+ years",
+          "Part B requires a monthly premium that varies based on income",
+          "You can see any doctor or hospital that accepts Medicare nationwide",
+          "Original Medicare doesn't include prescription drug coverage - you'll need Part D"
+        ],
+        quickLinks: [
+          { name: "Medicare Basics", description: "Understanding the fundamentals", popular: true },
+          { name: "Enrollment Guide", description: "When and how to enroll", popular: true },
+          { name: "Costs & Premiums", description: "What you'll pay", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Medicare Basics: Everything You Need to Know",
+            excerpt: "Complete guide to understanding Medicare Parts A, B, C, and D",
+            readTime: "8 min read",
+            category: "Basics",
+            isPopular: true
+          },
+          {
+            title: "Original Medicare vs Medicare Advantage",
+            excerpt: "Key differences between traditional Medicare and Medicare Advantage plans",
+            readTime: "6 min read",
+            category: "Comparison"
+          }
+        ]
+      },
+      "Medigap (Supplement)": {
+        name: "Medigap (Supplement)",
+        description: "Fill the gaps in Original Medicare",
+        videoUrl: "https://www.youtube.com/embed/eW5uW9Z3euc",
+        videoDuration: "7:45",
+        keyDetails: [
+          "Medigap policies help pay for costs that Original Medicare doesn't cover",
+          "Standardized plans (A through N) offer different levels of coverage",
+          "Plan G is the most comprehensive option available for new Medicare beneficiaries",
+          "Medigap premiums vary by location, insurance company, and your age",
+          "You must be enrolled in Original Medicare to purchase a Medigap policy"
+        ],
+        quickLinks: [
+          { name: "Plan Comparison", description: "Compare all Medigap plans", popular: true },
+          { name: "Enrollment Timing", description: "Best time to buy", popular: true },
+          { name: "Premium Costs", description: "What affects pricing", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Medigap Plan G vs Plan N: Which is Right for You?",
+            excerpt: "Detailed comparison of the two most popular Medigap plans",
+            readTime: "7 min read",
+            category: "Comparison",
+            isPopular: true
+          },
+          {
+            title: "When to Enroll in Medigap",
+            excerpt: "Understanding Medigap open enrollment and guaranteed issue rights",
+            readTime: "5 min read",
+            category: "Enrollment"
+          }
+        ]
+      },
+      "Medicare Advantage": {
+        name: "Medicare Advantage",
+        description: "All-in-one Medicare alternative",
+        videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
+        videoDuration: "6:15",
+        keyDetails: [
+          "Medicare Advantage plans replace Original Medicare and often include Part D",
+          "Plans must cover everything Original Medicare covers, plus often extras",
+          "You're limited to the plan's network of doctors and hospitals",
+          "Many plans include prescription drugs, dental, vision, and hearing aids",
+          "Annual out-of-pocket maximums provide financial protection"
+        ],
+        quickLinks: [
+          { name: "Plan Finder", description: "Find plans in your area", popular: true },
+          { name: "Star Ratings", description: "Quality & performance", popular: true },
+          { name: "Extra Benefits", description: "Dental, vision, wellness", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Medicare Advantage Explained: Pros and Cons",
+            excerpt: "Complete guide to Medicare Advantage benefits and drawbacks",
+            readTime: "9 min read",
+            category: "Overview",
+            isPopular: true
+          },
+          {
+            title: "How to Choose a Medicare Advantage Plan",
+            excerpt: "Key factors to consider when selecting a Medicare Advantage plan",
+            readTime: "6 min read",
+            category: "Comparison"
+          }
+        ]
+      },
+      "Add-Ons": {
+        name: "Add-On Insurance",
+        description: "Additional insurance products to enhance your coverage",
+        videoUrl: "https://www.youtube.com/embed/Koy7CZDHYO0",
+        videoDuration: "6:30",
+        keyDetails: [
+          "Add-on insurance products provide extra protection beyond Medicare",
+          "These plans can work with both Original Medicare and Medicare Advantage",
+          "Cancer insurance provides financial protection for a costly diagnosis",
+          "Dental coverage fills a major gap not covered by Medicare",
+          "Final expense insurance helps protect your family from burial costs",
+          "Hospital indemnity provides cash when you're hospitalized"
+        ],
+        quickLinks: [
+          { name: "Coverage Calculator", description: "Determine your needs", popular: true },
+          { name: "Plan Comparison", description: "Compare add-on options", popular: true },
+          { name: "Enrollment Guide", description: "When and how to enroll", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Cancer Insurance: Do You Need It with Medicare?",
+            excerpt: "Understanding when cancer insurance makes sense for Medicare beneficiaries",
+            readTime: "7 min read",
+            category: "Overview",
+            isPopular: true
+          },
+          {
+            title: "Medicare Dental Coverage Options",
+            excerpt: "How to get dental coverage when Medicare doesn't provide it",
+            readTime: "5 min read",
+            category: "Coverage"
+          }
+        ]
+      },
       // Original Medicare Plans
       "Part A (Hospital)": {
         name: "Medicare Part A",
         description: "Hospital Insurance Coverage",
-        videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
+        videoUrl: "https://www.youtube.com/embed/1bLmRqoBjJ0",
         videoDuration: "6:15",
         keyDetails: [
           "Covers inpatient hospital stays, including semi-private rooms, meals, and general nursing",
@@ -388,7 +562,7 @@ export default function MedicareLearnContent() {
       "Part B (Medical)": {
         name: "Medicare Part B",
         description: "Medical Insurance Coverage",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        videoUrl: "https://www.youtube.com/embed/1bLmRqoBjJ0",
         videoDuration: "5:45",
         keyDetails: [
           "Covers doctor visits, outpatient care, and preventive services",
@@ -412,11 +586,44 @@ export default function MedicareLearnContent() {
           }
         ]
       },
+      "Part D (Drugs)": {
+        name: "Medicare Part D",
+        description: "Prescription Drug Coverage",
+        videoUrl: "https://www.youtube.com/embed/1bLmRqoBjJ0",
+        videoDuration: "5:30",
+        keyDetails: [
+          "Covers prescription drugs and is offered by private insurance companies",
+          "Can be added to Original Medicare as a standalone plan (PDP)",
+          "Each plan has a formulary (list of covered drugs) that can change annually",
+          "Coverage gap ('donut hole') affects costs when you reach certain spending levels",
+          "Late enrollment penalty applies if you don't sign up when first eligible"
+        ],
+        quickLinks: [
+          { name: "Plan Finder", description: "Find plans in your area", popular: true },
+          { name: "Formulary Search", description: "Check drug coverage", popular: false },
+          { name: "Coverage Gap Info", description: "Understanding the donut hole", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Understanding Medicare Part D Coverage",
+            excerpt: "How prescription drug plans work and what they cover",
+            readTime: "6 min read",
+            category: "Overview",
+            isPopular: true
+          },
+          {
+            title: "Avoiding the Medicare Part D Late Penalty",
+            excerpt: "When and how to enroll in Part D to avoid penalties",
+            readTime: "4 min read",
+            category: "Enrollment"
+          }
+        ]
+      },
       // Medigap Plans
       "Plan G": {
         name: "Medigap Plan G",
         description: "Most Comprehensive Supplement Coverage",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        videoUrl: "https://www.youtube.com/embed/1nerFr8aTNs",
         videoDuration: "8:30",
         keyDetails: [
           "Covers Medicare Part A and Part B deductibles (except Part B deductible)",
@@ -443,7 +650,7 @@ export default function MedicareLearnContent() {
       "Plan N": {
         name: "Medigap Plan N",
         description: "Lower Premium Alternative",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", 
+        videoUrl: "https://www.youtube.com/embed/jIW0kiE_42U", 
         videoDuration: "7:20",
         keyDetails: [
           "Covers Medicare Part A deductible and coinsurance",
@@ -467,11 +674,38 @@ export default function MedicareLearnContent() {
           }
         ]
       },
+      "Plan F": {
+        name: "Medigap Plan F",
+        description: "Most Comprehensive Legacy Coverage",
+        videoUrl: "https://www.youtube.com/embed/HvNjmgyZUIg",
+        videoDuration: "7:45",
+        keyDetails: [
+          "Covers ALL Medicare deductibles, coinsurance, and copayments",
+          "Only available to those who became eligible for Medicare before 2020",
+          "Pays 100% of Medicare Part A and Part B costs after Medicare pays",
+          "Includes coverage for foreign travel emergency",
+          "Most comprehensive Medigap coverage available"
+        ],
+        quickLinks: [
+          { name: "Eligibility", description: "Who can still buy Plan F", popular: true },
+          { name: "F vs G Comparison", description: "Plan F vs Plan G benefits", popular: false },
+          { name: "Premium Costs", description: "Plan F pricing", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Medigap Plan F: Should You Keep It?",
+            excerpt: "Understanding Plan F benefits and whether to switch",
+            readTime: "8 min read",
+            category: "Analysis",
+            isPopular: true
+          }
+        ]
+      },
       // Medicare Advantage Plans
       "HMO Plans": {
         name: "Medicare Advantage HMO",
         description: "Health Maintenance Organization Plans",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
         videoDuration: "7:45",
         keyDetails: [
           "You must use doctors and hospitals in the plan's network",
@@ -498,7 +732,7 @@ export default function MedicareLearnContent() {
       "PPO Plans": {
         name: "Medicare Advantage PPO", 
         description: "Preferred Provider Organization Plans",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        videoUrl: "https://www.youtube.com/embed/7o3q3med9Dw",
         videoDuration: "6:50",
         keyDetails: [
           "More flexibility to see any doctor or specialist",
@@ -521,15 +755,151 @@ export default function MedicareLearnContent() {
             isPopular: true
           }
         ]
+      },
+      // Add-On Insurance Plans
+      "Cancer Insurance": {
+        name: "Cancer Insurance",
+        description: "Specialized Coverage for Cancer Diagnosis and Treatment",
+        videoUrl: "https://www.youtube.com/embed/p6BKsTaNz1A",
+        videoDuration: "6:45",
+        keyDetails: [
+          "Provides lump-sum cash benefits upon cancer diagnosis",
+          "Covers treatment costs not covered by Medicare",
+          "Can help with income replacement during treatment",
+          "No network restrictions - use any doctor or facility",
+          "Benefits can be used for any purpose, not just medical expenses"
+        ],
+        quickLinks: [
+          { name: "Coverage Benefits", description: "What cancer insurance covers", popular: true },
+          { name: "Claim Process", description: "How to file claims", popular: false },
+          { name: "Plan Options", description: "Different coverage levels", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Do You Need Cancer Insurance with Medicare?",
+            excerpt: "Understanding when cancer insurance makes financial sense",
+            readTime: "7 min read",
+            category: "Analysis",
+            isPopular: true
+          }
+        ]
+      },
+      "Dental Insurance": {
+        name: "Dental Insurance",
+        description: "Comprehensive Dental Care Coverage",
+        videoUrl: "https://www.youtube.com/embed/8LTgdUIO1hc",
+        videoDuration: "5:15",
+        keyDetails: [
+          "Covers preventive care like cleanings and exams",
+          "Includes basic procedures such as fillings and extractions",
+          "May cover major services like crowns and bridges",
+          "Some plans include orthodontics coverage",
+          "Fills the dental coverage gap left by Medicare"
+        ],
+        quickLinks: [
+          { name: "Coverage Levels", description: "Preventive, basic, major services", popular: true },
+          { name: "Provider Networks", description: "Find dentists in network", popular: false },
+          { name: "Waiting Periods", description: "When coverage begins", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Medicare Dental Coverage: Your Options",
+            excerpt: "How to get dental coverage when Medicare doesn't provide it",
+            readTime: "5 min read",
+            category: "Coverage",
+            isPopular: true
+          }
+        ]
+      },
+      "Final Expense": {
+        name: "Final Expense Insurance",
+        description: "Life Insurance for End-of-Life Costs",
+        videoUrl: "https://www.youtube.com/embed/Koy7CZDHYO0",
+        videoDuration: "4:30",
+        keyDetails: [
+          "Covers funeral, burial, and final medical expenses",
+          "Guaranteed acceptance for seniors aged 50-85",
+          "Fixed premiums that never increase",
+          "Coverage available immediately or after waiting period",
+          "No medical exam required for most plans"
+        ],
+        quickLinks: [
+          { name: "Coverage Amounts", description: "How much coverage you need", popular: true },
+          { name: "Application Process", description: "How to apply", popular: false },
+          { name: "Beneficiary Info", description: "Naming beneficiaries", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Final Expense vs Life Insurance: What's the Difference?",
+            excerpt: "Understanding the differences and which option is right for you",
+            readTime: "6 min read",
+            category: "Comparison",
+            isPopular: true
+          }
+        ]
+      },
+      "Hospital Indemnity": {
+        name: "Hospital Indemnity Insurance",
+        description: "Cash Benefits for Hospital Stays",
+        videoUrl: "https://www.youtube.com/embed/Koy7CZDHYO0",
+        videoDuration: "5:00",
+        keyDetails: [
+          "Provides daily cash benefits for hospital admissions",
+          "Works with any hospital - no network restrictions",
+          "Helps cover deductibles, copays, and non-medical expenses",
+          "Benefits paid directly to you, not the hospital",
+          "Perfect complement to Medicare Advantage plans"
+        ],
+        quickLinks: [
+          { name: "Benefit Amounts", description: "Daily benefit options", popular: true },
+          { name: "Coverage Scenarios", description: "When benefits are paid", popular: false },
+          { name: "Claim Examples", description: "Real claim situations", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Hospital Indemnity: Perfect for Medicare Advantage",
+            excerpt: "How hospital indemnity fills gaps in Medicare Advantage coverage",
+            readTime: "4 min read",
+            category: "Coverage",
+            isPopular: true
+          }
+        ]
+      },
+      "SNP Plans": {
+        name: "Special Needs Plans (SNP)",
+        description: "Medicare Plans for People with Chronic Conditions",
+        videoUrl: "https://www.youtube.com/embed/OuePjIGuA8I",
+        videoDuration: "7:15",
+        keyDetails: [
+          "Designed for people with specific chronic conditions or diseases",
+          "Provides specialized care coordination and case management",
+          "Often includes prescription drug coverage",
+          "May offer additional benefits tailored to your condition",
+          "Must meet specific eligibility requirements to enroll"
+        ],
+        quickLinks: [
+          { name: "Eligibility", description: "Who qualifies for SNP plans", popular: true },
+          { name: "Covered Conditions", description: "Conditions that qualify", popular: false },
+          { name: "Care Coordination", description: "How SNPs manage care", popular: false }
+        ],
+        relatedArticles: [
+          {
+            title: "Understanding Medicare Special Needs Plans",
+            excerpt: "How SNP plans provide specialized care for chronic conditions",
+            readTime: "6 min read",
+            category: "Plan Types",
+            isPopular: true
+          }
+        ]
       }
     };
     
     return planDataMap[planName] || null;
   };
   
-  // Dynamic Quick Links based on selected category
+  // Dynamic Quick Links based on sidebar category (stable)
   const getQuickLinks = () => {
-    switch (selectedCategory) {
+    switch (sidebarCategory) {
       case "original":
         return {
           title: "Original Medicare",
@@ -593,23 +963,25 @@ export default function MedicareLearnContent() {
             }
           ]
         };
-      case "part-d":
+      case "add-ons":
         return {
-          title: "Part D Drug Plans",
+          title: "Add-On Insurance",
           sections: [
             {
-              name: "Plan Types",
+              name: "Coverage Types",
               links: [
-                { name: "Standalone PDP", description: "Works with Original Medicare", popular: true },
-                { name: "MA-PD Plans", description: "Included in Advantage plans", popular: false }
+                { name: "Cancer Insurance", description: "Specialized cancer coverage", popular: true },
+                { name: "Dental Insurance", description: "Comprehensive dental care", popular: true },
+                { name: "Final Expense", description: "Life insurance for end-of-life costs", popular: false },
+                { name: "Hospital Indemnity", description: "Cash benefits for hospital stays", popular: true }
               ]
             },
             {
               name: "Resources",
               links: [
-                { name: "Formulary Search", description: "Find covered drugs", popular: false },
-                { name: "Coverage Gap", description: "Understanding the donut hole", popular: false },
-                { name: "LIS Program", description: "Low Income Subsidy help", popular: false }
+                { name: "Coverage Calculator", description: "Determine your needs", popular: false },
+                { name: "Plan Comparison", description: "Compare add-on options", popular: false },
+                { name: "Enrollment Guide", description: "When and how to enroll", popular: false }
               ]
             }
           ]
@@ -623,58 +995,35 @@ export default function MedicareLearnContent() {
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Breadcrumb / Back Navigation */}
-      {currentView === 'plan' && selectedPlanData && (
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              setCurrentView('overview');
-              setSelectedPlan(null);
-              setSelectedPlanData(null);
-              
-              // Update URL to remove plan parameter
-              const params = new URLSearchParams(searchParams.toString());
-              params.delete('plan');
-              router.push(`?${params.toString()}`, { scroll: false });
-            }}
-            className="mb-4"
-          >
-            ← Back to {currentCategory?.name} Overview
-          </Button>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Medicare</span>
-            <span>›</span>
-            <span>{currentCategory?.name}</span>
-            <span>›</span>
-            <span className="text-foreground">{selectedPlanData.name}</span>
-          </div>
+      {/* Category Selection - Show in both overview and plan mode */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Learn About Medicare Plans</h2>
+          {/* Navigation Tabs - Right side */}
+          <MedicareNavigationTabsWrapper />
         </div>
-      )}
-
-      {/* Category Selection - Only show in overview mode */}
-      {currentView === 'overview' && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Learn About Medicare Plans</h2>
-            {/* Navigation Tabs - Right side */}
-            <MedicareNavigationTabsWrapper />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {planCategories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                onClick={() => handleCategoryChange(category.id)}
-                className="flex items-center gap-2"
-              >
-                {category.name}
-                {category.id === "medigap" && <Badge variant="secondary" className="text-xs">Popular</Badge>}
-              </Button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {planCategories.map((category) => (
+            <Button
+              key={category.id}
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              onClick={() => handleCategoryChange(category.id)}
+              className="flex items-center gap-2"
+            >
+              {/* Show arrow icon + "Back to" text if we're viewing a subcategory */}
+              {selectedCategory === category.id && selectedPlan ? (
+                <>
+                  <ArrowLeftIcon className="w-5 h-5 font-bold" style={{ strokeWidth: 3 }} />
+                  Back to {category.name}
+                </>
+              ) : (
+                category.name
+              )}
+              {category.id === "medigap" && <Badge variant="secondary" className="text-xs">Popular</Badge>}
+            </Button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Plan-Specific View */}
       {currentView === 'plan' && selectedPlanData && (
@@ -735,15 +1084,6 @@ export default function MedicareLearnContent() {
             {/* Right Column - Quick Links */}
             <div className="space-y-6 flex flex-col h-fit">
               <Card className="border border-border min-h-[600px]">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookmarkIcon className="w-5 h-5" />
-                    Quick Links
-                  </CardTitle>
-                  <CardDescription>
-                    Explore {selectedPlanData.name} options
-                  </CardDescription>
-                </CardHeader>
                 <CardContent className="pb-6">
                   <div className="space-y-6">
                     {/* Plan-specific tools and resources */}
@@ -935,25 +1275,36 @@ export default function MedicareLearnContent() {
                         {section.name}
                       </h4>
                       <div className="space-y-2">
-                        {section.links.map((link, linkIndex) => (
-                          <div 
-                            key={linkIndex} 
-                            className="p-3 border border-border/50 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
-                            onClick={() => handlePlanSelect(link.name, selectedCategory)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h5 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                  {link.name}
-                                </h5>
-                                <p className="text-xs text-muted-foreground">{link.description}</p>
+                        {section.links.map((link, linkIndex) => {
+                          const isSelected = selectedPlan === link.name;
+                          return (
+                            <div 
+                              key={linkIndex} 
+                              className={`p-3 border rounded-lg transition-colors cursor-pointer group ${
+                                isSelected 
+                                  ? 'bg-blue-50 border-blue-100' 
+                                  : 'border-border/50 hover:bg-accent/50'
+                              }`}
+                              onClick={() => handlePlanSelect(link.name, sidebarCategory)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h5 className={`font-semibold transition-colors ${
+                                    isSelected 
+                                      ? 'text-blue-700' 
+                                      : 'text-foreground group-hover:text-primary'
+                                  }`}>
+                                    {link.name}
+                                  </h5>
+                                  <p className="text-xs text-muted-foreground">{link.description}</p>
+                                </div>
+                                {link.popular && (
+                                  <Badge variant="default" className="text-xs">Popular</Badge>
+                                )}
                               </div>
-                              {link.popular && (
-                                <Badge variant="default" className="text-xs">Popular</Badge>
-                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
