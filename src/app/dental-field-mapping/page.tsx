@@ -16,6 +16,7 @@ import {
   DentalPlanBuilder,
   SmartDentalPlanBuilder,
   SmartAnalysisDemo,
+  AdaptiveDentalPlanBuilder,
   toggleQuoteForComparison
 } from '@/components/medicare-shop/dental/dental-field-mapping';
 
@@ -130,16 +131,14 @@ export default function DentalFieldMappingPage() {
       {/* Smart Analysis Demo */}
       <SmartAnalysisDemo quotes={quotes} />
 
-      {/* Smart Plan Builder */}
-      {selectedQuote && (
-        <SmartDentalPlanBuilder 
-          quotes={quotes}
-          onPlanBuilt={(quote, config) => {
-            console.log('Plan built:', quote, config);
-            setSelectedQuote(quote);
-          }}
-        />
-      )}
+      {/* Adaptive Plan Builder */}
+      <AdaptiveDentalPlanBuilder 
+        quotes={quotes}
+        onPlanBuilt={(quote, config) => {
+          console.log('Adaptive plan built:', quote, config);
+          setSelectedQuote(quote);
+        }}
+      />
 
       {/* Selected Quote Details */}
       {selectedQuote && (

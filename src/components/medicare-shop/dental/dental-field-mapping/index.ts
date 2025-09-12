@@ -12,6 +12,7 @@ export { default as DentalPlanBuilder } from './DentalPlanBuilder';
 export { default as LoyalAmericanPlanBuilder } from './LoyalAmericanPlanBuilder';
 export { SmartDentalPlanBuilder } from './SmartDentalPlanBuilder';
 export { SmartAnalysisDemo } from './SmartAnalysisDemo';
+export { AdaptiveDentalPlanBuilder } from './AdaptiveDentalPlanBuilder';
 
 // Types and utilities
 export * from './types';
@@ -23,3 +24,10 @@ export {
   type IntelligentPlanAnalysis,
   type BenefitOption
 } from './intelligent-benefit-analyzer';
+export {
+  analyzeProductPattern,
+  normalizeQuotes,
+  ProductPattern,
+  type ProductPatternAnalysis,
+  type NormalizedQuote
+} from './enhanced-pattern-analyzer';
