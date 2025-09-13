@@ -90,7 +90,9 @@ export default function MedicareShopLayout({
       case 'advantage':
       case 'drug-plan':
       case 'dental':
+        return ['zipCode'];
       case 'hospital-indemnity':
+        return ['age', 'zipCode', 'gender', 'tobaccoUse'];
       case 'final-expense':
         return ['zipCode'];
       case 'cancer':

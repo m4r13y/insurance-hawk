@@ -326,9 +326,11 @@ function MedicareShopContent() {
   }, [carrierLogos]);
 
   // Save selectedQuotePlans to storage whenever they change (single source of truth)
+  // But skip during initial load to prevent overwriting restored data
   useEffect(() => {
     const saveSelectedPlans = async () => {
-      if (selectedQuotePlans.length > 0) {
+      // Only save if initialization is complete to prevent overwriting during restore
+      if (selectedQuotePlans.length > 0 && !isInitializing) {
         // Convert to storage format and save
         const storageFormat = selectedQuotePlans.map(plan => `plan-${plan.toLowerCase()}`);
         const currentData = await loadFromStorage(QUOTE_FORM_DATA_KEY, {});
@@ -337,11 +339,12 @@ function MedicareShopContent() {
           selectedQuotePlans: storageFormat
         };
         await saveToStorage(QUOTE_FORM_DATA_KEY, updatedData);
+        console.log('💾 Saved selectedQuotePlans to storage:', storageFormat);
       }
     };
     
     saveSelectedPlans();
-  }, [selectedQuotePlans]);
+  }, [selectedQuotePlans, isInitializing]);
 
   // Initialize component with async storage loading
   useEffect(() => {
@@ -445,6 +448,16 @@ function MedicareShopContent() {
 
         if (savedFormData) {
           setQuoteFormData(savedFormData);
+          
+          // Restore selectedQuotePlans from saved form data
+          if (savedFormData.selectedQuotePlans && Array.isArray(savedFormData.selectedQuotePlans)) {
+            // Convert from storage format (plan-f, plan-g, plan-n) to component format (F, G, N)
+            const restoredPlans = savedFormData.selectedQuotePlans.map((plan: string) => 
+              plan.replace('plan-', '').toUpperCase()
+            );
+            setSelectedQuotePlans(restoredPlans);
+            console.log('🔄 Restored selectedQuotePlans from storage:', restoredPlans);
+          }
           
           // Load any existing quotes from storage based on initial category
           if (initialCategory === 'medigap') {
