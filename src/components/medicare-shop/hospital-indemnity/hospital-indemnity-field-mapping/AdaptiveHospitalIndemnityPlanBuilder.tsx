@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FaInfoCircle as InfoIcon, 
   FaDollarSign as DollarSignIcon, 
@@ -376,54 +377,50 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                 {/* Left Column: Benefits Configuration */}
                 <div className="lg:col-span-2 space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Configure Your Plan</h3>
+                    <h3 className="text-lg font-semibold mb-6">Configure Your Plan</h3>
                     
-                    {/* Benefit Days Selection */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Benefit Days Coverage</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {dayConfigurations.map((config) => (
-                          <Card 
-                            key={config.days}
-                            className={`cursor-pointer transition-colors ${
-                              selectedBenefitDays === config.days ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                            }`}
-                            onClick={() => setSelectedBenefitDays(config.days)}
-                          >
-                            <CardContent className="p-4 text-center">
-                              <div className="text-2xl font-bold">{config.days}</div>
-                              <div className="text-sm text-gray-600">days</div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {formatCurrency(config.minPremium)} - {formatCurrency(config.maxPremium)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                    {/* Basic Plan Configuration */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div>
+                        <h4 className="font-medium mb-2">Benefit Days Coverage</h4>
+                        <Select
+                          value={selectedBenefitDays?.toString() || ""}
+                          onValueChange={(value) => setSelectedBenefitDays(parseInt(value))}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select benefit days coverage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {dayConfigurations.map((config) => (
+                              <SelectItem key={config.days} value={config.days.toString()}>
+                                {config.days} days
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </div>
 
-                    {/* Daily Benefit Amount Selection */}
-                    {selectedBenefitDays && (
-                      <div className="space-y-4">
-                        <h4 className="font-medium">Daily Benefit Amount</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                          {getAvailableDailyBenefits().map((amount) => (
-                            <Card 
-                              key={amount}
-                              className={`cursor-pointer transition-colors ${
-                                selectedDailyBenefit === amount ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                              }`}
-                              onClick={() => setSelectedDailyBenefit(amount)}
-                            >
-                              <CardContent className="p-4 text-center">
-                                <div className="text-lg font-bold">${amount}</div>
-                                <div className="text-xs text-gray-600">per day</div>
-                              </CardContent>
-                            </Card>
-                          ))}
+                      {selectedBenefitDays && (
+                        <div>
+                          <h4 className="font-medium mb-2">Daily Benefit Amount</h4>
+                          <Select
+                            value={selectedDailyBenefit?.toString() || ""}
+                            onValueChange={(value) => setSelectedDailyBenefit(parseInt(value))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select daily benefit amount" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableDailyBenefits().map((amount) => (
+                                <SelectItem key={amount} value={amount.toString()}>
+                                  ${amount} per day
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* Riders Section */}
                     {selectedBenefitDays && selectedDailyBenefit && (
@@ -475,7 +472,7 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
 
                                     return (
                                       <Card key={rider.name} className={`border transition-colors ${
-                                        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                                        isSelected ? 'border-blue-100 bg-blue-50' : 'border-gray-200'
                                       }`}>
                                         <CardContent className="p-3">
                                           <div className="space-y-3">
@@ -516,26 +513,46 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                                     }
                                                   }}
                                                 >
-                                                  <div className="grid gap-1">
-                                                    {rider.benefitOptions.map((option: any, optIndex: number) => (
-                                                      <div key={optIndex} className="flex items-center space-x-2">
-                                                        <RadioGroupItem 
-                                                          value={`${option.amount}-${option.rate}`} 
-                                                          id={`${rider.name}-${optIndex}`}
-                                                        />
-                                                        <Label 
-                                                          htmlFor={`${rider.name}-${optIndex}`}
-                                                          className="flex-1 cursor-pointer text-xs"
-                                                        >
-                                                          <div className="flex justify-between items-center">
-                                                            <span>${option.amount} {option.quantifier || 'per occurrence'}</span>
-                                                            <span className="font-medium text-blue-600">
-                                                              +${option.rate}/mo
-                                                            </span>
+                                                  <div className="space-y-2">
+                                                    {/* Group options by quantifier to reduce redundancy */}
+                                                    {(() => {
+                                                      // Group benefit options by their quantifier
+                                                      const groupedOptions = rider.benefitOptions?.reduce((acc: any, option: any) => {
+                                                        const key = option.quantifier || 'per occurrence';
+                                                        if (!acc[key]) acc[key] = [];
+                                                        acc[key].push(option);
+                                                        return acc;
+                                                      }, {}) || {};
+
+                                                      return Object.entries(groupedOptions).map(([quantifier, options]: [string, any]) => (
+                                                        <div key={quantifier}>
+                                                          {Object.keys(groupedOptions).length > 1 && (
+                                                            <div className="text-xs font-medium text-gray-600 mb-1">{quantifier}</div>
+                                                          )}
+                                                          <div className="grid grid-cols-1 gap-1">
+                                                            {options.map((option: any, optIndex: number) => (
+                                                              <div key={optIndex} className="flex items-center space-x-2">
+                                                                <RadioGroupItem 
+                                                                  value={`${option.amount}-${option.rate}`} 
+                                                                  id={`${rider.name}-${quantifier}-${optIndex}`}
+                                                                />
+                                                                <Label 
+                                                                  htmlFor={`${rider.name}-${quantifier}-${optIndex}`}
+                                                                  className="flex-1 cursor-pointer text-xs"
+                                                                >
+                                                                  <div className="flex justify-between items-center">
+                                                                    <span>${option.amount}</span>
+                                                                    <span className="font-medium text-blue-600">
+                                                                      +${option.rate}/mo
+                                                                    </span>
+                                                                  </div>
+                                                                </Label>
+                                                              </div>
+                                                            ))}
                                                           </div>
-                                                        </Label>
-                                                      </div>
-                                                    ))}
+                                                        </div>
+                                                      ));
+                                                    })()}
                                                   </div>
                                                 </RadioGroup>
                                               </div>
