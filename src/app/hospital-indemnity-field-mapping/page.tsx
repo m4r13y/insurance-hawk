@@ -44,12 +44,38 @@ export default function HospitalIndemnityFieldMappingPage() {
   const [groupByPlan, setGroupByPlan] = useState(true);
   const [selectedForComparison, setSelectedForComparison] = useState<OptimizedHospitalIndemnityQuote[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [rawApiData, setRawApiData] = useState<any>(null);
+
+  // Function to copy API response to clipboard
+  const copyApiResponseToClipboard = async () => {
+    try {
+      // For now, copy the optimized quotes structure
+      // TODO: We should store and retrieve the raw API response
+      const dataToString = JSON.stringify(quotes, null, 2);
+      await navigator.clipboard.writeText(dataToString);
+      
+      // Show success feedback
+      alert('Hospital Indemnity API response copied to clipboard!\n\nNote: This is the optimized quote data. For the raw API response, we need to enhance the storage system.');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      alert('Failed to copy to clipboard. Please check console for details.');
+    }
+  };
 
   useEffect(() => {
     const loadQuotes = async () => {
       try {
         console.log('📥 Loading hospital indemnity quotes from storage...');
         const savedQuotes = await loadFromStorage<OptimizedHospitalIndemnityQuote[]>(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
+        
+        // Also load raw API response
+        try {
+          const savedRawData = await loadFromStorage('medicare_hospital_indemnity_raw_api_response', null);
+          setRawApiData(savedRawData);
+          console.log('📥 Loaded raw API data:', savedRawData);
+        } catch (rawError) {
+          console.warn('⚠️ Could not load raw API data:', rawError);
+        }
         
         if (savedQuotes && savedQuotes.length > 0) {
           console.log(`✅ Found ${savedQuotes.length} hospital indemnity quotes`);
@@ -110,9 +136,19 @@ export default function HospitalIndemnityFieldMappingPage() {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Hospital Indemnity Field Mapping Test</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 mb-4">
           Analyze and inspect hospital indemnity insurance quote data structure and field mappings
         </p>
+        
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={copyApiResponseToClipboard}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            📋 Copy API Response
+          </button>
+        </div>
         
         {/* Comparison Controls */}
         <ComparisonControls

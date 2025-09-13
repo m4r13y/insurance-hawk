@@ -139,20 +139,42 @@ export function validateQuoteStructure(quote: any): quote is HospitalIndemnityQu
  */
 export function isQuoteFrom2025(quote: any): boolean {
   try {
-    const lastModified = quote.last_modified;
-    if (!lastModified) {
-      console.log('❌ No last_modified field found');
+    // Check if the quote is valid for 2025 based on effective and expiration dates
+    const effectiveDate = quote.effective_date;
+    const expiresDate = quote.expires_date;
+    
+    if (!effectiveDate && !expiresDate) {
+      console.log('❌ No effective_date or expires_date found');
       return false;
     }
     
-    const date = new Date(lastModified);
-    const year = date.getFullYear();
-    const is2025 = year === 2025;
+    // Check if quote is currently valid (not expired)
+    const now = new Date();
+    if (expiresDate) {
+      const expiry = new Date(expiresDate);
+      if (expiry < now) {
+        console.log(`❌ Quote expired: ${expiresDate}`);
+        return false;
+      }
+    }
     
-    console.log(`📅 Quote last_modified: ${lastModified} -> Year: ${year} -> Is 2025: ${is2025}`);
-    return is2025;
+    // If we have an effective date, check if it's reasonable (not too far in the future)
+    if (effectiveDate) {
+      const effective = new Date(effectiveDate);
+      const effectiveYear = effective.getFullYear();
+      
+      // Accept quotes effective from 2018 onwards that haven't expired
+      const isValidPeriod = effectiveYear >= 2018 && effectiveYear <= 2026;
+      
+      console.log(`📅 Quote effective: ${effectiveDate}, expires: ${expiresDate} -> Valid period: ${isValidPeriod}`);
+      return isValidPeriod;
+    }
+    
+    // If no effective date but has expiry date and not expired, accept it
+    console.log(`📅 Quote expires: ${expiresDate} -> Not expired, accepting`);
+    return true;
   } catch (error) {
-    console.log('❌ Error parsing date:', error);
+    console.log('❌ Error parsing dates:', error);
     return false;
   }
 }

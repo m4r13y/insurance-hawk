@@ -101,8 +101,7 @@ export async function getHospitalIndemnityQuotes(params: HospitalIndemnityQuoteP
       zip5: params.zipCode,
       age: params.age,
       gender: params.gender,
-      tobacco: params.tobaccoUse ? 1 : 0,
-      offset: "10"
+      tobacco: params.tobaccoUse ? 1 : 0
     };
 
     const getHospitalIndemnityQuotesFunction = httpsCallable(functions, 'getHospitalIndemnityQuotes');

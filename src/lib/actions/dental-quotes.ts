@@ -62,7 +62,6 @@ export async function getDentalQuotes(formData: DentalQuoteRequest): Promise<Den
       gender: formData.gender,
       tobacco: formData.tobaccoUse ? 1 : 0,
       covered_members: 'I',
-      offset: '5',
     };
     
     const getDentalQuotesFunction = httpsCallable(functions, 'getDentalQuotes');
