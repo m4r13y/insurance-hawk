@@ -72,8 +72,8 @@ interface DayConfiguration {
 // Helper functions for carrier display
 const getCachedLogoUrl = (carrierName: string, carrierId: string): string => {
   // Use the enhanced carrier info system for hospital indemnity
-  const mockQuote = { carrier: { name: carrierName } };
-  const enhancedInfo = getEnhancedCarrierInfo(mockQuote, 'hospital-indemnity');
+  const tempQuoteForCarrierInfo = { carrier: { name: carrierName } };
+  const enhancedInfo = getEnhancedCarrierInfo(tempQuoteForCarrierInfo, 'hospital-indemnity');
   return enhancedInfo.logoUrl;
 };
 
@@ -102,6 +102,144 @@ const ambest_to_stars = (ambest_rating: string): number => {
     case 'F': return 1;
     default: return 0; // Unknown rating
   }
+};
+
+// Create abbreviated names for rider badges
+const abbreviateRiderName = (riderName: string): string => {
+  // Define comprehensive mapping for consistent badge names
+  const abbreviations: { [key: string]: string } = {
+    // Ambulance services - all variations map to same
+    'Ambulance Services Rider': 'Ambulance',
+    'Ambulance Ben': 'Ambulance',
+    'Ambulance -': 'Ambulance',
+    'Ambulance': 'Ambulance',
+    'Ambulance Air/Ground Services': 'Ambulance',
+    'Ambulance Air': 'Ambulance',
+    'Ambulance Ground': 'Ambulance',
+    'Ambulance Ai': 'Ambulance',
+    
+    // Combined Ambulance and Emergency
+    'Ambulance /Emergency': 'Ambulance / ER',
+    'Ambulance Emergency': 'Ambulance / ER',
+    'Ambulance & Emergency': 'Ambulance / ER',
+    'Ambulance and Emergency': 'Ambulance / ER',
+    
+    // Dental and Vision - all variations
+    'Dental, Vision & Hearing Rider': 'Dental & Vision',
+    'Dental and Vision': 'Dental & Vision',
+    'Dental/Vision': 'Dental & Vision',
+    
+    // Emergency and Urgent Care
+    'ER & Urgent Care Benefit Rider': 'Emergency Care',
+    'ER/Urgent Care': 'Emergency Care',
+    'Emergency Room Visit due to accident or injury': 'Emergency Care',
+    'Emergency Care': 'Emergency Care',
+    
+    // Diagnostics and Exams
+    'OP Dx Svcs & Wellness Rider': 'Diagnostics',
+    'OP Dx Exam': 'Diagnostics',
+    'OP Diagnostics': 'Diagnostics',
+    'Diagnostics': 'Diagnostics',
+    
+    // Therapy and Medical Devices - consolidate all variations
+    'OP Therapy & Medical Devices Rider': 'Therapy',
+    'OP Therapy 1': 'Therapy',
+    'OP Therapy 2': 'Therapy',
+    'OP Therapy': 'Therapy',
+    'Physical Therapy Rider': 'Therapy',
+    'Therapy/Devices': 'Therapy',
+    'Therapy': 'Therapy',
+    
+    // Surgery - all variations
+    'Outpatient Surgery Rider': 'Surgery',
+    'OP Surgery': 'Surgery',
+    'Outpatient Surgical Benefits': 'Surgery',
+    'Surgery': 'Surgery',
+    
+    // Hospital Stay and related
+    'Hospital Confinement Benefits': 'Hospital Stay',
+    'Hospital Admission': 'Hospital Stay',
+    'Hospital Stay': 'Hospital Stay',
+    'Intensive Care': 'Intensive Care',
+    'Primary Care': 'Primary Care',
+    
+    // Lump Sum benefits
+    'Lump Sum Hospital Confinement Rider': 'Lump Sum',
+    'Lump Sum Cancer': 'Cancer Benefit',
+    'Lump Sum': 'Lump Sum',
+    
+    // Skilled Nursing - all variations
+    'Skilled Nurse & Hospice Care Facility Rider 1': 'Skilled Nursing',
+    'Skilled Nurse & Hospice Care Facility Rider 2': 'Skilled Nursing',
+    'Skilled Nurse w/EP & Hospice Care Facility Rider': 'Skilled Nursing',
+    'Skilled Nursing': 'Skilled Nursing',
+    
+    // Rehabilitation
+    'OP Rehabilitation': 'Rehabilitation',
+    'OP Rehabilit': 'Rehabilitation',
+    'Rehabilitation': 'Rehabilitation',
+    
+    // Wellness and Preventive
+    'Wellness & Preventive Care Rider': 'Wellness',
+    'Wellness': 'Wellness',
+    
+    // Other specific riders
+    'Critical Accident': 'Critical Care',
+    'Critical Care': 'Critical Care',
+    'Chiropractic Services Rider': 'Chiropractic',
+    'Medical Equipment Rider': 'Equipment',
+    'Home Health Care Rider': 'Home Care',
+    'Prescription Drug Rider': 'Prescription'
+  };
+
+  // First, check for exact match
+  if (abbreviations[riderName]) {
+    return abbreviations[riderName];
+  }
+
+  // Remove trailing numbers and check again (handles numbered variations)
+  const baseNameWithoutNumbers = riderName.replace(/\s+\d+\s*$/, '').trim();
+  if (abbreviations[baseNameWithoutNumbers]) {
+    return abbreviations[baseNameWithoutNumbers];
+  }
+
+  // Remove "Rider" suffix and check
+  const withoutRider = riderName.replace(/\s+Rider\s*$/, '').trim();
+  if (abbreviations[withoutRider]) {
+    return abbreviations[withoutRider];
+  }
+
+  // Apply intelligent abbreviation rules
+  let abbreviated = riderName
+    .replace(/\s+Rider\s*$/gi, '') // Remove "Rider" suffix
+    .replace(/\s+\d+\s*$/g, '') // Remove trailing numbers
+    .replace(/\bServices?\b/gi, '') // Remove "Service(s)"
+    .replace(/\bBenefit(s)?\b/gi, '') // Remove "Benefit(s)"
+    .replace(/\bOutpatient\b/gi, 'OP')
+    .replace(/\bEmergency Room\b/gi, 'Emergency')
+    .replace(/\bUrgent Care\b/gi, 'Urgent')
+    .replace(/\bDiagnostic(s)?\b/gi, 'Diagnostics')
+    .replace(/\bMedical Equipment\b/gi, 'Equipment')
+    .replace(/\bSkilled Nurse\b/gi, 'Skilled Nursing')
+    .replace(/\bHospice Care\b/gi, 'Hospice')
+    .replace(/\bFacility\b/gi, '')
+    .replace(/\bConfinement\b/gi, 'Stay')
+    .replace(/\s+&\s+/g, ' & ') // Standardize ampersands
+    .replace(/\s*-\s*/g, ' ') // Remove dashes
+    .replace(/\s+/g, ' ') // Clean up extra spaces
+    .trim();
+
+  // Ensure reasonable length (no truncation with ...)
+  if (abbreviated.length > 15) {
+    const words = abbreviated.split(' ');
+    if (words.length > 2) {
+      abbreviated = words.slice(0, 2).join(' ');
+    } else if (abbreviated.length > 15) {
+      abbreviated = abbreviated.substring(0, 12);
+    }
+  }
+
+  return abbreviated;
 };
 
 // StarRating component for Hospital Indemnity
@@ -468,9 +606,6 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                 </div>
                                 <div>
                                   <h4 className="text-xl font-bold text-primary">{displayName}</h4>
-                                  {subsidiaryName && (
-                                    <p className="text-sm text-muted-foreground">{subsidiaryName}</p>
-                                  )}
                                   <div className="flex items-center gap-2 my-1">
                                     <StarRating 
                                       rating={starRating} 
@@ -482,9 +617,9 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    {companyQuotes.length} plan option{companyQuotes.length !== 1 ? 's' : ''} available
-                                  </p>
+                                  {subsidiaryName && (
+                                    <p className="text-sm text-muted-foreground">{subsidiaryName}</p>
+                                  )}
                                 </div>
                               </div>
                               {selectedCompany === company && (
@@ -500,16 +635,16 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                 Available Riders ({allRiders.size}):
                               </p>
                               <div className="flex flex-wrap gap-1">
-                                {Array.from(allRiders).slice(0, 6).map((riderName) => (
+                                {Array.from(new Set(Array.from(allRiders).map(riderName => abbreviateRiderName(riderName)))).slice(0, 15).map((abbreviatedName, index) => (
                                   <Badge 
-                                    key={riderName} 
+                                    key={`${abbreviatedName}-${index}`} 
                                     variant="outline" 
                                     className="text-xs"
                                   >
-                                    {riderName.length > 20 ? `${riderName.substring(0, 20)}...` : riderName}
+                                    {abbreviatedName}
                                   </Badge>
                                 ))}
-                                {allRiders.size > 6 && (
+                                {allRiders.size > 15 && (
                                   <Badge variant="outline" className="text-xs">
                                     +{allRiders.size - 6} more
                                   </Badge>

@@ -186,6 +186,26 @@ export const CARRIERS: CarrierInfo[] = [
     phone: '800-622-9525',
     website: 'https://www.manhattanlife.com',
     logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
+  },
+  {
+    id: 'guarantee-trust-life',
+    name: 'Guarantee Trust Life Insurance Company',
+    shortName: 'Guarantee Trust Life',
+    displayName: 'Guarantee Trust Life',
+    namePatterns: ['Guarantee Trust Life', 'Guarantee Trust', 'Guarantee Trust Life Ins Co'],
+    phone: '800-338-7452',
+    website: 'https://www.gtlic.com',
+    logoUrl: 'https://logo.clearbit.com/gtlic.com'
+  },
+  {
+    id: 'liberty-bankers',
+    name: 'Liberty Bankers Life Insurance Company',
+    shortName: 'Liberty Bankers',
+    displayName: 'Liberty Bankers Life',
+    namePatterns: ['Liberty Bankers Life', 'Liberty Bankers', 'Liberty Bankers Life Ins Co'],
+    phone: '800-731-4300',
+    website: 'https://www.lbig.com/',
+    logoUrl: 'https://logo.clearbit.com/lbig.com'
   }
 ];
 
