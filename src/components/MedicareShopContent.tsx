@@ -77,6 +77,7 @@ import MedigapCarrierSkeleton from "@/components/MedigapCarrierSkeleton";
 
 import {
   DentalShopContent,
+  AdaptiveDentalShopContent,
   DentalSidebar
 } from "@/components/medicare-shop/dental";
 
@@ -361,10 +362,71 @@ function MedicareShopContent() {
         // visitor_id is only created when quotes are generated, so it's a reliable indicator
         const hasExistingQuotes = !!hasVisitorId;
         
+        // Also check for actual quote data in storage as backup detection
+        const hasStoredQuoteData = await Promise.all([
+          loadFromStorage(REAL_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking medigap quotes:', quotes.length);
+            return quotes.length > 0;
+          }),
+          loadFromStorage(DENTAL_QUOTES_KEY, []).then(async quotes => {
+            console.log('🔍 Checking dental quotes in Firebase:', quotes.length);
+            
+            // If no dental quotes in Firebase, check localStorage fallback
+            if (quotes.length === 0) {
+              try {
+                const { loadDentalQuotesFromStorage } = await import('@/lib/dental-storage');
+                const localDentalQuotes = loadDentalQuotesFromStorage();
+                const localCount = localDentalQuotes?.quotes?.length || 0;
+                console.log('🔍 Checking dental quotes in localStorage fallback:', localCount);
+                return localCount > 0;
+              } catch (error) {
+                console.warn('Failed to check dental localStorage:', error);
+                return false;
+              }
+            }
+            
+            return quotes.length > 0;
+          }),
+          loadFromStorage(ADVANTAGE_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking advantage quotes:', quotes.length);
+            return quotes.length > 0;
+          }),
+          loadFromStorage(DRUG_PLAN_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking drug plan quotes:', quotes.length);
+            return quotes.length > 0;
+          }),
+          loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking hospital indemnity quotes:', quotes.length);
+            return quotes.length > 0;
+          }),
+          loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking final expense quotes:', quotes.length);
+            return quotes.length > 0;
+          }),
+          loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []).then(quotes => {
+            console.log('🔍 Checking cancer insurance quotes:', quotes.length);
+            return quotes.length > 0;
+          })
+        ]).then(results => {
+          const hasAnyQuotes = results.some(hasQuotes => hasQuotes);
+          console.log('🔍 Storage check results:', results, 'hasAnyQuotes:', hasAnyQuotes);
+          return hasAnyQuotes;
+        });
+        
         // If we have all required keys, this is a page refresh with existing session
-        // Make session detection more forgiving - visitor_id + categories is sufficient
-        const isExistingSession = hasVisitorId && hasMedicareCategories;
-        const hasExistingQuoteSession = isExistingSession && hasExistingQuotes;
+        // Make session detection more forgiving - visitor_id + categories OR actual stored quotes
+        const isExistingSession = (hasVisitorId && hasMedicareCategories) || hasStoredQuoteData;
+        const hasExistingQuoteSession = isExistingSession && (hasExistingQuotes || hasStoredQuoteData);
+        
+        console.log('🔍 Session detection analysis:', {
+          hasVisitorId: !!hasVisitorId,
+          hasMedicareCategories: !!hasMedicareCategories, 
+          hasActiveCategory: !!hasActiveCategory,
+          hasExistingQuotes,
+          hasStoredQuoteData,
+          isExistingSession,
+          hasExistingQuoteSession
+        });
         
         // Only load form data on initialization - quotes will be loaded lazily
         const savedFormData = await loadFromStorage(QUOTE_FORM_DATA_KEY, null);
@@ -384,10 +446,14 @@ function MedicareShopContent() {
         if (savedFormData) {
           setQuoteFormData(savedFormData);
           
-          // Load any existing medigap quotes from storage
+          // Load any existing quotes from storage based on initial category
           if (initialCategory === 'medigap') {
             console.log('🔍 Loading existing medigap quotes from storage...');
             await loadAllPlanQuotes();
+          } else {
+            // Load quotes for other categories
+            console.log(`🔍 Loading existing ${initialCategory} quotes from storage...`);
+            await loadQuotesForCategory(initialCategory);
           }
         }
         if (savedCategories && Array.isArray(savedCategories)) {
@@ -409,11 +475,25 @@ function MedicareShopContent() {
           
           // Load quotes for selected categories - but do it lazily, one at a time
           if (savedCategories && Array.isArray(savedCategories) && savedCategories.length > 0) {
-            // Set expected quote types based on saved categories to enable quotesReady detection
-            setExpectedQuoteTypes(savedCategories);
+            
+            // Map saved categories to actual quote loading categories
+            // "additional" needs to be expanded to the specific quote types that were generated
+            const mappedCategories = savedCategories.flatMap(category => {
+              if (category === 'additional') {
+                // For "additional", we need to check which specific types were actually generated
+                // This is a temporary workaround - ideally we'd save the specific types
+                return ['dental']; // Most common case for additional is dental
+              }
+              return [category];
+            });
+            
+            console.log('🔄 Mapped saved categories for loading:', savedCategories, '→', mappedCategories);
+            
+            // Set expected quote types based on mapped categories to enable quotesReady detection
+            setExpectedQuoteTypes(mappedCategories);
             
             // Only load the first/active category immediately
-            const primaryCategory = savedCategories[0];
+            const primaryCategory = mappedCategories[0];
             if (primaryCategory) {
               // Set the active category BEFORE loading quotes
               setActiveCategory(primaryCategory);
@@ -933,15 +1013,41 @@ function MedicareShopContent() {
   // Failsafe: Auto-hide loading page if it's been showing for too long
   useEffect(() => {
     if (showQuoteLoading) {
-      // Set a 30-second timeout to automatically hide loading page
+      // Calculate timeout based on quote types being loaded
+      const calculateTimeout = () => {
+        let baseTimeout = 30000; // 30 seconds default
+        
+        // Check if dental quotes are being loaded (they take much longer)
+        const isDentalLoading = expectedQuoteTypes.includes('dental') || 
+                               selectedFlowCategories.includes('additional') ||
+                               selectedFlowCategories.includes('dental') ||
+                               currentQuoteType === 'Dental Insurance';
+        
+        // Check if multiple quote types are being loaded (may take longer)
+        const multipleQuoteTypes = expectedQuoteTypes.length > 1 || selectedFlowCategories.length > 1;
+        
+        if (isDentalLoading) {
+          baseTimeout = 60000; // 60 seconds for dental quotes
+          console.log('🦷 Dental quotes detected - extending timeout to 60 seconds');
+        } else if (multipleQuoteTypes) {
+          baseTimeout = 45000; // 45 seconds for multiple quote types
+          console.log('📊 Multiple quote types detected - extending timeout to 45 seconds');
+        }
+        
+        return baseTimeout;
+      };
+      
+      const timeoutDuration = calculateTimeout();
+      
+      // Set a dynamic timeout to automatically hide loading page
       const failsafeTimer = setTimeout(() => {
-        console.warn('Loading page timeout reached - forcing transition to results');
+        console.warn(`Loading page timeout reached after ${timeoutDuration/1000} seconds - forcing transition to results`);
         setShowQuoteLoading(false);
-      }, 30000); // 30 seconds
+      }, timeoutDuration);
 
       return () => clearTimeout(failsafeTimer);
     }
-  }, [showQuoteLoading]);
+  }, [showQuoteLoading, expectedQuoteTypes, selectedFlowCategories, currentQuoteType]);
 
   // Cleanup effect: Cancel all pending requests when component unmounts or category changes
   useEffect(() => {
@@ -1633,7 +1739,21 @@ function MedicareShopContent() {
         const displayName = categoryDisplayNames[targetCategory];
         if (displayName) {
           console.log(`🔄 Marking failed category ${targetCategory} as "completed" to enable auto-switching`);
-          // Don't add to completedQuoteTypes as this would trigger auto-switching to empty results
+          
+          // For dental failures, ensure we still save the session state for recovery
+          if (targetCategory === 'dental') {
+            try {
+              // Save empty dental quotes to maintain session persistence
+              await saveToStorage(DENTAL_QUOTES_KEY, []);
+              // Still mark as completed so session recovery works
+              setCompletedQuoteTypes(prev => [...prev, 'Dental Insurance']);
+              console.log('💾 Saved empty dental quotes for session persistence');
+            } catch (saveError) {
+              console.warn('Failed to save empty dental quotes for session:', saveError);
+            }
+          }
+          
+          // Don't add to completedQuoteTypes for other categories as this would trigger auto-switching to empty results
           // Just ensure the loading state clears
           setCurrentQuoteType(null);
         }
@@ -2632,10 +2752,14 @@ function MedicareShopContent() {
                       /* Skeleton for Dental */
                       <PlanCardsSkeleton count={5} title="Dental Insurance Plans" />
                     ) : selectedCategory === 'dental' && dentalQuotes.length > 0 ? (
-                      /* Display Dental Plans */
-                      <DentalShopContent 
+                      /* Display Dental Plans - Using Adaptive Builder */
+                      <AdaptiveDentalShopContent 
                         quotes={dentalQuotes} 
-                        isLoading={false} 
+                        isLoading={false}
+                        onPlanSelect={(quote: OptimizedDentalQuote) => {
+                          console.log('Selected dental plan:', quote);
+                          // Handle plan selection - integrate with existing flow
+                        }}
                       />
                     ) : selectedCategory === 'cancer' && isCategoryLoading('cancer') ? (
                       /* Loading Screen for Cancer Insurance Quotes */

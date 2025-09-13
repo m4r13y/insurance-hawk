@@ -88,7 +88,23 @@ export const useLazyQuoteLoading = (quoteActions: QuoteActions) => {
           }
           break;
         case 'dental':
-          const savedDentalQuotes = await loadTemporaryData(DENTAL_QUOTES_KEY, []);
+          // First try loading from Firebase/Firestore
+          let savedDentalQuotes: any[] = await loadTemporaryData(DENTAL_QUOTES_KEY, []);
+          
+          // If no quotes found in Firebase, try the dedicated localStorage dental storage
+          if (!savedDentalQuotes || savedDentalQuotes.length === 0) {
+            try {
+              const { loadDentalQuotesFromStorage } = await import('@/lib/dental-storage');
+              const dentalStorage = loadDentalQuotesFromStorage();
+              if (dentalStorage && dentalStorage.quotes && dentalStorage.quotes.length > 0) {
+                savedDentalQuotes = dentalStorage.quotes;
+                console.log('📦 Loaded dental quotes from localStorage fallback:', savedDentalQuotes.length);
+              }
+            } catch (error) {
+              console.warn('Failed to load from dental localStorage:', error);
+            }
+          }
+          
           if (savedDentalQuotes && Array.isArray(savedDentalQuotes) && savedDentalQuotes.length > 0) {
             setDentalQuotes(savedDentalQuotes);
           }

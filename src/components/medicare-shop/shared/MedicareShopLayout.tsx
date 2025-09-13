@@ -279,9 +279,12 @@ export default function MedicareShopLayout({
     return fieldNames[field] || field;
   };
 
-  // Determine button text based on number of quote types generated
+  // Determine button text based on number of quote types actually completed
   const getMoreQuotesButtonText = () => {
-    if (selectedFlowCategories.length === 1) {
+    // Count how many categories actually have quotes
+    const categoriesWithQuotes = productCategories.filter(category => category.plans.length > 0);
+    
+    if (categoriesWithQuotes.length === 1) {
       return "More Quotes";
     }
     return "+";
@@ -429,7 +432,8 @@ export default function MedicareShopLayout({
                     title="Generate quotes for additional plan types"
                     onClick={() => setShowMoreCategories(true)}
                   >
-                    {selectedFlowCategories.length === 1 ? (
+                    {/* Count categories with actual quotes instead of selected categories */}
+                    {productCategories.filter(category => category.plans.length > 0).length === 1 ? (
                       "More Quotes"
                     ) : (
                       <>
