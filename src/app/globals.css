@@ -90,6 +90,17 @@
     @apply border-border;
   }
   
+  html {
+    scroll-behavior: smooth;
+    /* Prevent scroll restoration flash */
+    overflow-anchor: none;
+  }
+  
+  body {
+    /* Ensure body starts at top */
+    scroll-behavior: auto; /* Override smooth scrolling for immediate positioning */
+  }
+  
   /* Remove default focus outlines from all input elements */
   input:focus,
   textarea:focus,

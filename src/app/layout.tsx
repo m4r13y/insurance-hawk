@@ -2,6 +2,7 @@
 
 import { Inter } from "next/font/google";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -25,12 +26,45 @@ export default function RootLayout({
   const isHomePage = pathname === '/';
   const isMedicarePage = pathname.startsWith('/medicare');
 
+  // Immediate scroll to top on route change - runs before render
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure it runs after DOM update but before paint
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    
+    // Run immediately
+    scrollToTop();
+    
+    // Also run on next frame to catch any late updates
+    requestAnimationFrame(scrollToTop);
+  }, [pathname]);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <title>The Insurance Hawk</title>
         <meta name="description" content="Save your money, keep your freedom" />
         <link rel="icon" href="/favicon.svg" />
+        {/* Prevent scroll restoration flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Immediately scroll to top before any rendering
+              if (typeof window !== 'undefined') {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                if (document.body) document.body.scrollTop = 0;
+              }
+              // Disable browser scroll restoration
+              if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+              }
+            `,
+          }}
+        />
       </head>
       <body className={cn("font-sans antialiased gradient-bg text-foreground min-h-screen flex flex-col", inter.variable)}>
         {/* Main Header - Temporarily hidden */}

@@ -3,6 +3,9 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    scrollRestoration: false, // Disable automatic scroll restoration to prevent conflicts
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
