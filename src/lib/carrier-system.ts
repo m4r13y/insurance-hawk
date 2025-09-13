@@ -122,7 +122,7 @@ export const CARRIERS: CarrierInfo[] = [
     name: 'Aetna Health Insurance Company',
     shortName: 'Aetna',
     displayName: 'Aetna',
-    namePatterns: ['Aetna'],
+    namePatterns: ['Aetna', 'Continental Life Insurance Company', 'Continental Life Ins Co'],
     phone: '800-872-3862',
     website: 'https://www.aetna.com',
     logoUrl: 'https://logo.clearbit.com/aetna.com'
@@ -265,6 +265,25 @@ export function getCarrierDisplayName(carrierName: string, category: ProductCate
   }
   
   return displayName;
+}
+
+/**
+ * Get subsidiary company name for display beneath parent company
+ */
+export function getSubsidiaryName(carrierName: string, category: ProductCategory = 'medicare-supplement'): string | null {
+  // Check if this is a subsidiary relationship
+  const carrier = findCarrierByName(carrierName);
+  
+  // If we found a parent carrier match, but the actual carrier name is different, 
+  // return the original name as the subsidiary
+  if (carrier && !carrier.namePatterns.some(pattern => 
+    pattern.toLowerCase() === carrierName.toLowerCase()
+  )) {
+    // This means we matched on a subsidiary pattern
+    return carrierName;
+  }
+  
+  return null;
 }
 
 // ===== PREFERRED CARRIERS FUNCTIONS =====

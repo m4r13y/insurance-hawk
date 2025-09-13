@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 import { 
   FaInfoCircle as InfoIcon, 
   FaDollarSign as DollarSignIcon, 
@@ -24,11 +25,17 @@ import {
   FaBrain as BrainIcon,
   FaLayerGroup as LayerIcon,
   FaCalendarAlt as CalendarIcon,
-  FaHospital as HospitalIcon
+  FaHospital as HospitalIcon,
+  FaStar as Star
 } from 'react-icons/fa';
 
 import { OptimizedHospitalIndemnityQuote } from '@/lib/hospital-indemnity-quote-optimizer';
 import { extractBenefitDays, analyzeBenefitDayConfigurations } from './analysis-utilities';
+import { 
+  getEnhancedCarrierInfo,
+  getCarrierDisplayName as getCarrierDisplayNameFromSystem,
+  getSubsidiaryName
+} from '@/lib/carrier-system';
 
 interface AdaptiveHospitalIndemnityPlanBuilderProps {
   quotes: OptimizedHospitalIndemnityQuote[];
@@ -61,6 +68,61 @@ interface DayConfiguration {
   minPremium: number;
   maxPremium: number;
 }
+
+// Helper functions for carrier display
+const getCachedLogoUrl = (carrierName: string, carrierId: string): string => {
+  // Use the enhanced carrier info system for hospital indemnity
+  const mockQuote = { carrier: { name: carrierName } };
+  const enhancedInfo = getEnhancedCarrierInfo(mockQuote, 'hospital-indemnity');
+  return enhancedInfo.logoUrl;
+};
+
+const getCarrierDisplayName = (carrierName: string, carrierId: string): string => {
+  return getCarrierDisplayNameFromSystem(carrierName, 'hospital-indemnity');
+};
+
+// Convert A.M. Best rating to star rating (1-5 stars)
+const ambest_to_stars = (ambest_rating: string): number => {
+  const rating = ambest_rating.toUpperCase().replace(/[+-]/g, '');
+  switch (rating) {
+    case 'A++':
+    case 'A+': return 5;
+    case 'A':
+    case 'A-': return 4;
+    case 'B++':
+    case 'B+': return 3;
+    case 'B':
+    case 'B-': return 2;
+    case 'C++':
+    case 'C+':
+    case 'C':
+    case 'C-':
+    case 'D':
+    case 'E':
+    case 'F': return 1;
+    default: return 0; // Unknown rating
+  }
+};
+
+// StarRating component for Hospital Indemnity
+const StarRating: React.FC<{ rating: number; ambest_rating?: string }> = ({ rating, ambest_rating }) => {
+  return (
+    <div className="flex items-center gap-1">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`h-3 w-3 ${
+            i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
+          style={{ fill: i < rating ? "currentColor" : "none" }}
+        />
+      ))}
+      <span className="text-xs text-gray-600 ml-1">
+        {ambest_rating ? `${ambest_rating}` : `${rating}/5`}
+      </span>
+    </div>
+  );
+};
 
 export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: AdaptiveHospitalIndemnityPlanBuilderProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -343,30 +405,122 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
             <TabsContent value="1" className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Select Insurance Company</h3>
-                <div className="grid gap-3">
-                  {companiesList.map((company) => (
-                    <Card 
-                      key={company} 
-                      className={`cursor-pointer transition-colors ${
-                        selectedCompany === company ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                      }`}
-                      onClick={() => handleCompanySelect(company)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium">{company}</h4>
-                            <p className="text-sm text-gray-600">
-                              {quotes.filter(q => q.companyName === company).length} plan options
-                            </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {companiesList.map((company) => {
+                    // Get company quotes for rider analysis
+                    const companyQuotes = quotes.filter(q => q.companyName === company);
+                    
+                    // Get unique riders from all quotes for this company
+                    const allRiders = new Set<string>();
+                    companyQuotes.forEach(quote => {
+                      if (quote.riders) {
+                        quote.riders.forEach(rider => {
+                          if (!rider.included) { // Only optional riders
+                            allRiders.add(rider.name);
+                          }
+                        });
+                      }
+                    });
+                    
+                    // Get company rating from first quote (all quotes from same company should have same rating)
+                    const companyRating = companyQuotes[0]?.ambest;
+                    const starRating = companyRating ? ambest_to_stars(companyRating.rating) : 0;
+                    
+                    const displayName = getCarrierDisplayName(company, company);
+                    const subsidiaryName = getSubsidiaryName(company, 'hospital-indemnity');
+                    
+                    return (
+                      <Card 
+                        key={company} 
+                        className={`cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/20 ${
+                          selectedCompany === company ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20' : 'hover:border-gray-300'
+                        }`}
+                        onClick={() => handleCompanySelect(company)}
+                      >
+                        <CardContent className="p-6">
+                          {/* Carrier Header */}
+                          <div className="mb-4 pb-4 border-b">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {/* Carrier Logo */}
+                                <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                  <Image
+                                    src={getCachedLogoUrl(company, company)}
+                                    alt={`${displayName} logo`}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-contain"
+                                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                      const target = e.currentTarget;
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        target.style.display = 'none';
+                                        const initials = displayName
+                                          .split(' ')
+                                          .map((word: string) => word[0])
+                                          .join('')
+                                          .substring(0, 2)
+                                          .toUpperCase();
+                                        parent.innerHTML = `<span class="text-sm font-semibold text-gray-600">${initials}</span>`;
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <h4 className="text-xl font-bold text-primary">{displayName}</h4>
+                                  {subsidiaryName && (
+                                    <p className="text-sm text-muted-foreground">{subsidiaryName}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 my-1">
+                                    <StarRating 
+                                      rating={starRating} 
+                                      ambest_rating={companyRating?.rating}
+                                    />
+                                    {companyRating?.outlook && (
+                                      <span className="text-xs text-muted-foreground">
+                                        ({companyRating.outlook})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {companyQuotes.length} plan option{companyQuotes.length !== 1 ? 's' : ''} available
+                                  </p>
+                                </div>
+                              </div>
+                              {selectedCompany === company && (
+                                <CheckCircleIcon className="h-5 w-5 text-blue-600" />
+                              )}
+                            </div>
                           </div>
-                          {selectedCompany === company && (
-                            <CheckCircleIcon className="h-5 w-5 text-blue-600" />
+                          
+                          {/* Rider Badges */}
+                          {allRiders.size > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-muted-foreground">
+                                Available Riders ({allRiders.size}):
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {Array.from(allRiders).slice(0, 6).map((riderName) => (
+                                  <Badge 
+                                    key={riderName} 
+                                    variant="outline" 
+                                    className="text-xs"
+                                  >
+                                    {riderName.length > 20 ? `${riderName.substring(0, 20)}...` : riderName}
+                                  </Badge>
+                                ))}
+                                {allRiders.size > 6 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{allRiders.size - 6} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             </TabsContent>
