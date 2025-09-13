@@ -553,10 +553,9 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                     companyQuotes.forEach(quote => {
                       if (quote.riders) {
                         quote.riders.forEach(rider => {
-                          if (!rider.included) { // Only optional riders
                             allRiders.add(rider.name);
                           }
-                        });
+                        );
                       }
                     });
                     
@@ -635,7 +634,7 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                 Available Riders ({allRiders.size}):
                               </p>
                               <div className="flex flex-wrap gap-1">
-                                {Array.from(new Set(Array.from(allRiders).map(riderName => abbreviateRiderName(riderName)))).slice(0, 15).map((abbreviatedName, index) => (
+                                {Array.from(new Set(Array.from(allRiders).map(riderName => abbreviateRiderName(riderName)))).slice(0, 20).map((abbreviatedName, index) => (
                                   <Badge 
                                     key={`${abbreviatedName}-${index}`} 
                                     variant="outline" 
@@ -644,9 +643,9 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                     {abbreviatedName}
                                   </Badge>
                                 ))}
-                                {allRiders.size > 15 && (
+                                {allRiders.size > 20 && (
                                   <Badge variant="outline" className="text-xs">
-                                    +{allRiders.size - 6} more
+                                    +{allRiders.size - 20} more
                                   </Badge>
                                 )}
                               </div>
