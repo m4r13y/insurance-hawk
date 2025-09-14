@@ -13,7 +13,8 @@ import { RawDataInspector } from '@/components/medicare-shop/hospital-indemnity/
 import { ComparisonControls } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/ComparisonControls';
 import { ProductVariationParser } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/ProductVariationParser';
 import { SmartAnalysisDemo } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SmartAnalysisDemo';
-import { CompanyPlanHierarchy } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/CompanyPlanHierarchy';
+/* import { CompanyPlanHierarchy } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/CompanyPlanHierarchy'; */
+import { SimplifiedHospitalIndemnityPlanBuilder } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder';
 import { 
   HospitalIndemnityPlanBuilder,
   SmartHospitalIndemnityPlanBuilder
@@ -160,7 +161,16 @@ export default function HospitalIndemnityFieldMappingPage() {
       </div>
 
       {/* Simple Company/Plan Hierarchy */}
-      <CompanyPlanHierarchy quotes={quotes} />
+      {/* <CompanyPlanHierarchy quotes={quotes} /> */}
+
+      {/* Simplified Hospital Indemnity Plan Builder */}
+      <SimplifiedHospitalIndemnityPlanBuilder
+        quotes={quotes}
+        onPlanBuilt={(config) => {
+          console.log('Plan built:', config);
+          alert(`Plan built successfully!\nCompany: ${config.quote?.companyName}\nDaily Benefit: $${config.selectedDailyBenefit}\nTotal Premium: $${config.totalPremium?.toFixed(2)}/month`);
+        }}
+      />
 
       {/* Quote Selector */}
       <QuoteSelector
