@@ -736,8 +736,8 @@ function MedicareShopContent() {
           await saveToStorage(storageKey, response.quotes);
           
           // Add this plan to selected plans if not already there
-          if (!selectedQuotePlans.includes(planType)) {
-            const newSelectedPlans = [...selectedQuotePlans, planType];
+          if (!(selectedQuotePlans || []).includes(planType)) {
+            const newSelectedPlans = [...(selectedQuotePlans || []), planType];
             setSelectedQuotePlans(newSelectedPlans);
             // Note: selectedQuotePlans will be automatically saved via useEffect
           }
@@ -916,9 +916,9 @@ function MedicareShopContent() {
 
   // Check if all expected quotes are ready
   useEffect(() => {
-    if (expectedQuoteTypes.length === 0) return;
+    if ((expectedQuoteTypes || []).length === 0) return;
     
-    const hasAllExpectedQuotes = expectedQuoteTypes.every(type => {
+    const hasAllExpectedQuotes = (expectedQuoteTypes || []).every(type => {
       if (type === 'medigap') return realQuotes.length > 0;
       if (type === 'advantage') return advantageQuotes.length > 0;
       if (type === 'drug-plan') return drugPlanQuotes.length > 0;
@@ -970,13 +970,13 @@ function MedicareShopContent() {
         let baseTimeout = 30000; // 30 seconds default
         
         // Check if dental quotes are being loaded (they take much longer)
-        const isDentalLoading = expectedQuoteTypes.includes('dental') || 
-                               selectedFlowCategories.includes('additional') ||
-                               selectedFlowCategories.includes('dental') ||
+        const isDentalLoading = (expectedQuoteTypes || []).includes('dental') || 
+                               (selectedFlowCategories || []).includes('additional') ||
+                               (selectedFlowCategories || []).includes('dental') ||
                                currentQuoteType === 'Dental Insurance';
         
         // Check if multiple quote types are being loaded (may take longer)
-        const multipleQuoteTypes = expectedQuoteTypes.length > 1 || selectedFlowCategories.length > 1;
+        const multipleQuoteTypes = (expectedQuoteTypes || []).length > 1 || (selectedFlowCategories || []).length > 1;
         
         if (isDentalLoading) {
           baseTimeout = 60000; // 60 seconds for dental quotes
@@ -1212,12 +1212,14 @@ function MedicareShopContent() {
         // Set current quote type based on number of plans
         if (plansToFetch.length > 1) {
           setCurrentQuoteType('Supplement Plans');
-        } else {
+        } else if (plansToFetch.length === 1 && plansToFetch[0]) {
           // Handle both old format (plan-x) and new format (X) for single plan
           const planLetter = plansToFetch[0].includes('plan-') 
             ? plansToFetch[0].replace('plan-', '').toUpperCase()
             : plansToFetch[0].toUpperCase();
           setCurrentQuoteType(`Plan ${planLetter}`);
+        } else {
+          setCurrentQuoteType('Supplement Plans'); // fallback
         }
         
         // Convert form data to API format for our enhanced getMedigapQuotes action
@@ -1227,7 +1229,7 @@ function MedicareShopContent() {
           gender: formData.gender === 'male' ? 'M' as const : 'F' as const,
           tobacco: formData.tobaccoUse ? "1" as const : "0" as const,
           plans: plansToFetch.length > 0 
-            ? plansToFetch.map(plan => plan.includes('plan-') ? plan.replace('plan-', '').toUpperCase() : plan.toUpperCase())
+            ? plansToFetch.filter(plan => plan).map(plan => plan.includes('plan-') ? plan.replace('plan-', '').toUpperCase() : plan.toUpperCase())
             : ['F', 'G', 'N'], // Use selected plans from parameter or state, converting format if needed
         };
 
@@ -1432,7 +1434,7 @@ function MedicareShopContent() {
             setCurrentQuoteType(null);
             
             // Set quotes as ready if this is the only expected type
-            if (expectedQuoteTypes.length === 1 && expectedQuoteTypes.includes('dental')) {
+            if ((expectedQuoteTypes || []).length === 1 && (expectedQuoteTypes || []).includes('dental')) {
               setQuotesReady(true);
             }
             
@@ -1480,7 +1482,7 @@ function MedicareShopContent() {
             setCurrentQuoteType(null);
             
             // Set quotes as ready if this is the only expected type
-            if (expectedQuoteTypes.length === 1 && expectedQuoteTypes.includes('dental')) {
+            if ((expectedQuoteTypes || []).length === 1 && (expectedQuoteTypes || []).includes('dental')) {
               setQuotesReady(true);
             }
             
@@ -2506,8 +2508,8 @@ function MedicareShopContent() {
       setQuoteFormData(formData);
       
       // Add category to selected flow categories if not already present
-      if (!selectedFlowCategories.includes(category)) {
-        const updatedCategories = [...selectedFlowCategories, category];
+      if (!(selectedFlowCategories || []).includes(category)) {
+        const updatedCategories = [...(selectedFlowCategories || []), category];
         setSelectedFlowCategories(updatedCategories);
         saveSelectedCategories(updatedCategories);
       }
