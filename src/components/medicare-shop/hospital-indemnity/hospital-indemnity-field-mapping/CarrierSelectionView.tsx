@@ -164,14 +164,7 @@ export function CarrierSelectionView({
   }, [validQuotes]);
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Choose Your Insurance Company</h2>
-        <p className="text-gray-600">
-          Compare available companies and their benefits. Select a company to configure your plan.
-        </p>
-      </div>
-      
+    <div>    
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {availableCompanies.map((company) => (
           <Card 

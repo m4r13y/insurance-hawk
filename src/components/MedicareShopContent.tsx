@@ -2600,31 +2600,33 @@ function MedicareShopContent() {
                 />
               ) : hasQuotes() || isRecoveringSession || realQuotes.length > 0 ? (
             /* Show Plans When There Are Quotes */
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Enhanced Sidebar with Combined Filters */}
-              <MedicareShopSidebar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                selectedCoverageLevel={selectedCoverageLevel}
-                setSelectedCoverageLevel={setSelectedCoverageLevel}
-                selectedCategory={selectedCategory}
-                selectedQuotePlans={selectedQuotePlans}
-                setSelectedQuotePlans={handlePlanSelection}
-                applyDiscounts={applyDiscounts}
-                setApplyDiscounts={setApplyDiscounts}
-                paymentMode={paymentMode}
-                setPaymentMode={setPaymentMode}
-                quoteFormData={quoteFormData}
-                realQuotes={realQuotes}
-                onClearFilters={clearFilters}
-                showPreferredOnly={showPreferredOnly}
-                setShowPreferredOnly={setShowPreferredOnly}
-              />
+            <div className={`grid grid-cols-1 gap-8 ${selectedCategory === 'hospital-indemnity' ? '' : 'lg:grid-cols-4'}`}>
+              {/* Enhanced Sidebar with Combined Filters - Hidden for Hospital Indemnity */}
+              {selectedCategory !== 'hospital-indemnity' && (
+                <MedicareShopSidebar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  selectedCoverageLevel={selectedCoverageLevel}
+                  setSelectedCoverageLevel={setSelectedCoverageLevel}
+                  selectedCategory={selectedCategory}
+                  selectedQuotePlans={selectedQuotePlans}
+                  setSelectedQuotePlans={handlePlanSelection}
+                  applyDiscounts={applyDiscounts}
+                  setApplyDiscounts={setApplyDiscounts}
+                  paymentMode={paymentMode}
+                  setPaymentMode={setPaymentMode}
+                  quoteFormData={quoteFormData}
+                  realQuotes={realQuotes}
+                  onClearFilters={clearFilters}
+                  showPreferredOnly={showPreferredOnly}
+                  setShowPreferredOnly={setShowPreferredOnly}
+                />
+              )}
 
               {/* Main Product Grid */}
-              <main className="lg:col-span-3">
+              <main className={selectedCategory === 'hospital-indemnity' ? 'col-span-1' : 'lg:col-span-3'}>
                 {/* Quote Error Display */}
                 {quotesError && (
                   <Card className="mb-6 border-red-200 bg-red-50">
