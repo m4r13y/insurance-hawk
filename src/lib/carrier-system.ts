@@ -152,7 +152,7 @@ export const CARRIERS: CarrierInfo[] = [
     name: 'UnitedHealthcare Insurance Company',
     shortName: 'UnitedHealthcare',
     displayName: 'UnitedHealthcare',
-    namePatterns: ['UnitedHealthcare', 'United Healthcare', 'UnitedHealth', 'AARP Medicare Supplement'],
+    namePatterns: ['UnitedHealthcare', 'United Healthcare', 'UnitedHealth', 'AARP Medicare Supplement', 'Golden Rule Ins Co'],
     phone: '877-832-7734',
     website: 'https://www.uhc.com',
     logoUrl: 'https://logo.clearbit.com/unitedhealthcare.com'
@@ -206,6 +206,56 @@ export const CARRIERS: CarrierInfo[] = [
     phone: '800-731-4300',
     website: 'https://www.lbig.com/',
     logoUrl: 'https://logo.clearbit.com/lbig.com'
+  },
+  {
+    id: 'all-state-health',
+    name: 'Allstate Health Insurance Company',
+    shortName: 'Allstate',
+    displayName: 'Allstate Health',
+    namePatterns: ['Allstate Health', 'Allstate'],
+    phone: '800-781-0585',
+    website: 'https://allstatehealth.com/',
+    logoUrl: 'https://logo.clearbit.com/allstate.com'
+  },
+  {
+    id: 'heartland',
+    name: 'Heartland National Life Insurance Company',
+    shortName: 'Heartland',
+    displayName: 'Heartland National Life',
+    namePatterns: ['Heartland National Life', 'Heartland', 'Heartland Nat Life Ins Co'],
+    phone: '800-123-4567',
+    website: 'https://www.heartlandnational.com',
+    logoUrl: 'https://logo.clearbit.com/heartlandnational.com'
+  },
+  {
+    id: 'manhattan-life',
+    name: 'Manhattan Life Insurance Company',
+    shortName: 'Manhattan Life',
+    displayName: 'Manhattan Life',
+    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance'],
+    phone: '800-622-9525',
+    website: 'https://www.manhattanlife.com',
+    logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
+  },
+  {
+    id: 'medico',
+    name: 'Medico Insurance Company',
+    shortName: 'Medico',
+    displayName: 'Medico',
+    namePatterns: ['Medico', 'Medico Insurance'],
+    phone: '800-555-5555',
+    website: 'https://www.medico.com',
+    logoUrl: 'https://logo.clearbit.com/medico.com'
+  },
+  {
+    id: 'unl',
+    name: 'United National Life Insurance Company of America',
+    shortName: 'UNL',
+    displayName: 'United National Life',
+    namePatterns: ['United National Life', 'UNL', 'United Natl Life Ins Co'],
+    phone: '800-207-8050',
+    website: 'https://www.unlinsurance.com',
+    logoUrl: 'https://logo.clearbit.com/unl.com'
   }
 ];
 

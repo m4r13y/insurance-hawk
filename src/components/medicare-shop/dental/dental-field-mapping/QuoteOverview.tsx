@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, PersonIcon, StarIcon } from "@radix-ui/react-icons";
 import { QuoteOverviewProps } from './types';
+import { getAmBestRatingText } from '@/utils/amBestRating';
 
 export default function QuoteOverview({ quote }: QuoteOverviewProps) {
   return (
@@ -46,7 +47,7 @@ export default function QuoteOverview({ quote }: QuoteOverviewProps) {
           <div className="flex items-center gap-2">
             <StarIcon className="h-4 w-4 text-green-600" />
             <span className="text-sm">
-              <strong>AM Best Rating:</strong> {quote.ambestRating} ({quote.ambestOutlook})
+              <strong>AM Best Rating:</strong> {getAmBestRatingText(quote.ambestRating)}
             </span>
           </div>
           <div className="flex items-center gap-2">

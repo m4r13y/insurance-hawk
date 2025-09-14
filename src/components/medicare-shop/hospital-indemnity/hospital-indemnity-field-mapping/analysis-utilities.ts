@@ -5,6 +5,7 @@
 
 import { OptimizedHospitalIndemnityQuote } from '@/lib/hospital-indemnity-quote-optimizer';
 import { RIDER_TYPES, QUANTIFIER_PATTERNS, RATE_ANALYSIS } from './field-analysis';
+import { getAmBestRatingText } from '@/utils/amBestRating';
 
 /**
  * Extracts benefit days configuration from plan name
@@ -501,7 +502,7 @@ export function exportFieldMappingCSV(quotes: OptimizedHospitalIndemnityQuote[])
     quote.monthlyPremium,
     quote.policyFee,
     quote.hhDiscount,
-    quote.ambest?.rating || 'N/A'
+    getAmBestRatingText(quote.ambest?.rating)
   ]);
   
   return [headers, ...rows].map(row => row.join(',')).join('\n');

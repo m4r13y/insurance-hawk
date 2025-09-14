@@ -147,7 +147,7 @@ export default function HospitalIndemnityShopContent({
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">
                     {quote.ambest?.rating ? (
-                      `A.M. Best Rating: ${quote.ambest.rating}${quote.ambest.outlook ? ` (${quote.ambest.outlook})` : ''}`
+                      `A.M. Best Rating: ${quote.ambest.rating}`
                     ) : (
                       'Rating information not available'
                     )}

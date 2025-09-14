@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { QuoteData } from './types.js';
+import { getAmBestRatingText } from '@/utils/amBestRating';
 
 interface CompanyTabProps {
   quoteData: QuoteData;
@@ -74,7 +75,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
               <div className="flex justify-between items-center">
                 <span>A.M. Best Rating</span>
                 <span className={`font-bold ${getRatingColor(quoteData.company_base.ambest_rating)}`}>
-                  {quoteData.company_base.ambest_rating !== 'n/a' ? quoteData.company_base.ambest_rating : 'Not Rated'}
+                  {getAmBestRatingText(quoteData.company_base.ambest_rating)}
                 </span>
               </div>
               <div className="flex justify-between items-center">

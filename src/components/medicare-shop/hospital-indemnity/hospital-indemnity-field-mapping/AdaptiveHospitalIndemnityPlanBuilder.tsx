@@ -8,6 +8,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { amBestToStars } from '@/utils/amBestRating';
+import { AmBestStarRating } from '@/components/ui/star-rating';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -82,27 +84,7 @@ const getCarrierDisplayName = (carrierName: string, carrierId: string): string =
 };
 
 // Convert A.M. Best rating to star rating (1-5 stars)
-const ambest_to_stars = (ambest_rating: string): number => {
-  const rating = ambest_rating.toUpperCase().replace(/[+-]/g, '');
-  switch (rating) {
-    case 'A++':
-    case 'A+': return 5;
-    case 'A':
-    case 'A-': return 4;
-    case 'B++':
-    case 'B+': return 3;
-    case 'B':
-    case 'B-': return 2;
-    case 'C++':
-    case 'C+':
-    case 'C':
-    case 'C-':
-    case 'D':
-    case 'E':
-    case 'F': return 1;
-    default: return 0; // Unknown rating
-  }
-};
+// REMOVED: Now using centralized utility function from @/utils/amBestRating
 
 // Create abbreviated names for rider badges
 const abbreviateRiderName = (riderName: string): string => {
@@ -242,25 +224,8 @@ const abbreviateRiderName = (riderName: string): string => {
   return abbreviated;
 };
 
-// StarRating component for Hospital Indemnity
-const StarRating: React.FC<{ rating: number; ambest_rating?: string }> = ({ rating, ambest_rating }) => {
-  return (
-    <div className="flex items-center gap-1">
-      {[...Array(5)].map((_, i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${
-            i < rating ? "text-yellow-400" : "text-gray-300"
-          }`}
-          style={{ fill: i < rating ? "currentColor" : "none" }}
-        />
-      ))}
-      <span className="text-xs text-gray-600 ml-1">
-        {ambest_rating ? `${ambest_rating}` : `${rating}/5`}
-      </span>
-    </div>
-  );
-};
+// StarRating component for Hospital Indemnity - REMOVED
+// Now using centralized AmBestStarRating component from @/components/ui/star-rating
 
 export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: AdaptiveHospitalIndemnityPlanBuilderProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -561,7 +526,7 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                     
                     // Get company rating from first quote (all quotes from same company should have same rating)
                     const companyRating = companyQuotes[0]?.ambest;
-                    const starRating = companyRating ? ambest_to_stars(companyRating.rating) : 0;
+                    const starRating = companyRating ? amBestToStars(companyRating.rating) : 0;
                     
                     const displayName = getCarrierDisplayName(company, company);
                     const subsidiaryName = getSubsidiaryName(company, 'hospital-indemnity');
@@ -606,15 +571,10 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                 <div>
                                   <h4 className="text-xl font-bold text-primary">{displayName}</h4>
                                   <div className="flex items-center gap-2 my-1">
-                                    <StarRating 
-                                      rating={starRating} 
-                                      ambest_rating={companyRating?.rating}
+                                    <AmBestStarRating 
+                                      amBestRating={companyRating?.rating}
+                                      size="sm"
                                     />
-                                    {companyRating?.outlook && (
-                                      <span className="text-xs text-muted-foreground">
-                                        ({companyRating.outlook})
-                                      </span>
-                                    )}
                                   </div>
                                   {subsidiaryName && (
                                     <p className="text-sm text-muted-foreground">{subsidiaryName}</p>

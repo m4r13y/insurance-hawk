@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { getAmBestRatingText } from '@/utils/amBestRating';
 import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon, DotsHorizontalIcon, UpdateIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
@@ -26,6 +27,7 @@ import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-o
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
 import { Timestamp } from 'firebase/firestore';
 import { useDiscountState } from "@/lib/services/discount-state";
+import { getAmBestRatingColor } from '@/utils/amBestRating';
 
 interface PlanConfiguration {
   ratingClass: string;
@@ -44,24 +46,7 @@ interface PlanBuilderTabProps {
 
 // Helper function for rating colors
 const getRatingColor = (rating: string) => {
-  switch (rating.toLowerCase()) {
-    case 'a++':
-    case 'a+':
-      return 'text-green-600';
-    case 'a':
-    case 'a-':
-      return 'text-green-500';
-    case 'b++':
-    case 'b+':
-    case 'b':
-      return 'text-yellow-600';
-    case 'b-':
-    case 'c++':
-    case 'c+':
-      return 'text-orange-600';
-    default:
-      return 'text-gray-500';
-  }
+  return getAmBestRatingColor(rating);
 };
 
 // Helper functions for validating required fields (same logic as MissingFieldsModal)
@@ -804,7 +789,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         name: medigapQuote.carrier?.name || medigapQuote.company || '',
         name_full: medigapQuote.carrier?.full_name || medigapQuote.company || '',
         naic: '',
-        ambest_rating: medigapQuote.am_best_rating || 'n/a',
+        ambest_rating: getAmBestRatingText(medigapQuote.am_best_rating),
         ambest_outlook: 'n/a',
         sp_rating: 'n/a',
         type: 'STOCK',

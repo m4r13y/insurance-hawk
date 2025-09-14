@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircledIcon, CalendarIcon, PersonIcon, StarFilledIcon } from "@radix-ui/react-icons";
 import { OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
+import { getAmBestRatingText } from '@/utils/amBestRating';
 
 interface DentalSidebarProps {
   selectedQuote?: OptimizedDentalQuote;
@@ -60,7 +61,7 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
                 <span className="text-sm text-gray-600">Company Rating</span>
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <StarFilledIcon className="h-3 w-3 text-yellow-400 fill-current" />
-                  {selectedQuote.ambestRating || 'N/A'}
+                  {getAmBestRatingText(selectedQuote.ambestRating)}
                 </Badge>
               </div>
               
@@ -73,9 +74,6 @@ export default function DentalSidebar({ selectedQuote, className = "" }: DentalS
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">NAIC</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {selectedQuote.naic}
-                </span>
               </div>
             </div>
 

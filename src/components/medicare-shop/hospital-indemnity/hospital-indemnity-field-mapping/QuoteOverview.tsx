@@ -40,11 +40,6 @@ export function QuoteOverview({ quote }: QuoteOverviewProps) {
                 <Badge variant="outline">
                   A.M. Best: {quote.ambest.rating}
                 </Badge>
-                {quote.ambest.outlook && (
-                  <Badge variant="outline">
-                    Outlook: {quote.ambest.outlook}
-                  </Badge>
-                )}
               </div>
             )}
           </div>
