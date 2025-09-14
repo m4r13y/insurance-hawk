@@ -159,6 +159,9 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
   const [selectedDailyBenefit, setSelectedDailyBenefit] = useState<number | null>(null);
   const [selectedRiders, setSelectedRiders] = useState<RiderSelection[]>([]);
   const [groupedRiderSelections, setGroupedRiderSelections] = useState<{ [key: string]: { variant: string; option: any } }>({});
+  const [automaticBenefitIncrease, setAutomaticBenefitIncrease] = useState<boolean>(false);
+  const [gpoRider, setGpoRider] = useState<boolean>(false);
+  const [selectedPlanTier, setSelectedPlanTier] = useState<string>('');
   const [finalQuote, setFinalQuote] = useState<OptimizedHospitalIndemnityQuote | null>(null);
 
   // Effect to handle URL parameter changes
@@ -173,6 +176,9 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
       setSelectedDailyBenefit(null);
       setSelectedRiders([]);
       setGroupedRiderSelections({});
+      setAutomaticBenefitIncrease(false);
+      setGpoRider(false);
+      setSelectedPlanTier('');
       setFinalQuote(null);
     } else if (!company && selectedCompany) {
       // Company was removed from URL, go back to carriers
@@ -183,9 +189,24 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
       setSelectedDailyBenefit(null);
       setSelectedRiders([]);
       setGroupedRiderSelections({});
+      setAutomaticBenefitIncrease(false);
+      setGpoRider(false);
+      setSelectedPlanTier('');
       setFinalQuote(null);
     }
   }, [searchParams, selectedCompany]);
+
+  // Effect to handle plan configuration changes (checkboxes and tier selection)
+  useEffect(() => {
+    if (selectedPlanOption) {
+      // Reset dependent selections when plan configuration changes
+      setSelectedBenefitDays(null);
+      setSelectedDailyBenefit(null);
+      setSelectedRiders([]);
+      setGroupedRiderSelections({});
+      setFinalQuote(null);
+    }
+  }, [automaticBenefitIncrease, gpoRider, selectedPlanTier]);
 
   // Filter valid quotes
   const availableQuotes = useMemo(() => {
@@ -213,17 +234,172 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     );
   }, [availableQuotes, selectedCompany]);
 
-  // Get available plan options (plan names)
+  // Get available plan options (simplified base plans without riders and tiers)
   const availablePlanOptions = useMemo(() => {
     if (!selectedCompany) return [];
     const planNames = [...new Set(companyQuotes.map(q => q.planName))];
-    return planNames.sort();
+    
+    console.log('🔍 Original plan names for', selectedCompany + ':', planNames);
+    
+    // Extract unique base plan names, removing riders and tiers
+    const simplifiedPlans = planNames.map(planName => {
+      // Remove riders like "with GPO Rider", "with Automatic Benefit Increase Rider"
+      let basePlan = planName
+        .replace(/\s+with\s+GPO\s+Rider/gi, '')
+        .replace(/\s+with\s+Automatic\s+Benefit\s+Increase\s+Rider/gi, '');
+      
+      // Remove tier/option indicators like "Core Option", "Preferred Option", "Premier Option", "Elite"
+      basePlan = basePlan
+        .replace(/\s*-\s*(Core|Preferred|Premier|Elite)\s+Option\s+\d+/gi, '')
+        .replace(/\s+(Elite|Core|Premier|Preferred)\s*/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      console.log('📝 Simplified:', planName, '->', basePlan);
+      
+      return basePlan;
+    });
+    
+    // Remove duplicates and sort
+    const uniquePlans = [...new Set(simplifiedPlans)];
+    
+    console.log('✅ Final simplified plan options:', uniquePlans);
+    
+    return uniquePlans.sort((a, b) => {
+      // Extract day numbers for sorting
+      const dayMatchA = a.match(/(\d+)\s*(?:benefit\s*)?days?/i);
+      const dayMatchB = b.match(/(\d+)\s*(?:benefit\s*)?days?/i);
+      
+      if (dayMatchA && dayMatchB) {
+        const daysA = parseInt(dayMatchA[1]);
+        const daysB = parseInt(dayMatchB[1]);
+        return daysA - daysB;
+      }
+      
+      // Fallback to alphabetical if no day numbers found
+      return a.localeCompare(b);
+    });
   }, [companyQuotes]);
+
+  // Helper function to construct actual plan name from all selected options
+  const getActualPlanName = (
+    basePlanName: string, 
+    tier: string = '', 
+    includeAutomaticBenefitIncrease: boolean = false,
+    includeGpo: boolean = false
+  ): string => {
+    // This function is now mainly for display purposes in the plan summary
+    let planName = basePlanName;
+    
+    if (tier) {
+      planName = `${planName} ${tier}`;
+    }
+    
+    if (includeGpo) {
+      planName += ' with GPO Rider';
+    }
+    if (includeAutomaticBenefitIncrease) {
+      planName += ' with Automatic Benefit Increase Rider';
+    }
+    
+    return planName;
+  };
+
+  // Check if Automatic Benefit Increase Rider is available for the selected plan
+  const isAutomaticBenefitIncreaseAvailable = useMemo(() => {
+    if (!selectedPlanOption || !selectedCompany) return false;
+    
+    // Check if there are any plans with "Automatic Benefit Increase Rider" for this plan option
+    const withRiderPlanName = `${selectedPlanOption} with Automatic Benefit Increase Rider`;
+    const hasRiderVersion = companyQuotes.some(q => q.planName === withRiderPlanName);
+    
+    return hasRiderVersion;
+  }, [selectedPlanOption, selectedCompany, companyQuotes]);
+
+  // Check if GPO Rider is available for the selected plan
+  const isGpoRiderAvailable = useMemo(() => {
+    if (!selectedPlanOption || !selectedCompany) return false;
+    
+    // Debug: log all plan names for this company
+    console.log('🔍 Checking GPO availability for:', selectedPlanOption);
+    console.log('📋 Available plan names:', companyQuotes.map(q => q.planName));
+    
+    // Get the base plan name from selectedPlanOption (remove day count)
+    const basePlanPattern = selectedPlanOption.replace(/\s*-\s*\d+\s*Day.*$/i, '').trim();
+    console.log('🔍 Base plan pattern:', basePlanPattern);
+    
+    // Check if there are any plans with "with GPO Rider" pattern
+    const hasGpoVersion = companyQuotes.some(q => {
+      const planNameLower = q.planName.toLowerCase();
+      const basePatternLower = basePlanPattern.toLowerCase();
+      
+      // Check if this plan starts with our base plan and has GPO
+      const startsWithBasePlan = planNameLower.startsWith(basePatternLower.toLowerCase());
+      const hasGpoInName = planNameLower.includes('with gpo rider') || planNameLower.includes('gpo rider');
+      
+      if (startsWithBasePlan && hasGpoInName) {
+        console.log('✅ Found matching GPO plan:', q.planName);
+      }
+      
+      return startsWithBasePlan && hasGpoInName;
+    });
+    
+    console.log('🎯 GPO Rider available:', hasGpoVersion);
+    
+    return hasGpoVersion;
+  }, [selectedPlanOption, selectedCompany, companyQuotes]);
+
+  // Get available plan tiers for the selected plan
+  const availablePlanTiers = useMemo(() => {
+    if (!selectedPlanOption || !selectedCompany) return [];
+    
+    console.log('🔍 Checking tiers for:', selectedPlanOption);
+    
+    const planTiers = new Set<string>();
+    
+    companyQuotes.forEach(quote => {
+      // Look for plans that match our base plan
+      const planNameLower = quote.planName.toLowerCase();
+      const selectedLower = selectedPlanOption.toLowerCase();
+      
+      // Check if this plan matches our base plan
+      if (planNameLower.includes(selectedLower) || selectedLower.includes(planNameLower.split(' -')[0]?.toLowerCase() || '')) {
+        // Look for tier patterns like "Core Option", "Preferred Option", "Premier Option", "Elite"
+        const tierMatch = quote.planName.match(/\b(Core|Preferred|Premier|Elite)\s*(?:Option\s*\d+)?/i);
+        if (tierMatch) {
+          const tierName = tierMatch[1];
+          console.log('🎯 Found tier:', tierName, 'in plan:', quote.planName);
+          planTiers.add(tierName);
+        }
+      }
+    });
+    
+    console.log('📊 Available tiers:', Array.from(planTiers));
+    
+    // Sort tiers in a logical order
+    const tierOrder = ['Core', 'Premier', 'Preferred', 'Elite'];
+    return Array.from(planTiers).sort((a, b) => {
+      const orderA = tierOrder.indexOf(a);
+      const orderB = tierOrder.indexOf(b);
+      return orderA - orderB;
+    });
+  }, [selectedPlanOption, selectedCompany, companyQuotes]);
+
+  // Effect to reset checkboxes when riders are no longer available
+  useEffect(() => {
+    if (selectedPlanOption && automaticBenefitIncrease && !isAutomaticBenefitIncreaseAvailable) {
+      setAutomaticBenefitIncrease(false);
+    }
+    if (selectedPlanOption && gpoRider && !isGpoRiderAvailable) {
+      setGpoRider(false);
+    }
+  }, [selectedPlanOption, isAutomaticBenefitIncreaseAvailable, automaticBenefitIncrease, isGpoRiderAvailable, gpoRider]);
 
   // Get available benefit days for selected plan
   const availableBenefitDays = useMemo(() => {
     if (!selectedPlanOption) return [];
-    const filteredQuotes = companyQuotes.filter(q => q.planName === selectedPlanOption);
+    const actualPlanName = getActualPlanName(selectedPlanOption, selectedPlanTier, automaticBenefitIncrease, gpoRider);
+    const filteredQuotes = companyQuotes.filter(q => q.planName === actualPlanName);
     const daysSet = new Set<number>();
     
     filteredQuotes.forEach(quote => {
@@ -235,49 +411,127 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     });
     
     return Array.from(daysSet).sort((a, b) => a - b);
-  }, [companyQuotes, selectedPlanOption]);
+  }, [companyQuotes, selectedPlanOption, selectedPlanTier, automaticBenefitIncrease, gpoRider]);
 
   // Get available daily benefits for current selection
   const availableDailyBenefits = useMemo(() => {
     if (!selectedCompany || !selectedPlanOption) return [];
     
-    let filteredQuotes = companyQuotes.filter(q => q.planName === selectedPlanOption);
+    // Get daily benefits from any plan that matches the base plan name
+    const basePlanPattern = selectedPlanOption.replace(/\s*-\s*\d+\s*Day.*$/i, '').trim();
+    let matchingQuotes = companyQuotes.filter(q => q.planName.includes(basePlanPattern));
     
     if (selectedBenefitDays) {
-      filteredQuotes = filteredQuotes.filter(q => {
+      matchingQuotes = matchingQuotes.filter(q => {
         const dayMatch = q.planName.match(/(\d+)\s*(?:benefit\s*)?days?/i);
         return dayMatch && parseInt(dayMatch[1]) === selectedBenefitDays;
       });
     }
 
-    if (filteredQuotes.length === 0) return [];
+    if (matchingQuotes.length === 0) return [];
     
     // Get all available daily benefits from the first matching quote
-    const quote = filteredQuotes[0];
+    const quote = matchingQuotes[0];
     return getAvailableDailyBenefitsFromQuote(quote);
   }, [companyQuotes, selectedPlanOption, selectedBenefitDays]);
 
   // Get current quote for configuration
   const currentQuote = useMemo(() => {
-    if (!selectedCompany || !selectedPlanOption || !selectedDailyBenefit) return null;
+    console.log('🔄 currentQuote useMemo triggered with:', {
+      selectedCompany,
+      selectedPlanOption,
+      selectedDailyBenefit,
+      selectedPlanTier,
+      gpoRider,
+      automaticBenefitIncrease
+    });
     
-    let filteredQuotes = companyQuotes.filter(q => q.planName === selectedPlanOption);
+    if (!selectedCompany || !selectedPlanOption) {
+      console.log('❌ Missing company or plan option for currentQuote');
+      return null;
+    }
     
+    // If no daily benefit is selected yet, try to use the first available one
+    let dailyBenefitToUse = selectedDailyBenefit;
+    if (!dailyBenefitToUse && availableDailyBenefits.length > 0) {
+      dailyBenefitToUse = availableDailyBenefits[0];
+      console.log('🔧 Auto-selecting first available daily benefit:', dailyBenefitToUse);
+    }
+    
+    if (!dailyBenefitToUse) {
+      console.log('❌ No daily benefit available');
+      return null;
+    }
+    
+    console.log('🔍 Looking for quote with:');
+    console.log('  - Base plan:', selectedPlanOption);
+    console.log('  - Tier:', selectedPlanTier);
+    console.log('  - GPO:', gpoRider);
+    console.log('  - Auto Benefit:', automaticBenefitIncrease);
+    console.log('📋 Available plans:', companyQuotes.map(q => q.planName));
+    
+    // Build search criteria
+    let filteredQuotes = companyQuotes;
+    
+    // Filter by base plan name
+    const basePlanPattern = selectedPlanOption.replace(/\s*-\s*\d+\s*Day.*$/i, '').trim();
+    filteredQuotes = filteredQuotes.filter(q => q.planName.includes(basePlanPattern));
+    console.log('🎯 After base plan filter:', filteredQuotes.length, 'quotes');
+    
+    // Filter by tier if selected
+    if (selectedPlanTier) {
+      filteredQuotes = filteredQuotes.filter(q => q.planName.includes(selectedPlanTier));
+      console.log('🎯 After tier filter:', filteredQuotes.length, 'quotes');
+    }
+    
+    // Filter by GPO if selected
+    if (gpoRider) {
+      filteredQuotes = filteredQuotes.filter(q => 
+        q.planName.toLowerCase().includes('with gpo rider') || 
+        q.planName.toLowerCase().includes('gpo rider')
+      );
+      console.log('🎯 After GPO filter:', filteredQuotes.length, 'quotes');
+    } else {
+      // If GPO not selected, exclude GPO plans
+      filteredQuotes = filteredQuotes.filter(q => 
+        !q.planName.toLowerCase().includes('with gpo rider') && 
+        !q.planName.toLowerCase().includes('gpo rider')
+      );
+      console.log('🎯 After excluding GPO:', filteredQuotes.length, 'quotes');
+    }
+    
+    // Filter by automatic benefit increase if selected
+    if (automaticBenefitIncrease) {
+      filteredQuotes = filteredQuotes.filter(q => 
+        q.planName.toLowerCase().includes('automatic benefit increase') ||
+        q.planName.toLowerCase().includes('abi')
+      );
+      console.log('🎯 After ABI filter:', filteredQuotes.length, 'quotes');
+    }
+    
+    // Filter by benefit days if specified
     if (selectedBenefitDays) {
       filteredQuotes = filteredQuotes.filter(q => {
         const dayMatch = q.planName.match(/(\d+)\s*(?:benefit\s*)?days?/i);
         return dayMatch && parseInt(dayMatch[1]) === selectedBenefitDays;
       });
+      console.log('🎯 After benefit days filter:', filteredQuotes.length, 'quotes');
     }
 
-    if (filteredQuotes.length === 0) return null;
+    if (filteredQuotes.length === 0) {
+      console.log('❌ No matching quotes found');
+      return null;
+    }
     
     // Find quote with matching daily benefit
-    return filteredQuotes.find(q => {
+    const finalQuote = filteredQuotes.find(q => {
       const availableBenefits = getAvailableDailyBenefitsFromQuote(q);
-      return availableBenefits.includes(selectedDailyBenefit);
+      return availableBenefits.includes(dailyBenefitToUse);
     }) || filteredQuotes[0];
-  }, [companyQuotes, selectedPlanOption, selectedBenefitDays, selectedDailyBenefit]);
+    
+    console.log('✅ Selected quote:', finalQuote?.planName);
+    return finalQuote;
+  }, [selectedCompany, companyQuotes, selectedPlanOption, selectedBenefitDays, selectedDailyBenefit, selectedPlanTier, automaticBenefitIncrease, gpoRider, availableDailyBenefits]);
 
   // Get available riders for current quote
   const availableRiders = useMemo(() => {
@@ -376,6 +630,23 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     setSelectedRiders([]);
     setGroupedRiderSelections({});
     setFinalQuote(null);
+    
+    // Reset automatic benefit increase if not available for the new plan
+    const withRiderPlanName = `${planOption} with Automatic Benefit Increase Rider`;
+    const hasRiderVersion = companyQuotes.some(q => q.planName === withRiderPlanName);
+    if (!hasRiderVersion) {
+      setAutomaticBenefitIncrease(false);
+    }
+    
+    // Reset GPO rider if not available for the new plan
+    const withGpoRiderPattern = new RegExp(`${planOption.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*with\\s+GPO\\s+Rider`, 'i');
+    const hasGpoVersion = companyQuotes.some(q => withGpoRiderPattern.test(q.planName));
+    if (!hasGpoVersion) {
+      setGpoRider(false);
+    }
+    
+    // Reset plan tier - let user choose from available tiers
+    setSelectedPlanTier('');
   };
 
   // Handle rider selection
@@ -514,7 +785,25 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <>
+      <style jsx>{`
+        .radio-filled {
+          --tw-ring-offset-shadow: 0 0 #0000;
+          --tw-ring-shadow: 0 0 #0000;
+          --tw-shadow: 0 0 #0000;
+        }
+        .radio-filled[data-state="checked"] {
+          background-color: #3b82f6 !important;
+          border-color: #3b82f6 !important;
+        }
+        .radio-filled[data-state="checked"] > span {
+          background-color: #3b82f6 !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 50% !important;
+        }
+      `}</style>
+      <div className="max-w-6xl mx-auto p-6">
       {currentView === 'carriers' ? (
         // Carrier Selection View
         <CarrierSelectionView
@@ -574,6 +863,60 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                 </div>
               )}
 
+              {/* Automatic Benefit Increase Rider Checkbox */}
+              {selectedPlanOption && isAutomaticBenefitIncreaseAvailable && (
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="automatic-benefit-increase"
+                      checked={automaticBenefitIncrease}
+                      onCheckedChange={(checked) => setAutomaticBenefitIncrease(checked === true)}
+                    />
+                    <Label htmlFor="automatic-benefit-increase" className="text-sm font-medium cursor-pointer">
+                      Automatic Benefit Increase Rider
+                    </Label>
+                  </div>
+                </div>
+              )}
+
+              {/* GPO Rider Checkbox */}
+              {selectedPlanOption && isGpoRiderAvailable && (
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="gpo-rider"
+                      checked={gpoRider}
+                      onCheckedChange={(checked) => {
+                        console.log('🔧 GPO checkbox changed to:', checked);
+                        setGpoRider(checked === true);
+                      }}
+                    />
+                    <Label htmlFor="gpo-rider" className="text-sm font-medium cursor-pointer">
+                      Guarantee Purchase Option (GPO) Rider
+                    </Label>
+                  </div>
+                </div>
+              )}
+
+              {/* Plan Tier Selection */}
+              {selectedPlanOption && availablePlanTiers.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Plan Tier</label>
+                  <Select value={selectedPlanTier} onValueChange={setSelectedPlanTier}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose plan tier..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePlanTiers.map((tier, index) => (
+                        <SelectItem key={`tier-${tier}-${index}`} value={tier}>
+                          {tier}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* Benefit Days Coverage (if applicable) */}
               {selectedPlanOption && availableBenefitDays.length > 1 && (
                 <div>
@@ -623,11 +966,11 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                 <div>
                   <h4 className="text-xs font-medium mb-2 text-gray-700">Included Benefits</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {includedBenefits.map((benefit) => {
+                    {includedBenefits.map((benefit, benefitIndex) => {
                       const relevantOption = getRelevantBenefitOption(benefit, selectedDailyBenefit);
                       
                       return (
-                        <div key={benefit.name} className="border border-green-200 rounded p-2">
+                        <div key={`benefit-${benefit.name}-${benefitIndex}`} className="border border-green-200 rounded p-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <h5 className="text-sm font-medium mb-2">{benefit.name}</h5>
@@ -694,12 +1037,12 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                                   }
                                 }}
                               >
-                                <SelectTrigger className="h-8">
+                                <SelectTrigger className="h-8 text-xs">
                                   <SelectValue placeholder="Choose coverage..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {group.variants.map((variant: any) => (
-                                    <SelectItem key={variant.name} value={variant.name}>
+                                    <SelectItem key={variant.name} value={variant.name} className="text-xs">
                                       {variant.variantLabel}
                                     </SelectItem>
                                   ))}
@@ -733,14 +1076,14 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                                           <RadioGroupItem 
                                             value={`${option.amount}-${option.rate}`} 
                                             id={`${group.baseName}-${index}`}
-                                            className="w-3 h-3"
+                                            className="w-3 h-3 radio-filled"
                                           />
                                           <Label htmlFor={`${group.baseName}-${index}`} className="flex-1 cursor-pointer text-xs">
                                             <div className="flex justify-between items-center">
                                               <span>
-                                                ${option.amount} {option.quantifier || 'per occurrence'}
+                                                <span className="font-bold">${option.amount}</span> {option.quantifier || 'per occurrence'}
                                               </span>
-                                              <span className="font-medium text-blue-600">
+                                              <span className="font-medium text-blue-500">
                                                 +{formatCurrency(option.rate)}/mo
                                               </span>
                                             </div>
@@ -757,12 +1100,12 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                     })}
 
                     {/* Ungrouped Riders */}
-                    {ungroupedRiders.map((rider) => {
+                    {ungroupedRiders.map((rider, riderIndex) => {
                       const isSelected = selectedRiders.some(r => r.riderName === rider.name);
                       const selectedConfig = selectedRiders.find(r => r.riderName === rider.name);
 
                       return (
-                        <div key={rider.name} className="border rounded p-3">
+                        <div key={`rider-${rider.name}-${riderIndex}`} className="border rounded p-3">
                           <div className="space-y-2">
                             <h5 className="text-sm font-medium">{rider.name}</h5>
                               {rider.notes && (
@@ -796,14 +1139,14 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                                           <RadioGroupItem 
                                             value={`${option.amount}-${option.rate}`} 
                                             id={`${rider.name}-${index}`}
-                                            className="w-3 h-3"
+                                            className="w-3 h-3 radio-filled"
                                           />
                                           <Label htmlFor={`${rider.name}-${index}`} className="flex-1 cursor-pointer text-xs">
                                             <div className="flex justify-between items-center">
                                               <span>
-                                                ${option.amount} {option.quantifier || 'per occurrence'}
+                                                <span className="font-bold">${option.amount}</span> {option.quantifier || 'per occurrence'}
                                               </span>
-                                              <span className="font-medium text-blue-600">
+                                              <span className="font-medium text-blue-500">
                                                 +{formatCurrency(option.rate)}/mo
                                               </span>
                                             </div>
@@ -854,7 +1197,9 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
               {selectedDailyBenefit && (
                 <div>
                   <h4 className="text-xs font-medium text-gray-600">{benefitType === 'admission' ? 'Admission Benefit:' : 'Daily Benefit:'}</h4>
-                  <p className="text-sm font-medium">{benefitLabels.format(selectedDailyBenefit)}</p>
+                  <p className="text-sm font-medium">
+                    <span className="font-bold">{benefitLabels.format(selectedDailyBenefit)}</span>
+                  </p>
                 </div>
               )}
 
@@ -864,7 +1209,7 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                   <div className="space-y-1">
                     {selectedRiders.map((rider, index) => (
                       <div key={index} className="text-xs">
-                        {rider.riderName}: ${rider.selectedOption.amount} 
+                        {rider.riderName}: <span className="font-bold">${rider.selectedOption.amount}</span> 
                         (+{formatCurrency(rider.selectedOption.rate)}/mo)
                       </div>
                     ))}
@@ -877,7 +1222,7 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                   <Separator />
                   <div>
                     <h4 className="text-sm font-semibold">Total Monthly:</h4>
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-lg font-bold text-blue-500">
                       {formatCurrency(totalPremium)}
                     </p>
                   </div>
@@ -905,5 +1250,6 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     </div>
       )}
     </div>
+    </>
   );
 }
