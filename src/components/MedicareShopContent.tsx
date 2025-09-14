@@ -358,14 +358,14 @@ function MedicareShopContent() {
         await migrateLegacyStorage();
         
         // Check for existing quote session on page refresh
-        const hasVisitorId = localStorage.getItem('visitor_id');
+        const hasMedicareFormData = localStorage.getItem('medicare_quote_form_data');
         const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
         const hasActiveCategory = localStorage.getItem('medicare_current_flow_step');
         
-        // OPTIMIZATION: Fast check using visitor_id only!
-        // visitor_id is only created when quotes are generated, so it's a reliable indicator
+        // OPTIMIZATION: Fast check using medicare_quote_form_data only!
+        // medicare_quote_form_data is only created when quotes are generated, so it's a reliable indicator
         // This avoids expensive Firestore calls during page load
-        const hasExistingQuotes = !!hasVisitorId;
+        const hasExistingQuotes = !!hasMedicareFormData;
         
         // Simple session detection based on visitor_id presence (much faster!)
         const isExistingSession = hasExistingQuotes && hasMedicareCategories;
@@ -373,7 +373,7 @@ function MedicareShopContent() {
         
         const sessionDetectionTime = performance.now() - startTime;
         console.log('� Fast session detection completed in:', sessionDetectionTime.toFixed(2) + 'ms', {
-          hasVisitorId: !!hasVisitorId,
+          hasMedicareFormData: !!hasMedicareFormData,
           hasMedicareCategories: !!hasMedicareCategories, 
           hasActiveCategory: !!hasActiveCategory,
           hasExistingQuotes,
@@ -397,10 +397,10 @@ function MedicareShopContent() {
           ? urlCategory 
           : savedActiveCategory || 'medigap'; // Default to 'medigap' if flow step is missing
 
-        // VISITOR_ID is the source of truth for existing quotes
+        // MEDICARE_QUOTE_FORM_DATA is the source of truth for existing quotes
         // Move ALL quote loading logic here instead of checking savedFormData
         if (hasExistingQuotes) {
-          console.log('🔍 visitor_id found - loading quotes from Firestore for visitor:', hasVisitorId);
+          console.log('🔍 medicare_quote_form_data found - loading quotes from Firestore for existing session');
           
           // Set recovery mode and form completed state FIRST
           setIsRecoveringSession(true);
@@ -459,8 +459,8 @@ function MedicareShopContent() {
           setIsRecoveringSession(false);
           
         } else {
-          // NEW USER - no visitor_id means no quotes exist
-          console.log('🆕 New user - no visitor_id found, setting up fresh session');
+          // NEW USER - no medicare_quote_form_data means no quotes exist
+          console.log('🆕 New user - no medicare_quote_form_data found, setting up fresh session');
           
           // Set up initial category
           setActiveCategory(initialCategory);

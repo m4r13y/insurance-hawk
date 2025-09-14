@@ -223,17 +223,17 @@ export const CARRIERS: CarrierInfo[] = [
     shortName: 'Heartland',
     displayName: 'Heartland National Life',
     namePatterns: ['Heartland National Life', 'Heartland', 'Heartland Nat Life Ins Co'],
-    phone: '800-123-4567',
-    website: 'https://www.heartlandnational.com',
-    logoUrl: 'https://logo.clearbit.com/heartlandnational.com'
+    phone: '800-616-0015',
+    website: 'https://www.heartlandnationallife.com',
+    logoUrl: 'https://logo.clearbit.com/heartlandnationallife.com'
   },
   {
     id: 'manhattan-life',
     name: 'Manhattan Life Insurance Company',
     shortName: 'Manhattan Life',
     displayName: 'Manhattan Life',
-    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance'],
-    phone: '800-622-9525',
+    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance', 'ManhattanLife Insurance and Annuity Company'],
+    phone: '800-879-6542',
     website: 'https://www.manhattanlife.com',
     logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
   },
@@ -243,9 +243,9 @@ export const CARRIERS: CarrierInfo[] = [
     shortName: 'Medico',
     displayName: 'Medico',
     namePatterns: ['Medico', 'Medico Insurance'],
-    phone: '800-555-5555',
-    website: 'https://www.medico.com',
-    logoUrl: 'https://logo.clearbit.com/medico.com'
+    phone: '800-228-6080',
+    website: 'https://www.wellabe.com/',
+    logoUrl: 'https://logo.clearbit.com/wellabe.com'
   },
   {
     id: 'unl',
@@ -254,8 +254,8 @@ export const CARRIERS: CarrierInfo[] = [
     displayName: 'United National Life',
     namePatterns: ['United National Life', 'UNL', 'United Natl Life Ins Co'],
     phone: '800-207-8050',
-    website: 'https://www.unlinsurance.com',
-    logoUrl: 'https://logo.clearbit.com/unl.com'
+    website: 'https://unlinsurance.com/',
+    logoUrl: 'https://logo.clearbit.com/unlinsurance.com'
   }
 ];
 

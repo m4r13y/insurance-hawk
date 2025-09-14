@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AdaptiveHospitalIndemnityPlanBuilder } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/AdaptiveHospitalIndemnityPlanBuilder';
+import { SimplifiedHospitalIndemnityPlanBuilder } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder';
 import { OptimizedHospitalIndemnityQuote } from '@/lib/hospital-indemnity-quote-optimizer';
 import { loadFromStorage, HOSPITAL_INDEMNITY_QUOTES_KEY } from '@/components/medicare-shop/shared/storage';
 
@@ -40,15 +40,15 @@ export default function HospitalIndemnityPlanBuilderPage() {
     loadQuotes();
   }, []);
   
-  const handlePlanBuilt = (selectedQuote: OptimizedHospitalIndemnityQuote, configuration: any) => {
-    console.log('✅ Plan built successfully:', { selectedQuote, configuration });
+  const handlePlanBuilt = (config: any) => {
+    console.log('✅ Plan built successfully:', config);
     
     // Here you would typically:
     // 1. Save the configuration to the user's profile
     // 2. Navigate to a checkout or enrollment page
     // 3. Show a confirmation modal
     
-    alert(`Plan built successfully!\n\nCompany: ${selectedQuote.companyName}\nPlan: ${selectedQuote.planName}\nTotal Premium: $${configuration.totalPremium?.toFixed(2) || '0.00'}/month`);
+    alert(`Plan built successfully!\n\nCompany: ${config.quote.companyName}\nPlan: ${config.quote.planName}\nTotal Premium: $${config.totalPremium?.toFixed(2) || '0.00'}/month`);
   };
 
   if (loading) {
@@ -99,7 +99,7 @@ export default function HospitalIndemnityPlanBuilderPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="p-6">
-            <AdaptiveHospitalIndemnityPlanBuilder 
+            <SimplifiedHospitalIndemnityPlanBuilder 
               quotes={quotes}
               onPlanBuilt={handlePlanBuilt}
             />

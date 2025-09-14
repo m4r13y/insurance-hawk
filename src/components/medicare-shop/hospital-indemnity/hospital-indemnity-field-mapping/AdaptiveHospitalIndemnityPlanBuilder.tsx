@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,30 @@ import {
   getCarrierDisplayName as getCarrierDisplayNameFromSystem,
   getSubsidiaryName
 } from '@/lib/carrier-system';
+import {
+  getAllBenefits,
+  getMainBenefit,
+  getAdditionalRiders,
+  getAvailableDailyBenefits as getAvailableDailyBenefitsFromQuote,
+  getPremiumForDailyBenefit,
+  getAvailableRiderOptions,
+  hasValidBenefitStructure,
+  calculateTotalPremium as calculateTotalPremiumSimplified
+} from '@/utils/simplifiedHospitalIndemnityBenefits';
+import {
+  detectCompanyRouteConfig,
+  getAvailablePlanOptions as getAvailablePlanOptionsFromRoutes,
+  extractBenefitDaysForCompany,
+  getPrimaryBenefitSourceForCompany,
+  filterQuotesByBenefitType,
+  determineBenefitType
+} from '@/utils/hospitalIndemnityRoutes';
+import {
+  detectPlanStructure,
+  hasSpecialPlanStructure,
+  getPlanGroupingSummary,
+  getDisplayConfiguration
+} from '@/utils/hospitalIndemnityPlanStructures';
 
 interface AdaptiveHospitalIndemnityPlanBuilderProps {
   quotes: OptimizedHospitalIndemnityQuote[];
@@ -228,8 +252,49 @@ const abbreviateRiderName = (riderName: string): string => {
 // Now using centralized AmBestStarRating component from @/components/ui/star-rating
 
 export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: AdaptiveHospitalIndemnityPlanBuilderProps) {
+  // Memoize the validation of quotes to prevent infinite re-renders
+  const validQuotes = useMemo(() => {
+    const filtered = quotes.filter(quote => hasValidBenefitStructure(quote));
+    
+    // Log analysis for debugging (only when quotes change)
+    const invalidQuotes = quotes.filter(quote => !hasValidBenefitStructure(quote));
+    if (invalidQuotes.length > 0) {
+      console.log(`Filtered out ${invalidQuotes.length} invalid quotes:`, 
+        invalidQuotes.map(q => ({ 
+          company: q.companyName, 
+          plan: q.planName,
+          hasBasePlans: !!q.basePlans?.length,
+          hasRiders: !!q.riders?.length
+        }))
+      );
+    }
+    console.log(`Using ${filtered.length} of ${quotes.length} total quotes`);
+    
+    return filtered;
+  }, [quotes]); // Only depend on the original quotes prop
+
+  // Group quotes by company and detect plan structures
+  const companiesWithStructures = useMemo(() => {
+    const companiesList = Array.from(new Set(validQuotes.map(q => q.companyName))).sort();
+    
+    return companiesList.map(companyName => {
+      const companyQuotes = validQuotes.filter(q => q.companyName === companyName);
+      const planStructure = detectPlanStructure(companyQuotes);
+      const hasSpecialStructure = hasSpecialPlanStructure(companyQuotes);
+      
+      return {
+        name: companyName,
+        quotes: companyQuotes,
+        planStructure,
+        hasSpecialStructure,
+        displayConfig: getDisplayConfiguration(planStructure)
+      };
+    });
+  }, [validQuotes]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [selectedPlanOption, setSelectedPlanOption] = useState<string>(''); // For companies with multiple plan types
   const [selectedBenefitDays, setSelectedBenefitDays] = useState<number | null>(null);
   const [selectedDailyBenefit, setSelectedDailyBenefit] = useState<number | null>(null);
   const [selectedRiders, setSelectedRiders] = useState<RiderConfiguration[]>([]);
@@ -237,78 +302,222 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
   const [availableQuotes, setAvailableQuotes] = useState<OptimizedHospitalIndemnityQuote[]>([]);
   const [finalQuote, setFinalQuote] = useState<OptimizedHospitalIndemnityQuote | null>(null);
   const [dayConfigurations, setDayConfigurations] = useState<DayConfiguration[]>([]);
+  
+  // Enhanced state for plan structure handling
+  const [selectedCompanyStructure, setSelectedCompanyStructure] = useState<any>(null);
+  const [selectedPlanGroup, setSelectedPlanGroup] = useState<string>('');
 
-  // Group quotes by company
-  const companiesList = Array.from(new Set(quotes.map(q => q.companyName)))
-    .sort();
-
-  // Analyze benefit day configurations
-  useEffect(() => {
-    if (quotes.length > 0) {
-      const dayAnalysis = analyzeBenefitDayConfigurations(quotes.map(q => ({ plan_name: q.planName })));
-      
-      const dayConfigs = dayAnalysis.availableDayOptions.map(days => {
-        const quotesForDays = quotes.filter(q => {
-          const dayInfo = extractBenefitDays(q.planName);
-          return dayInfo.days === days;
-        });
-
-        const premiums = quotesForDays.map(q => {
-          return q.basePlans?.[0]?.benefitOptions?.[0]?.rate || 0;
-        }).filter(rate => rate > 0);
-
-        return {
-          days,
-          available: quotesForDays.length > 0,
-          quoteCount: quotesForDays.length,
-          minPremium: Math.min(...premiums),
-          maxPremium: Math.max(...premiums)
-        };
-      });
-
-      setDayConfigurations(dayConfigs);
-    }
-  }, [quotes]);
+  // Day configurations are now built per company in the company selection effect below
+  // This ensures that only day options available for the selected company are shown
 
   // Filter quotes when company is selected
   useEffect(() => {
     if (selectedCompany) {
-      const companyQuotes = quotes.filter(q => q.companyName === selectedCompany);
-      setAvailableQuotes(companyQuotes);
+      const companyInfo = companiesWithStructures.find(c => c.name === selectedCompany);
+      if (!companyInfo) return;
+      
+      setAvailableQuotes(companyInfo.quotes);
+      setSelectedCompanyStructure(companyInfo);
+      
+      // Update day configurations for the selected company only
+      const companyQuotes = companyInfo.quotes;
+      if (companyQuotes.length > 0) {
+        const dayAnalysis = analyzeBenefitDayConfigurations(companyQuotes.map(q => ({ plan_name: q.planName })));
+        
+        // Also collect days from rider quantifiers (for companies like Continental Life)
+        const quantifierDays = new Set<number>();
+        companyQuotes.forEach(quote => {
+          const allBenefits = getAllBenefits(quote);
+          allBenefits.forEach(benefit => {
+            benefit.benefitOptions.forEach(option => {
+              if (option.quantifier) {
+                const quantifierDayMatch = option.quantifier.match(/(\d+)\s*day/i);
+                if (quantifierDayMatch) {
+                  quantifierDays.add(parseInt(quantifierDayMatch[1]));
+                }
+              }
+            });
+          });
+        });
+
+        // Combine both sources of day options for this company only
+        const allDayOptions = [...new Set([...dayAnalysis.availableDayOptions, ...Array.from(quantifierDays)])].sort((a, b) => a - b);
+        
+        const dayConfigs = allDayOptions.map(days => {
+          const quotesForDays = companyQuotes.filter(q => {
+            const dayInfo = extractBenefitDays(q.planName);
+            
+            // Check plan name first
+            if (dayInfo.days === days) {
+              return true;
+            }
+            
+            // Check rider quantifiers for companies like Continental Life
+            const allBenefits = getAllBenefits(q);
+            return allBenefits.some(benefit => {
+              return benefit.benefitOptions.some(option => {
+                if (option.quantifier) {
+                  const quantifierDayMatch = option.quantifier.match(/(\d+)\s*day/i);
+                  if (quantifierDayMatch) {
+                    return parseInt(quantifierDayMatch[1]) === days;
+                  }
+                }
+                return false;
+              });
+            });
+          });
+
+          const premiums = quotesForDays.map(q => {
+            const mainBenefit = getMainBenefit(q);
+            if (mainBenefit && mainBenefit.benefitOptions.length > 0) {
+              return mainBenefit.benefitOptions[0]?.rate || 0;
+            }
+            return 0;
+          }).filter(rate => rate > 0);
+
+          return {
+            days,
+            available: quotesForDays.length > 0,
+            quoteCount: quotesForDays.length,
+            minPremium: premiums.length > 0 ? Math.min(...premiums) : 0,
+            maxPremium: premiums.length > 0 ? Math.max(...premiums) : 0
+          };
+        });
+
+        setDayConfigurations(dayConfigs);
+      }
+      
+      if (companyInfo.hasSpecialStructure) {
+        // For special structures, reset standard selections
+        setSelectedPlanOption('');
+        setSelectedBenefitDays(null);
+        setSelectedDailyBenefit(null);
+        setSelectedRiders([]);
+        setSelectedPlanGroup(''); // Reset plan group selection
+      } else {
+        // Reset special structure state for standard companies
+        setSelectedPlanOption(''); // Reset plan option for all companies
+        setSelectedPlanGroup('');
+      }
       
       if (currentStep === 1) {
         setCurrentStep(2);
       }
     }
-  }, [selectedCompany, quotes, currentStep]);
+  }, [selectedCompany, companiesWithStructures, currentStep]);
+
+  // Update available quotes when plan option is selected (for companies like Continental Life)
+  useEffect(() => {
+    if (selectedCompany && selectedPlanOption && availableQuotes.length > 0) {
+      // Get company routing configuration
+      const routeConfig = detectCompanyRouteConfig(selectedCompany, availableQuotes);
+      
+      // Filter quotes to only include the selected plan option
+      const planFilteredQuotes = availableQuotes.filter(q => q.planName === selectedPlanOption);
+      
+      if (planFilteredQuotes.length > 0) {
+        // Use routing system to extract benefit days
+        const dayOptions = new Set<number>();
+        
+        planFilteredQuotes.forEach(quote => {
+          const days = extractBenefitDaysForCompany(quote, routeConfig);
+          if (days !== null) {
+            dayOptions.add(days);
+          }
+        });
+
+        // Build day configurations for this plan option
+        const allDayOptions = Array.from(dayOptions).sort((a, b) => a - b);
+        
+        const dayConfigs = allDayOptions.map(days => {
+          const quotesForDays = planFilteredQuotes.filter(q => {
+            const extractedDays = extractBenefitDaysForCompany(q, routeConfig);
+            return extractedDays === days;
+          });
+
+          const premiums = quotesForDays.map(q => {
+            const primarySource = getPrimaryBenefitSourceForCompany(q, routeConfig);
+            if (primarySource && primarySource.benefitOptions.length > 0) {
+              return primarySource.benefitOptions[0]?.rate || 0;
+            }
+            return 0;
+          }).filter(rate => rate > 0);
+
+          return {
+            days,
+            available: quotesForDays.length > 0,
+            quoteCount: quotesForDays.length,
+            minPremium: premiums.length > 0 ? Math.min(...premiums) : 0,
+            maxPremium: premiums.length > 0 ? Math.max(...premiums) : 0
+          };
+        });
+
+        setDayConfigurations(dayConfigs);
+        
+        // Reset selections when plan option changes
+        setSelectedBenefitDays(null);
+        setSelectedDailyBenefit(null);
+      }
+    }
+  }, [selectedCompany, selectedPlanOption, availableQuotes]);
 
   // Update configuration when selections change
   useEffect(() => {
-    const newConfig: PlanConfiguration = {
-      company: selectedCompany,
-      benefitDays: selectedBenefitDays ?? undefined,
-      dailyBenefit: selectedDailyBenefit ?? undefined,
-      selectedRiders: selectedRiders,
-    };
+    // Handle special plan structures
+    if (selectedCompanyStructure?.hasSpecialStructure && selectedPlanGroup && selectedDailyBenefit && finalQuote) {
+      const newConfig: PlanConfiguration = {
+        company: selectedCompany,
+        planType: 'special-structure',
+        dailyBenefit: selectedDailyBenefit,
+        selectedRiders: selectedRiders,
+        totalPremium: getPremiumForDailyBenefit(finalQuote, selectedDailyBenefit) || 0,
+      };
+      
+      setConfiguration(newConfig);
+      
+      if (currentStep < 4) {
+        setCurrentStep(4);
+      }
+    } else if (!selectedCompanyStructure?.hasSpecialStructure) {
+      // Handle standard (non-special structure) plans
+      const newConfig: PlanConfiguration = {
+        company: selectedCompany,
+        benefitDays: selectedBenefitDays ?? undefined,
+        dailyBenefit: selectedDailyBenefit ?? undefined,
+        selectedRiders: selectedRiders,
+      };
 
-    // Find matching quote
-    if (selectedCompany && selectedBenefitDays && selectedDailyBenefit) {
-      const matchingQuote = findBestMatchingQuote(availableQuotes, newConfig);
-      if (matchingQuote) {
-        setFinalQuote(matchingQuote);
-        newConfig.totalPremium = calculateTotalPremium(matchingQuote, selectedRiders);
-        
-        if (currentStep < 4) {
-          setCurrentStep(4);
+      // Find matching quote
+      // More flexible matching - only require company selection, other fields are optional
+      if (selectedCompany) {
+        const matchingQuote = findBestMatchingQuote(availableQuotes, newConfig);
+        if (matchingQuote) {
+          setFinalQuote(matchingQuote);
+          newConfig.totalPremium = calculateTotalPremium(matchingQuote, selectedRiders);
+          
+          if (currentStep < 4) {
+            setCurrentStep(4);
+          }
         }
       }
-    }
 
-    setConfiguration(newConfig);
-  }, [selectedCompany, selectedBenefitDays, selectedDailyBenefit, selectedRiders, availableQuotes, currentStep]);
+      setConfiguration(newConfig);
+    }
+  }, [
+    selectedCompany, 
+    selectedBenefitDays, 
+    selectedDailyBenefit, 
+    selectedRiders, 
+    availableQuotes, 
+    currentStep,
+    selectedCompanyStructure,
+    selectedPlanGroup,
+    finalQuote
+  ]);
 
   const handleCompanySelect = (company: string) => {
     setSelectedCompany(company);
+    setSelectedPlanOption('');
     setSelectedBenefitDays(null);
     setSelectedDailyBenefit(null);
     setSelectedRiders([]);
@@ -340,24 +549,47 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
   };
 
   const findBestMatchingQuote = (quotes: OptimizedHospitalIndemnityQuote[], config: PlanConfiguration): OptimizedHospitalIndemnityQuote | null => {
-    if (!config.benefitDays || !config.dailyBenefit) return null;
-
-    return quotes.find(quote => {
-      const dayInfo = extractBenefitDays(quote.planName);
-      const hasMatchingBenefit = quote.basePlans?.some(plan => 
-        plan.benefitOptions?.some(option => parseInt(option.amount) === config.dailyBenefit)
-      );
+    // Flexible matching - try to find best match based on available configuration
+    if (!selectedCompany) return null;
+    
+    let candidateQuotes = quotes;
+    
+    // Filter by plan option if selected
+    if (selectedPlanOption) {
+      candidateQuotes = candidateQuotes.filter(q => q.planName.includes(selectedPlanOption));
+    }
+    
+    // If we have a daily benefit, try to match it
+    if (config.dailyBenefit) {
+      const matchingQuotes = candidateQuotes.filter(quote => {
+        const availableBenefits = getAvailableDailyBenefitsFromQuote(quote);
+        return availableBenefits.includes(config.dailyBenefit || 0);
+      });
       
-      return dayInfo.days === config.benefitDays && hasMatchingBenefit;
-    }) || null;
+      if (matchingQuotes.length > 0) {
+        candidateQuotes = matchingQuotes;
+      }
+    }
+    
+    // If we have benefit days, try to match them (for daily plans)
+    if (config.benefitDays && !isLumpSumPlan()) {
+      const dayMatchingQuotes = candidateQuotes.filter(quote => {
+        const dayInfo = extractBenefitDays(quote.planName);
+        return dayInfo.days === config.benefitDays;
+      });
+      
+      if (dayMatchingQuotes.length > 0) {
+        candidateQuotes = dayMatchingQuotes;
+      }
+    }
+    
+    // Return the first matching quote (or first quote if no specific matches)
+    return candidateQuotes[0] || null;
   };
 
   const calculateTotalPremium = (quote: OptimizedHospitalIndemnityQuote, riders: RiderConfiguration[]): number => {
-    // Get base premium from the selected daily benefit
-    const basePlan = quote.basePlans?.[0];
-    const basePremium = basePlan?.benefitOptions?.find(option => 
-      parseInt(option.amount) === selectedDailyBenefit
-    )?.rate || 0;
+    // Get base premium using the new detection system
+    const basePremium = getPremiumForDailyBenefit(quote, selectedDailyBenefit || 0);
 
     const riderPremium = riders.reduce((total, riderConfig) => {
       if (riderConfig.selectedBenefitOption) {
@@ -420,22 +652,82 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
     };
   };
 
-  const getAvailableDailyBenefits = (): number[] => {
-    if (!availableQuotes.length || !selectedBenefitDays) return [];
+  const getAvailablePlanOptions = (): string[] => {
+    if (!selectedCompany || !availableQuotes.length) return [];
+    
+    // Use the new routing system to get plan options
+    return getAvailablePlanOptionsFromRoutes(selectedCompany, availableQuotes);
+  };
 
-    const dayFilteredQuotes = availableQuotes.filter(q => {
-      const dayInfo = extractBenefitDays(q.planName);
-      return dayInfo.days === selectedBenefitDays;
-    });
+  // Helper function to determine if the current plan configuration is for a lump sum plan
+  const isLumpSumPlan = (): boolean => {
+    if (!selectedPlanOption && !selectedCompany) return false;
+    
+    // Check if plan option explicitly mentions lump sum
+    if (selectedPlanOption && selectedPlanOption.toLowerCase().includes('lump sum')) {
+      return true;
+    }
+    
+    // Check if any of the available quotes for this configuration are lump sum
+    if (selectedCompany && availableQuotes.length > 0) {
+      const currentQuotes = selectedPlanOption 
+        ? availableQuotes.filter(q => q.planName.includes(selectedPlanOption))
+        : availableQuotes;
+      
+      return currentQuotes.some(quote => 
+        quote.planName.toLowerCase().includes('lump sum') ||
+        (quote.riders && quote.riders.some(rider => 
+          rider.benefitOptions?.some(option => 
+            option.quantifier?.toLowerCase().includes('occurrence')
+          )
+        ))
+      );
+    }
+    
+    return false;
+  };
+
+  const getAvailableDailyBenefits = (): number[] => {
+    if (!availableQuotes.length || !selectedCompany) return [];
+
+    // Get company routing configuration
+    const routeConfig = detectCompanyRouteConfig(selectedCompany, availableQuotes);
+
+    // Filter by selected plan option first (if applicable)
+    let quotesToSearch = availableQuotes;
+    if (selectedPlanOption) {
+      quotesToSearch = availableQuotes.filter(q => q.planName === selectedPlanOption);
+    }
+
+    // Don't filter by benefit days - show all available daily benefits for the selected quotes
+    // This allows users to see all configuration options regardless of benefit days selection
+    let finalQuotes = quotesToSearch;
+
+    // For hybrid benefit structures, prefer daily benefits but show all if none selected
+    if (routeConfig.benefitStructureType === 'hybrid') {
+      const dailyQuotes = filterQuotesByBenefitType(quotesToSearch, 'daily', routeConfig);
+      if (dailyQuotes.length > 0) {
+        finalQuotes = dailyQuotes;
+      }
+    }
 
     const amounts = new Set<number>();
-    dayFilteredQuotes.forEach(quote => {
-      quote.basePlans?.forEach(plan => {
-        plan.benefitOptions?.forEach(option => {
+    finalQuotes.forEach(quote => {
+      const primarySource = getPrimaryBenefitSourceForCompany(quote, routeConfig);
+      if (primarySource) {
+        primarySource.benefitOptions.forEach(option => {
+          // For hybrid companies like Continental Life, only include daily benefits
+          if (routeConfig.benefitStructureType === 'hybrid') {
+            const benefitType = determineBenefitType(option.quantifier);
+            if (benefitType !== 'daily') return;
+          }
+          
           const amount = parseInt(option.amount);
-          if (!isNaN(amount)) amounts.add(amount);
+          if (!isNaN(amount) && amount > 0) {
+            amounts.add(amount);
+          }
         });
-      });
+      }
     });
 
     return Array.from(amounts).sort((a, b) => a - b);
@@ -509,9 +801,12 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
               <div>
                 <h3 className="text-lg font-semibold mb-4">Select Insurance Company</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {companiesList.map((company) => {
-                    // Get company quotes for rider analysis
-                    const companyQuotes = quotes.filter(q => q.companyName === company);
+                  {companiesWithStructures.map((companyInfo) => {
+                    const company = companyInfo.name;
+                    const companyQuotes = companyInfo.quotes;
+                    
+                    // Get plan structure summary
+                    const planSummary = getPlanGroupingSummary(companyQuotes);
                     
                     // Get unique riders from all quotes for this company
                     const allRiders = new Set<string>();
@@ -569,7 +864,16 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                   />
                                 </div>
                                 <div>
-                                  <h4 className="text-xl font-bold text-primary">{displayName}</h4>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="text-xl font-bold text-primary">{displayName}</h4>
+                                    {companyInfo.hasSpecialStructure && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        {companyInfo.planStructure.structureType === 'multiple-series' ? 'Multiple Series' :
+                                         companyInfo.planStructure.structureType === 'pre-configured' ? 'Pre-configured Plans' :
+                                         companyInfo.planStructure.structureType === 'hybrid' ? 'Mixed Structure' : 'Special'}
+                                      </Badge>
+                                    )}
+                                  </div>
                                   <div className="flex items-center gap-2 my-1">
                                     <AmBestStarRating 
                                       amBestRating={companyRating?.rating}
@@ -587,30 +891,57 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                             </div>
                           </div>
                           
-                          {/* Rider Badges */}
-                          {allRiders.size > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Available Riders ({allRiders.size}):
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {Array.from(new Set(Array.from(allRiders).map(riderName => abbreviateRiderName(riderName)))).slice(0, 20).map((abbreviatedName, index) => (
-                                  <Badge 
-                                    key={`${abbreviatedName}-${index}`} 
-                                    variant="outline" 
-                                    className="text-xs"
-                                  >
-                                    {abbreviatedName}
-                                  </Badge>
-                                ))}
-                                {allRiders.size > 20 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{allRiders.size - 20} more
-                                  </Badge>
-                                )}
+                          {/* Plan Structure Info & Rider Badges */}
+                          <div className="space-y-3">
+                            {/* Plan Structure Summary */}
+                            {companyInfo.hasSpecialStructure && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">
+                                  Plan Structure:
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                  {companyInfo.planStructure.planGroups.map((group, index) => (
+                                    <Badge 
+                                      key={`group-${index}`} 
+                                      variant="default" 
+                                      className="text-xs"
+                                    >
+                                      {group.baseName} ({group.variants.length} options)
+                                    </Badge>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {companyQuotes.length} quotes with {planSummary.totalVariants} variants
+                                  {planSummary.hasMultiplePlanSeries && ` across ${planSummary.planSeriesNames.length} series`}
+                                </p>
                               </div>
-                            </div>
-                          )}
+                            )}
+                            
+                            {/* Rider Badges */}
+                            {allRiders.size > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">
+                                  Available Riders ({allRiders.size}):
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                  {Array.from(new Set(Array.from(allRiders).map(riderName => abbreviateRiderName(riderName)))).slice(0, 20).map((abbreviatedName, index) => (
+                                    <Badge 
+                                      key={`${abbreviatedName}-${index}`} 
+                                      variant="outline" 
+                                      className="text-xs"
+                                    >
+                                      {abbreviatedName}
+                                    </Badge>
+                                  ))}
+                                  {allRiders.size > 20 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{allRiders.size - 20} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     );
@@ -627,51 +958,247 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                   <div>
                     <h3 className="text-lg font-semibold mb-6">Configure Your Plan</h3>
                     
-                    {/* Basic Plan Configuration */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div>
-                        <h4 className="font-medium mb-2">Benefit Days Coverage</h4>
-                        <Select
-                          value={selectedBenefitDays?.toString() || ""}
-                          onValueChange={(value) => setSelectedBenefitDays(parseInt(value))}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select benefit days coverage" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {dayConfigurations.map((config) => (
-                              <SelectItem key={config.days} value={config.days.toString()}>
-                                {config.days} days
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    {/* Special Plan Structure Configuration */}
+                    {selectedCompanyStructure?.hasSpecialStructure ? (
+                      // Special Plan Structure Configuration (CIGNA, Guarantee Trust, Allstate, etc.)
+                      <div className="space-y-6">
+                        <Alert className="bg-green-50 border-green-200">
+                          <InfoIcon className="h-4 w-4 text-green-600" />
+                          <AlertDescription>
+                            <div className="text-green-800">
+                              <strong>{selectedCompany} Special Plan Structure</strong>
+                              <p className="mt-1">
+                                This company offers {selectedCompanyStructure.planStructure.structureType === 'multiple-series' ? 'multiple plan series' : 
+                                selectedCompanyStructure.planStructure.structureType === 'pre-configured' ? 'pre-configured plan packages' : 'a mixed plan structure'}. 
+                                Select your preferred plan group below.
+                              </p>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
 
-                      {selectedBenefitDays && (
-                        <div>
-                          <h4 className="font-medium mb-2">Daily Benefit Amount</h4>
-                          <Select
-                            value={selectedDailyBenefit?.toString() || ""}
-                            onValueChange={(value) => setSelectedDailyBenefit(parseInt(value))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select daily benefit amount" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableDailyBenefits().map((amount) => (
-                                <SelectItem key={amount} value={amount.toString()}>
-                                  ${amount} per day
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        {/* Plan Group Selection */}
+                        <div className="space-y-4">
+                          {selectedCompanyStructure.planStructure.planGroups.length > 1 ? (
+                            <div>
+                              <h4 className="font-medium mb-3">Choose Plan Group</h4>
+                              <p className="text-sm text-gray-600 mb-4">
+                                Select the type of plan that best fits your needs.
+                              </p>
+                              <RadioGroup 
+                                value={selectedPlanGroup} 
+                                onValueChange={setSelectedPlanGroup}
+                              >
+                                {selectedCompanyStructure.planStructure.planGroups.map((group: any, index: number) => (
+                                  <div key={index} className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <RadioGroupItem value={group.baseName} id={`group-${index}`} />
+                                    <Label htmlFor={`group-${index}`} className="flex-1 cursor-pointer">
+                                      <div className="space-y-1">
+                                        <div className="font-medium">{group.baseName}</div>
+                                        <div className="text-sm text-gray-600">
+                                          {group.variants.length} option{group.variants.length !== 1 ? 's' : ''} available
+                                          {group.isPreConfigured && ' (Pre-configured packages)'}
+                                        </div>
+                                        {group.variants.length > 0 && (
+                                          <div className="text-xs text-gray-500">
+                                            Options: {group.variants.slice(0, 3).map((v: any) => v.variantName).join(', ')}
+                                            {group.variants.length > 3 && ` +${group.variants.length - 3} more`}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </div>
+                          ) : (
+                            // Single plan group - show info but don't auto-select
+                            (() => {
+                              const singleGroup = selectedCompanyStructure.planStructure.planGroups[0];
+                              return (
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <div className="font-medium text-blue-900">{singleGroup?.baseName}</div>
+                                  <div className="text-sm text-blue-700">
+                                    {singleGroup?.variants.length} option{singleGroup?.variants.length !== 1 ? 's' : ''} available
+                                  </div>
+                                  <button
+                                    onClick={() => setSelectedPlanGroup(singleGroup?.baseName)}
+                                    className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                                  >
+                                    Select this plan group
+                                  </button>
+                                </div>
+                              );
+                            })()
+                          )}
+
+                          {/* Plan Variant Selection */}
+                          {selectedPlanGroup && (() => {
+                            const selectedGroup = selectedCompanyStructure.planStructure.planGroups.find((g: any) => g.baseName === selectedPlanGroup);
+                            if (!selectedGroup) return null;
+
+                            // Helper function to extract daily benefit amount from main benefit
+                            const getDailyBenefitAmount = (quote: OptimizedHospitalIndemnityQuote): number => {
+                              const mainBenefit = getMainBenefit(quote);
+                              if (mainBenefit && mainBenefit.benefitOptions.length > 0) {
+                                const amount = mainBenefit.benefitOptions[0]?.amount;
+                                return amount ? parseInt(amount.replace(/\D/g, '')) : 0;
+                              }
+                              return 0;
+                            };
+
+                            return (
+                              <div>
+                                <h4 className="font-medium mb-3">Choose Your Plan Option</h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                  Select the plan that best fits your needs. Click on any plan to see details and continue.
+                                </p>
+                                <div className="space-y-3">
+                                  {selectedGroup.variants.map((variant: any, vIndex: number) => {
+                                    const dailyBenefit = getDailyBenefitAmount(variant.quote);
+                                    const premium = getPremiumForDailyBenefit(variant.quote, dailyBenefit);
+                                    const isSelected = selectedDailyBenefit === dailyBenefit;
+                                    
+                                    return (
+                                      <div 
+                                        key={vIndex} 
+                                        className={`cursor-pointer p-4 border-2 rounded-lg transition-all hover:border-blue-300 hover:shadow-md ${
+                                          isSelected 
+                                            ? 'border-blue-500 bg-blue-50 shadow-md' 
+                                            : 'border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                        onClick={() => {
+                                          const dailyBenefit = getDailyBenefitAmount(variant.quote);
+                                          setSelectedDailyBenefit(dailyBenefit);
+                                          setFinalQuote(variant.quote);
+                                        }}
+                                      >
+                                        <div className="flex justify-between items-start">
+                                          <div className="space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                              <div className={`w-4 h-4 rounded-full border-2 ${
+                                                isSelected 
+                                                  ? 'border-blue-500 bg-blue-500' 
+                                                  : 'border-gray-300'
+                                              }`}>
+                                                {isSelected && (
+                                                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                                                )}
+                                              </div>
+                                              <div className="font-semibold text-lg">{variant.variantName}</div>
+                                            </div>
+                                            <div className="text-gray-700 font-medium">
+                                              ${dailyBenefit}/day hospital benefit
+                                              {variant.benefitDays && ` • ${variant.benefitDays} days coverage`}
+                                            </div>
+                                            {variant.includedBenefits.length > 0 && (
+                                              <div className="text-sm text-gray-600">
+                                                <strong>Includes:</strong> {variant.includedBenefits.slice(0, 3).map((b: any) => b.name).join(', ')}
+                                                {variant.includedBenefits.length > 3 && ` +${variant.includedBenefits.length - 3} more`}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="text-right">
+                                            <div className="font-bold text-xl text-green-600">
+                                              ${premium?.toFixed(2) || '0.00'}
+                                            </div>
+                                            <div className="text-sm text-gray-500">per month</div>
+                                          </div>
+                                        </div>
+                                        {isSelected && (
+                                          <div className="mt-3 pt-3 border-t border-blue-200">
+                                            <div className="text-sm text-blue-700 font-medium">
+                                              ✓ Selected - Continue below to customize this plan
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      // Standard (non-Allstate) Plan Configuration
+                      <>
+                        {/* Plan Option Selection (for companies with multiple plan types) */}
+                        {getAvailablePlanOptions().length > 0 && (
+                          <div className="mb-6">
+                            <h4 className="font-medium mb-2">Select Plan Option</h4>
+                            <Select
+                              value={selectedPlanOption}
+                              onValueChange={(value) => {
+                                setSelectedPlanOption(value);
+                                // Reset selections when plan option changes
+                                setSelectedBenefitDays(null);
+                                setSelectedDailyBenefit(null);
+                                setSelectedRiders([]);
+                              }}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose plan option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAvailablePlanOptions().map((planName) => (
+                                  <SelectItem key={planName} value={planName}>
+                                    {planName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
 
-                    {/* Riders Section */}
-                    {selectedBenefitDays && selectedDailyBenefit && (
+                        {/* Basic Plan Configuration */}
+                        {/* Only show if no plan option selection is needed OR a plan option has been selected */}
+                        {(getAvailablePlanOptions().length === 0 || selectedPlanOption) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          <div>
+                            <h4 className="font-medium mb-2">Benefit Days Coverage</h4>
+                            <Select
+                              value={selectedBenefitDays?.toString() || ""}
+                              onValueChange={(value) => setSelectedBenefitDays(parseInt(value))}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select benefit days coverage" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {dayConfigurations.map((config) => (
+                                  <SelectItem key={config.days} value={config.days.toString()}>
+                                    {config.days} days
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Always show daily benefit selector once in configure plan section */}
+                          <div>
+                            <h4 className="font-medium mb-2">Daily Benefit Amount</h4>
+                            <Select
+                              value={selectedDailyBenefit?.toString() || ""}
+                              onValueChange={(value) => setSelectedDailyBenefit(parseInt(value))}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select daily benefit amount" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAvailableDailyBenefits().map((amount) => (
+                                  <SelectItem key={amount} value={amount.toString()}>
+                                    ${amount} per day
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        )}
+
+                        {/* Riders Section */}
+                        {/* Show riders section once plan option is selected (if needed) or we're in configure mode */}
+                        {(getAvailablePlanOptions().length === 0 || selectedPlanOption) && (
                       <div className="space-y-4">
                         <h4 className="font-medium">Optional Riders</h4>
                         
@@ -817,6 +1344,8 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                         </div>
                       </div>
                     )}
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -854,12 +1383,18 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                                   <div className="font-medium">${selectedDailyBenefit}/day</div>
                                 </div>
                               )}
-                              {selectedBenefitDays && selectedDailyBenefit && (
+                              {selectedBenefitDays && selectedDailyBenefit && !isLumpSumPlan() && (
                                 <div>
                                   <span className="text-sm text-gray-600">Maximum Benefit:</span>
                                   <div className="font-medium">
                                     ${(selectedDailyBenefit || 0) * (selectedBenefitDays || 0)}
                                   </div>
+                                </div>
+                              )}
+                              {isLumpSumPlan() && selectedDailyBenefit && (
+                                <div>
+                                  <span className="text-sm text-gray-600">Lump Sum Benefit:</span>
+                                  <div className="font-medium">${selectedDailyBenefit} per occurrence</div>
                                 </div>
                               )}
                             </div>
@@ -895,7 +1430,7 @@ export function AdaptiveHospitalIndemnityPlanBuilder({ quotes, onPlanBuilt }: Ad
                               onClick={() => onPlanBuilt(finalQuote, configuration)}
                               className="w-full"
                               size="sm"
-                              disabled={!selectedBenefitDays || !selectedDailyBenefit}
+                              disabled={!finalQuote}
                             >
                               <ShieldCheckIcon className="h-4 w-4 mr-2" />
                               Build This Plan

@@ -49,7 +49,7 @@ export const useQuoteManagement = () => {
   }, []);
 
   const hasQuotes = useCallback(() => {
-    // Fast check using visitor_id - much faster than checking all quote arrays
+    // Fast check using medicare_quote_form_data - much faster than checking all quote arrays
     return hasQuotesFromStorage();
   }, []);
 

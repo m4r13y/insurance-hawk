@@ -13,6 +13,7 @@ import { RawDataInspector } from '@/components/medicare-shop/hospital-indemnity/
 import { ComparisonControls } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/ComparisonControls';
 import { ProductVariationParser } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/ProductVariationParser';
 import { SmartAnalysisDemo } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SmartAnalysisDemo';
+import { CompanyPlanHierarchy } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/CompanyPlanHierarchy';
 import { 
   HospitalIndemnityPlanBuilder,
   SmartHospitalIndemnityPlanBuilder
@@ -157,6 +158,9 @@ export default function HospitalIndemnityFieldMappingPage() {
           onClearSelection={handleClearComparison}
         />
       </div>
+
+      {/* Simple Company/Plan Hierarchy */}
+      <CompanyPlanHierarchy quotes={quotes} />
 
       {/* Quote Selector */}
       <QuoteSelector

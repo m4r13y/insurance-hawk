@@ -239,13 +239,13 @@ export const saveToStorageSync = (key: string, value: any): Promise<void> => {
   return saveToStorage(key, value);
 };
 
-// Check if quotes exist by checking for visitor_id presence
-// visitor_id is only created when quotes are generated, so it's a reliable indicator
+// Check if quotes exist by checking for medicare_quote_form_data presence
+// medicare_quote_form_data is only created when quotes are generated, so it's a reliable indicator
 export const hasQuotes = (): boolean => {
   try {
-    // Check for visitor_id in localStorage - this is only set when quotes are created
-    const visitorId = localStorage.getItem('visitor_id');
-    return !!visitorId;
+    // Check for medicare_quote_form_data in localStorage - this is only set when quotes are created
+    const quoteFormData = localStorage.getItem(QUOTE_FORM_DATA_KEY);
+    return !!quoteFormData;
   } catch (error) {
     console.error('Error checking quotes:', error);
     return false;
