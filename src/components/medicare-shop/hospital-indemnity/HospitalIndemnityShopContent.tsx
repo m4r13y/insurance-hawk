@@ -1,10 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarFilledIcon, HomeIcon, CalendarIcon, CheckCircledIcon, TokensIcon as DollarSign } from "@radix-ui/react-icons";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { StarFilledIcon, HomeIcon, CalendarIcon, CheckCircledIcon, TokensIcon as DollarSign, ReloadIcon } from "@radix-ui/react-icons";
 import { OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
 import { SimplifiedHospitalIndemnityPlanBuilder } from './hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder';
@@ -20,19 +21,36 @@ export default function HospitalIndemnityShopContent({
   isLoading = false, 
   onSelectPlan 
 }: HospitalIndemnityShopContentProps) {
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [planConfig, setPlanConfig] = useState<any>(null);
+
   if (isLoading) {
     return <PlanCardsSkeleton count={4} title="Hospital Indemnity Plans" />;
   }
 
-    const handlePlanBuilt = (config: any) => {
+  const handlePlanBuilt = async (config: any) => {
     console.log('✅ Plan built successfully:', config);
+    
+    // Show processing state
+    setIsProcessing(true);
+    setPlanConfig(config);
+    setShowSuccessModal(true);
+    
+    // Simulate processing time (you can replace this with actual API calls)
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Here you would typically:
     // 1. Save the configuration to the user's profile
     // 2. Navigate to a checkout or enrollment page
-    // 3. Show a confirmation modal
+    // 3. Process the enrollment
     
-    alert(`Plan built successfully!\n\nCompany: ${config.quote.companyName}\nPlan: ${config.quote.planName}\nTotal Premium: $${config.totalPremium?.toFixed(2) || '0.00'}/month`);
+    setIsProcessing(false);
+    
+    // Auto-close modal after 3 seconds
+    setTimeout(() => {
+      setShowSuccessModal(false);
+    }, 3000);
   };
 
   if (!quotes || quotes.length === 0) {
