@@ -25,6 +25,8 @@ export interface QuoteActions {
   getQuotesForCategory: (category: string) => any[];
 }
 
+import { hasQuotes as hasQuotesFromStorage } from '@/components/medicare-shop/shared';
+
 export const useQuoteManagement = () => {
   // Quote state
   const [realQuotes, setRealQuotes] = useState<any[]>([]);
@@ -47,10 +49,9 @@ export const useQuoteManagement = () => {
   }, []);
 
   const hasQuotes = useCallback(() => {
-    return (realQuotes?.length > 0) || (advantageQuotes?.length > 0) || (drugPlanQuotes?.length > 0) || 
-           (dentalQuotes?.length > 0) || (hospitalIndemnityQuotes?.length > 0) || 
-           (finalExpenseQuotes?.length > 0) || (cancerInsuranceQuotes?.length > 0);
-  }, [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, hospitalIndemnityQuotes, finalExpenseQuotes, cancerInsuranceQuotes]);
+    // Fast check using visitor_id - much faster than checking all quote arrays
+    return hasQuotesFromStorage();
+  }, []);
 
   const getQuotesForCategory = useCallback((category: string) => {
     switch (category) {

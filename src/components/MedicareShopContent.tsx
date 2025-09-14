@@ -204,8 +204,8 @@ function MedicareShopContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCoverageLevel, setSelectedCoverageLevel] = useState('all');
-  // Single source of truth for plan selections - always use this format
-  const [selectedQuotePlans, setSelectedQuotePlans] = useState(['F', 'G', 'N']);
+  // Single source of truth for plan selections - start empty, populate based on user choices
+  const [selectedQuotePlans, setSelectedQuotePlans] = useState<string[]>([]);
   // Track which plans have quotes available (for checkbox display logic)
   // Plan-specific state management (like test-multi-plan working pattern)
   const [planQuotes, setPlanQuotes] = useState<{
@@ -352,6 +352,7 @@ function MedicareShopContent() {
     
     const initializeComponent = async () => {
       try {
+        const startTime = performance.now();
         
         // Migrate legacy localStorage data if it exists
         await migrateLegacyStorage();
@@ -361,78 +362,28 @@ function MedicareShopContent() {
         const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
         const hasActiveCategory = localStorage.getItem('medicare_current_flow_step');
         
-        // Check if we have any saved quotes using visitor_id presence
+        // OPTIMIZATION: Fast check using visitor_id only!
         // visitor_id is only created when quotes are generated, so it's a reliable indicator
+        // This avoids expensive Firestore calls during page load
         const hasExistingQuotes = !!hasVisitorId;
         
-        // Also check for actual quote data in storage as backup detection
-        const hasStoredQuoteData = await Promise.all([
-          loadFromStorage(REAL_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking medigap quotes:', quotes.length);
-            return quotes.length > 0;
-          }),
-          loadFromStorage(DENTAL_QUOTES_KEY, []).then(async quotes => {
-            console.log('🔍 Checking dental quotes in Firebase:', quotes.length);
-            
-            // If no dental quotes in Firebase, check localStorage fallback
-            if (quotes.length === 0) {
-              try {
-                const { loadDentalQuotesFromStorage } = await import('@/lib/dental-storage');
-                const localDentalQuotes = loadDentalQuotesFromStorage();
-                const localCount = localDentalQuotes?.quotes?.length || 0;
-                console.log('🔍 Checking dental quotes in localStorage fallback:', localCount);
-                return localCount > 0;
-              } catch (error) {
-                console.warn('Failed to check dental localStorage:', error);
-                return false;
-              }
-            }
-            
-            return quotes.length > 0;
-          }),
-          loadFromStorage(ADVANTAGE_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking advantage quotes:', quotes.length);
-            return quotes.length > 0;
-          }),
-          loadFromStorage(DRUG_PLAN_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking drug plan quotes:', quotes.length);
-            return quotes.length > 0;
-          }),
-          loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking hospital indemnity quotes:', quotes.length);
-            return quotes.length > 0;
-          }),
-          loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking final expense quotes:', quotes.length);
-            return quotes.length > 0;
-          }),
-          loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []).then(quotes => {
-            console.log('🔍 Checking cancer insurance quotes:', quotes.length);
-            return quotes.length > 0;
-          })
-        ]).then(results => {
-          const hasAnyQuotes = results.some(hasQuotes => hasQuotes);
-          console.log('🔍 Storage check results:', results, 'hasAnyQuotes:', hasAnyQuotes);
-          return hasAnyQuotes;
-        });
+        // Simple session detection based on visitor_id presence (much faster!)
+        const isExistingSession = hasExistingQuotes && hasMedicareCategories;
+        const hasExistingQuoteSession = isExistingSession;
         
-        // If we have all required keys, this is a page refresh with existing session
-        // Make session detection more forgiving - visitor_id + categories OR actual stored quotes
-        const isExistingSession = (hasVisitorId && hasMedicareCategories) || hasStoredQuoteData;
-        const hasExistingQuoteSession = isExistingSession && (hasExistingQuotes || hasStoredQuoteData);
-        
-        console.log('🔍 Session detection analysis:', {
+        const sessionDetectionTime = performance.now() - startTime;
+        console.log('� Fast session detection completed in:', sessionDetectionTime.toFixed(2) + 'ms', {
           hasVisitorId: !!hasVisitorId,
           hasMedicareCategories: !!hasMedicareCategories, 
           hasActiveCategory: !!hasActiveCategory,
           hasExistingQuotes,
-          hasStoredQuoteData,
           isExistingSession,
           hasExistingQuoteSession
         });
         
-        // Only load form data on initialization - quotes will be loaded lazily
-        const savedFormData = await loadFromStorage(QUOTE_FORM_DATA_KEY, null);
+        // Only load form data on initialization if we have an existing session
+        // This avoids unnecessary Firestore calls for new users
+        const savedFormData = hasExistingQuoteSession ? await loadFromStorage(QUOTE_FORM_DATA_KEY, null) : null;
 
         // Load UI state from localStorage (these are lightweight)
         const savedCategories = loadSelectedCategories();
@@ -446,55 +397,37 @@ function MedicareShopContent() {
           ? urlCategory 
           : savedActiveCategory || 'medigap'; // Default to 'medigap' if flow step is missing
 
-        if (savedFormData) {
-          setQuoteFormData(savedFormData);
-          
-          // Restore selectedQuotePlans from saved form data
-          if (savedFormData.selectedQuotePlans && Array.isArray(savedFormData.selectedQuotePlans)) {
-            // Convert from storage format (plan-f, plan-g, plan-n) to component format (F, G, N)
-            const restoredPlans = savedFormData.selectedQuotePlans.map((plan: string) => 
-              plan.replace('plan-', '').toUpperCase()
-            );
-            setSelectedQuotePlans(restoredPlans);
-            console.log('🔄 Restored selectedQuotePlans from storage:', restoredPlans);
-          }
-          
-          // Load any existing quotes from storage based on initial category
-          if (initialCategory === 'medigap') {
-            console.log('🔍 Loading existing medigap quotes from storage...');
-            await loadAllPlanQuotes();
-          } else {
-            // Load quotes for other categories
-            console.log(`🔍 Loading existing ${initialCategory} quotes from storage...`);
-            await loadQuotesForCategory(initialCategory);
-          }
-        }
-        if (savedCategories && Array.isArray(savedCategories)) {
-          setSelectedFlowCategories(savedCategories);
-        }
-        
-        // For existing sessions with quotes, load all quotes and show results
-        if (hasExistingQuoteSession) {
+        // VISITOR_ID is the source of truth for existing quotes
+        // Move ALL quote loading logic here instead of checking savedFormData
+        if (hasExistingQuotes) {
+          console.log('🔍 visitor_id found - loading quotes from Firestore for visitor:', hasVisitorId);
           
           // Set recovery mode and form completed state FIRST
           setIsRecoveringSession(true);
           setQuoteFormCompleted(true);
           medicareState.setShowMedicareFlow(false);
           
-          // Ensure the current flow step is saved if missing
-          if (!hasActiveCategory && initialCategory) {
-            saveCurrentFlowStep(initialCategory);
+          // Restore form data if available (but don't depend on it for quote loading)
+          if (savedFormData) {
+            setQuoteFormData(savedFormData);
+            
+            // Restore selectedQuotePlans from saved form data
+            if (savedFormData.selectedQuotePlans && Array.isArray(savedFormData.selectedQuotePlans)) {
+              const restoredPlans = savedFormData.selectedQuotePlans.map((plan: string) => 
+                plan.replace('plan-', '').toUpperCase()
+              );
+              setSelectedQuotePlans(restoredPlans);
+              console.log('🔄 Restored selectedQuotePlans from storage:', restoredPlans);
+            }
           }
           
-          // Load quotes for selected categories - but do it lazily, one at a time
+          // Load quotes based on saved categories (the reliable way)
           if (savedCategories && Array.isArray(savedCategories) && savedCategories.length > 0) {
+            console.log('🔍 Loading quotes for saved categories:', savedCategories);
             
             // Map saved categories to actual quote loading categories
-            // "additional" needs to be expanded to the specific quote types that were generated
             const mappedCategories = savedCategories.flatMap(category => {
               if (category === 'additional') {
-                // For "additional", we need to check which specific types were actually generated
-                // This is a temporary workaround - ideally we'd save the specific types
                 return ['dental']; // Most common case for additional is dental
               }
               return [category];
@@ -502,37 +435,43 @@ function MedicareShopContent() {
             
             console.log('🔄 Mapped saved categories for loading:', savedCategories, '→', mappedCategories);
             
-            // Set expected quote types based on mapped categories to enable quotesReady detection
+            // Set expected quote types based on mapped categories
             setExpectedQuoteTypes(mappedCategories);
             
-            // Only load the first/active category immediately
-            const primaryCategory = mappedCategories[0];
+            // Set the active category BEFORE loading quotes
+            const primaryCategory = mappedCategories[0] || initialCategory;
+            setActiveCategory(primaryCategory);
+            setSelectedCategory(primaryCategory);
+            
+            // Load quotes for the primary category
             if (primaryCategory) {
-              // Set the active category BEFORE loading quotes
-              setActiveCategory(primaryCategory);
-              setSelectedCategory(primaryCategory);
-              
               await loadQuotesForCategory(primaryCategory);
-              // Don't set quotesReady here - let the existing useEffect handle it when state updates
             }
-            // Other categories will be loaded when user switches to them
+          } else {
+            // Fallback: load based on initial category
+            console.log(`🔍 No saved categories, loading quotes for initial category: ${initialCategory}`);
+            setActiveCategory(initialCategory);
+            setSelectedCategory(initialCategory);
+            await loadQuotesForCategory(initialCategory);
           }
           
           // Reset recovery mode after quotes are loaded
           setIsRecoveringSession(false);
-        } else if (isExistingSession && savedFormData) {
-          // For existing sessions with form data but no quotes, they've completed the flow but need to regenerate quotes
-          setQuoteFormCompleted(true);
-          medicareState.setShowMedicareFlow(false); // This will show the flow selection page
-        } else if (initialCategory) {
-          // For new sessions or incomplete sessions, load quotes for active category only
-          await loadQuotesForCategory(initialCategory);
-        }
-        
-        // Only set categories if we haven't already set them during session recovery
-        if (!hasExistingQuoteSession) {
+          
+        } else {
+          // NEW USER - no visitor_id means no quotes exist
+          console.log('🆕 New user - no visitor_id found, setting up fresh session');
+          
+          // Set up initial category
           setActiveCategory(initialCategory);
           setSelectedCategory(initialCategory);
+          
+          // Don't load any quotes - they'll be generated when user completes the flow
+        }
+        
+        // Set selected flow categories regardless of quote loading path
+        if (savedCategories && Array.isArray(savedCategories)) {
+          setSelectedFlowCategories(savedCategories);
         }
         
         // Check if component is still mounted before setting initialization state
@@ -1967,7 +1906,8 @@ function MedicareShopContent() {
         if (category === 'partd') {
           // Map partd to drug-plan for consistency with tab system
           allCategories.push('drug-plan');
-        } else {
+        } else if (category !== 'additional') {
+          // Skip 'additional' category - it's handled by selectedAdditionalOptions
           allCategories.push(category);
         }
       });

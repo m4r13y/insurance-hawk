@@ -85,12 +85,23 @@ export const loadUIState = (key: string, defaultValue: any) => {
 
 // Save selected categories to localStorage for instant UI updates
 export const saveSelectedCategories = (categories: string[]) => {
-  saveUIState(SELECTED_CATEGORIES_KEY, categories);
+  // Filter out 'additional' category to maintain data integrity
+  const validCategories = categories.filter((category: string) => category !== 'additional');
+  saveUIState(SELECTED_CATEGORIES_KEY, validCategories);
 };
 
 // Load selected categories from localStorage
 export const loadSelectedCategories = (): string[] => {
-  return loadUIState(SELECTED_CATEGORIES_KEY, []);
+  const categories = loadUIState(SELECTED_CATEGORIES_KEY, []);
+  // Filter out 'additional' category if it exists for data integrity
+  const validCategories = categories.filter((category: string) => category !== 'additional');
+  
+  // If we removed any invalid categories, save the cleaned data back
+  if (validCategories.length !== categories.length) {
+    saveUIState(SELECTED_CATEGORIES_KEY, validCategories);
+  }
+  
+  return validCategories;
 };
 
 // Save current flow step for navigation persistence
