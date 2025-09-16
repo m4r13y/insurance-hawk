@@ -256,16 +256,10 @@ export function optimizeDentalQuotes(rawResponse: any): OptimizedDentalQuotesRes
     
     console.log(`📊 Processing ${rawResponse.quotes.length} dental quotes...`);
     
-    // Filter quotes to only include those with 2025 last_modified dates
-    const current2025Quotes = filter2025Quotes(rawResponse.quotes);
+    // Use all quotes (both quality filter and date filter removed to show all companies)
+    const quotesToProcess = rawResponse.quotes;
     
-    // Apply additional quality filter for better user experience
-    const qualityFiltered = filterRecentQualityPlans(current2025Quotes);
-    
-    // Use quality filtered if we have enough plans, otherwise fall back to 2025 filter
-    const quotesToProcess = qualityFiltered.length >= 10 ? qualityFiltered : current2025Quotes;
-    
-    console.log(`📊 Using ${quotesToProcess.length} quotes after quality filtering (${qualityFiltered.length} quality, ${current2025Quotes.length} total 2025)`);
+    console.log(`📊 Using ${quotesToProcess.length} quotes (all filters disabled)`);
     
     // Extract optimized quotes
     const optimizedQuotes: OptimizedDentalQuote[] = [];
