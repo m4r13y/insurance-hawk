@@ -2,11 +2,7 @@
 
 import React from 'react';
 import { ArchiveIcon } from "@radix-ui/react-icons";
-
-interface FinalExpenseEmptyStateProps {
-  title?: string;
-  description?: string;
-}
+import { FinalExpenseEmptyStateProps } from "@/types/final-expense";
 
 export default function FinalExpenseEmptyState({ 
   title = "No Final Expense Plans Found",

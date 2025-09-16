@@ -1,50 +1,22 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarFilledIcon, CalendarIcon } from "@radix-ui/react-icons";
+import { CheckCircledIcon, StarFilledIcon, PersonIcon, ClockIcon, FileTextIcon, GlobeIcon, CalendarIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
-
-interface FinalExpenseQuote {
-  id?: string;
-  monthly_rate: number;
-  annual_rate: number;
-  face_value: number;
-  face_amount_min: number;
-  face_amount_max: number;
-  carrier?: { 
-    name: string;
-    full_name?: string;
-    logo_url?: string | null;
-  } | null;
-  plan_name?: string;
-  company_name?: string;
-  company_base?: { 
-    name?: string;
-    full_name?: string; 
-    logo_url?: string | null;
-  };
-  benefit_name?: string;
-  naic?: string;
-  effective_date?: string;
-  expires_date?: string;
-  underwriting_type?: string;
-  am_best_rating?: string;
-  monthly_fee?: number;
-  annual_fee?: number;
-  is_down_payment_plan?: boolean;
-  has_pdf_app?: boolean;
-  e_app_link?: string;
-  key?: string;
-}
-
-interface FinalExpenseShopContentProps {
-  quotes: FinalExpenseQuote[];
-  isLoading?: boolean;
-  onSelectPlan?: (quote: FinalExpenseQuote) => void;
-}
+import { FinalExpenseEmptyState } from "./";
+import { 
+  FinalExpenseQuote, 
+  FinalExpenseShopContentProps, 
+  getFinalExpenseCarrierName, 
+  getFinalExpenseCarrierFullName,
+  groupFinalExpenseQuotesByCompany,
+  GroupedFinalExpenseQuotes
+} from "@/types/final-expense";
+import { getEnhancedCarrierInfo, getCarrierDisplayName } from "@/lib/carrier-system";
 
 export default function FinalExpenseShopContent({ 
   quotes, 
@@ -56,133 +28,145 @@ export default function FinalExpenseShopContent({
   }
 
   if (!quotes || quotes.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <span className="mx-auto h-12 w-12 text-gray-400 mb-4 flex items-center justify-center text-3xl">☂️</span>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Final Expense Plans Found</h3>
-        <p className="text-gray-500">
-          We couldn't find any final expense life insurance plans for your area. Please try adjusting your search criteria.
-        </p>
-      </div>
-    );
+    return <FinalExpenseEmptyState />;
   }
+
+  // Helper function to format currency properly
+  const formatCurrency = (amount: number): string => {
+    // Handle edge case where monthly_rate might be in cents or incorrectly scaled
+    // Final expense monthly premiums should typically be under $500/month
+    let adjustedAmount = amount;
+    
+    // If amount is suspiciously large (>$1000), it might be annual or in cents
+    if (amount > 1000) {
+      // Check if dividing by 100 gives a reasonable monthly premium (cents to dollars)
+      if (amount / 100 <= 500) {
+        adjustedAmount = amount / 100;
+      }
+      // Check if dividing by 12 gives a reasonable monthly premium (annual to monthly)
+      else if (amount / 12 <= 500) {
+        adjustedAmount = amount / 12;
+      }
+      // If still large, cap at a reasonable maximum
+      else {
+        adjustedAmount = Math.min(amount, 500);
+      }
+    }
+    
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(adjustedAmount).replace('$', '');
+  };
+
+  // Helper function to format fees with consistent 2 decimal places
+  const formatFee = (amount: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount).replace('$', '');
+  };
+
+  // Helper function to get carrier display name using the carrier system
+  const getCarrierDisplayNameForQuote = (quote: FinalExpenseQuote): string => {
+    const carrierName = getFinalExpenseCarrierName(quote);
+    return getCarrierDisplayName(carrierName, 'final-expense');
+  };
+
+  // Helper function for carrier logo
+  const getCarrierLogoUrl = (quote: FinalExpenseQuote): string => {
+    const carrierName = getFinalExpenseCarrierName(quote);
+    const tempQuote = { carrier: { name: carrierName } };
+    const enhancedInfo = getEnhancedCarrierInfo(tempQuote, 'final-expense');
+    return enhancedInfo.logoUrl || '/images/carrier-placeholder.svg';
+  };
+
+  // Group quotes by company for price range display
+  const groupedQuotes = groupFinalExpenseQuotesByCompany(quotes);
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        {quotes.map((quote) => (
-          <Card key={quote.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {groupedQuotes.map((group, index) => (
+          <Card key={group.company_key || index} className="hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
+            {/* Header with Logo and Company */}
+            <div className="flex items-center justify-between p-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <Image
+                    src={getCarrierLogoUrl(group.quotes[0])}
+                    alt={`${getCarrierDisplayNameForQuote(group.quotes[0])} logo`}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      const target = e.currentTarget;
+                      const parent = target.parentElement;
+                      if (parent) {
+                        target.style.display = 'none';
+                      }
+                    }}
+                  />
+                </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-lg">{quote.plan_name || 'Final Expense Life Insurance'}</h4>
-                    {quote.am_best_rating && (
-                      <div className="flex items-center gap-1">
-                        <StarFilledIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">{quote.am_best_rating}</span>
-                      </div>
-                    )}
-                    {quote.underwriting_type === 'guaranteed' && (
-                      <Badge variant="default" className="bg-orange-100 text-orange-800">
-                        Guaranteed Acceptance
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-gray-600">{quote.carrier?.name || quote.company_name || 'Unknown Carrier'}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-orange-600">
-                    ${quote.monthly_rate?.toLocaleString() || '0'}
-                  </div>
-                  <div className="text-sm text-gray-500">per month</div>
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {getCarrierDisplayNameForQuote(group.quotes[0])}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {group.plan_count} option{group.plan_count !== 1 ? 's' : ''} available
+                  </p>
                 </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <div className="text-sm text-orange-700">Coverage Amount</div>
-                  <div className="font-semibold text-orange-800">
-                    ${quote.face_value?.toLocaleString() || '0'}
-                  </div>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <div className="text-sm text-orange-700">Annual Premium</div>
-                  <div className="font-semibold text-orange-800">${quote.annual_rate?.toLocaleString() || '0'}</div>
-                </div>
-              </div>
-
+            <div className="px-4 pb-4">
+              {/* Price Range */}
               <div className="mb-4">
-                <h5 className="font-medium mb-2">Plan Features</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {/* Generate features based on available data */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="h-3 w-3 text-orange-500">☂️</span>
-                    <span>Coverage up to ${quote.face_value?.toLocaleString() || '0'}</span>
-                  </div>
-                  {quote.underwriting_type === 'guaranteed' && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 text-orange-500">☂️</span>
-                      <span>Guaranteed Acceptance</span>
-                    </div>
-                  )}
-                  {quote.has_pdf_app && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 text-orange-500">☂️</span>
-                      <span>PDF Application Available</span>
-                    </div>
-                  )}
-                  {quote.e_app_link && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 text-orange-500">☂️</span>
-                      <span>Online Application Available</span>
-                    </div>
-                  )}
-                  {quote.am_best_rating && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 text-orange-500">☂️</span>
-                      <span>AM Best Rating: {quote.am_best_rating}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="h-3 w-3 text-orange-500">☂️</span>
-                    <span>Final Expense Life Insurance</span>
-                  </div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">
+                  {group.price_range.min === group.price_range.max 
+                    ? `$${formatCurrency(group.price_range.min)}`
+                    : `$${formatCurrency(group.price_range.min)} - $${formatCurrency(group.price_range.max)}`
+                  } <span className="text-base font-normal text-gray-600">/month</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-4">
-                {quote.underwriting_type && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <CalendarIcon className="h-3 w-3" />
-                    {quote.underwriting_type}
-                  </Badge>
-                )}
-                {quote.underwriting_type === 'guaranteed' && (
-                  <Badge variant="secondary">
-                    No medical exam required
-                  </Badge>
-                )}
-                {quote.monthly_fee && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <span className="h-3 w-3 font-bold">$</span>
-                    ${quote.monthly_fee} monthly fee
-                  </Badge>
-                )}
+              {/* Plan Description */}
+              <div className="mb-4">
+                <h4 className="font-semibold text-gray-900">Final Expense Life Insurance</h4>
+                <p className="text-sm text-gray-600">
+                  Multiple coverage amounts available
+                </p>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Coverage for final expenses and burial costs
+              {/* Fee Badges - Clear Display */}
+              {(group.quotes.some(q => q.monthly_fee) || group.quotes.some(q => q.annual_fee)) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {group.quotes.some(q => q.monthly_fee) && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                      ${formatFee(group.quotes.find(q => q.monthly_fee)?.monthly_fee || 0)} monthly policy fee
+                    </span>
+                  )}
+                  {group.quotes.some(q => q.annual_fee) && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                      ${formatFee(group.quotes.find(q => q.annual_fee)?.annual_fee || 0)} annual policy fee
+                    </span>
+                  )}
                 </div>
-                <Button 
-                  onClick={() => onSelectPlan?.(quote)}
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  Select Plan
-                </Button>
-              </div>
-            </CardContent>
+              )}
+
+              {/* Select Button */}
+              <Button 
+                onClick={() => onSelectPlan?.(group.quotes[0])}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3"
+                size="lg"
+              >
+                Select Plan
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

@@ -1,11 +1,14 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PersonIcon, HeartIcon } from "@radix-ui/react-icons";
+import { CheckCircledIcon, StarFilledIcon, PersonIcon, ClockIcon, FileTextIcon, GlobeIcon, CalendarIcon } from "@radix-ui/react-icons";
 import { PlanCardsSkeleton } from "@/components/medicare-shop/shared";
+import { CancerInsuranceEmptyState } from "./";
+import { getEnhancedCarrierInfo, getCarrierDisplayName } from "@/lib/carrier-system";
 
 interface CancerInsuranceQuote {
   monthly_premium: number;
@@ -30,89 +33,106 @@ export default function CancerInsuranceShopContent({
   }
 
   if (!quotes || quotes.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <HeartIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Cancer Insurance Plans Found</h3>
-        <p className="text-gray-500">
-          We couldn't find any cancer insurance plans for your area. Please try adjusting your search criteria.
-        </p>
-      </div>
-    );
+    return <CancerInsuranceEmptyState />;
   }
+
+  // Helper function to format currency properly
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount).replace('$', '');
+  };
+
+  // Helper function to get carrier display name using the carrier system
+  const getCarrierDisplayNameForQuote = (quote: CancerInsuranceQuote): string => {
+    return getCarrierDisplayName(quote.carrier, 'cancer');
+  };
+
+  // Helper function for carrier logo
+  const getCarrierLogoUrl = (quote: CancerInsuranceQuote): string => {
+    const tempQuote = { carrier: quote.carrier };
+    const enhancedInfo = getEnhancedCarrierInfo(tempQuote, 'cancer');
+    return enhancedInfo.logoUrl || '/images/carrier-placeholder.svg';
+  };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {quotes.map((quote, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-lg">{quote.plan_name}</h4>
-                  </div>
-                  <p className="text-gray-600">{quote.carrier}</p>
+          <Card key={index} className="hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
+            {/* Header with Logo and Company */}
+            <div className="flex items-center justify-between p-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <Image
+                    src={getCarrierLogoUrl(quote)}
+                    alt={`${getCarrierDisplayNameForQuote(quote)} logo`}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      const target = e.currentTarget;
+                      const parent = target.parentElement;
+                      if (parent) {
+                        target.style.display = 'none';
+                      }
+                    }}
+                  />
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-purple-600">
-                    ${quote.monthly_premium}
-                  </div>
-                  <div className="text-sm text-gray-500">per month</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {getCarrierDisplayNameForQuote(quote)}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Cancer Insurance Coverage
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-4 pb-4">
+              {/* Price Display */}
+              <div className="mb-4">
+                <div className="text-3xl font-bold text-gray-900 mb-1">
+                  ${formatCurrency(quote.monthly_premium)} <span className="text-base font-normal text-gray-600">/month</span>
                 </div>
               </div>
 
-              {quote.benefit_amount && (
-                <div className="bg-purple-50 p-3 rounded-lg mb-4">
-                  <div className="text-sm text-purple-700">Maximum Benefit Amount</div>
-                  <div className="font-semibold text-purple-800">
-                    ${quote.benefit_amount.toLocaleString()}
-                  </div>
-                </div>
-              )}
-
+              {/* Plan Description */}
               <div className="mb-4">
-                <h5 className="font-medium mb-2">Key Benefits</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {/* Since API doesn't provide specific benefits, show standard cancer insurance benefits */}
+                <p className="text-lg font-bold text-gray-600">
+                  ${quote.benefit_amount?.toLocaleString()} benefit amount
+                </p>
+              </div>
+
+              {/* Benefits Preview */}
+              <div className="mb-4">
+                <div className="grid grid-cols-1 gap-2">
                   {[
                     'Lump sum payment upon diagnosis',
-                    'No network restrictions',
-                    'Use benefits as you choose',
-                    'Coverage for treatment costs',
-                    'Additional living expenses',
-                    'Peace of mind protection'
+                    'No network restrictions', 
+                    'Use benefits as you choose'
                   ].map((benefit, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm">
-                      <PersonIcon className="h-3 w-3 text-green-500" />
+                    <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircledIcon className="h-4 w-4 text-green-500 flex-shrink-0" />
                       <span>{benefit}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-4">
-                <Badge variant="secondary">
-                  Cancer Insurance Coverage
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <span className="text-xs">$</span>
-                  ${quote.benefit_amount.toLocaleString()} benefit
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  <span>View plan details for limitations and exclusions</span>
-                </div>
-                <Button 
-                  onClick={() => onSelectPlan?.(quote)}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Select Plan
-                </Button>
-              </div>
-            </CardContent>
+              {/* Select Button */}
+              <Button 
+                onClick={() => onSelectPlan?.(quote)}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3"
+                size="lg"
+              >
+                Select Plan
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

@@ -49,6 +49,14 @@ export function MedicareHeader() {
                 >
                   About
                 </Link>
+               {/* <Link 
+                  href="https://the-hawk-nest.printify.me/" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 text-sm font-medium text-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-xl transition-all duration-300"
+                >
+                  Merch
+                </Link> */}
               </div>
             </div>
 

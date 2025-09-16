@@ -6,13 +6,14 @@
 
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
+import { type ProductCategory } from '@/lib/carrier-system';
 
 interface PreferredCarriersFilterProps {
   isEnabled: boolean;
   onToggle: (enabled: boolean) => void;
   preferredCount?: number;
   totalCount?: number;
-  category: 'medicare-supplement' | 'medicare-advantage' | 'dental' | 'final-expense' | 'hospital-indemnity';
+  category: ProductCategory;
 }
 
 export default function PreferredCarriersFilter({

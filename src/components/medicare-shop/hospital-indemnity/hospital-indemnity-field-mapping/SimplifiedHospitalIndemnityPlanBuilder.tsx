@@ -819,8 +819,20 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
       ) : (
         // Configuration View
         <div>
-          {/* Back Button */}
-          <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Configuration Panel */}
+            <div className="lg:col-span-2">
+              <Card>
+            <CardContent className="space-y-6">
+              {/* Plan Option Selection */}
+              {selectedCompany && (
+                <div>
+                <div className='flex justify-between items-start'>
+              <h2 className="text-xl font-bold">
+              {selectedCompany}
+            </h2>
+             {/* Back Button */}
+          <div>
             <Button
               variant="outline"
               onClick={() => {
@@ -831,22 +843,10 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
               }}
               className="mb-4"
             >
-              <FaArrowLeft className="w-4 h-4 mr-2" />
-              Back to Carriers
+              Change
             </Button>
-            <h2 className="text-2xl font-bold">
-              Configure Your {selectedCompany} Plan
-            </h2>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Configuration Panel */}
-            <div className="lg:col-span-2">
-              <Card>
-            <CardContent className="space-y-6">
-              {/* Plan Option Selection */}
-              {selectedCompany && (
-                <div>
+            </div>
                   <label className="text-sm font-medium mb-2 block">Select Plan Option</label>
                   <Select value={selectedPlanOption} onValueChange={handlePlanOptionChange}>
                     <SelectTrigger>
@@ -861,6 +861,8 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                     </SelectContent>
                   </Select>
                 </div>
+                
+               
               )}
 
               {/* Automatic Benefit Increase Rider Checkbox */}
@@ -1168,9 +1170,9 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
           </Card>
         </div>
 
-        {/* Plan Summary Panel */}
-        <div>
-          <Card>
+        {/* Right Column: Plan Summary */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-4">
             <CardContent className="space-y-3">
               {selectedCompany && (
                 <div>
@@ -1246,10 +1248,10 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
       )}
-    </div>
+      </div>
     </>
   );
 }

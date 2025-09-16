@@ -5,6 +5,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { 
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -12,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ResetIcon, PlusIcon, UpdateIcon, CheckIcon, StarFilledIcon } from "@radix-ui/react-icons";
 import MedicareNavigationTabs from "@/components/MedicareNavigationTabs";
 
@@ -45,7 +47,7 @@ interface MedicareShopLayoutProps {
   onReset: () => void;
   // New props for quote generation
   quoteFormData?: QuoteFormData;
-  onGenerateQuotes?: (category: string, formData: QuoteFormData) => Promise<void>;
+  onGenerateQuotes?: (category: string, formData: QuoteFormData, plansList?: string[]) => Promise<void>;
   loadingCategories?: string[];
   completedQuoteTypes?: string[];
 }
@@ -70,6 +72,8 @@ export default function MedicareShopLayout({
   const [showMissingFieldsModal, setShowMissingFieldsModal] = useState(false);
   const [selectedCategoryForQuote, setSelectedCategoryForQuote] = useState<string>('');
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [selectedMedigapPlans, setSelectedMedigapPlans] = useState<string[]>([]);
+  const [isMedigapSelectionOpen, setIsMedigapSelectionOpen] = useState(false);
   const [formInputs, setFormInputs] = useState<QuoteFormData>({
     age: '',
     zipCode: '',
@@ -226,7 +230,15 @@ export default function MedicareShopLayout({
     const validation = validateRequiredData(category, quoteFormData);
     
     if (validation.isValid) {
-      // We have all required data, generate quotes immediately
+      // For Medigap, show plan selection
+      if (category === 'medigap') {
+        setSelectedCategoryForQuote(category);
+        setIsMedigapSelectionOpen(true);
+        setShowMoreCategories(false);
+        return;
+      }
+      
+      // We have all required data, generate quotes immediately for other categories
       await onGenerateQuotes(category, quoteFormData);
       setShowMoreCategories(false);
     } else {
@@ -264,6 +276,35 @@ export default function MedicareShopLayout({
     }
   };
 
+  // Handle Medigap plan selection confirmation
+  const handleMedigapPlanConfirm = async () => {
+    if (!quoteFormData || !onGenerateQuotes || !selectedCategoryForQuote || selectedMedigapPlans.length === 0) return;
+    
+    // Close the plan selection modal first
+    setIsMedigapSelectionOpen(false);
+    
+    // Show the main modal with loading state (like other categories)
+    setShowMoreCategories(true);
+    
+    // Generate quotes with selected plans
+    await onGenerateQuotes(selectedCategoryForQuote, quoteFormData, selectedMedigapPlans);
+    
+    // The loading state will be handled by the parent component's loading logic
+    // which will show completion and auto-close after 3 seconds
+    
+    // Clear selections
+    setSelectedCategoryForQuote('');
+    setSelectedMedigapPlans([]);
+  };
+
+  // Handle Medigap plan selection cancellation
+  const handleMedigapPlanCancel = () => {
+    setIsMedigapSelectionOpen(false);
+    setSelectedCategoryForQuote('');
+    setSelectedMedigapPlans([]);
+    setShowMoreCategories(true); // Return to the dropdown
+  };
+
   // Get friendly field names for display
   const getFieldDisplayName = (field: string): string => {
     const fieldNames: Record<string, string> = {
@@ -293,10 +334,10 @@ export default function MedicareShopLayout({
   };
 
   return (
-    <div className="max-w-7xl mt-8 mx-auto px-0 sm:px-0 lg:px-0 relative">
+    <div className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0 relative">
       {/* Show Shopping Header Only When There Are Quotes */}
       {hasQuotes && (
-        <div className="mb-8">
+        <div className="mb-2">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             
             {/* Cart Summary */}
@@ -890,6 +931,59 @@ export default function MedicareShopLayout({
               Cancel
             </Button>
             <Button onClick={handleMissingFieldsSubmit}>
+              Generate Quotes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Medigap Plan Selection Modal */}
+      <Dialog open={isMedigapSelectionOpen} onOpenChange={setIsMedigapSelectionOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Medigap Plans</DialogTitle>
+            <DialogDescription>
+              Choose which Medigap plans you'd like to compare. Select one or more options.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {['G', 'N', 'F'].map((plan) => (
+                <div key={plan} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`plan-${plan}`}
+                    checked={selectedMedigapPlans.includes(plan)}
+                    onCheckedChange={(checked: boolean) => {
+                      if (checked) {
+                        setSelectedMedigapPlans(prev => [...prev, plan]);
+                      } else {
+                        setSelectedMedigapPlans(prev => prev.filter(p => p !== plan));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`plan-${plan}`} className="text-sm font-medium">
+                    Plan {plan}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            
+            {selectedMedigapPlans.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Please select at least one plan to continue.
+              </p>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleMedigapPlanCancel}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleMedigapPlanConfirm}
+              disabled={selectedMedigapPlans.length === 0}
+            >
               Generate Quotes
             </Button>
           </DialogFooter>

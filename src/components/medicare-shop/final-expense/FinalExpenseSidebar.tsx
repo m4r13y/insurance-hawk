@@ -4,89 +4,130 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircledIcon, InfoCircledIcon, PersonIcon } from "@radix-ui/react-icons";
-
-interface FinalExpenseSidebarProps {
-  selectedQuote?: any;
-  className?: string;
-}
+import { CheckCircledIcon, InfoCircledIcon, PersonIcon, StarFilledIcon, CalendarIcon } from "@radix-ui/react-icons";
+import { 
+  FinalExpenseQuote, 
+  FinalExpenseSidebarProps, 
+  getFinalExpenseCarrierName, 
+  getFinalExpenseCarrierFullName 
+} from "@/types/final-expense";
 
 export default function FinalExpenseSidebar({ selectedQuote, className = "" }: FinalExpenseSidebarProps) {
+
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Filter Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CheckCircledIcon className="h-5 w-5" />
-            Final Expense Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Monthly Premium</label>
+      {/* Selected Plan Details */}
+      {selectedQuote && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircledIcon className="h-5 w-5 text-green-600" />
+              Selected Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">
+                {selectedQuote.plan_name || `${getFinalExpenseCarrierName(selectedQuote)} Life Insurance`}
+              </h3>
+              <p className="text-sm text-gray-600">{getFinalExpenseCarrierFullName(selectedQuote)}</p>
+              {selectedQuote.underwriting_type === 'guaranteed' && (
+                <Badge className="mt-2 bg-green-100 text-green-800 hover:bg-green-100">
+                  Guaranteed Acceptance
+                </Badge>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Pricing */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Monthly Premium</span>
+                <span className="text-lg font-bold text-blue-600">
+                  ${selectedQuote.monthly_rate?.toLocaleString() || '0'}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Coverage Amount</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  ${selectedQuote.face_value?.toLocaleString() || '0'}
+                </span>
+              </div>
+
+              {selectedQuote.annual_rate && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Annual Premium</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    ${selectedQuote.annual_rate.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Plan Details */}
             <div className="space-y-2">
-              <input 
-                type="range" 
-                min="0" 
-                max="200" 
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>$0</span>
-                <span>$200+</span>
+              {selectedQuote.am_best_rating && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">AM Best Rating</span>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <StarFilledIcon className="h-3 w-3 text-yellow-400 fill-current" />
+                    {selectedQuote.am_best_rating}
+                  </Badge>
+                </div>
+              )}
+              
+              {selectedQuote.underwriting_type && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Plan Type</span>
+                  <span className="text-sm font-medium text-gray-900 capitalize">
+                    {selectedQuote.underwriting_type} Issue
+                  </span>
+                </div>
+              )}
+
+              {selectedQuote.monthly_fee && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Policy Fee</span>
+                  <span className="text-sm font-medium text-orange-600">
+                    ${selectedQuote.monthly_fee}/month
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Application Options */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-900">Application Options</h4>
+              <div className="space-y-2">
+                {selectedQuote.e_app_link && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircledIcon className="h-4 w-4 text-green-600" />
+                    <span>Online application available</span>
+                  </div>
+                )}
+                {selectedQuote.has_pdf_app && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircledIcon className="h-4 w-4 text-green-600" />
+                    <span>PDF application available</span>
+                  </div>
+                )}
+                {selectedQuote.underwriting_type === 'guaranteed' && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircledIcon className="h-4 w-4 text-green-600" />
+                    <span>No medical exam required</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">Coverage Amount</label>
-            <select className="w-full p-2 border rounded-md">
-              <option value="all">Any Amount</option>
-              <option value="5000">$5,000+</option>
-              <option value="10000">$10,000+</option>
-              <option value="25000">$25,000+</option>
-              <option value="50000">$50,000+</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">Plan Type</label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">Guaranteed acceptance</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">Simplified issue</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">Full underwriting</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">Waiting Period</label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">No waiting period</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">2 years or less</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">3 years or less</span>
-              </label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Plan Information */}
       <Card>
@@ -96,7 +137,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <span className="text-sm">$</span>
+              <span className="text-blue-600 font-bold">$</span>
               What It Covers
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -112,15 +153,17 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <CheckCircledIcon className="h-4 w-4" />
+              <CheckCircledIcon className="h-4 w-4 text-green-600" />
               Plan Types
             </h4>
-            <div className="space-y-2 text-sm text-gray-600">
-              <div>
-                <strong>Guaranteed Acceptance:</strong> No medical exam or health questions. May have waiting periods.
+            <div className="space-y-3 text-sm">
+              <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+                <div className="font-medium text-green-800 mb-1">Guaranteed Acceptance</div>
+                <div className="text-green-700">No medical exam or health questions. May have waiting periods.</div>
               </div>
-              <div>
-                <strong>Simplified Issue:</strong> Basic health questions only. Faster approval process.
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <div className="font-medium text-blue-800 mb-1">Simplified Issue</div>
+                <div className="text-blue-700">Basic health questions only. Faster approval process.</div>
               </div>
             </div>
           </div>
@@ -129,7 +172,7 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <PersonIcon className="h-4 w-4" />
+              <PersonIcon className="h-4 w-4 text-blue-600" />
               Who Should Consider
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -144,78 +187,37 @@ export default function FinalExpenseSidebar({ selectedQuote, className = "" }: F
 
           <div>
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <InfoCircledIcon className="h-4 w-4" />
+              <InfoCircledIcon className="h-4 w-4 text-orange-600" />
               Important Notes
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• Premiums typically don't increase</li>
-              <li>• Cash value may be available</li>
               <li>• Benefits paid to beneficiaries</li>
               <li>• Coverage amounts are usually smaller</li>
+              <li>• Quick approval for most plans</li>
             </ul>
           </div>
         </CardContent>
       </Card>
 
-      {/* Selected Plan Details */}
-      {selectedQuote && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Selected Plan Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="font-medium">{selectedQuote.planName}</div>
-              <div className="text-sm text-gray-600">{selectedQuote.carrierName}</div>
-            </div>
-            
-            <Separator />
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Monthly Premium</span>
-                <span className="font-medium">${selectedQuote.monthlyPremium}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Coverage Amount</span>
-                <span className="font-medium">${selectedQuote.coverageAmount?.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Age Range</span>
-                <span className="font-medium">{selectedQuote.ageRange}</span>
-              </div>
-              {selectedQuote.waitingPeriod && (
-                <div className="flex justify-between">
-                  <span className="text-sm">Waiting Period</span>
-                  <span className="font-medium">{selectedQuote.waitingPeriod} years</span>
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
-            <div className="space-y-1">
-              <div className="text-sm font-medium">Plan Features</div>
-              {selectedQuote.features?.slice(0, 5).map((feature: string, idx: number) => (
-                <div key={idx} className="text-sm text-gray-600">• {feature}</div>
-              ))}
-              {selectedQuote.features?.length > 5 && (
-                <div className="text-sm text-orange-600">+ {selectedQuote.features.length - 5} more features</div>
-              )}
-            </div>
-
-            {selectedQuote.guaranteed && (
-              <>
-                <Separator />
-                <div className="bg-orange-50 p-2 rounded text-sm">
-                  <div className="font-medium text-orange-800">Guaranteed Acceptance</div>
-                  <div className="text-orange-700">No medical exam required</div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* General Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Important Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>• Coverage begins on your effective date</p>
+            <p>• Waiting periods may apply for guaranteed issue plans</p>
+            <p>• Premiums are typically fixed for life</p>
+            <p>• Benefits are paid tax-free to beneficiaries</p>
+            <p>• No cash value accumulation in most plans</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

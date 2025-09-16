@@ -30,6 +30,7 @@ import {
   getCarrierDisplayName as getCarrierDisplayNameFromSystem,
   getEnhancedCarrierInfo,
   filterPreferredCarriers,
+  mapUICategoryToProductCategory,
   type ProductCategory
 } from "@/lib/carrier-system";
 import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
@@ -2296,6 +2297,27 @@ function MedicareShopContent() {
     setSelectedQuotePlans(plans);
   }, [availableMedigapPlans]);
 
+  // Apply preferred carriers filtering to all category quotes
+  const filteredCategoryQuotes = React.useMemo(() => {
+    const applyFilter = (quotes: any[], category: string) => {
+      if (!showPreferredOnly || !quotes?.length) return quotes;
+      
+      const productCategory = mapUICategoryToProductCategory(category);
+      if (!productCategory) return quotes;
+      
+      return filterPreferredCarriers(quotes, productCategory);
+    };
+
+    return {
+      advantage: applyFilter(advantageQuotes, 'advantage'),
+      dental: applyFilter(dentalQuotes, 'dental'),
+      finalExpense: applyFilter(finalExpenseQuotes, 'final-expense'),
+      hospitalIndemnity: applyFilter(hospitalIndemnityQuotes, 'hospital-indemnity'),
+      cancer: applyFilter(cancerInsuranceQuotes, 'cancer'),
+      drugPlan: applyFilter(drugPlanQuotes, 'drug-plan')
+    };
+  }, [advantageQuotes, dentalQuotes, finalExpenseQuotes, hospitalIndemnityQuotes, cancerInsuranceQuotes, drugPlanQuotes, showPreferredOnly]);
+
   // Display data processing - handle both real quotes types
   const displayData = React.useMemo(() => {
     if (selectedCategory === 'medigap') {
@@ -2316,7 +2338,10 @@ function MedicareShopContent() {
       // Apply preferred carriers filter first if enabled
       let quotesToProcess = selectedPlansData;
       if (showPreferredOnly) {
-        quotesToProcess = filterPreferredCarriers(selectedPlansData, 'medicare-supplement');
+        const productCategory = mapUICategoryToProductCategory(selectedCategory);
+        if (productCategory) {
+          quotesToProcess = filterPreferredCarriers(selectedPlansData, productCategory);
+        }
       }
       
       // Group by carrier for medigap - simplified filtering like test-multi-plan
@@ -2434,9 +2459,9 @@ function MedicareShopContent() {
         type: 'grouped' as const,
         data: sortedCarrierGroups
       };
-    } else if (selectedCategory === 'advantage' && advantageQuotes?.length > 0) {
+    } else if (selectedCategory === 'advantage' && filteredCategoryQuotes.advantage?.length > 0) {
       // Handle advantage quotes (could be individual or grouped depending on structure)
-      const filteredQuotes = advantageQuotes.filter(quote => {
+      const filteredQuotes = filteredCategoryQuotes.advantage.filter(quote => {
         if (searchQuery) {
           const carrierName = quote?.carrier?.name || 
                              quote?.company_base?.name ||
@@ -2475,7 +2500,7 @@ function MedicareShopContent() {
       type: 'individual' as const,
       data: []
     };
-  }, [selectedCategory, planQuotes, advantageQuotes, drugPlanQuotes, selectedQuotePlans, searchQuery, showPreferredOnly, applyDiscounts]);
+  }, [selectedCategory, planQuotes, filteredCategoryQuotes, drugPlanQuotes, selectedQuotePlans, searchQuery, showPreferredOnly, applyDiscounts]);
 
   // Memoized pagination calculations to prevent unnecessary re-computations
   const paginationData = React.useMemo(() => {
@@ -2502,7 +2527,7 @@ function MedicareShopContent() {
   const { paginatedData, paginationInfo } = paginationData;
 
   // Handler for generating quotes from the additional options dropdown
-  const handleGenerateQuotesForCategory = useCallback(async (category: string, formData: QuoteFormData) => {
+  const handleGenerateQuotesForCategory = useCallback(async (category: string, formData: QuoteFormData, plansList?: string[]) => {
     try {
       // Update form data state with any new information
       setQuoteFormData(formData);
@@ -2514,12 +2539,18 @@ function MedicareShopContent() {
         saveSelectedCategories(updatedCategories);
       }
       
-      // Generate quotes for the specific category WITHOUT affecting global loading state
-      await handleQuoteFormSubmitWithData(formData, category, undefined, false, true);
+      // For Medigap with specific plans, pass the plans list
+      if (category === 'medigap' && plansList && plansList.length > 0) {
+        // Generate quotes for the specific category with selected plans
+        await handleQuoteFormSubmitWithData(formData, category, plansList, false, true);
+      } else {
+        // Generate quotes for the specific category WITHOUT affecting global loading state
+        await handleQuoteFormSubmitWithData(formData, category, undefined, false, true);
+      }
       
       // DON'T switch to the new category immediately - let user manually switch when ready
       // This preserves the current user experience while quotes load in background
-      console.log(`✅ Background quote generation completed for ${category}`);
+      console.log(`✅ Background quote generation completed for ${category}${plansList ? ` with plans: ${plansList.join(', ')}` : ''}`);
       
     } catch (error) {
       console.error('Error generating quotes for category:', category, error);
@@ -2602,33 +2633,46 @@ function MedicareShopContent() {
                 />
               ) : hasQuotes() || isRecoveringSession || realQuotes.length > 0 ? (
             /* Show Plans When There Are Quotes */
-            <div className={`grid grid-cols-1 gap-8 ${selectedCategory === 'hospital-indemnity' ? '' : 'lg:grid-cols-4'}`}>
-              {/* Enhanced Sidebar with Combined Filters - Hidden for Hospital Indemnity */}
-              {selectedCategory !== 'hospital-indemnity' && (
-                <MedicareShopSidebar
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  priceRange={priceRange}
-                  setPriceRange={setPriceRange}
-                  selectedCoverageLevel={selectedCoverageLevel}
-                  setSelectedCoverageLevel={setSelectedCoverageLevel}
-                  selectedCategory={selectedCategory}
-                  selectedQuotePlans={selectedQuotePlans}
-                  setSelectedQuotePlans={handlePlanSelection}
-                  applyDiscounts={applyDiscounts}
-                  setApplyDiscounts={setApplyDiscounts}
-                  paymentMode={paymentMode}
-                  setPaymentMode={setPaymentMode}
-                  quoteFormData={quoteFormData}
-                  realQuotes={realQuotes}
-                  onClearFilters={clearFilters}
-                  showPreferredOnly={showPreferredOnly}
-                  setShowPreferredOnly={setShowPreferredOnly}
+            (() => {
+              // Get appropriate quotes for sidebar based on current category
+              const getCurrentCategoryQuotes = () => {
+                switch (selectedCategory) {
+                  case 'advantage': return advantageQuotes || [];
+                  case 'dental': return dentalQuotes || [];
+                  case 'final-expense': return finalExpenseQuotes || [];
+                  case 'hospital-indemnity': return hospitalIndemnityQuotes || [];
+                  case 'cancer': return cancerInsuranceQuotes || [];
+                  case 'drug-plan': return drugPlanQuotes || [];
+                  default: return realQuotes || []; // medigap
+                }
+              };
+              
+              return (
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+                  {/* Enhanced Sidebar with Combined Filters */}
+                  <MedicareShopSidebar
+                      searchQuery={searchQuery}
+                      setSearchQuery={setSearchQuery}
+                      priceRange={priceRange}
+                      setPriceRange={setPriceRange}
+                      selectedCoverageLevel={selectedCoverageLevel}
+                      setSelectedCoverageLevel={setSelectedCoverageLevel}
+                      selectedCategory={selectedCategory}
+                      selectedQuotePlans={selectedQuotePlans}
+                      setSelectedQuotePlans={handlePlanSelection}
+                      applyDiscounts={applyDiscounts}
+                      setApplyDiscounts={setApplyDiscounts}
+                      paymentMode={paymentMode}
+                      setPaymentMode={setPaymentMode}
+                      quoteFormData={quoteFormData}
+                      realQuotes={getCurrentCategoryQuotes()}
+                      onClearFilters={clearFilters}
+                      showPreferredOnly={showPreferredOnly}
+                      setShowPreferredOnly={setShowPreferredOnly}
                 />
-              )}
 
               {/* Main Product Grid */}
-              <main className={selectedCategory === 'hospital-indemnity' ? 'col-span-1' : 'lg:col-span-3'}>
+              <main className="lg:col-span-3">
                 {/* Quote Error Display */}
                 {quotesError && (
                   <Card className="mb-6 border-red-200 bg-red-50">
@@ -2705,13 +2749,13 @@ function MedicareShopContent() {
                         title="Getting Your Dental Insurance Quotes"
                         message="Searching for dental insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'dental' && dentalQuotes.length === 0 && !isCategoryLoading('dental') ? (
+                    ) : selectedCategory === 'dental' && filteredCategoryQuotes.dental.length === 0 && !isCategoryLoading('dental') ? (
                       /* Skeleton for Dental */
                       <PlanCardsSkeleton count={5} title="Dental Insurance Plans" />
-                    ) : selectedCategory === 'dental' && dentalQuotes.length > 0 ? (
+                    ) : selectedCategory === 'dental' && filteredCategoryQuotes.dental.length > 0 ? (
                       /* Display Dental Plans - Using Adaptive Builder */
                       <AdaptiveDentalShopContent 
-                        quotes={dentalQuotes} 
+                        quotes={filteredCategoryQuotes.dental} 
                         isLoading={false}
                         onPlanSelect={(quote: OptimizedDentalQuote) => {
                           console.log('Selected dental plan:', quote);
@@ -2724,13 +2768,13 @@ function MedicareShopContent() {
                         title="Getting Your Cancer Insurance Quotes"
                         message="Searching for cancer insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length === 0 && !isCategoryLoading('cancer') ? (
+                    ) : selectedCategory === 'cancer' && filteredCategoryQuotes.cancer.length === 0 && !isCategoryLoading('cancer') ? (
                       /* Skeleton for Cancer Insurance */
                       <PlanCardsSkeleton count={4} title="Cancer Insurance Plans" />
-                    ) : selectedCategory === 'cancer' && cancerInsuranceQuotes.length > 0 ? (
+                    ) : selectedCategory === 'cancer' && filteredCategoryQuotes.cancer.length > 0 ? (
                       /* Display Cancer Insurance Plans */
                       <CancerInsuranceShopContent 
-                        quotes={cancerInsuranceQuotes} 
+                        quotes={filteredCategoryQuotes.cancer} 
                         isLoading={false} 
                       />
                     ) : selectedCategory === 'hospital-indemnity' && isCategoryLoading('hospital-indemnity') ? (
@@ -2739,13 +2783,13 @@ function MedicareShopContent() {
                         title="Getting Your Hospital Indemnity Quotes"
                         message="Searching for hospital indemnity insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length === 0 && !isCategoryLoading('hospital-indemnity') ? (
+                    ) : selectedCategory === 'hospital-indemnity' && filteredCategoryQuotes.hospitalIndemnity.length === 0 && !isCategoryLoading('hospital-indemnity') ? (
                       /* Skeleton for Hospital Indemnity */
                       <PlanCardsSkeleton count={4} title="Hospital Indemnity Plans" />
-                    ) : selectedCategory === 'hospital-indemnity' && hospitalIndemnityQuotes.length > 0 ? (
+                    ) : selectedCategory === 'hospital-indemnity' && filteredCategoryQuotes.hospitalIndemnity.length > 0 ? (
                       /* Display Hospital Indemnity Plans */
                       <HospitalIndemnityShopContent 
-                        quotes={hospitalIndemnityQuotes} 
+                        quotes={filteredCategoryQuotes.hospitalIndemnity} 
                         isLoading={false} 
                       />
                     ) : selectedCategory === 'final-expense' && isCategoryLoading('final-expense') ? (
@@ -2754,13 +2798,13 @@ function MedicareShopContent() {
                         title="Getting Your Final Expense Life Insurance Quotes"
                         message="Searching for final expense life insurance plans in your area..."
                       />
-                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length === 0 && !isCategoryLoading('final-expense') ? (
+                    ) : selectedCategory === 'final-expense' && filteredCategoryQuotes.finalExpense.length === 0 && !isCategoryLoading('final-expense') ? (
                       /* Skeleton for Final Expense */
                       <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />
-                    ) : selectedCategory === 'final-expense' && finalExpenseQuotes.length > 0 ? (
+                    ) : selectedCategory === 'final-expense' && filteredCategoryQuotes.finalExpense.length > 0 ? (
                       /* Display Final Expense Plans */
                       <FinalExpenseShopContent 
-                        quotes={finalExpenseQuotes} 
+                        quotes={filteredCategoryQuotes.finalExpense} 
                         isLoading={false} 
                       />
                     ) : (
@@ -2825,6 +2869,8 @@ function MedicareShopContent() {
                 </div>
               </main>
             </div>
+              );
+            })()
           ) : (
             /* Landing Page with Flow Options */
             <div className="mt-8 -mx-4 sm:-mx-6 lg:-mx-8">

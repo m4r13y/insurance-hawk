@@ -12,7 +12,11 @@ import {
 } from "@radix-ui/react-icons";
 import { type QuoteFormData } from "./types";
 import PreferredCarriersFilter from "@/components/filters/PreferredCarriersFilter";
-import { filterPreferredCarriers } from "@/lib/carrier-system";
+import { 
+  filterPreferredCarriers, 
+  mapUICategoryToProductCategory, 
+  categorySupportsPreferredCarriers 
+} from "@/lib/carrier-system";
 
 interface MedicareShopSidebarProps {
   // Search and filters
@@ -67,8 +71,9 @@ export default function MedicareShopSidebar({
   
   // Calculate preferred carriers counts for display
   const preferredQuotes = useMemo(() => {
-    if (selectedCategory === 'medigap' && realQuotes.length > 0) {
-      return filterPreferredCarriers(realQuotes, 'medicare-supplement');
+    const productCategory = mapUICategoryToProductCategory(selectedCategory);
+    if (productCategory && realQuotes.length > 0) {
+      return filterPreferredCarriers(realQuotes, productCategory);
     }
     return [];
   }, [realQuotes, selectedCategory]);
@@ -100,14 +105,14 @@ export default function MedicareShopSidebar({
           </CardHeader>
           <CardContent className="pt-4 space-y-6">
             {/* Preferred Carriers Filter */}
-            {selectedCategory === 'medigap' && realQuotes.length > 0 && (
+            {categorySupportsPreferredCarriers(selectedCategory) && realQuotes.length > 0 && (
               <div>
                 <PreferredCarriersFilter
                   isEnabled={showPreferredOnly}
                   onToggle={setShowPreferredOnly}
                   preferredCount={preferredQuotes.length}
                   totalCount={realQuotes.length}
-                  category="medicare-supplement"
+                  category={mapUICategoryToProductCategory(selectedCategory)!}
                 />
               </div>
             )}
