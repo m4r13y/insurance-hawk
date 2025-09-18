@@ -14,14 +14,14 @@ export function MedicareHeader() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-[5%]">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center px-[5%] pt-2 pointer-events-none">
       <header className="w-full max-w-7xl">
-        <nav className="relative backdrop-blur-md bg-card/60 dark:card/60 border border-border/20 dark:border-gray-700/60 rounded-2xl shadow-lg">
-        <div className="relative z-10 px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <nav className="relative backdrop-blur-md bg-card/70 dark:bg-slate-900/70 border border-border/30 dark:border-slate-700/60 rounded-2xl shadow-lg supports-[backdrop-filter]:bg-card/60 pointer-events-auto">
+        <div className="relative z-10 px-5 lg:px-8">
+          <div className="flex items-center justify-between h-18 min-h-[4.25rem]">
             <div className="flex items-center space-x-8">
               <Link href="/" className="flex items-center space-x-3">
-                <Logo className="h-10 w-auto" />
+                <Logo autoDark className="h-10 w-auto" />
               </Link>
               
               <div className="hidden lg:flex items-center space-x-1">
