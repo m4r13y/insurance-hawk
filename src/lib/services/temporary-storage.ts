@@ -1001,6 +1001,7 @@ const compressQuoteData = (quotes: any[]): any[] => {
 
 // Plan Builder Data Interface
 export interface PlanBuilderData {
+  schemaVersion?: number; // added for migration tracking
   medigapPlan: {
     plan: string;
     carrier: string;
@@ -1049,6 +1050,7 @@ export const savePlanBuilderData = async (planBuilderData: PlanBuilderData): Pro
     
     const documentData = {
       ...planBuilderData,
+      schemaVersion: planBuilderData.schemaVersion ?? 1,
       visitorId,
       savedAt: now,
       expiresAt
@@ -1088,6 +1090,21 @@ export const loadPlanBuilderData = async (): Promise<PlanBuilderData | null> => 
   } catch (error) {
     console.error('❌ Error loading plan builder data:', error);
     return null;
+  }
+};
+
+// Delete plan builder document (remote wipe)
+export const deletePlanBuilderData = async (): Promise<void> => {
+  try {
+    if (!db) return;
+    const visitorId = getVisitorId();
+    const visitorDocRef = doc(db, COLLECTION_NAME, visitorId);
+    const planBuilderRef = collection(visitorDocRef, 'plan-builder');
+    const originalMedicareDocRef = doc(planBuilderRef, 'original-medicare');
+    await retryWithBackoff(() => deleteDoc(originalMedicareDocRef));
+    console.log('🗑️ Remote Plan Builder document deleted');
+  } catch (e) {
+    console.error('Failed to delete remote Plan Builder document', e);
   }
 };
 

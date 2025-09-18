@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookmarkIcon, BookmarkFilledIcon } from '@radix-ui/react-icons';
+import { FaFilter, FaClipboardList, FaPuzzlePiece, FaBalanceScale, FaBookmark, FaChevronRight } from 'react-icons/fa';
 import { SavedPlanRecord } from '@/lib/savedPlans';
 import Image from 'next/image';
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
@@ -13,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { loadFromLocalCache as loadPBCache, clearLocalCache as clearPBLocalCache } from '@/components/new-shop-components/plan-details/planBuilderPersistence';
+import { deletePlanBuilderData } from '@/lib/services/temporary-storage';
 
 interface NavItem {
   label: string;
@@ -22,12 +25,13 @@ interface NavItem {
   disabled?: boolean;
 }
 
-const primaryNavSeed: NavItem[] = [
-  { label: 'Filters', active: true },
-  { label: 'Quotes' },
-  { label: 'Plan Builder' },
-  { label: 'Compare' },
-  { label: 'Saved' },
+// Base nav items; Preferred & Discounts now inline toggles (not standalone panels)
+const baseNav: NavItem[] = [
+  { label: 'Filters', active: true, icon: <FaFilter className="w-3.5 h-3.5" /> },
+  { label: 'Quotes', icon: <FaClipboardList className="w-3.5 h-3.5" /> },
+  { label: 'Plan Builder', icon: <FaPuzzlePiece className="w-3.5 h-3.5" /> },
+  { label: 'Compare', icon: <FaBalanceScale className="w-3.5 h-3.5" /> },
+  { label: 'Saved', icon: <FaBookmark className="w-3.5 h-3.5" /> },
 ];
 
 const filters: NavItem[] = [
@@ -37,18 +41,14 @@ const filters: NavItem[] = [
   { label: 'High Coverage' },
 ];
 
-// Icon box with dedicated bookmark icon for Saved (outline vs filled when active)
-const IconBox: React.FC<{active?: boolean; label?: string; count?: number}> = ({active, label, count}) => {
-  const base = `w-5 h-5 rounded-sm border flex items-center justify-center text-[10px] font-medium ${active ? 'bg-blue-primary text-white border-blue-400' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`;
+// Icon box updated: specific icons per nav; Saved uses filled/outline bookmark
+const IconBox: React.FC<{active?: boolean; label?: string; icon?: React.ReactNode; count?: number}> = ({active, label, icon}) => {
+  const base = `w-6 h-6 rounded-md border flex items-center justify-center text-[11px] font-medium shrink-0 ${active ? 'bg-blue-primary text-white border-blue-400' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`;
   if (label === 'Saved') {
-    const Icon = active ? BookmarkFilledIcon : BookmarkIcon;
-    return (
-      <div className={base} aria-hidden="true">
-        <Icon className="w-3.5 h-3.5" />
-      </div>
-    );
+    const Dynamic = active ? BookmarkFilledIcon : BookmarkIcon;
+    return <div className={base} aria-hidden="true"><Dynamic className="w-4 h-4" /></div>;
   }
-  return <div className={base}>i</div>;
+  return <div className={base} aria-hidden="true">{icon ?? (label ? label[0] : '•')}</div>;
 };
 
 interface QuoteFormData {
@@ -73,6 +73,10 @@ interface SidebarShowcaseProps {
   externalCloseSignal?: number; // increment to force close from parent
   activeCategory?: string;
   onSelectCategory?: (category: string) => void;
+  preferredOnly?: boolean;
+  onTogglePreferred?: (value: boolean) => void;
+  applyDiscounts?: boolean;
+  onToggleApplyDiscounts?: (value: boolean) => void;
   // New props for quote generation flow
   onGenerateQuotes?: (category: string, formData: QuoteFormData, plansList?: string[]) => Promise<void> | void;
   loadingCategories?: string[];
@@ -90,6 +94,10 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   externalCloseSignal,
   activeCategory,
   onSelectCategory,
+  preferredOnly = false,
+  onTogglePreferred,
+  applyDiscounts = false,
+  onToggleApplyDiscounts,
   onGenerateQuotes,
   loadingCategories = [],
   completedQuoteTypes = []
@@ -97,20 +105,118 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   // State: active detail tab, active nav item
   const [activeTab, setActiveTab] = React.useState<string | null>(null);
   const [planBuilderState, setPlanBuilderState] = React.useState<PlanBuilderState>({});
-  const [activeNav, setActiveNav] = React.useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('shopSidebar.activeNav');
-      // Migrate legacy 'Overview' to new 'Filters'
-      if (stored === 'Overview') return 'Filters';
-      return stored || 'Filters';
+  // Synced Original Medicare builder snapshot (lightweight summary)
+  const [originalBuilderSnapshot, setOriginalBuilderSnapshot] = React.useState<any | null>(null);
+  const [originalBuilderLoading, setOriginalBuilderLoading] = React.useState(false);
+  const [originalBuilderError, setOriginalBuilderError] = React.useState<string | null>(null);
+
+  // Hydrate sidebar snapshot from local cache quickly
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const cached = loadPBCache?.();
+      if (cached) {
+        setOriginalBuilderSnapshot(cached);
+        setPlanBuilderState(s => ({ ...s, original: true }));
+      }
+    } catch (e) {
+      // silent
     }
-    return 'Filters';
-  });
+  }, []);
+
+  const refreshOriginalBuilderSnapshot = React.useCallback(() => {
+    setOriginalBuilderLoading(true);
+    setOriginalBuilderError(null);
+    try {
+      const cached = loadPBCache?.();
+      if (cached) {
+        setOriginalBuilderSnapshot(cached);
+        setPlanBuilderState(s => ({ ...s, original: true }));
+      } else {
+        setOriginalBuilderSnapshot(null);
+      }
+    } catch (e:any) {
+      setOriginalBuilderError(e?.message || 'Failed to load builder cache');
+    } finally {
+      setOriginalBuilderLoading(false);
+    }
+  }, []);
+
+  // Listen for cross-tab localStorage updates and custom events to auto-refresh snapshot
+  React.useEffect(() => {
+    const STORAGE_KEY = 'plan_builder_cache_v1';
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        refreshOriginalBuilderSnapshot();
+      }
+    };
+    const handleCustomUpdate = () => refreshOriginalBuilderSnapshot();
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('planBuilder:updated', handleCustomUpdate as EventListener);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('planBuilder:updated', handleCustomUpdate as EventListener);
+    };
+  }, [refreshOriginalBuilderSnapshot]);
+
+  const handleOriginalReset = React.useCallback(async () => {
+    try { clearPBLocalCache?.(); } catch {}
+    try { await deletePlanBuilderData(); } catch (e) { console.warn('Sidebar remote delete failed:', e); }
+    setOriginalBuilderSnapshot(null);
+    setPlanBuilderState(s => ({ ...s, original: false }));
+  }, []);
+
+  // Helper to focus Plan Builder main section
+  const goToPlanBuilder = React.useCallback(() => {
+    setActiveNav('Plan Builder');
+    setActiveTab(null); // ensure nav panel state resets
+    // Optionally dispatch a custom event other components could listen for to open builder focus
+    try { window.dispatchEvent(new CustomEvent('planBuilder:focus')); } catch {}
+  }, []);
+  // Deterministic initial value to avoid SSR/client mismatch. LocalStorage hydration deferred to effect.
+  const [activeNav, setActiveNav] = React.useState<string>('Filters');
+  React.useEffect(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('shopSidebar.activeNav') : null;
+      if (stored && stored !== activeNav) {
+        setActiveNav(stored === 'Overview' ? 'Filters' : stored);
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Generated quote categories (for potential category-specific filters or future use)
+  const [generatedCats, setGeneratedCats] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('medicare_selected_categories');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setGeneratedCats(parsed);
+      }
+    } catch {}
+  }, []);
+
+  // Primary nav no longer injects Preferred/Discounts as panels
+  const primaryNavSeed = baseNav;
   const tabPanelId = React.useId();
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const lastFocusedTriggerRef = React.useRef<HTMLButtonElement | null>(null);
   const { savedPlans } = useSavedPlans();
+  // Selected quote categories (persisted) for inline display under Quotes nav
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('medicare_selected_categories');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setSelectedCategories(parsed);
+      }
+    } catch {}
+  }, []);
 
   // Persist active nav
   React.useEffect(() => {
@@ -337,21 +443,57 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
               <div className="rounded-lg border border-slate-200 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-800/40 p-3 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Original Medicare</span>
-                  {planBuilderState.original && (
+                  {planBuilderState.original && originalBuilderSnapshot && (
                     <Badge className="bg-blue-primary/20 text-blue-primary dark:text-blue-200">In Progress</Badge>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mb-3 leading-relaxed">Build a supplement-focused comparison starting from Parts A & B baseline coverage.</p>
-                <div className="flex gap-2">
-                  {planBuilderState.original ? (
-                    <>
-                      <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={() => {/* continue editing */}}>Edit</Button>
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setPlanBuilderState(s => ({...s, original: true}))}>Start New</Button>
-                    </>
-                  ) : (
-                    <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={() => setPlanBuilderState(s => ({...s, original: true}))}>Start New</Button>
-                  )}
-                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mb-3 leading-relaxed">Build a supplement-focused configuration starting from Parts A & B baseline coverage.</p>
+                {originalBuilderSnapshot ? (
+                  <div className="space-y-3 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">Monthly Total</span>
+                      <span className="text-slate-900 dark:text-white font-semibold">${(originalBuilderSnapshot.totalMonthlyCost || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {['medigapPlan','selectedPlans.drugPlan','selectedPlans.dentalPlan','selectedPlans.cancerPlan'].map(key => {
+                        const parts = key.split('.');
+                        let obj:any = originalBuilderSnapshot;
+                        for (const p of parts) obj = obj?.[p];
+                        if (!obj) return null;
+                        const labelMap:Record<string,string> = { medigapPlan: 'Medigap', drugPlan: 'Part D', dentalPlan: 'DVH', cancerPlan: 'Cancer' };
+                        const label = labelMap[parts.at(-1)!] || key;
+                        const rate = obj.monthlyRate || ((obj.rate?.month||0)/100) || obj.monthlyPremium || obj.month_rate || obj.part_d_rate || obj.monthly_premium || 0;
+                        const rateDisplay = typeof rate === 'number' ? (rate > 50 ? `$${(rate/100).toFixed(2)}` : `$${rate.toFixed(2)}`) : '—';
+                        return (
+                          <div key={key} className="flex items-center justify-between rounded-md bg-white/60 dark:bg-slate-700/40 px-2 py-1 border border-slate-200 dark:border-slate-600/50">
+                            <span className="text-slate-600 dark:text-slate-300">{label}</span>
+                            <span className="font-medium text-slate-800 dark:text-slate-100 text-[10px]">{rateDisplay}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex gap-1.5">
+                        <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" onClick={goToPlanBuilder}>Open</Button>
+                        <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" onClick={refreshOriginalBuilderSnapshot} disabled={originalBuilderLoading}>{originalBuilderLoading ? '...' : 'Refresh'}</Button>
+                      </div>
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 dark:text-red-400" onClick={handleOriginalReset}>Reset</Button>
+                    </div>
+                    {originalBuilderError && <p className="text-[10px] text-red-600">{originalBuilderError}</p>}
+                    <p className="text-[10px] text-slate-500 dark:text-slate-500">Updated {(originalBuilderSnapshot.lastUpdated?.seconds ? new Date(originalBuilderSnapshot.lastUpdated.seconds*1000).toLocaleTimeString() : 'now')}</p>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    {planBuilderState.original ? (
+                      <>
+                        <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={goToPlanBuilder}>Edit</Button>
+                        <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setPlanBuilderState(s => ({...s, original: true}))}>Start New</Button>
+                      </>
+                    ) : (
+                      <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={() => setPlanBuilderState(s => ({...s, original: true}))}>Start New</Button>
+                    )}
+                  </div>
+                )}
               </div>
               {/* Medicare Advantage Section */}
               <div className="rounded-lg border border-slate-200 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-800/40 p-3 backdrop-blur-sm">
@@ -365,7 +507,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 <div className="flex gap-2">
                   {planBuilderState.advantage ? (
                     <>
-                      <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={() => {/* continue editing */}}>Edit</Button>
+                      <Button size="sm" className="h-7 px-3 text-xs btn-brand" onClick={goToPlanBuilder}>Edit</Button>
                       <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setPlanBuilderState(s => ({...s, advantage: true}))}>Start New</Button>
                     </>
                   ) : (
@@ -376,25 +518,46 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
             </div>
           </div>
         ) : activeNav === 'Filters' ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              {filters.map(f => (
+          <div className="space-y-5">
+            <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/60 space-y-3">
+              <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
+                <span>Preferred Carriers Only</span>
                 <button
-                  key={f.label}
-                  className={`px-2 py-1.5 rounded-md text-[11px] font-medium transition border focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                    ${f.active ? 'bg-blue-primary text-white border-blue-400 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/40 hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600/60'}`}
+                  type="button"
+                  onClick={() => onTogglePreferred?.(!preferredOnly)}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full border transition-colors ${preferredOnly ? 'bg-blue-primary border-blue-400' : 'bg-slate-300/60 dark:bg-slate-600/60 border-slate-400/40 dark:border-slate-500/50'}`}
+                  aria-pressed={preferredOnly}
+                  aria-label="Toggle preferred carriers"
                 >
-                  {f.label}
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${preferredOnly ? 'translate-x-4' : 'translate-x-0.5'}`} />
                 </button>
-              ))}
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Limits quote results to carriers designated as preferred partners.</p>
+              <Separator className="my-1" />
+              <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
+                <span>Apply Discounts</span>
+                <button
+                  type="button"
+                  onClick={() => onToggleApplyDiscounts?.(!applyDiscounts)}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full border transition-colors ${applyDiscounts ? 'bg-green-600 border-green-500' : 'bg-slate-300/60 dark:bg-slate-600/60 border-slate-400/40 dark:border-slate-500/50'}`}
+                  aria-pressed={applyDiscounts}
+                  aria-label="Toggle apply discounts"
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${applyDiscounts ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Shows rates with household or other eligible discounts applied when available.</p>
             </div>
-            <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/60 backdrop-blur-sm">
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Tune filters to surface preferred carriers faster.</p>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="h-8 text-xs flex-1 border-slate-300 dark:border-slate-600/70 hover:bg-slate-100 dark:hover:bg-slate-700/60">Reset</Button>
-              <Button size="sm" className="h-8 text-xs flex-1 btn-brand">Apply</Button>
-            </div>
+            {generatedCats.filter(c => c !== 'medigap').length > 0 && (
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/40 p-3 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Category Filters (Coming Soon)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {generatedCats.filter(c => c !== 'medigap').map(c => (
+                    <span key={c} className="px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 text-[10px] text-slate-700 dark:text-slate-300 capitalize">{c.replace(/-/g,' ')}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : activeNav === 'Saved' ? (
           <div className="space-y-6">
@@ -467,9 +630,12 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
                   ${isActive ? 'bg-blue-primary text-white shadow-sm ring-1 ring-blue-300/40' : 'hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200'}`}
               >
-                <IconBox active={isActive} label={item.label} />
+                <IconBox active={isActive} label={item.label} icon={item.icon} />
                 <span className="flex-1 text-left">{item.label}</span>
-                {isActive && <Badge className="bg-white/20 text-white h-5 px-2">·</Badge>}
+                {/* Chevron indicator: shown when panel not active for this item */}
+                {!isActive && (
+                  <FaChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition" aria-hidden="true" />
+                )}
               </button>
             )})}
           </div>
@@ -500,37 +666,83 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   <div className="flex gap-4 mt-2 lg:mt-2">
       {/* Compact Rail (unchanged baseline) */}
       <div className="flex flex-col w-52 rounded-xl border bg-white/70 dark:bg-slate-800/60 backdrop-blur p-3 gap-2 shadow-sm relative">
-        <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 px-1.5">Workspace</h3>
-        {primaryNavSeed.map(item => {
+  <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 px-1.5">Explorer</h3>
+        {primaryNavSeed.map((item, index) => {
           const logicalActive = activeNav === item.label;
           const panelOpen = activeTab === 'nav';
           const isActive = logicalActive && panelOpen; // visual active only when panel open
           const savedCount = item.label === 'Saved' ? savedPlans.length : 0;
           return (
-            <button
-              key={item.label}
-              ref={el => { if (logicalActive) lastFocusedTriggerRef.current = el; }}
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                ${isActive ? 'bg-blue-primary text-white shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200'}`}
-              onClick={(e) => {
-                setActiveNav(item.label);
-                // If panel closed, open nav panel. If open on filters, switch to nav. If already on nav, keep open.
-                if (activeTab == null || activeTab !== 'nav') {
-                  openTab('nav', e.currentTarget);
-                } else {
-                  // keep panel open; still update last focused trigger for proper focus restore
-                  lastFocusedTriggerRef.current = e.currentTarget;
-                }
-              }}
-              aria-controls={tabPanelId}
-              aria-expanded={activeTab === 'nav'}
-              role="tab"
-              aria-current={logicalActive ? 'page' : undefined}
-            >
-              <IconBox active={isActive} label={item.label} count={savedCount} />
-              <span className="flex-1 truncate flex items-center gap-1">{item.label}{savedCount > 0 && item.label === 'Saved' && <span className="inline-flex items-center justify-center h-5 min-w-[1.25rem] px-1 rounded-full text-[10px] font-semibold border border-amber-300/60 text-amber-600 dark:text-amber-300 dark:border-amber-400/40 bg-amber-50/70 dark:bg-amber-400/10 shadow-sm">{savedCount}</span>}</span>
-              {isActive && <Badge className="bg-white/20 text-white h-5 px-2">·</Badge>}
-            </button>
+            <div key={item.label} className="relative group">
+              <button
+                ref={el => { if (logicalActive) lastFocusedTriggerRef.current = el; }}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
+                  ${isActive ? 'bg-blue-primary text-white shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200'}`}
+                onClick={(e) => {
+                  setActiveNav(item.label);
+                  if (activeTab == null || activeTab !== 'nav') {
+                    openTab('nav', e.currentTarget);
+                  } else {
+                    lastFocusedTriggerRef.current = e.currentTarget;
+                  }
+                }}
+                aria-controls={tabPanelId}
+                aria-expanded={activeTab === 'nav'}
+                role="tab"
+                aria-current={logicalActive ? 'page' : undefined}
+              >
+                <IconBox active={isActive} label={item.label} icon={item.icon} count={savedCount} />
+                <span className="flex-1 truncate flex items-center gap-1">{item.label}{savedCount > 0 && item.label === 'Saved' && <span className="inline-flex items-center justify-center h-5 min-w-[1.25rem] px-1 rounded-full text-[10px] font-semibold border border-amber-300/60 text-amber-600 dark:text-amber-300 dark:border-amber-400/40 bg-amber-50/70 dark:bg-amber-400/10 shadow-sm">{savedCount}</span>}</span>
+                {!isActive && (
+                  <FaChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition" aria-hidden="true" />
+                )}
+              </button>
+              {/* Sidebar sub-tabs (Preferred & Discounts) injected directly after Filters and before Quotes */}
+              {item.label === 'Filters' && primaryNavSeed[index + 1]?.label === 'Quotes' && (
+                <div className="mt-1 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2 ml-4 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Preferred</span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onTogglePreferred?.(!preferredOnly); }}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full border transition-colors ${preferredOnly ? 'bg-blue-primary border-blue-400' : 'bg-slate-300/60 dark:bg-slate-600/60 border-slate-400/40 dark:border-slate-500/50'}`}
+                      aria-pressed={preferredOnly}
+                      aria-label="Toggle preferred carriers"
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${preferredOnly ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 ml-4 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Discounts</span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onToggleApplyDiscounts?.(!applyDiscounts); }}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full border transition-colors ${applyDiscounts ? 'bg-green-600 border-green-500' : 'bg-slate-300/60 dark:bg-slate-600/60 border-slate-400/40 dark:border-slate-500/50'}`}
+                      aria-pressed={applyDiscounts}
+                      aria-label="Toggle apply discounts"
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${applyDiscounts ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              {item.label === 'Quotes' && selectedCategories.length > 0 && (
+                <div className="mt-1 ml-10 flex flex-wrap gap-1.5 pr-1">
+                  {selectedCategories.map(cat => {
+                    const cLabel = cat.replace(/-/g,' ').replace(/\b\w/g, m => m.toUpperCase());
+                    const selected = activeCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={(e) => { e.stopPropagation(); onSelectCategory?.(cat); setActiveNav('Quotes'); if (activeTab == null) openTab('nav', null); }}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 ${selected ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
+                        aria-pressed={selected}
+                      >{cLabel}</button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
         <Separator className="my-1" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,8 @@ import { MissingFieldsModal } from "@/components/shared/MissingFieldsModal";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { optimizeDentalQuotes, OptimizedDentalQuote } from "@/lib/dental-quote-optimizer";
 import { savePlanBuilderData, loadPlanBuilderData, PlanBuilderData } from "@/lib/services/temporary-storage";
+import { persistPlanBuilderState, loadFromLocalCache, normalizeLoadedData, clearLocalCache, buildPlanBuilderData, cacheLocally } from './planBuilderPersistence';
+import { deletePlanBuilderData } from '@/lib/services/temporary-storage';
 import { Timestamp } from 'firebase/firestore';
 import { useDiscountState } from "@/lib/services/discount-state";
 import { getAmBestRatingColor } from '@/utils/amBestRating';
@@ -451,26 +453,22 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     setShowResetConfirmation(true);
   };
 
-  const handleConfirmReset = () => {
-    // Reset all selected plans
+  const handleConfirmReset = async () => {
     setSelectedDrugPlan(null);
     setSelectedDentalPlan(null);
     setSelectedCancerPlan(null);
     setSelectedPlanOption(null);
-    
-    // Reset chart data to default state (only Medicare A&B and Medigap selected)
-    setChartData(prevData => 
-      prevData.map(item => {
-        if (item.name === 'Medicare A & B' || item.name === 'Medigap') {
-          return { ...item, selected: true };
-        } else {
-          return { ...item, selected: false };
-        }
-      })
-    );
-    
+    // Reset chart data (Medicare A & B and Medigap selected)
+    setChartData(getDefaultChartData().map(item => ({ ...item, selected: item.name === 'Medicare A & B' || item.name === 'Medigap' })));
+    try { clearLocalCache(); } catch {}
+    // Remote wipe (best-effort, non-blocking UX)
+    try {
+      await deletePlanBuilderData();
+    } catch (e) {
+      console.warn('Remote Plan Builder delete failed (continuing):', e);
+    }
     setShowResetConfirmation(false);
-    console.log('✅ Plan builder reset completed');
+    console.log('✅ Plan builder reset completed (local + remote cleared)');
   };
 
   const handleCancelReset = () => {
@@ -536,128 +534,63 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     setShowRemoveConfirmation(false);
   };
 
-  // Load existing quotes from Firestore on component mount
+  // Optimistic hydration: local cache, then remote reconciliation
   useEffect(() => {
-    const loadStoredQuotes = async () => {
-      try {
-        // Load form data first to get user info
-        const formData = await loadFromStorage(QUOTE_FORM_DATA_KEY, {} as QuoteFormData);
-        
-        // Load existing plan builder data
-        const existingPlanBuilder = await loadPlanBuilderData();
-        if (existingPlanBuilder) {
-          console.log('📖 Loaded existing plan builder data:', existingPlanBuilder);
-          
-          // Use the stored plan builder data
-          setUsePlanBuilderData(true);
-          setStoredMedigapData(existingPlanBuilder.medigapPlan);
-          
-          // Restore chart data if it exists
-          if (existingPlanBuilder.chartData) {
-            console.log('🔄 Restoring chart data:', existingPlanBuilder.chartData);
-            // Ensure backward compatibility by adding missing properties
-            const enhancedChartData = existingPlanBuilder.chartData.map(item => {
-              const defaultItem = getDefaultChartData().find(defaultItem => defaultItem.name === item.name);
-              return {
-                ...item,
-                importance: item.importance || defaultItem?.importance || '',
-                missingWarning: item.missingWarning || defaultItem?.missingWarning || ''
-              };
-            });
-            setChartData(enhancedChartData);
-          }
-          
-          // Restore selected plans
-          if (existingPlanBuilder.selectedPlans.drugPlan) {
-            console.log('💊 Restoring drug plan:', existingPlanBuilder.selectedPlans.drugPlan);
-            setSelectedDrugPlan(existingPlanBuilder.selectedPlans.drugPlan);
-          }
-          if (existingPlanBuilder.selectedPlans.dentalPlan) {
-            console.log('🦷 Restoring dental plan:', existingPlanBuilder.selectedPlans.dentalPlan);
-            setSelectedDentalPlan(existingPlanBuilder.selectedPlans.dentalPlan);
-          }
-          if (existingPlanBuilder.selectedPlans.cancerPlan) {
-            console.log('🎗️ Restoring cancer plan:', existingPlanBuilder.selectedPlans.cancerPlan);
-            setSelectedCancerPlan(existingPlanBuilder.selectedPlans.cancerPlan);
-          }
-          if (existingPlanBuilder.selectedPlans.medigapPlanOption) {
-            console.log('📋 Checking saved medigap plan option:', existingPlanBuilder.selectedPlans.medigapPlanOption);
-            console.log('📋 Current quote data:', { plan: quoteData.plan, carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '') });
-            
-            // Check if the saved plan matches the current quote (same carrier and plan type)
-            const savedCarrier = existingPlanBuilder.medigapPlan?.carrier;
-            const currentCarrier = getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '');
-            const savedPlan = existingPlanBuilder.medigapPlan?.plan;
-            const currentPlan = quoteData.plan;
-            
-            const carrierMatches = savedCarrier === currentCarrier;
-            const planMatches = savedPlan === currentPlan;
-            
-            console.log('📋 Plan comparison:', { 
-              savedCarrier, 
-              currentCarrier, 
-              carrierMatches, 
-              savedPlan, 
-              currentPlan, 
-              planMatches 
-            });
-            
-            // Only restore the selected plan option if both carrier and plan type match
-            if (carrierMatches && planMatches) {
-              console.log('✅ Carrier and plan match - restoring selected plan option');
-              setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
-              setCarrierChangeInfo(null); // Clear any previous notifications
-            } else {
-              console.log('❌ Carrier or plan mismatch - user needs to select new plan option');
-              console.log(`Carrier match: ${carrierMatches}, Plan match: ${planMatches}`);
-              
-              // Show notification about carrier/plan change
-              if (!carrierMatches) {
-                setCarrierChangeInfo({
-                  previousCarrier: savedCarrier,
-                  newCarrier: currentCarrier,
-                  show: true
-                });
-              } else if (!planMatches) {
-                // Same carrier but different plan type - just log it
-                console.log(`📋 Plan type changed: ${savedPlan} → ${currentPlan} (same carrier: ${currentCarrier})`);
-              }
-              
-              // Don't restore the selected plan option, user will need to select again
-            }
-          }
-        } else {
-          console.log('📝 No existing plan builder data found, using defaults');
+    let mounted = true;
+    const hydrateFrom = (source: any, isRemote = false) => {
+      if (!source) return;
+      const existingPlanBuilder = normalizeLoadedData(source);
+      setUsePlanBuilderData(true);
+      setStoredMedigapData(existingPlanBuilder.medigapPlan);
+      if (existingPlanBuilder.chartData) {
+        const enhancedChartData = existingPlanBuilder.chartData.map((item: any) => {
+          const defItem = getDefaultChartData().find(d => d.name === item.name);
+            return { ...item, importance: item.importance || defItem?.importance || '', missingWarning: item.missingWarning || defItem?.missingWarning || '' };
+        });
+        setChartData(enhancedChartData);
+      }
+      if (existingPlanBuilder.selectedPlans?.drugPlan) setSelectedDrugPlan(existingPlanBuilder.selectedPlans.drugPlan);
+      if (existingPlanBuilder.selectedPlans?.dentalPlan) setSelectedDentalPlan(existingPlanBuilder.selectedPlans.dentalPlan);
+      if (existingPlanBuilder.selectedPlans?.cancerPlan) setSelectedCancerPlan(existingPlanBuilder.selectedPlans.cancerPlan);
+      if (existingPlanBuilder.selectedPlans?.medigapPlanOption) {
+        const savedCarrier = existingPlanBuilder.medigapPlan?.carrier;
+        const currentCarrier = getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '');
+        const savedPlan = existingPlanBuilder.medigapPlan?.plan;
+        const currentPlan = quoteData.plan;
+        if (savedCarrier === currentCarrier && savedPlan === currentPlan) {
+          setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
+          setCarrierChangeInfo(null);
+        } else if (!isRemote && savedCarrier !== currentCarrier) {
+          setCarrierChangeInfo({ previousCarrier: savedCarrier, newCarrier: currentCarrier, show: true });
         }
-        
-        setDataLoaded(true);
-        
-        // Load drug plan quotes
-        const storedDrugQuotes = await loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
-        if (storedDrugQuotes && storedDrugQuotes.length > 0) {
-          setDrugPlanQuotes(storedDrugQuotes);
-          setCompletedCoverageTypes(prev => [...prev, 'Medicare Part D']);
-        }
-
-        // Load dental quotes
-        const storedDentalQuotes = await loadFromStorage(DENTAL_QUOTES_KEY, []);
-        if (storedDentalQuotes && storedDentalQuotes.length > 0) {
-          setDentalQuotes(storedDentalQuotes);
-          setCompletedCoverageTypes(prev => [...prev, 'Dental/Vision/Hearing']);
-        }
-
-        // Load cancer insurance quotes
-        const storedCancerQuotes = await loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
-        if (storedCancerQuotes && storedCancerQuotes.length > 0) {
-          setCancerInsuranceQuotes(storedCancerQuotes);
-          setCompletedCoverageTypes(prev => [...prev, 'Cancer Insurance']);
-        }
-      } catch (error) {
-        console.error('Error loading stored quotes:', error);
       }
     };
-
-    loadStoredQuotes();
+    // Local cache first
+    try { const cached = loadFromLocalCache(); if (cached) hydrateFrom(cached); } catch {}
+    // Remote Firestore
+    (async () => {
+      try {
+        const remote = await loadPlanBuilderData();
+        if (!mounted || !remote) return;
+        const cached = loadFromLocalCache();
+        const remoteTime = remote.lastUpdated?.seconds || 0;
+        const cachedTime = cached?.lastUpdated?.seconds || 0;
+        if (remoteTime > cachedTime) hydrateFrom(remote, true);
+      } catch (e) { console.error('Error loading remote plan builder data:', e); }
+      finally { if (mounted) setDataLoaded(true); }
+    })();
+    // Ancillary stored quotes
+    (async () => {
+      try {
+        const storedDrugQuotes = await loadFromStorage(DRUG_PLAN_QUOTES_KEY, []);
+        if (storedDrugQuotes?.length) { setDrugPlanQuotes(storedDrugQuotes); setCompletedCoverageTypes(prev => [...prev, 'Medicare Part D']); }
+        const storedDentalQuotes = await loadFromStorage(DENTAL_QUOTES_KEY, []);
+        if (storedDentalQuotes?.length) { setDentalQuotes(storedDentalQuotes); setCompletedCoverageTypes(prev => [...prev, 'Dental/Vision/Hearing']); }
+        const storedCancerQuotes = await loadFromStorage(CANCER_INSURANCE_QUOTES_KEY, []);
+        if (storedCancerQuotes?.length) { setCancerInsuranceQuotes(storedCancerQuotes); setCompletedCoverageTypes(prev => [...prev, 'Cancer Insurance']); }
+      } catch (e) { console.error('Error loading ancillary stored coverage quotes:', e); }
+    })();
+    return () => { mounted = false; };
   }, []);
   
   // Chart data for the Coverage Quality scale - percentage-based scoring
@@ -716,32 +649,72 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   
   const [chartData, setChartData] = useState(getDefaultChartData());
 
-  // Save plan builder state whenever relevant data changes
+  // Debounced remote persistence with immediate local cache update
+  const debounceRef = useRef<number | null>(null);
+  const lastPersistArgsRef = useRef<any | null>(null);
+  const DEBOUNCE_MS = 700;
+
+  // Flush function (used on visibilitychange/unload)
+  const flushPendingPersist = useCallback(async () => {
+    if (!lastPersistArgsRef.current) return;
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    try {
+      await persistPlanBuilderState(lastPersistArgsRef.current);
+      try { window.dispatchEvent(new CustomEvent('planBuilder:updated')); } catch {}
+    } catch (e) {
+      console.error('Flush persist failed', e);
+    }
+  }, []);
+
   useEffect(() => {
-    // Only save if data has been loaded from Firestore first (to avoid overwriting on mount)
-    if (!dataLoaded) {
-      console.log('⏳ Data not loaded yet, skipping save');
-      return;
-    }
-    
-    // Only save if Medicare A&B is selected and we have actual data
+    // Only attempt persistence after initial load to avoid overwriting remote with empty
+    if (!dataLoaded) return;
     const medicareABSelected = chartData.find(item => item.name === 'Medicare A & B')?.selected;
-    if (medicareABSelected && quoteData.plan) {
-      console.log('💾 Saving plan builder state...', {
-        chartData,
-        selectedDrugPlan,
-        selectedDentalPlan,
-        selectedCancerPlan,
-        selectedPlanOption
-      });
-      savePlanBuilderState();
-    } else {
-      console.log('❌ Not saving - conditions not met:', {
-        medicareABSelected,
-        hasQuoteData: !!quoteData.plan
-      });
-    }
+    if (!(medicareABSelected && quoteData.plan)) return;
+
+    // Build data & cache immediately (fast UI + sidebar sync)
+    try {
+      const currentRate = getCurrentSelectionRate();
+      if (currentRate == null) return;
+      const buildArgs = { quoteData, currentRate, chartData, selectedDrugPlan, selectedDentalPlan, selectedCancerPlan, selectedPlanOption };
+      lastPersistArgsRef.current = buildArgs;
+      const data = buildPlanBuilderData(buildArgs);
+      cacheLocally(data);
+      // Notify same-tab listeners (sidebar) of local update
+      try { window.dispatchEvent(new CustomEvent('planBuilder:updated')); } catch {}
+    } catch (e) { console.warn('Local cache update failed', e); }
+
+    // Debounce remote write
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(async () => {
+      if (!lastPersistArgsRef.current) return;
+      try {
+        await persistPlanBuilderState(lastPersistArgsRef.current);
+        try { window.dispatchEvent(new CustomEvent('planBuilder:updated')); } catch {}
+      } catch (e) {
+        console.error('Debounced persist failed', e);
+      }
+    }, DEBOUNCE_MS);
   }, [chartData, selectedDrugPlan, selectedDentalPlan, selectedCancerPlan, selectedPlanOption, dataLoaded]);
+
+  // Visibility/unload flush
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingPersist();
+      }
+    };
+    const handleBeforeUnload = () => { flushPendingPersist(); };
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [flushPendingPersist]);
 
   // Helper functions from test-multi-plan
   const formatRate = (rate: any) => {
@@ -1108,57 +1081,24 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     );
   };
 
-  // Function to save plan builder state to Firestore
+  // Function to save plan builder state to Firestore (refactored)
   const savePlanBuilderState = async () => {
     try {
       const currentRate = getCurrentSelectionRate();
-      if (currentRate === null) {
+      if (currentRate == null) {
         console.warn('Cannot save plan builder state: No plan selection made yet');
         return;
       }
-
-      const totalMonthlyCost = 
-        currentRate + 
-        (selectedDrugPlan ? ((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100) : 0) +
-        (selectedDentalPlan ? selectedDentalPlan.monthlyPremium : 0) +
-        (selectedCancerPlan ? (selectedCancerPlan.monthly_premium || 0) : 0);
-
-      const totalScore = chartData.filter(item => item.selected).reduce((sum, item) => sum + item.value, 0);
-      const maxPossibleScore = 100; // Total percentage possible
-      const coveragePercentage = Math.round((totalScore / maxPossibleScore) * 100);
-      
-      let coverageQuality = 'Basic';
-      if (coveragePercentage >= 90) coverageQuality = 'Excellent';
-      else if (coveragePercentage >= 80) coverageQuality = 'Very Good';
-      else if (coveragePercentage >= 70) coverageQuality = 'Good';
-      else if (coveragePercentage >= 60) coverageQuality = 'Fair';
-
-      const planBuilderData: PlanBuilderData = {
-        medigapPlan: {
-          plan: quoteData.plan,
-          carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
-          monthlyRate: currentRate,
-          selected: true
-        },
-        medicareAB: {
-          selected: chartData.find(item => item.name === 'Medicare A & B')?.selected || false,
-          selectedAt: Timestamp.now()
-        },
-        selectedPlans: {
-          drugPlan: selectedDrugPlan,
-          dentalPlan: selectedDentalPlan,
-          cancerPlan: selectedCancerPlan,
-          medigapPlanOption: selectedPlanOption
-        },
-        chartData: chartData,
-        totalMonthlyCost: totalMonthlyCost,
-        coverageQuality: coverageQuality,
-        lastUpdated: Timestamp.now()
-      };
-
-      console.log('💾 About to save plan builder data:', planBuilderData);
-      await savePlanBuilderData(planBuilderData);
-      console.log('✅ Plan Builder state saved to Firestore');
+      const data = await persistPlanBuilderState({
+        quoteData,
+        currentRate,
+        chartData,
+        selectedDrugPlan,
+        selectedDentalPlan,
+        selectedCancerPlan,
+        selectedPlanOption
+      });
+      console.log('✅ Plan Builder state saved to Firestore', data);
     } catch (error) {
       console.error('❌ Failed to save plan builder state:', error);
     }

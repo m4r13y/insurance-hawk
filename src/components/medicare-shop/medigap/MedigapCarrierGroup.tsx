@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
+import { processOptionsForDisplay } from '@/lib/medigap-utils';
 
 interface MedigapCarrierGroupProps {
   carrierGroup: any;
@@ -42,60 +43,8 @@ export default function MedigapCarrierGroup({
   // Skip carrier if no plans match selected types
   if (filteredQuotes.length === 0) return null;
 
-  // Function to process options based on discount toggle - copied from test-quote-processor
-  const processOptionsForDisplay = (plan: any) => {
-    // Check if this plan has pre-calculated discounts
-    const hasWithHHD = plan.options.some((opt: any) => opt.view_type?.includes('with_hhd'));
-    const hasSansHHD = plan.options.some((opt: any) => opt.view_type?.includes('sans_hhd'));
-    const hasPreCalculatedDiscounts = hasWithHHD && hasSansHHD;
-
-    if (hasPreCalculatedDiscounts) {
-      // For pre-calculated discounts, just filter based on toggle
-      if (applyDiscounts) {
-        // Show with_hhd options (discounted versions)
-        return plan.options.filter((opt: any) => opt.view_type?.includes('with_hhd'));
-      } else {
-        // Show sans_hhd options (non-discounted versions)
-        return plan.options.filter((opt: any) => opt.view_type?.includes('sans_hhd'));
-      }
-    } else {
-      // For non-pre-calculated discounts, we need to calculate
-      if (applyDiscounts) {
-        // Apply discounts to base options
-        return plan.options.map((opt: any) => {
-          // Check if this option has discounts available
-          const hasDiscounts = opt.discounts && opt.discounts.length > 0;
-          
-          if (hasDiscounts) {
-            // Calculate discounted price
-            let discountedRate = opt.rate.month;
-            opt.discounts.forEach((discount: any) => {
-              const discountPercent = discount.value ? (discount.value * 100) : (discount.percent || 0);
-              discountedRate = discountedRate * (1 - discountPercent / 100);
-            });
-            
-            return {
-              ...opt,
-              rate: {
-                ...opt.rate,
-                month: discountedRate,
-                annual: discountedRate * 12,
-                quarter: discountedRate * 3,
-                semi_annual: discountedRate * 6
-              },
-              name: `${opt.name} (Calculated Discount)`,
-              isCalculatedDiscount: true
-            };
-          }
-          
-          return opt;
-        });
-      } else {
-        // Show base options without discounts
-        return plan.options;
-      }
-    }
-  };
+  // Reuse shared processing logic (handles pre-calculated vs calculated discount patterns)
+  const processPlanOptions = (plan: any) => processOptionsForDisplay(plan, applyDiscounts);
   
   // Helper function to get base rate without discounts
   const getBaseRate = (quote: any) => {
@@ -208,7 +157,7 @@ export default function MedigapCarrierGroup({
                     
                     // Get the total number of processed options across all plans
                     const totalProcessedOptions = consolidated.reduce((total, plan) => {
-                      const processedOptions = processOptionsForDisplay(plan);
+                      const processedOptions = processPlanOptions(plan);
                       return total + processedOptions.length;
                     }, 0);
                     
@@ -273,7 +222,7 @@ export default function MedigapCarrierGroup({
               const plan = consolidatedPlans[0]; // Should only be one plan per plan type
               
               // Process options using our discount filtering logic
-              const displayOptions = plan ? processOptionsForDisplay(plan) : [];
+              const displayOptions = plan ? processPlanOptions(plan) : [];
               
               // Calculate price range from processed options
               const rates = displayOptions.map((opt: any) => opt.rate?.month || 0);

@@ -1,12 +1,10 @@
 "use client";
 import React from 'react';
-import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRightIcon, BookmarkIcon, BookmarkFilledIcon } from '@radix-ui/react-icons';
+import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
 import { AmBestStarRating } from '@/components/ui/star-rating';
+import { CarrierLogoBlock, SaveToggleButton, DetailsButton, PlanPriceBlock } from './SharedCardParts';
 
 interface PlanBadges { [k:string]: { label: string; color: string } }
 export interface CarrierSummaryLight { id:string; name:string; logo:string; rating:string; plans?: Record<string, number | undefined>; planRanges?: Record<string, { min:number; max:number; count:number } | undefined>; }
@@ -130,20 +128,11 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
               <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.18),transparent_65%)]" />
               {/* Header */}
               <div className="relative z-10 flex items-start gap-3 mb-3">
-                <button
-                  type="button"
-                  aria-label={saved ? 'Unsave plan' : 'Save plan'}
-                  onClick={() => handleToggleSave(carrier, selectedPlan, activePrice, range ? {min: range.min, max: range.max} : undefined)}
-                  className={`absolute top-0 right-0 -mt-1 -mr-1 w-8 h-8 inline-flex items-center justify-center rounded-md transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                    ${saved ? 'text-amber-400 hover:text-amber-300 bg-slate-700/60' : 'text-slate-400 hover:text-white hover:bg-slate-700/60'}`}
-                >
-                  {saved ? <BookmarkFilledIcon className="w-4.5 h-4.5" aria-hidden="true" /> : <BookmarkIcon className="w-4.5 h-4.5" aria-hidden="true" />}
-                </button>
-                <div className="w-12 h-12 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center overflow-hidden text-slate-700 dark:text-slate-200 font-semibold text-lg">
-                  {/* Fallback initial (always render; image overlays if available) */}
-                  <span className="absolute">{carrier.name.charAt(0)}</span>
-                  <Image loading="lazy" src={carrier.logo} alt={carrier.name} width={48} height={48} className="object-contain relative z-10" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} />
-                </div>
+                <SaveToggleButton
+                  saved={saved}
+                  onToggle={() => handleToggleSave(carrier, selectedPlan, activePrice, range ? {min: range.min, max: range.max} : undefined)}
+                />
+                <CarrierLogoBlock name={carrier.name} logo={carrier.logo} />
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="font-semibold text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
                     {/* Allow wrapping to multiple rows (previously truncated) */}
@@ -176,24 +165,9 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
               {/* Price + CTA row */}
               <div className="relative z-10 flex items-end justify-between mt-auto">
                 <div className="flex flex-col">
-                  <div className="flex items-end gap-2">
-                    <div className="text-4xl font-bold leading-none text-white">{activePrice !== undefined ? `$${activePrice.toFixed(0)}` : '—'}</div>
-                    {showRange && range && (
-                      <div className="text-sm text-slate-400 mb-1">to ${range.max.toFixed(0)}</div>
-                    )}
-                  </div>
-                  {/* Quote count removed */}
+                  <PlanPriceBlock price={activePrice} range={range as any} showRange={showRange} />
                 </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => onOpenPlanDetails?.(carrier)}
-                    className="w-11 h-11 inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800/70 text-slate-200 hover:bg-slate-700 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 transition shadow-sm"
-                    aria-label={`View plans for ${carrier.name}`}
-                  >
-                    <ArrowRightIcon className="w-5 h-5" />
-                  </button>
-                </div>
+                <DetailsButton onClick={() => onOpenPlanDetails?.(carrier)} carrierName={carrier.name} />
               </div>
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </>

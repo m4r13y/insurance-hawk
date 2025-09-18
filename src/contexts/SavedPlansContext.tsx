@@ -6,6 +6,7 @@ interface SavedPlansContextValue {
   savedPlans: SavedPlanRecord[];
   toggle: (record: { carrierId: string; carrierName: string; logo: string; rating?: string; category: string; planType?: string; price?: number; min?: number; max?: number }) => void;
   isSaved: (carrierId: string, planType?: string, category?: string) => boolean;
+  removeByCarrier: (carrierId: string, category?: string) => void; // remove all plans for carrier (used by chip X)
 }
 
 const SavedPlansContext = React.createContext<SavedPlansContextValue | undefined>(undefined);
@@ -27,7 +28,16 @@ export const SavedPlansProvider: React.FC<{children: React.ReactNode}> = ({ chil
     return savedPlans.some(p => p.key === key);
   }, [savedPlans]);
 
-  const value = React.useMemo(() => ({ savedPlans, toggle, isSaved }), [savedPlans, toggle, isSaved]);
+  const removeByCarrier = React.useCallback((carrierId: string, category: string = 'medigap') => {
+    setSavedPlans(prev => {
+      const next = prev.filter(p => !(p.carrierId === carrierId && p.category === category));
+      // persist manually since toggleSavedPlan handles persistence for toggles only
+      try { if (typeof window !== 'undefined') localStorage.setItem('saved_plans_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  const value = React.useMemo(() => ({ savedPlans, toggle, isSaved, removeByCarrier }), [savedPlans, toggle, isSaved, removeByCarrier]);
 
   return <SavedPlansContext.Provider value={value}>{children}</SavedPlansContext.Provider>;
 };

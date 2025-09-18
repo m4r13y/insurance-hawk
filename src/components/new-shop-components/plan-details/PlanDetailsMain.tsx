@@ -28,7 +28,10 @@ import { LoadingState } from './LoadingState';
 import { ErrorState } from './ErrorState';
 
 interface PlanDetailsMainProps {
-  // Props will be passed via URL params or state
+  carrierId?: string; // explicitly selected carrier id/name
+  initialQuotes?: QuoteData[]; // pre-filtered quotes for that carrier
+  plan?: string; // selected plan letter (F/G/N)
+  onClose?: () => void; // callback to exit details view
 }
 
 interface PlanConfiguration {
@@ -36,7 +39,7 @@ interface PlanConfiguration {
   discounts: string[];
 }
 
-const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
+const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuotes, plan, onClose }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -127,32 +130,31 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
 
   // Handle back navigation
   const handleGoBack = () => {
+    // Prefer sandbox-provided close handler for in-place view (shop-components)
+    if (onClose) {
+      onClose();
+      return;
+    }
     const returnUrl = localStorage.getItem('planDetailsReturnUrl');
     if (returnUrl) {
-      // Clear the stored return URL
       localStorage.removeItem('planDetailsReturnUrl');
-      
-      // Ensure the return URL includes step=results to show quotes
       let finalReturnUrl = returnUrl;
       if (!returnUrl.includes('step=results')) {
         const separator = returnUrl.includes('?') ? '&' : '?';
         finalReturnUrl = `${returnUrl}${separator}step=results`;
       }
-      
       router.push(finalReturnUrl);
-    } else {
-      // Fallback to Medicare shop page with results step - check Firestore for quotes
-      router.push('/medicare/shop?step=results');
+      return;
     }
+    router.push('/medicare/shop?step=results');
   };
 
   React.useEffect(() => {
     const initializeComponent = async () => {
       console.log('Plan Details - Initializing component...');
-      
-      // Get simplified URL parameters 
-      const carrier = searchParams.get('carrier'); // The company field from API
-      const planType = searchParams.get('plan');
+      // Prefer explicit props (from parent) over URL params to eliminate flicker
+      const carrier = carrierId || searchParams.get('carrier');
+      const planType = plan || searchParams.get('plan');
       
       console.log('Plan Details - URL Parameters:', { carrier, planType });
       
@@ -162,8 +164,22 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
       });
       
       // Check for existing medigap quotes
-      console.log('Plan Details - Checking for existing quotes...');
-      const existingQuotes = await loadExistingQuotes();
+      // If parent supplied quotes for this carrier, short-circuit all storage loading & filtering
+      if (initialQuotes && initialQuotes.length) {
+        console.log('Plan Details - Short-circuit using initialQuotes:', initialQuotes.length);
+        let subset = initialQuotes as QuoteData[];
+        if (planType) {
+          const planFiltered = subset.filter(q => (q.plan || '').toUpperCase().endsWith(planType.toUpperCase()));
+          if (planFiltered.length) subset = planFiltered;
+        }
+        setQuoteData(subset[0]);
+        setCarrierQuotes(subset);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Plan Details - Checking for existing quotes (no initialQuotes provided)...');
+      let existingQuotes: QuoteData[] = await loadExistingQuotes();
       
       if (existingQuotes.length > 0) {
         console.log('Plan Details - Found existing quotes, total:', existingQuotes.length);
@@ -172,23 +188,16 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
         let filteredQuotes = existingQuotes;
         
         if (carrier || planType) {
+          const carrierNorm = carrier ? carrier.toLowerCase().trim() : '';
           filteredQuotes = existingQuotes.filter(quote => {
-            // Match using the company field from the API (primary identifier)
-            const matchesCarrier = !carrier || quote.company === carrier;
-            const matchesPlan = !planType || quote.plan === planType;
-            
-            console.log('Quote filter check:', {
-              quoteKey: quote.key,
-              quoteCompany: quote.company,
-              quotePlan: quote.plan,
-              urlCarrier: carrier,
-              urlPlanType: planType,
-              matchesCarrier,
-              matchesPlan,
-              overallMatch: matchesCarrier && matchesPlan
-            });
-            
-            return matchesCarrier && matchesPlan;
+            const company = (quote.company || '').toLowerCase();
+            const nestedName = (quote as any).carrier?.name ? (quote as any).carrier.name.toLowerCase() : '';
+            const baseName = (quote.company_base?.name || '').toLowerCase();
+            const fullName = (quote.company_base?.name_full || '').toLowerCase();
+            const matchesCarrier = !carrier || [company, nestedName, baseName, fullName].some(v => v && v === carrierNorm);
+            const matchesPlan = !planType || quote.plan === planType || (quote.plan || '').toUpperCase().endsWith(planType.toUpperCase());
+            if (matchesCarrier && matchesPlan) return true;
+            return false;
           });
           
           console.log('Plan Details - Filtered quotes for specific carrier/plan:', {
@@ -216,7 +225,23 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = () => {
     };
 
     initializeComponent();
-  }, [searchParams]); // Add searchParams as dependency
+  }, [searchParams, carrierId, initialQuotes, plan]);
+
+  // Render a lightweight back control if onClose provided
+  const BackBar = () => (
+    onClose ? (
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-xs px-3 py-1.5 rounded-md border border-slate-600 bg-slate-800/60 text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+          aria-label="Back to results"
+        >
+          ← Back to results
+        </button>
+      </div>
+    ) : null
+  );
 
   const calculateDiscountedRate = (rate: number, discounts: any[]) => {
     let discountedRate = rate;
