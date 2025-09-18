@@ -169,6 +169,31 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
 
   const carriers = carrierSummaries;
 
+  // Carrier search (listens to sidebar events / storage)
+  const [carrierSearch, setCarrierSearch] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try { return localStorage.getItem('carrier_search_query') || ''; } catch { return ''; }
+  });
+  useEffect(() => {
+    const STORAGE_KEY = 'carrier_search_query';
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setCarrierSearch(e.newValue || '');
+        setCarrierPage(1);
+      }
+    };
+    const handleCustom = (e: any) => {
+      const q = e?.detail?.query;
+      if (typeof q === 'string') { setCarrierSearch(q); setCarrierPage(1); }
+    };
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('carrierSearch:changed', handleCustom as EventListener);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('carrierSearch:changed', handleCustom as EventListener);
+    };
+  }, []);
+
   // Category + View toggles (replacing upper tabs)
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'medigap');
   const [preferredOnly, setPreferredOnly] = useState(true);
@@ -190,13 +215,21 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     ? streamedCarriers
     : carrierSummaries;
 
+  // Apply search filter first (case-insensitive substring on carrier name)
+  const searchedCarriers = useMemo(() => {
+    if (!carrierSearch.trim()) return effectiveCarriers;
+    const q = carrierSearch.trim().toLowerCase();
+    return effectiveCarriers.filter((c: any) => (c.carrierName || c.name || '').toLowerCase().includes(q));
+  }, [effectiveCarriers, carrierSearch]);
+
   // Apply preferred filter before slicing so page counts stay consistent with user view
   const filteredCarriers = useMemo(() => {
+    const base = searchedCarriers;
     if (preferredOnly && activeCategory === 'medigap') {
-      return effectiveCarriers.filter((c: any) => c.__preferred);
+      return base.filter((c: any) => c.__preferred);
     }
-    return effectiveCarriers;
-  }, [effectiveCarriers, preferredOnly, activeCategory]);
+    return base;
+  }, [searchedCarriers, preferredOnly, activeCategory]);
 
   const totalCarrierPages = Math.max(1, Math.ceil(filteredCarriers.length / CARRIER_PAGE_SIZE));
   // Clamp page if data size shrinks
@@ -387,6 +420,31 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     router.replace(`?${params.toString()}`);
   }, [router, searchParams]);
 
+  // View mode (card | list) - moved from inline IIFE to satisfy Rules of Hooks
+  const [quoteViewMode, setQuoteViewMode] = useState<'card' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'card';
+    try { return (localStorage.getItem('quote_view_mode') as 'card' | 'list') || 'card'; } catch { return 'card'; }
+  });
+  useEffect(() => {
+    const STORAGE_KEY = 'quote_view_mode';
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        const val = (e.newValue as 'card' | 'list') || 'card';
+        setQuoteViewMode(val === 'list' ? 'list' : 'card');
+      }
+    };
+    const handleCustom = (e: any) => {
+      const mode = e?.detail?.mode;
+      if (mode === 'list' || mode === 'card') setQuoteViewMode(mode);
+    };
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('quoteViewMode:changed', handleCustom as EventListener);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('quoteViewMode:changed', handleCustom as EventListener);
+    };
+  }, []);
+
   return (
     <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
       {/* Page-level overlay for sidebar panel (modal-style) */}
@@ -418,7 +476,17 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         </span>
         {viewVisibility.cards && (
         <div className="space-y-8">
+          {/* View mode (card | list) handled via top-level hook now */}
           {/* Developer Controls moved to bottom */}
+
+          {filteredCarriers.length === 0 && !loadingQuotes && (
+            <div className="rounded-md border border-dashed border-slate-300 dark:border-slate-600 p-6 text-center space-y-2">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No carriers match your filters</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Try clearing the search{preferredOnly ? ' or disabling Preferred filter' : ''}.
+              </p>
+            </div>
+          )}
 
           {variantVisibility.minimal && (
             <>
@@ -446,21 +514,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
               <Separator />
             </>
           )}
-          {variantVisibility.lightInverse && (
-            <>
-              <LightInverseCards
-                carriers={paginatedCarriers}
-                loading={loadingQuotes && !effectiveCarriers.length}
-                planBadges={planBadges as any}
-                availablePlans={availablePlans}
-                selectedPlan={selectedPlan}
-                onSelectPlan={setSelectedPlan}
-                onOpenPlanDetails={openPlanDetails}
-              />
-              <Separator />
-            </>
-          )}
-          {variantVisibility.comparison && (
+          {quoteViewMode === 'list' ? (
             <>
               <ComparisonRowCards
                 carriers={paginatedCarriers}
@@ -471,10 +525,28 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                 onOpenPlanDetails={openPlanDetails as any}
               />
               <Separator />
+              <PaginationControls />
             </>
-          )}
-          {(variantVisibility.lightInverse || variantVisibility.comparison) && (
-            <PaginationControls />
+          ) : (
+            <>
+              {variantVisibility.lightInverse && (
+                <>
+                  <LightInverseCards
+                    carriers={paginatedCarriers}
+                    loading={loadingQuotes && !effectiveCarriers.length}
+                    planBadges={planBadges as any}
+                    availablePlans={availablePlans}
+                    selectedPlan={selectedPlan}
+                    onSelectPlan={setSelectedPlan}
+                    onOpenPlanDetails={openPlanDetails}
+                  />
+                  <Separator />
+                </>
+              )}
+              {(variantVisibility.lightInverse) && (
+                <PaginationControls />
+              )}
+            </>
           )}
         </div>
       )}

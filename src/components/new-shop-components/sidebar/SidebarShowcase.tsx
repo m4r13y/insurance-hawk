@@ -175,6 +175,16 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   }, []);
   // Deterministic initial value to avoid SSR/client mismatch. LocalStorage hydration deferred to effect.
   const [activeNav, setActiveNav] = React.useState<string>('Filters');
+  // View mode state (card | list) default card
+  const [quoteViewMode, setQuoteViewMode] = React.useState<'card' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'card';
+    try { return (localStorage.getItem('quote_view_mode') as 'card' | 'list') || 'card'; } catch { return 'card'; }
+  });
+  const persistQuoteViewMode = React.useCallback((mode: 'card' | 'list') => {
+    setQuoteViewMode(mode);
+    try { localStorage.setItem('quote_view_mode', mode); } catch {}
+    try { window.dispatchEvent(new CustomEvent('quoteViewMode:changed', { detail: { mode } })); } catch {}
+  }, []);
   React.useEffect(() => {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('shopSidebar.activeNav') : null;
@@ -454,6 +464,32 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                       <span className="font-semibold text-slate-700 dark:text-slate-200">Monthly Total</span>
                       <span className="text-slate-900 dark:text-white font-semibold">${(originalBuilderSnapshot.totalMonthlyCost || 0).toFixed(2)}</span>
                     </div>
+                    {/* Component chips */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {(() => {
+                        const chips: { key:string; label:string; value?: number; tone: string }[] = [];
+                        const m = originalBuilderSnapshot?.medigapPlan;
+                        if (m) chips.push({ key:'medigap', label:`Medigap ${m.plan||m.planType||''}`.trim(), value:m.monthlyRate, tone:'bg-blue-600/90 text-white dark:bg-blue-500/80' });
+                        const d = originalBuilderSnapshot?.selectedPlans?.drugPlan;
+                        if (d) chips.push({ key:'drug', label:'Part D', value:(d.month_rate||d.part_d_rate||0)/100, tone:'bg-emerald-600/90 text-white dark:bg-emerald-500/80' });
+                        const dvh = originalBuilderSnapshot?.selectedPlans?.dentalPlan;
+                        if (dvh) chips.push({ key:'dvh', label:'DVH', value:dvh.monthlyPremium, tone:'bg-amber-600/90 text-white dark:bg-amber-500/80' });
+                        const c = originalBuilderSnapshot?.selectedPlans?.cancerPlan;
+                        if (c) chips.push({ key:'cancer', label:'Cancer', value:c.monthly_premium || c.monthlyPremium, tone:'bg-fuchsia-600/90 text-white dark:bg-fuchsia-500/80' });
+                        if (!chips.length) return <span className="text-[10px] text-slate-500 dark:text-slate-400">No components selected yet.</span>;
+                        return chips.map(ch => (
+                          <span
+                            key={ch.key}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium shadow-sm border border-white/10 ${ch.tone}`}
+                          >
+                            <span>{ch.label}</span>
+                            {typeof ch.value === 'number' && ch.value > 0 && (
+                              <span className="opacity-90">${ch.value.toFixed(2)}</span>
+                            )}
+                          </span>
+                        ));
+                      })()}
+                    </div>
                     <div className="grid grid-cols-2 gap-1">
                       {['medigapPlan','selectedPlans.drugPlan','selectedPlans.dentalPlan','selectedPlans.cancerPlan'].map(key => {
                         const parts = key.split('.');
@@ -519,6 +555,45 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           </div>
         ) : activeNav === 'Filters' ? (
           <div className="space-y-5">
+            <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/60 space-y-3">
+              <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
+                <span>Quote View</span>
+                <div className="inline-flex items-center gap-1 bg-white/70 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-md p-0.5">
+                  <button type="button" aria-pressed={quoteViewMode==='card'} onClick={()=>persistQuoteViewMode('card')} className={`px-2 h-6 rounded text-[10px] font-medium transition ${quoteViewMode==='card' ? 'bg-blue-primary text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-600/50'}`}>Card</button>
+                  <button type="button" aria-pressed={quoteViewMode==='list'} onClick={()=>persistQuoteViewMode('list')} className={`px-2 h-6 rounded text-[10px] font-medium transition ${quoteViewMode==='list' ? 'bg-blue-primary text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-600/50'}`}>List</button>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Switch between spacious card layout and compact list rows for Medigap quotes.</p>
+              <Separator className="my-1" />
+              {/* Carrier Search */}
+              {(() => {
+                const [search, setSearch] = React.useState<string>(() => {
+                  if (typeof window === 'undefined') return '';
+                  try { return localStorage.getItem('carrier_search_query') || ''; } catch { return ''; }
+                });
+                React.useEffect(() => {
+                  try { localStorage.setItem('carrier_search_query', search); } catch {}
+                  try { window.dispatchEvent(new CustomEvent('carrierSearch:changed', { detail: { query: search } })); } catch {}
+                }, [search]);
+                return (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span>Search Carriers</span>
+                      {search && (
+                        <button type="button" onClick={()=>setSearch('')} className="text-[10px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">Clear</button>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={e=>setSearch(e.target.value)}
+                      placeholder="Type a carrier name..."
+                      className="w-full h-7 px-2 rounded-md border text-[11px] bg-white/80 dark:bg-slate-700/60 border-slate-300 dark:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                    />
+                  </div>
+                );
+              })()}
+            </div>
             <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/60 space-y-3">
               <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
                 <span>Preferred Carriers Only</span>
