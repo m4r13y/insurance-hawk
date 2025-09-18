@@ -199,13 +199,26 @@ export default function CardsSandboxPage() {
   };
 
   const loadingActive = loadingQuotes && !carrierSummaries.length;
+  const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
+  const [closeSignal, setCloseSignal] = useState(0);
+
   return (
-    <div className="min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
-      <div className="grid grid-cols-1 lg:grid-cols-[18rem_minmax(0,1fr)] gap-8">
-        <aside className="sticky hidden lg:block self-start h-fit top-28">
-          <SidebarShowcase />
+    <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
+      {/* Page-level overlay for sidebar panel (modal-style) */}
+      {sidebarPanelOpen && (
+        <button
+          type="button"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={() => setCloseSignal(s => s + 1)}
+          className="fixed inset-0 z-[110] hidden lg:block bg-slate-950/5 dark:bg-black/5 backdrop-blur-xsm"
+        />
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)] relative">
+        <aside className="sticky hidden lg:block self-start h-fit top-28 z-[120]">
+          <SidebarShowcase onPanelStateChange={setSidebarPanelOpen} externalCloseSignal={closeSignal} />
         </aside>
-        <div className="space-y-12" aria-busy={loadingActive} aria-describedby="carrier-loading-status">
+        <div className={`space-y-12 ${sidebarPanelOpen ? 'lg:blur-sm lg:pointer-events-none' : ''}`} aria-busy={loadingActive} aria-describedby="carrier-loading-status">
         <span id="carrier-loading-status" role="status" aria-live="polite" className="sr-only">
           {loadingActive ? 'Loading Medigap carriers…' : carrierSummaries.length ? `${carrierSummaries.length} Medigap carriers loaded.` : 'No carriers.'}
         </span>

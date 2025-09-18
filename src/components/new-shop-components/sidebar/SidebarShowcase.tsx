@@ -32,7 +32,12 @@ const IconBox: React.FC<{active?: boolean}> = ({active}) => (
   <div className={`w-5 h-5 rounded-sm border flex items-center justify-center text-[10px] font-medium ${active ? 'bg-blue-primary text-white border-blue-400' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}>i</div>
 );
 
-export const SidebarShowcase: React.FC = () => {
+interface SidebarShowcaseProps {
+  onPanelStateChange?: (open: boolean) => void;
+  externalCloseSignal?: number; // increment to force close from parent
+}
+
+export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({ onPanelStateChange, externalCloseSignal }) => {
   // State: active detail tab, active nav item
   const [activeTab, setActiveTab] = React.useState<string | null>(null);
   const [activeNav, setActiveNav] = React.useState<string>(() => {
@@ -130,8 +135,20 @@ export const SidebarShowcase: React.FC = () => {
     return cur === id ? null : id;
   });
 
+  // Notify parent when open state changes
+  React.useEffect(() => {
+    onPanelStateChange?.(!!activeTab);
+  }, [activeTab, onPanelStateChange]);
+
+  // Listen for external close signals
+  React.useEffect(() => {
+    if (externalCloseSignal != null) {
+      setActiveTab(null);
+    }
+  }, [externalCloseSignal]);
+
   return (
-  <div className="flex gap-4 mt-24 lg:mt-24">
+  <div className="flex gap-4 mt-2 lg:mt-2">
       {/* Compact Rail (unchanged baseline) */}
       <div className="flex flex-col w-52 rounded-xl border bg-white/70 dark:bg-slate-800/60 backdrop-blur p-3 gap-2 shadow-sm relative">
         <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 px-1.5">Workspace</h3>
