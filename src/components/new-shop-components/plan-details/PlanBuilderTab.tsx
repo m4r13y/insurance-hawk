@@ -539,28 +539,42 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     let mounted = true;
     const hydrateFrom = (source: any, isRemote = false) => {
       if (!source) return;
-      const existingPlanBuilder = normalizeLoadedData(source);
+      const existingPlanBuilder: any = normalizeLoadedData(source);
+      if (!existingPlanBuilder) return;
       setUsePlanBuilderData(true);
-      setStoredMedigapData(existingPlanBuilder.medigapPlan);
+
+      // Adapt: snapshot now stores quote/currentRate instead of nested medigapPlan structure
+      if (existingPlanBuilder.quote?.plan && existingPlanBuilder.quote?.carrier) {
+        setStoredMedigapData({
+          plan: existingPlanBuilder.quote.plan,
+          carrier: existingPlanBuilder.quote.carrier,
+          monthlyRate: existingPlanBuilder.currentRate,
+          selected: true
+        } as any);
+      }
+
       if (existingPlanBuilder.chartData) {
         const enhancedChartData = existingPlanBuilder.chartData.map((item: any) => {
           const defItem = getDefaultChartData().find(d => d.name === item.name);
-            return { ...item, importance: item.importance || defItem?.importance || '', missingWarning: item.missingWarning || defItem?.missingWarning || '' };
+          return { ...item, importance: item.importance || defItem?.importance || '', missingWarning: item.missingWarning || defItem?.missingWarning || '', selected: typeof item.selected === 'boolean' ? item.selected : true };
         });
         setChartData(enhancedChartData);
       }
-      if (existingPlanBuilder.selectedPlans?.drugPlan) setSelectedDrugPlan(existingPlanBuilder.selectedPlans.drugPlan);
-      if (existingPlanBuilder.selectedPlans?.dentalPlan) setSelectedDentalPlan(existingPlanBuilder.selectedPlans.dentalPlan);
-      if (existingPlanBuilder.selectedPlans?.cancerPlan) setSelectedCancerPlan(existingPlanBuilder.selectedPlans.cancerPlan);
-      if (existingPlanBuilder.selectedPlans?.medigapPlanOption) {
-        const savedCarrier = existingPlanBuilder.medigapPlan?.carrier;
+
+      // Ancillary plans now top-level on snapshot
+      if (existingPlanBuilder.drugPlan) setSelectedDrugPlan(existingPlanBuilder.drugPlan);
+      if (existingPlanBuilder.dentalPlan) setSelectedDentalPlan(existingPlanBuilder.dentalPlan);
+      if (existingPlanBuilder.cancerPlan) setSelectedCancerPlan(existingPlanBuilder.cancerPlan);
+
+      if (existingPlanBuilder.planOption) {
+        const savedCarrier = existingPlanBuilder.quote?.carrier;
         const currentCarrier = getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '');
-        const savedPlan = existingPlanBuilder.medigapPlan?.plan;
+        const savedPlan = existingPlanBuilder.quote?.plan;
         const currentPlan = quoteData.plan;
         if (savedCarrier === currentCarrier && savedPlan === currentPlan) {
-          setSelectedPlanOption(existingPlanBuilder.selectedPlans.medigapPlanOption);
+          setSelectedPlanOption(existingPlanBuilder.planOption);
           setCarrierChangeInfo(null);
-        } else if (!isRemote && savedCarrier !== currentCarrier) {
+        } else if (!isRemote && savedCarrier && savedCarrier !== currentCarrier) {
           setCarrierChangeInfo({ previousCarrier: savedCarrier, newCarrier: currentCarrier, show: true });
         }
       }
@@ -573,8 +587,8 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         const remote = await loadPlanBuilderData();
         if (!mounted || !remote) return;
         const cached = loadFromLocalCache();
-        const remoteTime = remote.lastUpdated?.seconds || 0;
-        const cachedTime = cached?.lastUpdated?.seconds || 0;
+  const remoteTime = (remote as any).lastUpdated?.seconds || (remote as any).timestamp || 0;
+  const cachedTime = (cached as any)?.lastUpdated?.seconds || (cached as any)?.timestamp || 0;
         if (remoteTime > cachedTime) hydrateFrom(remote, true);
       } catch (e) { console.error('Error loading remote plan builder data:', e); }
       finally { if (mounted) setDataLoaded(true); }
@@ -758,7 +772,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       age_increases: [],
       company: medigapQuote.company || medigapQuote.carrier?.name || '',
       company_base: {
-        key: medigapQuote.company || medigapQuote.carrier?.name || '',
+  // Preserve original object shape – drop ad-hoc 'key' to satisfy stricter typing
         name: medigapQuote.carrier?.name || medigapQuote.company || '',
         name_full: medigapQuote.carrier?.full_name || medigapQuote.company || '',
         naic: '',

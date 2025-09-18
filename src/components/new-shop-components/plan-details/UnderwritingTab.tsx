@@ -89,7 +89,7 @@ export const UnderwritingTab: React.FC<UnderwritingTabProps> = ({
                 <div>
                   <AgeBasedRateChart 
                     ageIncreases={quoteData.age_increases} 
-                    currentAge={quoteData.age} 
+                    currentAge={quoteData.age || 0}
                   />
                 </div>
               </div>
@@ -103,7 +103,7 @@ export const UnderwritingTab: React.FC<UnderwritingTabProps> = ({
               <div>
                 <h4 className="font-medium mb-3">Available Riders</h4>
                 <div className="space-y-2">
-                  {quoteData.riders.map((rider, index) => (
+                  {quoteData.riders.map((rider: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 border rounded">
                       <span className="text-sm">{rider.name}</span>
                       <span className="text-sm font-medium">

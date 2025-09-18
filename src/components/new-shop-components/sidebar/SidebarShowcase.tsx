@@ -185,6 +185,16 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     try { localStorage.setItem('quote_view_mode', mode); } catch {}
     try { window.dispatchEvent(new CustomEvent('quoteViewMode:changed', { detail: { mode } })); } catch {}
   }, []);
+
+  // Carrier search (previously an inline IIFE with hooks inside Filters panel causing hook order issues)
+  const [carrierSearch, setCarrierSearch] = React.useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try { return localStorage.getItem('carrier_search_query') || ''; } catch { return ''; }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem('carrier_search_query', carrierSearch); } catch {}
+    try { window.dispatchEvent(new CustomEvent('carrierSearch:changed', { detail: { query: carrierSearch } })); } catch {}
+  }, [carrierSearch]);
   React.useEffect(() => {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('shopSidebar.activeNav') : null;
@@ -566,33 +576,27 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Switch between spacious card layout and compact list rows for Medigap quotes.</p>
               <Separator className="my-1" />
               {/* Carrier Search */}
-              {(() => {
-                const [search, setSearch] = React.useState<string>(() => {
-                  if (typeof window === 'undefined') return '';
-                  try { return localStorage.getItem('carrier_search_query') || ''; } catch { return ''; }
-                });
-                React.useEffect(() => {
-                  try { localStorage.setItem('carrier_search_query', search); } catch {}
-                  try { window.dispatchEvent(new CustomEvent('carrierSearch:changed', { detail: { query: search } })); } catch {}
-                }, [search]);
-                return (
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>Search Carriers</span>
-                      {search && (
-                        <button type="button" onClick={()=>setSearch('')} className="text-[10px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">Clear</button>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      value={search}
-                      onChange={e=>setSearch(e.target.value)}
-                      placeholder="Type a carrier name..."
-                      className="w-full h-7 px-2 rounded-md border text-[11px] bg-white/80 dark:bg-slate-700/60 border-slate-300 dark:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
-                    />
-                  </div>
-                );
-              })()}
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                  <span>Search Carriers</span>
+                  {carrierSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCarrierSearch('')}
+                      className="text-[10px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  value={carrierSearch}
+                  onChange={e => setCarrierSearch(e.target.value)}
+                  placeholder="Type a carrier name..."
+                  className="w-full h-7 px-2 rounded-md border text-[11px] bg-white/80 dark:bg-slate-700/60 border-slate-300 dark:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                />
+              </div>
             </div>
             <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/60 space-y-3">
               <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
@@ -809,7 +813,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                     return (
                       <button
                         key={cat}
-                        onClick={(e) => { e.stopPropagation(); onSelectCategory?.(cat); setActiveNav('Quotes'); if (activeTab == null) openTab('nav', null); }}
+                        /* Selecting a quote category from the rail should NOT open the slideout panel. Only clicking the 'Quotes' nav item opens it. */
+                        onClick={(e) => { e.stopPropagation(); onSelectCategory?.(cat); setActiveNav('Quotes'); /* intentionally omit openTab */ }}
                         className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 ${selected ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
                         aria-pressed={selected}
                       >{cLabel}</button>

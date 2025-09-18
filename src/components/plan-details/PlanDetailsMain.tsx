@@ -1,4 +1,9 @@
 "use client";
+// DEPRECATION NOTICE:
+// This legacy Medigap-focused implementation is being replaced by the new
+// category-agnostic shell at new-shop-components/plan-details/PlanDetailsShell.tsx
+// and the extracted MedigapPlanDetails component. New categories (drug-plan, advantage, etc.)
+// should NOT add logic here. After full migration, this file can be removed.
 
 import React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';

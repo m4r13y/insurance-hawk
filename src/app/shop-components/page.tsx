@@ -9,7 +9,7 @@ import { ComparisonRowCards } from '@/components/new-shop-components/quote-cards
 import { MinimalRateChips } from '@/components/new-shop-components/quote-cards/MinimalRateChips';
 import { DensityStressGrid } from '@/components/new-shop-components/quote-cards/DensityStressGrid';
 import { LightInverseCards } from '@/components/new-shop-components/quote-cards/PrimaryCards';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { planBadges } from '@/components/new-shop-components/constants/planBadges';
 import SidebarShowcase from '@/components/new-shop-components/sidebar/SidebarShowcase';
 import { filterPreferredCarriers } from '@/lib/carrier-system';
@@ -24,6 +24,12 @@ import { runCarrierStream } from '@/lib/streaming/medigapStreaming';
 // Reuse shared Medigap discount utilities instead of ad‑hoc logic
 import { getBaseRate } from '@/lib/medigap-utils';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { useCategoryQuotes } from '@/components/new-shop-components/adapters/useCategoryQuotes';
+import { getEnhancedCarrierInfo, mapUICategoryToProductCategory } from '@/lib/carrier-system';
+import DrugPlanCards from '@/components/new-shop-components/quote-cards/DrugPlanCards';
+import { SavedPlanChips } from '@/components/new-shop-components/quote-cards/SavedPlanChips';
+import PdpDetailsShowcase from '@/components/new-shop-components/plan-details/PdpDetailsShowcase';
+// Always-live adapter mode (shadow diff removed)
 
 /*
   Cards Design Sandbox
@@ -167,7 +173,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     return { carrierName, carrierQuotes };
   }, [quotes, applyDiscounts]);
 
-  const carriers = carrierSummaries;
+  // Adapter integration: legacy grouping still computed (for fallback) but UI always prefers adapter summaries.
 
   // Carrier search (listens to sidebar events / storage)
   const [carrierSearch, setCarrierSearch] = useState<string>(() => {
@@ -198,6 +204,95 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'medigap');
   const [preferredOnly, setPreferredOnly] = useState(true);
 
+  // Adapter shadow integration (Medigap only for now) – must run after activeCategory declaration
+  const { normalized: adapterMedigapQuotes, summaries: adapterMedigapSummaries, timing: adapterTiming } = useCategoryQuotes<any>('medigap', activeCategory==='medigap' ? quotes : [], {
+    applyDiscounts,
+    enabled: true,
+  });
+  if (adapterTiming.count && typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.debug('ADAPTER_PERF medigap', adapterTiming);
+  }
+
+  // Resolve carriers (legacy vs adapter derived) early so downstream memos (availablePlans, pagination) use unified source
+  const carriers = useMemo(() => {
+    if (activeCategory === 'medigap' && adapterMedigapSummaries?.length) {
+      return adapterMedigapSummaries.map((s: any) => {
+        const planKeys = ['F','G','N'] as const;
+        const candidatePrices: number[] = [];
+        planKeys.forEach(pk => { const p = s.plans[pk]; if (typeof p === 'number') candidatePrices.push(p); });
+        const min = candidatePrices.length ? Math.min(...candidatePrices) : undefined;
+        const max = candidatePrices.length ? Math.max(...candidatePrices) : undefined;
+        return {
+          id: s.carrierId,
+          name: s.carrierName,
+          logo: s.logoUrl || `/carrier-logos/1.png`,
+          rating: s.rating || 'N/A',
+          min,
+          max,
+          plans: s.plans,
+          planRanges: s.planRanges,
+          __preferred: true, // TODO: merge preferred carrier logic
+        };
+      });
+    }
+    // Fallback: use legacy computed summaries (still hydrated above) if adapter produced none
+    return carrierSummaries;
+  }, [activeCategory, adapterMedigapSummaries, carrierSummaries]);
+
+  // PDP (drug-plan) adapters integration (simplified first pass)
+  const { summaries: pdpSummaries, normalized: pdpNormalized } = useCategoryQuotes<any>('drug-plan', activeCategory==='drug-plan' ? quotes : [], { enabled: true });
+  // Persist PDP normalized quotes for details page (lightweight cache)
+  useEffect(() => {
+    if (pdpNormalized && pdpNormalized.length) {
+      try {
+        localStorage.setItem('drug_plan_normalized_quotes', JSON.stringify(pdpNormalized));
+      } catch {}
+    }
+  }, [pdpNormalized]);
+  const pdpCarriers = useMemo(() => {
+    if (activeCategory !== 'drug-plan') return [] as any[];
+    const productCategory = mapUICategoryToProductCategory('drug-plan') || 'drug-plan';
+    return pdpSummaries.map(s => {
+      const range = s.planRanges?.PDP;
+      const related = pdpNormalized.filter(q => q.carrier.id === s.carrierId);
+      let star: number | undefined; let deductible: number | undefined; let representativePlan: string | undefined;
+      related.forEach(r => {
+        const sr = r.metadata?.starRating;
+        if (typeof sr === 'number') star = sr;
+        const ded = r.metadata?.deductible;
+        if (typeof ded === 'number' && (deductible == null || ded < deductible)) deductible = ded;
+        if (!representativePlan || r.pricing.monthly === s.plans.PDP) representativePlan = r.plan.display;
+      });
+      // use enhanced carrier info for consistent naming + logo (preferred logic)
+      const enhancedInfo = related.length ? getEnhancedCarrierInfo(related[0], productCategory as any) : {
+        displayName: s.carrierName,
+        logoUrl: s.logoUrl || '/images/carrier-placeholder.svg'
+      };
+      return {
+        id: s.carrierId,
+        name: enhancedInfo.displayName || s.carrierName,
+        logo: enhancedInfo.logoUrl || s.logoUrl || '/images/carrier-placeholder.svg',
+        rating: star != null ? String(star) : 'N/A',
+        min: s.plans.PDP,
+        max: range?.max,
+        planRange: range,
+        deductible,
+        count: range?.count || 1,
+        planName: (s as any)._planName || representativePlan,
+      };
+    });
+  }, [pdpSummaries, pdpNormalized, activeCategory]);
+
+  // When live adapter mode first produces summaries, record timing metrics similar to legacy pipeline
+  useEffect(() => {
+    if (activeCategory === 'medigap' && adapterMedigapSummaries?.length && !firstCarrierReadyTs) {
+      const ts = performance.now();
+      setFirstCarrierReadyTs(ts);
+      if (fetchStartTs && !firstPlanVisibleMs) setFirstPlanVisibleMs(ts - fetchStartTs);
+    }
+  }, [activeCategory, adapterMedigapSummaries, firstCarrierReadyTs, fetchStartTs, firstPlanVisibleMs]);
+
   // Pagination for carrier-based sections --------------------------------------------------
   const CARRIER_PAGE_SIZE = 12; // configurable page size
   const [carrierPage, setCarrierPage] = useState(1);
@@ -214,6 +309,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const effectiveCarriers = streamingEnabled && streamedCarriers.length
     ? streamedCarriers
     : carrierSummaries;
+
 
   // Apply search filter first (case-insensitive substring on carrier name)
   const searchedCarriers = useMemo(() => {
@@ -291,25 +387,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     setVariantVisibility(v => ({ ...v, [key]: !v[key] }));
   }, []);
 
-  const handleRefetch = () => setReloadIndex(i => i + 1); // now just re-hydrates from storage
-
-  // Simulated streaming demonstration (sandbox only)
-  const simulateStreaming = async () => {
-    if (streamingActive) return;
-    setStreamingActive(true);
-    setStreamedCarriers([]);
-    const snapshot = [...carrierSummaries];
-    await runCarrierStream(snapshot, {
-      delayMs: 400,
-      onFirst: () => {
-        if (fetchStartTs && !firstPlanVisibleMs) setFirstPlanVisibleMs(performance.now() - fetchStartTs);
-      },
-      onComplete: () => {
-        setStreamingActive(false);
-        if (fetchStartTs && !allPlansCompleteMs) setAllPlansCompleteMs(performance.now() - fetchStartTs);
-      }
-    }, (carrier) => setStreamedCarriers(prev => [...prev, carrier]));
-  };
+  // (handleRefetch & simulateStreaming consolidated later)
 
   // effectiveCarriers moved above to integrate with pagination pipeline
 
@@ -382,43 +460,79 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     hydrateExisting();
     return () => { mounted = false; };
   }, [activeCategory, reloadIndex]);
-  const [viewVisibility, setViewVisibility] = useState({
-    cards: true,
-    planDetails: false,
-  });
+  // Consolidated state (removed duplicate inner component)
+  const [viewVisibility, setViewVisibility] = useState({ cards: true, planDetails: false });
   const [activeCarrierId, setActiveCarrierId] = useState<string | null>(null);
-  const toggleView = (key: keyof typeof viewVisibility) => {
-    setViewVisibility(v => ({ ...v, [key]: !v[key] }));
-  };
-
-  const loadingActive = loadingQuotes && !carrierSummaries.length;
   const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
   const [closeSignal, setCloseSignal] = useState(0);
-  // (moved preferredOnly earlier for pagination dependency ordering)
-  // applyDiscounts state moved earlier; keep setter accessible here (no redeclare)
-
-  // URL navigation for plan details (sandbox experiment)
+  const loadingActive = loadingQuotes && !carrierSummaries.length;
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const toggleView = (key: keyof typeof viewVisibility) => setViewVisibility(v => ({ ...v, [key]: !v[key] }));
+  const handleRefetch = () => setReloadIndex(i => i + 1);
+  // (CARRIER_PAGE_SIZE declared earlier – avoid redeclaration)
+  const simulateStreaming = async () => {
+    if (streamingActive) return;
+    setStreamingActive(true);
+    setStreamedCarriers([]);
+    const snapshot = [...carrierSummaries];
+    await runCarrierStream(snapshot, {
+      delayMs: 400,
+      onFirst: () => {
+        if (fetchStartTs && !firstPlanVisibleMs) setFirstPlanVisibleMs(performance.now() - fetchStartTs);
+      },
+      onComplete: () => {
+        setStreamingActive(false);
+        if (fetchStartTs && !allPlansCompleteMs) setAllPlansCompleteMs(performance.now() - fetchStartTs);
+      }
+    }, (carrier) => setStreamedCarriers(prev => [...prev, carrier]));
+  };
+
+  // Query helper (avoid useSearchParams to remove Suspense split)
+  const updateQuery = useCallback((mutate: (p: URLSearchParams) => void) => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    mutate(params);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  // Deep-link hydration
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view');
+      const carrierParam = params.get('carrier');
+      const categoryParam = params.get('category');
+      if (categoryParam && categoryParam !== activeCategory) setActiveCategory(categoryParam);
+      if (viewParam === 'plan-details' && carrierParam) {
+        setActiveCarrierId(carrierParam);
+        setViewVisibility({ cards: false, planDetails: true });
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openPlanDetails = useCallback((carrier: any) => {
     if (!carrier) return;
     setActiveCarrierId(carrier.id);
-    const params = new URLSearchParams(searchParams?.toString() || '');
-    params.set('carrier', carrier.id);
-    params.set('view', 'plan-details');
-    router.replace(`?${params.toString()}`, { scroll: false });
+    updateQuery(p => { p.set('carrier', carrier.id); p.set('view', 'plan-details'); });
     setViewVisibility({ cards: false, planDetails: true });
-  }, [router, searchParams]);
+  }, [updateQuery]);
+
+  const openPdpDetails = useCallback((carrier: any) => {
+    if (!carrier) return;
+    setActiveCarrierId(carrier.id);
+    updateQuery(p => { p.set('carrier', carrier.id); p.set('view', 'plan-details'); p.set('category', 'drug-plan'); });
+    setViewVisibility({ cards: false, planDetails: true });
+  }, [updateQuery]);
 
   const closePlanDetails = useCallback(() => {
     setViewVisibility({ cards: true, planDetails: false });
     setActiveCarrierId(null);
-    const params = new URLSearchParams(searchParams?.toString() || '');
-    params.delete('carrier');
-    params.delete('view');
-    router.replace(`?${params.toString()}`);
-  }, [router, searchParams]);
+    updateQuery(p => { p.delete('carrier'); p.delete('view'); p.delete('category'); });
+  }, [updateQuery]);
+
+  // (removed duplicate handlers after consolidation)
 
   // View mode (card | list) - moved from inline IIFE to satisfy Rules of Hooks
   const [quoteViewMode, setQuoteViewMode] = useState<'card' | 'list'>(() => {
@@ -444,6 +558,8 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       window.removeEventListener('quoteViewMode:changed', handleCustom as EventListener);
     };
   }, []);
+
+  // (deep link sync handled on initial mount above)
 
   return (
     <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
@@ -474,7 +590,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <span id="carrier-loading-status" role="status" aria-live="polite" className="sr-only">
           {loadingActive ? 'Loading Medigap carriers…' : carrierSummaries.length ? `${carrierSummaries.length} Medigap carriers loaded.` : 'No carriers.'}
         </span>
-        {viewVisibility.cards && (
+  {viewVisibility.cards && (
         <div className="space-y-8">
           {/* View mode (card | list) handled via top-level hook now */}
           {/* Developer Controls moved to bottom */}
@@ -488,33 +604,30 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
             </div>
           )}
 
-          {variantVisibility.minimal && (
-            <>
-              {(() => {
-                // Build carriers from saved medigap plans only
-                const medigapSaved = savedPlans.filter(p => p.category === 'medigap');
-                const map: Record<string, { id:string; name:string; logo:string; rating:string; min?:number; max?:number; savedPlanTypes:string[] }> = {};
-                medigapSaved.forEach(p => {
-                  if (!map[p.carrierId]) {
-                    map[p.carrierId] = { id: p.carrierId, name: p.carrierName, logo: p.logo, rating: p.rating || 'N/A', min: p.min, max: p.max, savedPlanTypes: p.planType ? [p.planType] : [] };
-                  } else {
-                    if (p.planType && !map[p.carrierId].savedPlanTypes.includes(p.planType)) map[p.carrierId].savedPlanTypes.push(p.planType);
-                    if (typeof p.min === 'number') {
-                      if (map[p.carrierId].min === undefined || p.min < (map[p.carrierId].min as number)) map[p.carrierId].min = p.min;
-                    }
-                    if (typeof p.max === 'number') {
-                      if (map[p.carrierId].max === undefined || p.max > (map[p.carrierId].max as number)) map[p.carrierId].max = p.max;
-                    }
-                  }
-                });
-                const savedCarrierList = Object.values(map);
-                if (!savedCarrierList.length) return <p className="text-xs text-slate-500 dark:text-slate-400">No saved plans yet. Bookmark a plan to see it summarized here.</p>;
-                return <MinimalRateChips carriers={savedCarrierList} loading={false} />;
-              })()}
-              <Separator />
-            </>
+          {/* Unified saved plans chip strip (all categories) */}
+          <SavedPlanChips
+            onOpen={(category, carrierName) => {
+              if (category === 'drug-plan') {
+                openPdpDetails({ id: carrierName });
+                setActiveCategory('drug-plan');
+              } else {
+                openPlanDetails({ id: carrierName } as any);
+                setActiveCategory('medigap');
+              }
+            }}
+            className="mb-6"
+          />
+          <Separator />
+          {activeCategory === 'drug-plan' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Prescription Drug Plans</h3>
+              {pdpCarriers.length === 0 && !loadingQuotes && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">No drug plans loaded.</div>
+              )}
+              <DrugPlanCards carriers={pdpCarriers as any} loading={loadingQuotes} onOpenCarrierDetails={(c)=>openPdpDetails({ id: c.name })} />
+            </section>
           )}
-          {quoteViewMode === 'list' ? (
+          {activeCategory !== 'drug-plan' && (quoteViewMode === 'list' ? (
             <>
               <ComparisonRowCards
                 carriers={paginatedCarriers}
@@ -547,15 +660,24 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                 <PaginationControls />
               )}
             </>
-          )}
+          ))}
         </div>
       )}
-      {viewVisibility.planDetails && activeCarrierId && (
+      {viewVisibility.planDetails && activeCarrierId && activeCategory !== 'drug-plan' && (
         <div className="space-y-8">
           <PlanDetailsShowcase
             carrierId={activeCarrierId}
             quotes={quotes.filter(q => (q.carrier?.name || q.company) === activeCarrierId)}
             plan={selectedPlan}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'drug-plan' && (
+        <div className="space-y-8">
+          <PdpDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={pdpNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
             onClose={closePlanDetails}
           />
         </div>
@@ -605,7 +727,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                         onClick={() => {
                           setActiveCategory(cat);
                           if (typeof window !== 'undefined') {
-                            router.push(`/shop-components/${cat}` + (searchParams?.toString() ? `?${searchParams.toString()}` : ''));
+                            router.push(`/shop-components/${cat}${window.location.search || ''}`);
                           }
                         }}
                         className={`px-2.5 py-1 rounded-md border text-[11px] transition ${activeCategory === cat ? 'bg-blue-primary text-white border-blue-primary' : 'bg-card/40 hover:bg-card/60 border-border'} `}

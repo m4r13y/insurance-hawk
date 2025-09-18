@@ -74,7 +74,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span>A.M. Best Rating</span>
-                <span className={`font-bold ${getRatingColor(quoteData.company_base.ambest_rating)}`}>
+                <span className={`font-bold ${getRatingColor(quoteData.company_base.ambest_rating || '')}`}>
                   {getAmBestRatingText(quoteData.company_base.ambest_rating)}
                 </span>
               </div>
@@ -107,8 +107,8 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-sm">Customer Satisfaction</span>
                 <span className="text-sm font-medium">
-                  {quoteData.company_base.customer_satisfaction_ratio > 0 
-                    ? `${quoteData.company_base.customer_satisfaction_ratio}%`
+                  {(quoteData.company_base.customer_satisfaction_ratio || 0) > 0
+                    ? `${quoteData.company_base.customer_satisfaction_ratio || 0}%`
                     : 'Not Available'
                   }
                 </span>
@@ -119,14 +119,14 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       </div>
 
       {/* Market Data */}
-      {quoteData.company_base.med_supp_market_data.length > 0 && (
+  {(quoteData.company_base.med_supp_market_data?.length || 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Medicare Supplement Market Performance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {quoteData.company_base.med_supp_market_data.slice(0, 3).map((data, index) => (
+              {quoteData.company_base.med_supp_market_data?.slice(0, 3).map((data: any, index: number) => (
                 <div key={index} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium">Year {data.year}</h4>

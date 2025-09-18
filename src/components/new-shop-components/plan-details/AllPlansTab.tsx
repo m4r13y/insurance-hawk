@@ -88,7 +88,7 @@ export const AllPlansTab: React.FC<AllPlansTabProps> = ({
       // Apply discounts
       if (config.discounts.length > 0 && matchingQuote.discounts) {
         config.discounts.forEach(discountName => {
-          const discount = matchingQuote.discounts?.find(d => d.name === discountName)
+          const discount = matchingQuote.discounts?.find((d: any) => d.name === discountName)
           if (discount) {
             if (discount.type === 'percent') {
               rate = rate * (1 - discount.value)
@@ -134,7 +134,7 @@ export const AllPlansTab: React.FC<AllPlansTabProps> = ({
           // Get available discounts
           const allDiscounts = new Set<string>()
           quotes.forEach(quote => {
-            quote.discounts?.forEach(d => allDiscounts.add(d.name))
+            quote.discounts?.forEach((d: any) => allDiscounts.add(d.name))
           })
           const availableDiscounts = Array.from(allDiscounts).sort()
 
@@ -205,8 +205,8 @@ export const AllPlansTab: React.FC<AllPlansTabProps> = ({
                     <div className="space-y-2">
                       {availableDiscounts.map(discountName => {
                         const discount = quotes.find(q => 
-                          q.discounts?.some(d => d.name === discountName)
-                        )?.discounts?.find(d => d.name === discountName)
+                          q.discounts?.some((d: any) => d.name === discountName)
+                        )?.discounts?.find((d: any) => d.name === discountName)
                         
                         return (
                           <div key={discountName} className="flex items-center justify-between p-3 border rounded-lg">

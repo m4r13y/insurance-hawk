@@ -1,0 +1,69 @@
+import React from 'react';
+import { getAdapter, isAdaptersEnabled } from './registry';
+import { NormalizedQuoteBase, NormalizeContext, PricingSummary } from './types';
+
+export interface UseCategoryQuotesResult<N extends NormalizedQuoteBase = NormalizedQuoteBase> {
+  normalized: N[];
+  summaries: PricingSummary[];
+  errors: { count: number; samples: any[] };
+  timing: { ms: number; count: number };
+}
+
+interface UseCategoryQuotesOptions extends NormalizeContext {
+  enabled?: boolean;              // override global
+  shadow?: boolean;               // indicates shadow evaluation (unused here directly)
+  onAfterNormalize?: (quotes: NormalizedQuoteBase[]) => void;
+}
+
+export function useCategoryQuotes<Raw, N extends NormalizedQuoteBase = NormalizedQuoteBase>(
+  category: string,
+  rawQuotes: Raw[] | undefined | null,
+  opts: UseCategoryQuotesOptions = {}
+): UseCategoryQuotesResult<N> {
+  const { applyDiscounts, enabled, onAfterNormalize } = opts;
+  const active = (enabled ?? isAdaptersEnabled()) && !!category && Array.isArray(rawQuotes);
+  const adapter = React.useMemo(() => active ? getAdapter(category) : undefined, [active, category]);
+
+  const result = React.useMemo<UseCategoryQuotesResult<N>>(() => {
+    if (!active || !adapter || !rawQuotes) return { normalized: [], summaries: [], errors: { count:0, samples: [] }, timing: { ms:0, count:0 } };
+    const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const errors: any[] = [];
+    const normalized: N[] = [];
+    for (const r of rawQuotes) {
+      try {
+        const q = adapter.normalize(r as any, { applyDiscounts });
+        if (q) normalized.push(q as N);
+      } catch (e:any) {
+        if (errors.length < 5) errors.push({ error: e?.message, raw: r });
+      }
+    }
+    // Derive summaries (carrier grouping etc.)
+    let summaries: PricingSummary[] = [];
+    try {
+      if (adapter.derivePricingSummary) {
+        summaries = adapter.derivePricingSummary(normalized as any) || [];
+      }
+    } catch (e:any) {
+      if (errors.length < 5) errors.push({ error: 'derivePricingSummary failed', detail: e?.message });
+    }
+    const t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    return {
+      normalized,
+      summaries,
+      errors: { count: errors.length, samples: errors },
+      timing: { ms: +(t1 - t0).toFixed(2), count: normalized.length }
+    };
+  }, [active, adapter, rawQuotes, applyDiscounts]);
+
+  // Side effect after normalization (shadow diff hook can plug in here)
+  React.useEffect(() => {
+    if (result.normalized.length && onAfterNormalize) {
+      try { onAfterNormalize(result.normalized); } catch {/* noop */}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.normalized]);
+
+  return result;
+}
+
+export default useCategoryQuotes;

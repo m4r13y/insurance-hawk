@@ -5,6 +5,7 @@ import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
 import { AmBestStarRating } from '@/components/ui/star-rating';
 import { CarrierLogoBlock, SaveToggleButton, DetailsButton, PlanPriceBlock } from './SharedCardParts';
+import { CardShell, useCardVisibility } from './CardShell';
 
 interface PlanBadges { [k:string]: { label: string; color: string } }
 export interface CarrierSummaryLight { id:string; name:string; logo:string; rating:string; plans?: Record<string, number | undefined>; planRanges?: Record<string, { min:number; max:number; count:number } | undefined>; }
@@ -19,9 +20,7 @@ interface Props {
 }
 
 export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadges, availablePlans, selectedPlan, onSelectPlan, onOpenPlanDetails }) => {
-  // Track which carrier cards have entered the viewport
-  const [visibleIds, setVisibleIds] = React.useState<Set<string>>(() => new Set());
-  const observerRef = React.useRef<IntersectionObserver | null>(null);
+  // (Replaced custom multi-element observer with per-card hook via CardShell)
   const { isSaved: isCarrierPlanSaved, toggle: toggleSaved } = useSavedPlans();
   const handleToggleSave = (carrier: CarrierSummaryLight, planType: string | undefined, activePrice?: number, range?: {min:number; max:number}) => {
     toggleSaved({
@@ -37,32 +36,7 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
     });
   };
 
-  const registerObserver = React.useCallback((el: HTMLDivElement | null, id: string) => {
-    if (!el) return;
-    if (visibleIds.has(id)) return; // already visible, no need to observe
-    if (!observerRef.current) {
-      observerRef.current = new IntersectionObserver((entries) => {
-        setVisibleIds(prev => {
-          let changed = false;
-          const next = new Set(prev);
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const targetId = (entry.target as HTMLElement).dataset.carrierId;
-              if (targetId && !next.has(targetId)) {
-                next.add(targetId);
-                changed = true;
-              }
-              observerRef.current?.unobserve(entry.target);
-            }
-          });
-          return changed ? next : prev;
-        });
-      }, { rootMargin: '80px 0px 160px 0px', threshold: 0.1 });
-    }
-    observerRef.current.observe(el);
-  }, [visibleIds]);
-
-  React.useEffect(() => () => { observerRef.current?.disconnect(); }, []);
+  // legacy observer removed
 
   return (
     <section className="space-y-6">
@@ -100,32 +74,28 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
             <Skeleton key={i} className="h-72 rounded-xl" />
           ))}
         {carriers.map(carrier => {
-          const isVisible = visibleIds.has(carrier.id) || !loading; // if loading false, show all immediately
           const activePrice = carrier.plans?.[selectedPlan];
           const range = carrier.planRanges?.[selectedPlan];
           const showRange = range && range.count > 1 && range.max !== range.min;
           const saved = isCarrierPlanSaved(carrier.id, selectedPlan);
           // Removed quote count display per design update
-          return (
-            <div
-              key={carrier.id}
-              data-carrier-id={carrier.id}
-              ref={(el) => registerObserver(el, carrier.id)}
-              className="relative rounded-xl bg-gradient-to-br from-[#0f172a] via-[#0f1d33] to-[#0f172a] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 sm:p-5 border border-slate-700/60 dark:border-slate-700 shadow-md hover:shadow-lg transition-shadow overflow-hidden group"
-            >
-              {!isVisible ? (
-                <div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true">
-                  <Skeleton className="h-10 w-10 rounded-md" />
-                  <Skeleton className="h-4 w-40" />
-                  <div className="mt-auto space-y-2">
-                    <Skeleton className="h-8 w-32" />
-                    <Skeleton className="h-9 w-11 rounded-md" />
+          const CardInner: React.FC = () => {
+            const { ref, visible } = useCardVisibility();
+            const showSkeleton = !visible && loading;
+            return (
+              <CardShell ref={ref as any} highlight={saved} className="p-4 sm:p-5">
+                {showSkeleton && (
+                  <div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true">
+                    <Skeleton className="h-10 w-10 rounded-md" />
+                    <Skeleton className="h-4 w-40" />
+                    <div className="mt-auto space-y-2">
+                      <Skeleton className="h-8 w-32" />
+                      <Skeleton className="h-9 w-11 rounded-md" />
+                    </div>
                   </div>
-                </div>
-              ) : null}
-              {isVisible && (
-              <>
-              <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.18),transparent_65%)]" />
+                )}
+                {visible && (
+                <>
               {/* Header */}
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton
@@ -169,11 +139,12 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
                 </div>
                 <DetailsButton onClick={() => onOpenPlanDetails?.(carrier)} carrierName={carrier.name} />
               </div>
-              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </>
-              )}
-            </div>
-          );
+                </>
+                )}
+              </CardShell>
+            );
+          };
+          return <CardInner key={carrier.id} />;
         })}
       </div>
     </section>
