@@ -102,19 +102,19 @@ export const PlanDetailsTab: React.FC<PlanDetailsTabProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Monthly</span>
-                  <span className="font-medium">{formatCurrency(quoteData.rate.month)}</span>
+                  <span className="font-medium">{quoteData.rate?.month != null ? formatCurrency(quoteData.rate.month) : '—'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Quarterly</span>
-                  <span className="font-medium">{quoteData.rate.quarter != null ? formatCurrency(quoteData.rate.quarter) : '—'}</span>
+                  <span className="font-medium">{quoteData.rate?.quarter != null ? formatCurrency(quoteData.rate.quarter) : '—'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Semi-Annual</span>
-                  <span className="font-medium">{quoteData.rate.semi_annual != null ? formatCurrency(quoteData.rate.semi_annual) : '—'}</span>
+                  <span className="font-medium">{quoteData.rate?.semi_annual != null ? formatCurrency(quoteData.rate.semi_annual) : '—'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Annual</span>
-                  <span className="font-medium">{quoteData.rate.annual != null ? formatCurrency(quoteData.rate.annual) : '—'}</span>
+                  <span className="font-medium">{quoteData.rate?.annual != null ? formatCurrency(quoteData.rate.annual) : '—'}</span>
                 </div>
               </div>
             </div>

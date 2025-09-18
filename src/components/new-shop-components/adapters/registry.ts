@@ -6,6 +6,11 @@
 import { AdapterRegistry, CategoryAdapter } from './types';
 import { medigapAdapter } from './medigapAdapter';
 import { drugPlanAdapter } from './drugPlanAdapter';
+import { advantagePlanAdapter } from './advantagePlanAdapter';
+import { dentalPlanAdapter } from './dentalPlanAdapter';
+import { cancerPlanAdapter } from './cancerPlanAdapter';
+import { hospitalIndemnityPlanAdapter } from './hospitalIndemnityPlanAdapter';
+import { finalExpensePlanAdapter } from './finalExpensePlanAdapter';
 
 // Internal mutable registry — not exported directly to preserve invariants.
 const registry: AdapterRegistry = Object.create(null);
@@ -34,5 +39,10 @@ export function isAdaptersEnabled(): boolean { return true; }
 // Pre-register adapters
 registerAdapter(medigapAdapter);
 registerAdapter(drugPlanAdapter);
+registerAdapter(advantagePlanAdapter);
+registerAdapter(dentalPlanAdapter);
+registerAdapter(cancerPlanAdapter);
+registerAdapter(hospitalIndemnityPlanAdapter);
+registerAdapter(finalExpensePlanAdapter);
 
 export type { CategoryAdapter };

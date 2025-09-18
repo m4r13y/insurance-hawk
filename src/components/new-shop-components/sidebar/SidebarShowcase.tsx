@@ -267,7 +267,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
 
   // Quotes panel subcomponent (defined before tabs to allow reference)
   // Quote generation support state (mirrors MedicareShopLayout logic simplified)
-  const [showMissingFieldsModal, setShowMissingFieldsModal] = React.useState(false);
+  // Inline quote generation form states (replaces previous modal UX)
+  const [showInlineQuoteForm, setShowInlineQuoteForm] = React.useState(false);
   const [selectedCategoryForQuote, setSelectedCategoryForQuote] = React.useState<string>('');
   const [missingFields, setMissingFields] = React.useState<string[]>([]);
   const [formInputs, setFormInputs] = React.useState<QuoteFormData>({
@@ -363,7 +364,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     } else {
       setSelectedCategoryForQuote(category);
       setMissingFields(validation.missing);
-      setShowMissingFieldsModal(true);
+  setShowInlineQuoteForm(true);
     }
   };
 
@@ -371,28 +372,31 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     const validation = validateRequiredData(selectedCategoryForQuote, formInputs);
     if (!validation.isValid || !onGenerateQuotes) return;
     persistFormData(formInputs);
-    setShowMissingFieldsModal(false);
+  setShowInlineQuoteForm(false);
     if (selectedCategoryForQuote === 'medigap') {
       setIsMedigapSelectionOpen(true);
     } else {
-      await onGenerateQuotes(selectedCategoryForQuote, formInputs);
-      setSelectedCategoryForQuote('');
+  await onGenerateQuotes(selectedCategoryForQuote, formInputs);
+  setSelectedCategoryForQuote('');
+  setShowInlineQuoteForm(false);
     }
   };
 
   const handleMedigapPlanConfirm = async () => {
     if (!onGenerateQuotes || selectedMedigapPlans.length === 0) return;
     persistFormData(formInputs);
-    setIsMedigapSelectionOpen(false);
+  setIsMedigapSelectionOpen(false);
     await onGenerateQuotes(selectedCategoryForQuote, formInputs, selectedMedigapPlans);
     setSelectedCategoryForQuote('');
     setSelectedMedigapPlans([]);
+  setShowInlineQuoteForm(false);
   };
 
   const handleMedigapPlanCancel = () => {
-    setIsMedigapSelectionOpen(false);
+  setIsMedigapSelectionOpen(false);
     setSelectedCategoryForQuote('');
     setSelectedMedigapPlans([]);
+  setShowInlineQuoteForm(false);
   };
 
   const QuotesPanel: React.FC<{ activeCategory?: string; onSelectCategory?: (c:string)=>void }> = ({ activeCategory, onSelectCategory }) => {
@@ -440,9 +444,176 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
 
     return (
       <div className="space-y-4">
-        {myQuotes.length > 0 && renderGroup('My Quotes', myQuotes, 'my')}
-        {renderGroup(myQuotes.length ? 'More Options' : 'Quote Categories', moreOptions, 'more')}
-        {myQuotes.length === 0 && (
+  {!showInlineQuoteForm && myQuotes.length > 0 && renderGroup('My Quotes', myQuotes, 'my')}
+  {!showInlineQuoteForm && renderGroup(myQuotes.length ? 'More Options' : 'Quote Categories', moreOptions, 'more')}
+  {showInlineQuoteForm && (
+          <div className="mt-2 p-3 border rounded-lg bg-white/70 dark:bg-slate-700/40 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <h6 className="text-[11px] font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">Generate {selectedCategoryForQuote.replace(/-/g,' ') || 'Quotes'}</h6>
+                {!!missingFields.length && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Provide required fields below.</p>}
+              </div>
+              <button onClick={()=>{ setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); }} className="text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {missingFields.includes('age') && (
+                <div className="space-y-1 col-span-1">
+                  <Label htmlFor="inline-age" className="text-[11px]">Age</Label>
+                  <Input id="inline-age" type="number" className="h-7 text-[11px]" value={formInputs.age} onChange={(e)=>setFormInputs(p=>({...p, age: e.target.value? parseInt(e.target.value): ''}))} />
+                </div>
+              )}
+              {missingFields.includes('zipCode') && (
+                <div className="space-y-1 col-span-1">
+                  <Label htmlFor="inline-zip" className="text-[11px]">ZIP Code</Label>
+                  <Input id="inline-zip" className="h-7 text-[11px]" value={formInputs.zipCode} onChange={(e)=>setFormInputs(p=>({...p, zipCode: e.target.value}))} />
+                </div>
+              )}
+              {missingFields.includes('gender') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Gender</Label>
+                  <Select value={formInputs.gender} onValueChange={(v)=>setFormInputs(p=>({...p, gender: v as 'male'|'female'}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Gender" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {missingFields.includes('tobaccoUse') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Tobacco</Label>
+                  <Select value={formInputs.tobaccoUse === null ? '' : formInputs.tobaccoUse.toString()} onValueChange={(v)=>setFormInputs(p=>({...p, tobaccoUse: v==='true'}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Use?" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="false">No</SelectItem>
+                      <SelectItem value="true">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {/* State (non-cancer) */}
+              {missingFields.includes('state') && selectedCategoryForQuote !== 'cancer' && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">State</Label>
+                  <Select value={formInputs.state} onValueChange={(v)=>setFormInputs(p=>({...p, state: v}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="State" /></SelectTrigger>
+                    <SelectContent className="max-h-52">
+                      {['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].map(st=> <SelectItem key={st} value={st}>{st}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {/* Cancer specific */}
+              {selectedCategoryForQuote === 'cancer' && missingFields.includes('state') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">State</Label>
+                  <Select value={formInputs.state} onValueChange={(v)=>setFormInputs(p=>({...p, state: v}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="State" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TX">TX</SelectItem>
+                      <SelectItem value="GA">GA</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedCategoryForQuote === 'cancer' && missingFields.includes('familyType') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Coverage</Label>
+                  <Select value={formInputs.familyType} onValueChange={(v)=>setFormInputs(p=>({...p, familyType: v as 'individual'|'family'}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="family">Family</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedCategoryForQuote === 'cancer' && missingFields.includes('carcinomaInSitu') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">CIS %</Label>
+                  <Select value={formInputs.carcinomaInSitu == null ? '' : formInputs.carcinomaInSitu.toString()} onValueChange={(v)=>setFormInputs(p=>({...p, carcinomaInSitu: v==='true'}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="%" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="false">25%</SelectItem>
+                      <SelectItem value="true">100%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedCategoryForQuote === 'cancer' && missingFields.includes('premiumMode') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Mode</Label>
+                  <Select value={formInputs.premiumMode} onValueChange={(v)=>setFormInputs(p=>({...p, premiumMode: v as 'monthly'|'annual'}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Mode" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="annual">Annual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedCategoryForQuote === 'cancer' && missingFields.includes('benefitAmount') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Benefit</Label>
+                  <Select value={formInputs.benefitAmount} onValueChange={(v)=>setFormInputs(p=>({...p, benefitAmount: v}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Amount" /></SelectTrigger>
+                    <SelectContent>
+                      {['10000','25000','50000','75000','100000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedCategoryForQuote === 'dental' && missingFields.includes('coveredMembers') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Members</Label>
+                  <Input className="h-7 text-[11px]" value={formInputs.coveredMembers} onChange={(e)=>setFormInputs(p=>({...p, coveredMembers: e.target.value}))} />
+                </div>
+              )}
+              {selectedCategoryForQuote === 'final-expense' && missingFields.includes('desiredFaceValue') && (
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-[11px]">Face Value</Label>
+                  <Select value={formInputs.desiredFaceValue} onValueChange={(v)=>setFormInputs(p=>({...p, desiredFaceValue: v}))}>
+                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Amount" /></SelectTrigger>
+                    <SelectContent>
+                      {['10000','15000','20000','25000','50000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            {/* Medigap plan selection inline (appears once base fields satisfied) */}
+            {selectedCategoryForQuote === 'medigap' && showInlineQuoteForm && missingFields.length === 0 && (
+              <div className="border-t pt-2 mt-2">
+                <p className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mb-1">Select Plans</p>
+                <div className="flex gap-2">
+                  {['G','N','F'].map(pl => {
+                    const active = selectedMedigapPlans.includes(pl);
+                    return (
+                      <button key={pl} onClick={()=> setSelectedMedigapPlans(prev => active ? prev.filter(p=>p!==pl) : [...prev, pl])} className={`px-2 py-1 rounded-md text-[11px] border ${active ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'}`}>Plan {pl}</button>
+                    );
+                  })}
+                </div>
+                {selectedMedigapPlans.length === 0 && <p className="text-[10px] text-slate-500 mt-1">Select at least one.</p>}
+              </div>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={()=>{ setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); }}>Cancel</Button>
+              <Button size="sm" disabled={selectedCategoryForQuote==='medigap' && selectedMedigapPlans.length===0 && missingFields.length===0} onClick={async ()=>{
+                if (missingFields.length){
+                  await handleMissingFieldsSubmit();
+                } else if (selectedCategoryForQuote === 'medigap') {
+                  await handleMedigapPlanConfirm();
+                } else {
+                  await handleMissingFieldsSubmit();
+                }
+                // After generation hide form (in case handler path didn't already close it)
+                setShowInlineQuoteForm(false);
+              }}>Generate</Button>
+            </div>
+          </div>
+        )}
+        {!showInlineQuoteForm && myQuotes.length === 0 && (
           <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed px-0.5">No stored quotes yet. Generate quotes in the main Medicare flow to pin them here.</p>
         )}
       </div>
@@ -862,153 +1033,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           </div>
         </div>
       </div>
-      {/* Missing Fields Modal */}
-      <Dialog open={showMissingFieldsModal} onOpenChange={setShowMissingFieldsModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Additional Information Required</DialogTitle>
-            <DialogDescription className="sr-only">Provide required information to generate quotes</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-xs text-slate-600 dark:text-slate-300">We need a bit more information to generate {selectedCategoryForQuote.replace(/-/g,' ')} quotes.</p>
-            <div className="space-y-3">
-              {missingFields.includes('age') && (
-                <div className="space-y-1">
-                  <Label htmlFor="age">Age</Label>
-                  <Input id="age" type="number" value={formInputs.age} onChange={(e) => setFormInputs(p => ({...p, age: e.target.value ? parseInt(e.target.value) : ''}))} />
-                </div>
-              )}
-              {missingFields.includes('zipCode') && (
-                <div className="space-y-1">
-                  <Label htmlFor="zipCode">ZIP Code</Label>
-                  <Input id="zipCode" value={formInputs.zipCode} onChange={(e) => setFormInputs(p => ({...p, zipCode: e.target.value}))} />
-                </div>
-              )}
-              {missingFields.includes('gender') && (
-                <div className="space-y-1">
-                  <Label>Gender</Label>
-                  <Select value={formInputs.gender} onValueChange={(v) => setFormInputs(p => ({...p, gender: v as 'male' | 'female'}))}>
-                    <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {missingFields.includes('tobaccoUse') && (
-                <div className="space-y-1">
-                  <Label>Tobacco Use</Label>
-                  <Select value={formInputs.tobaccoUse === null ? '' : formInputs.tobaccoUse.toString()} onValueChange={(v) => setFormInputs(p => ({...p, tobaccoUse: v === 'true'}))}>
-                    <SelectTrigger><SelectValue placeholder="Do you use tobacco?" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="false">No</SelectItem>
-                      <SelectItem value="true">Yes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {missingFields.includes('state') && selectedCategoryForQuote !== 'cancer' && (
-                <div className="space-y-1">
-                  <Label>State</Label>
-                  <Select value={formInputs.state} onValueChange={(v) => setFormInputs(p => ({...p, state: v}))}>
-                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
-                    <SelectContent>
-                      {['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].map(st => <SelectItem key={st} value={st}>{st}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {selectedCategoryForQuote === 'cancer' && (
-                <>
-                  {missingFields.includes('state') && (
-                    <div className="space-y-1">
-                      <Label>State</Label>
-                      <Select value={formInputs.state} onValueChange={(v) => setFormInputs(p => ({...p, state: v}))}>
-                        <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="TX">Texas</SelectItem>
-                          <SelectItem value="GA">Georgia</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Cancer insurance currently limited to TX & GA.</p>
-                    </div>
-                  )}
-                  {missingFields.includes('familyType') && (
-                    <div className="space-y-1">
-                      <Label>Coverage Type</Label>
-                      <Select value={formInputs.familyType} onValueChange={(v) => setFormInputs(p => ({...p, familyType: v as 'individual' | 'family'}))}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="individual">Individual</SelectItem>
-                          <SelectItem value="family">Family</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {missingFields.includes('carcinomaInSitu') && (
-                    <div className="space-y-1">
-                      <Label>Carcinoma In Situ Benefit</Label>
-                      <Select value={formInputs.carcinomaInSitu === null || formInputs.carcinomaInSitu === undefined ? '' : formInputs.carcinomaInSitu.toString()} onValueChange={(v) => setFormInputs(p => ({...p, carcinomaInSitu: v === 'true'}))}>
-                        <SelectTrigger><SelectValue placeholder="Benefit %" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="false">25%</SelectItem>
-                          <SelectItem value="true">100%</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {missingFields.includes('premiumMode') && (
-                    <div className="space-y-1">
-                      <Label>Premium Mode</Label>
-                      <Select value={formInputs.premiumMode} onValueChange={(v) => setFormInputs(p => ({...p, premiumMode: v as 'monthly' | 'annual'}))}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="annual">Annual</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {missingFields.includes('benefitAmount') && (
-                    <div className="space-y-1">
-                      <Label>Benefit Amount</Label>
-                      <Select value={formInputs.benefitAmount} onValueChange={(v) => setFormInputs(p => ({...p, benefitAmount: v}))}>
-                        <SelectTrigger><SelectValue placeholder="Select amount" /></SelectTrigger>
-                        <SelectContent>
-                          {['10000','25000','50000','75000','100000'].map(val => <SelectItem key={val} value={val}>${val.replace(/(\d{2})(\d{3})?/, (m,a,b) => b ? a+','+b : a )}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </>
-              )}
-              {selectedCategoryForQuote === 'dental' && missingFields.includes('coveredMembers') && (
-                <div className="space-y-1">
-                  <Label>Covered Members</Label>
-                  <Input value={formInputs.coveredMembers} onChange={(e) => setFormInputs(p => ({...p, coveredMembers: e.target.value}))} />
-                </div>
-              )}
-              {selectedCategoryForQuote === 'final-expense' && missingFields.includes('desiredFaceValue') && (
-                <div className="space-y-1">
-                  <Label>Coverage Amount</Label>
-                  <Select value={formInputs.desiredFaceValue} onValueChange={(v) => setFormInputs(p => ({...p, desiredFaceValue: v}))}>
-                    <SelectTrigger><SelectValue placeholder="Select amount" /></SelectTrigger>
-                    <SelectContent>
-                      {['10000','15000','20000','25000','50000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowMissingFieldsModal(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleMissingFieldsSubmit}>Get Quote</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* Medigap Plan Selection Modal */}
+      {/* Medigap Plan Selection Modal (still separate for multi-plan choose; could be inlined similarly) */}
       <Dialog open={isMedigapSelectionOpen} onOpenChange={setIsMedigapSelectionOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

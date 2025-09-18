@@ -20,6 +20,13 @@ export interface RawDrugPlanQuote {
   overall_star_rating?: number;    // 0-5
   effective_date?: string;
   state?: string;
+  // Full benefits array (subset). We only care about outpatient prescription drugs for tiers.
+  benefits?: Array<{
+    benefit_type?: string;
+    full_description?: string; // HTML-ish string with tier tables
+    pd_view_display?: boolean;
+    summary_description?: string | null;
+  }>;
 }
 
 // Attempt to extract tier cost sharing from an HTML-ish benefit full_description that contains
@@ -57,6 +64,43 @@ function extractDrugTiers(benefitHtml?: string) {
   return tiers.length ? tiers : undefined;
 }
 
+// Rich extraction capturing each pharmacy row for 30/60/90 day supplies so we can build the carousel UI.
+// Returns an array of objects: { tier: 'Tier 1', tierType: 'Preferred Generic', rows: [{ pharmacyType, thirty, sixty, ninety }] }
+function extractFullTierRows(benefitHtml?: string) {
+  if (!benefitHtml || typeof benefitHtml !== 'string') return undefined;
+  // Basic memo cache to avoid re-parsing identical HTML across multiple quotes (shared carriers)
+  const cache = (globalThis as any).__drugTierParseCache || ((globalThis as any).__drugTierParseCache = new Map<string, any>());
+  if (cache.has(benefitHtml)) return cache.get(benefitHtml);
+  const blocks = Array.from(benefitHtml.matchAll(/<p><b>Tier\s+(\d+)\s*\(([^)]+)\)<\/b><\/p><table>([\s\S]*?)<\/table>/gi));
+  if (!blocks.length) return undefined;
+  const result: Array<{ tier: string; tierType: string; rows: Array<{ pharmacyType: string; thirty: string; sixty: string; ninety: string }> }> = [];
+  blocks.forEach(b => {
+    const tierNum = b[1];
+    const tierType = b[2];
+    const tableHtml = b[3];
+    const rows: Array<{ pharmacyType: string; thirty: string; sixty: string; ninety: string }> = [];
+    const trMatches = Array.from(tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/gi));
+    trMatches.forEach(tr => {
+      const tds = Array.from(tr[1].matchAll(/<td>([\s\S]*?)<\/td>/gi)).map(td => td[1].replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim());
+      if (tds.length >= 4 && /:/.test(tds[0])) {
+        const label = tds[0].replace(/:/,'').trim();
+        rows.push({
+          pharmacyType: label,
+          thirty: tds[1] || '—',
+            sixty: tds[2] || '—',
+            ninety: tds[3] || '—'
+        });
+      }
+    });
+    if (rows.length) {
+      result.push({ tier: `Tier ${tierNum}`, tierType, rows });
+    }
+  });
+  const finalVal = result.length ? result : undefined;
+  cache.set(benefitHtml, finalVal);
+  return finalVal;
+}
+
 function chooseCarrierName(raw: RawDrugPlanQuote): string {
   return raw.organization_name || raw.name_full || raw.name || 'Unknown Carrier';
 }
@@ -88,10 +132,10 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
     const contract = raw.contract_id || 'X';
     const segment = raw.segment_id || '000';
     const planKey = `${contract}-${planId}-${segment}`;
-    // The full_description HTML is not present on this trimmed RawDrugPlanQuote interface yet.
-    // If upstream expands RawDrugPlanQuote to include benefits, we can parse tiers here; for now attempt ctx.extra?.benefitHtml.
-    const benefitHtml = (ctx as any)?.extra?.benefitHtml as string | undefined;
-    const drugTiers = extractDrugTiers(benefitHtml);
+  // Attempt to find the outpatient prescription drugs benefit entry for tier extraction.
+  const benefitHtml = raw.benefits?.find(b => (b.benefit_type || '').toLowerCase().includes('outpatient prescription drugs'))?.full_description;
+  const drugTiers = extractDrugTiers(benefitHtml);
+  const tierCarousel = extractFullTierRows(benefitHtml);
     return {
       id: `drug-plan:${planKey}`,
       category: 'drug-plan',
@@ -114,6 +158,9 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
         effectiveDate: raw.effective_date,
         state: raw.state,
         drugTiers,
+        // Rich rows for carousel UI (optional)
+        // @ts-ignore
+        tierCarousel,
       },
     };
   },

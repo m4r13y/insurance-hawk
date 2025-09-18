@@ -29,6 +29,13 @@ import { getEnhancedCarrierInfo, mapUICategoryToProductCategory } from '@/lib/ca
 import DrugPlanCards from '@/components/new-shop-components/quote-cards/DrugPlanCards';
 import { SavedPlanChips } from '@/components/new-shop-components/quote-cards/SavedPlanChips';
 import PdpDetailsShowcase from '@/components/new-shop-components/plan-details/PdpDetailsShowcase';
+import AdvantagePlanCards from '@/components/new-shop-components/quote-cards/AdvantagePlanCards';
+import { AdvantageDetailsShowcase } from '@/components/new-shop-components/plan-details';
+import DentalPlanCards from '@/components/new-shop-components/quote-cards/DentalPlanCards';
+import CancerPlanCards from '@/components/new-shop-components/quote-cards/CancerPlanCards';
+import HospitalIndemnityPlanCards from '@/components/new-shop-components/quote-cards/HospitalIndemnityPlanCards';
+import FinalExpensePlanCards from '@/components/new-shop-components/quote-cards/FinalExpensePlanCards';
+import { DentalDetailsShowcase, CancerDetailsShowcase, HospitalIndemnityDetailsShowcase, FinalExpenseDetailsShowcase } from '@/components/new-shop-components/plan-details';
 // Always-live adapter mode (shadow diff removed)
 
 /*
@@ -176,10 +183,14 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Adapter integration: legacy grouping still computed (for fallback) but UI always prefers adapter summaries.
 
   // Carrier search (listens to sidebar events / storage)
-  const [carrierSearch, setCarrierSearch] = useState<string>(() => {
-    if (typeof window === 'undefined') return '';
-    try { return localStorage.getItem('carrier_search_query') || ''; } catch { return ''; }
-  });
+  // Hydration-safe default; apply persisted carrier search after mount to avoid SSR mismatch.
+  const [carrierSearch, setCarrierSearch] = useState<string>('');
+  useEffect(() => {
+    try {
+      const persisted = localStorage.getItem('carrier_search_query');
+      if (persisted) setCarrierSearch(persisted);
+    } catch {}
+  }, []);
   useEffect(() => {
     const STORAGE_KEY = 'carrier_search_query';
     const handleStorage = (e: StorageEvent) => {
@@ -283,6 +294,108 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       };
     });
   }, [pdpSummaries, pdpNormalized, activeCategory]);
+
+  // Add advantage adapter hook usage
+  const { summaries: advantageSummaries, normalized: advantageNormalized } = useCategoryQuotes<any>('advantage', activeCategory==='advantage' ? quotes : [], { enabled: true });
+  // Persist advantage normalized quotes lightly for details if needed
+  useEffect(()=>{ if(advantageNormalized?.length){ try{ localStorage.setItem('advantage_normalized_quotes', JSON.stringify(advantageNormalized)); }catch{} } },[advantageNormalized]);
+  const advantageCarriers = useMemo(()=> {
+    if (activeCategory !== 'advantage') return [] as any[];
+    return advantageSummaries.map(s => {
+      const range = s.planRanges?.MA;
+      const related = advantageNormalized.filter(q => q.carrier.id === s.carrierId);
+      let medDed: string|undefined; let drugDed: string|undefined; let star: number|undefined; let moop: string|undefined; let planName: string|undefined;
+      related.forEach(r => {
+        if (!medDed && r.metadata?.medicalDeductible) medDed = r.metadata.medicalDeductible;
+        if (!drugDed && r.metadata?.drugDeductible) drugDed = r.metadata.drugDeductible;
+        if (!moop && r.metadata?.moop) moop = r.metadata.moop;
+        if (!planName) planName = r.plan.display;
+        if (typeof r.metadata?.starRating === 'number' && star == null) star = r.metadata.starRating;
+      });
+      return {
+        id: s.carrierId,
+        name: s.carrierName,
+        logo: s.logoUrl || '/carrier-logos/1.png',
+        rating: star,
+        min: range?.min,
+        max: range?.max,
+        planRange: range,
+        planName,
+        medicalDeductible: medDed,
+        drugDeductible: drugDed,
+        moop,
+        count: related.length,
+      };
+    });
+  }, [activeCategory, advantageSummaries, advantageNormalized]);
+
+  // New category adapter integrations ----------------------------------------------------
+  const { summaries: dentalSummaries, normalized: dentalNormalized } = useCategoryQuotes<any>('dental', activeCategory==='dental' ? quotes : [], { enabled: true });
+  const dentalCarriers = useMemo(() => {
+    if (activeCategory !== 'dental') return [] as any[];
+    return dentalSummaries.map(s => {
+      const range = s.planRanges?.DENTAL; const related = dentalNormalized.filter(q => q.carrier.id === s.carrierId);
+      let annualMax: number|undefined; let deductibleIndividual: number|undefined; let visionIncluded: boolean|undefined; let hearingIncluded: boolean|undefined; let planName: string|undefined;
+      related.forEach(r => {
+        if (annualMax == null && typeof r.metadata?.annualMax === 'number') annualMax = r.metadata.annualMax;
+        if (deductibleIndividual == null && typeof r.metadata?.deductibleIndividual === 'number') deductibleIndividual = r.metadata.deductibleIndividual;
+        if (visionIncluded == null && typeof r.metadata?.visionIncluded === 'boolean') visionIncluded = r.metadata.visionIncluded;
+        if (hearingIncluded == null && typeof r.metadata?.hearingIncluded === 'boolean') hearingIncluded = r.metadata.hearingIncluded;
+        if (!planName) planName = r.plan.display;
+      });
+      return { id: s.carrierId, name: s.carrierName, logo: s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, annualMax, deductibleIndividual, visionIncluded, hearingIncluded, count: related.length };
+    });
+  }, [activeCategory, dentalSummaries, dentalNormalized]);
+
+  const { summaries: cancerSummaries, normalized: cancerNormalized } = useCategoryQuotes<any>('cancer', activeCategory==='cancer' ? quotes : [], { enabled: true });
+  const cancerCarriers = useMemo(() => {
+    if (activeCategory !== 'cancer') return [] as any[];
+    return cancerSummaries.map(s => {
+      const range = s.planRanges?.CANCER; const related = cancerNormalized.filter(q => q.carrier.id === s.carrierId);
+      let lumpSum: number|undefined; let wellness: number|undefined; let recurrence: boolean|undefined; let planName: string|undefined;
+      related.forEach(r => {
+        if (lumpSum == null && typeof r.metadata?.lumpSum === 'number') lumpSum = r.metadata.lumpSum;
+        if (wellness == null && typeof r.metadata?.wellness === 'number') wellness = r.metadata.wellness;
+        if (recurrence == null && typeof r.metadata?.recurrence === 'boolean') recurrence = r.metadata.recurrence;
+        if (!planName) planName = r.plan.display;
+      });
+      return { id: s.carrierId, name: s.carrierName, logo: s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, lumpSum, wellness, recurrence, count: related.length };
+    });
+  }, [activeCategory, cancerSummaries, cancerNormalized]);
+
+  const { summaries: hospitalSummaries, normalized: hospitalNormalized } = useCategoryQuotes<any>('hospital', activeCategory==='hospital' ? quotes : [], { enabled: true });
+  const hospitalCarriers = useMemo(() => {
+    if (activeCategory !== 'hospital') return [] as any[];
+    return hospitalSummaries.map(s => {
+      const range = s.planRanges?.HOSP; const related = hospitalNormalized.filter(q => q.carrier.id === s.carrierId);
+      let dailyBenefit: number|undefined; let daysCovered: number|undefined; let ambulance: number|undefined; let icuUpgrade: boolean|undefined; let planName: string|undefined;
+      related.forEach(r => {
+        if (dailyBenefit == null && typeof r.metadata?.dailyBenefit === 'number') dailyBenefit = r.metadata.dailyBenefit;
+        if (daysCovered == null && typeof r.metadata?.daysCovered === 'number') daysCovered = r.metadata.daysCovered;
+        if (ambulance == null && typeof r.metadata?.ambulance === 'number') ambulance = r.metadata.ambulance;
+        if (icuUpgrade == null && typeof r.metadata?.icuUpgrade === 'boolean') icuUpgrade = r.metadata.icuUpgrade;
+        if (!planName) planName = r.plan.display;
+      });
+      return { id: s.carrierId, name: s.carrierName, logo: s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, dailyBenefit, daysCovered, ambulance, icuUpgrade, count: related.length };
+    });
+  }, [activeCategory, hospitalSummaries, hospitalNormalized]);
+
+  const { summaries: finalExpenseSummaries, normalized: finalExpenseNormalized } = useCategoryQuotes<any>('final-expense', activeCategory==='final-expense' ? quotes : [], { enabled: true });
+  const finalExpenseCarriers = useMemo(() => {
+    if (activeCategory !== 'final-expense') return [] as any[];
+    return finalExpenseSummaries.map(s => {
+      const range = s.planRanges?.FE; const related = finalExpenseNormalized.filter(q => q.carrier.id === s.carrierId);
+      let faceAmount: number|undefined; let graded: boolean|undefined; let immediate: boolean|undefined; let accidental: boolean|undefined; let planName: string|undefined;
+      related.forEach(r => {
+        if (faceAmount == null && typeof r.metadata?.faceAmount === 'number') faceAmount = r.metadata.faceAmount;
+        if (graded == null && typeof r.metadata?.graded === 'boolean') graded = r.metadata.graded;
+        if (immediate == null && typeof r.metadata?.immediate === 'boolean') immediate = r.metadata.immediate;
+        if (accidental == null && typeof r.metadata?.accidental === 'boolean') accidental = r.metadata.accidental;
+        if (!planName) planName = r.plan.display;
+      });
+      return { id: s.carrierId, name: s.carrierName, logo: s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, faceAmount, graded, immediate, accidental, count: related.length };
+    });
+  }, [activeCategory, finalExpenseSummaries, finalExpenseNormalized]);
 
   // When live adapter mode first produces summaries, record timing metrics similar to legacy pipeline
   useEffect(() => {
@@ -526,6 +639,15 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     setViewVisibility({ cards: false, planDetails: true });
   }, [updateQuery]);
 
+  // Generic helper for new categories (advantage, dental, cancer, hospital, final-expense)
+  const openCategoryDetails = useCallback((carrierId: string, category: string) => {
+    if (!carrierId) return;
+    setActiveCarrierId(carrierId);
+    updateQuery(p => { p.set('carrier', carrierId); p.set('view', 'plan-details'); p.set('category', category); });
+    setActiveCategory(category);
+    setViewVisibility({ cards: false, planDetails: true });
+  }, [updateQuery]);
+
   const closePlanDetails = useCallback(() => {
     setViewVisibility({ cards: true, planDetails: false });
     setActiveCarrierId(null);
@@ -535,10 +657,14 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // (removed duplicate handlers after consolidation)
 
   // View mode (card | list) - moved from inline IIFE to satisfy Rules of Hooks
-  const [quoteViewMode, setQuoteViewMode] = useState<'card' | 'list'>(() => {
-    if (typeof window === 'undefined') return 'card';
-    try { return (localStorage.getItem('quote_view_mode') as 'card' | 'list') || 'card'; } catch { return 'card'; }
-  });
+  // Hydration-safe default; apply persisted view mode post-mount.
+  const [quoteViewMode, setQuoteViewMode] = useState<'card' | 'list'>('card');
+  useEffect(() => {
+    try {
+      const persisted = localStorage.getItem('quote_view_mode') as 'card' | 'list' | null;
+      if (persisted === 'card' || persisted === 'list') setQuoteViewMode(persisted);
+    } catch {}
+  }, []);
   useEffect(() => {
     const STORAGE_KEY = 'quote_view_mode';
     const handleStorage = (e: StorageEvent) => {
@@ -584,6 +710,39 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
             onTogglePreferred={setPreferredOnly}
             applyDiscounts={applyDiscounts}
             onToggleApplyDiscounts={setApplyDiscounts}
+            onGenerateQuotes={async (category, formData, plansList) => {
+              // Simulated quote generation for sandbox: persist a stub array to localStorage
+              // Align storage key pattern used in hydrateExisting (medicare_<category>_quotes)
+              try {
+                const key = category === 'medigap' ? 'medigap_plan_quotes_stub' : `medicare_${category.replace(/-/g,'_')}_quotes`;
+                const baseId = `${category}-carrier`;
+                const makeQuote = (i:number) => ({
+                  id: `${category}_${Date.now()}_${i}`,
+                  carrier: { name: `${baseId}-${i}`, id: `${baseId}-${i}`, logo_url: `/carrier-logos/${(i%9)+1}.png` },
+                  company: `${baseId}-${i}`,
+                  plan: category==='medigap' ? (plansList?.[i % (plansList.length||1)] || 'G') : undefined,
+                  plan_name: category==='medigap' ? `Plan ${plansList?.[i % (plansList.length||1)] || 'G'}` : `${category} Plan ${i+1}`,
+                  monthly_premium: 50 + i * 5,
+                  rate: { month: (50 + i*5) * 100 },
+                  view_type: ['sans_hhd'],
+                  metadata: { generated: true, formHash: Object.keys(formData||{}).length }
+                });
+                const count = category==='medigap' ? Math.min( (plansList?.length||3) * 3, 9) : 5;
+                const quotesToStore = Array.from({length: count}).map((_,i)=> makeQuote(i));
+                localStorage.setItem(key, JSON.stringify(quotesToStore));
+                // Track selected categories so hydrateExisting will pick them up
+                const raw = localStorage.getItem('selected_medicare_categories') || localStorage.getItem('medicare_selected_categories');
+                let selected: string[] = [];
+                try { if (raw) selected = JSON.parse(raw); } catch {}
+                if (!selected.includes(category)) { selected.push(category); }
+                localStorage.setItem('medicare_selected_categories', JSON.stringify(selected));
+                // Trigger reload
+                setReloadIndex(i=>i+1);
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error('Mock quote generation failed', e);
+              }
+            }}
           />
         </aside>
         <div className={`space-y-12 ${sidebarPanelOpen ? 'lg:blur-sm lg:pointer-events-none' : ''}`} aria-busy={loadingActive} aria-describedby="carrier-loading-status">
@@ -607,12 +766,21 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           {/* Unified saved plans chip strip (all categories) */}
           <SavedPlanChips
             onOpen={(category, carrierName) => {
-              if (category === 'drug-plan') {
-                openPdpDetails({ id: carrierName });
-                setActiveCategory('drug-plan');
-              } else {
-                openPlanDetails({ id: carrierName } as any);
-                setActiveCategory('medigap');
+              switch (category) {
+                case 'drug-plan':
+                  openPdpDetails({ id: carrierName });
+                  setActiveCategory('drug-plan');
+                  break;
+                case 'advantage':
+                case 'dental':
+                case 'cancer':
+                case 'hospital':
+                case 'final-expense':
+                  openCategoryDetails(carrierName, category);
+                  break;
+                default:
+                  openPlanDetails({ id: carrierName } as any);
+                  setActiveCategory('medigap');
               }
             }}
             className="mb-6"
@@ -627,7 +795,48 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
               <DrugPlanCards carriers={pdpCarriers as any} loading={loadingQuotes} onOpenCarrierDetails={(c)=>openPdpDetails({ id: c.name })} />
             </section>
           )}
-          {activeCategory !== 'drug-plan' && (quoteViewMode === 'list' ? (
+          {activeCategory === 'advantage' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Medicare Advantage Plans</h3>
+              {(!loadingQuotes && advantageCarriers.length === 0) && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">No advantage plans loaded.</div>
+              )}
+              <AdvantagePlanCards
+                carriers={advantageCarriers as any}
+                loading={loadingQuotes && advantageCarriers.length === 0}
+                onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'advantage') }
+              />
+            </section>
+          )}
+          {activeCategory === 'dental' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Dental Plans</h3>
+              {(!loadingQuotes && dentalCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No dental plans loaded.</div>)}
+              <DentalPlanCards carriers={dentalCarriers as any} loading={loadingQuotes && dentalCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'dental')} />
+            </section>
+          )}
+          {activeCategory === 'cancer' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Cancer Plans</h3>
+              {(!loadingQuotes && cancerCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No cancer plans loaded.</div>)}
+              <CancerPlanCards carriers={cancerCarriers as any} loading={loadingQuotes && cancerCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'cancer')} />
+            </section>
+          )}
+          {activeCategory === 'hospital' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Hospital Indemnity Plans</h3>
+              {(!loadingQuotes && hospitalCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No hospital indemnity plans loaded.</div>)}
+              <HospitalIndemnityPlanCards carriers={hospitalCarriers as any} loading={loadingQuotes && hospitalCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'hospital')} />
+            </section>
+          )}
+          {activeCategory === 'final-expense' && (
+            <section className="space-y-6">
+              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Final Expense Plans</h3>
+              {(!loadingQuotes && finalExpenseCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No final expense plans loaded.</div>)}
+              <FinalExpensePlanCards carriers={finalExpenseCarriers as any} loading={loadingQuotes && finalExpenseCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'final-expense')} />
+            </section>
+          )}
+          {activeCategory === 'medigap' && (quoteViewMode === 'list' ? (
             <>
               <ComparisonRowCards
                 carriers={paginatedCarriers}
@@ -663,7 +872,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           ))}
         </div>
       )}
-      {viewVisibility.planDetails && activeCarrierId && activeCategory !== 'drug-plan' && (
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'medigap' && (
         <div className="space-y-8">
           <PlanDetailsShowcase
             carrierId={activeCarrierId}
@@ -678,6 +887,51 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           <PdpDetailsShowcase
             carrierName={activeCarrierId}
             quotes={pdpNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'advantage' && (
+        <div className="space-y-8">
+          <AdvantageDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={advantageNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'dental' && (
+        <div className="space-y-8">
+          <DentalDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={dentalNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'cancer' && (
+        <div className="space-y-8">
+          <CancerDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={cancerNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'hospital' && (
+        <div className="space-y-8">
+          <HospitalIndemnityDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={hospitalNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            onClose={closePlanDetails}
+          />
+        </div>
+      )}
+      {viewVisibility.planDetails && activeCarrierId && activeCategory === 'final-expense' && (
+        <div className="space-y-8">
+          <FinalExpenseDetailsShowcase
+            carrierName={activeCarrierId}
+            quotes={finalExpenseNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
             onClose={closePlanDetails}
           />
         </div>
