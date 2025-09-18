@@ -3,9 +3,14 @@ import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary 
 
 export interface RawHospitalIndemnityQuote {
   id: string;
-  carrier_name: string;
-  plan_name: string;
-  monthly_premium: number;
+  carrier_name?: string;
+  company?: string; // action uses 'company'
+  plan_name?: string;
+  planName?: string; // docs sample
+  monthly_premium?: number; // may not exist
+  policy_fee?: number;
+  base_plans?: any[]; // use to derive cost
+  riders?: any[];
   daily_hospital_benefit?: number; // per day amount
   days_covered?: number; // number of days
   observation_benefit?: number;
@@ -19,14 +24,39 @@ export const hospitalIndemnityPlanAdapter: CategoryAdapter<RawHospitalIndemnityQ
   category: 'hospital',
   version: 1,
   normalize(raw: RawHospitalIndemnityQuote, _ctx: NormalizeContext){
-    const monthly = toMoney(raw.monthly_premium); if(monthly==null) return null;
-    const carrier = raw.carrier_name || 'Unknown';
+    let monthly = toMoney(raw.monthly_premium);
+    if(monthly==null){
+      // Derive approximate monthly by summing policy_fee + first rate of each included base plan + included riders
+      let total = 0;
+      if(typeof raw.policy_fee==='number') total += toMoney(raw.policy_fee) || 0;
+      const pickRate = (benef:any)=> typeof benef?.rate==='number'? benef.rate : 0;
+      if(Array.isArray(raw.base_plans)){
+        raw.base_plans.forEach((bp:any)=>{
+          if(bp?.included && Array.isArray(bp.benefits)) total += bp.benefits.reduce((s:number,b:any)=> s + pickRate(b),0);
+        });
+      }
+      if(Array.isArray(raw.riders)){
+        raw.riders.forEach((r:any)=>{
+          if(r?.included && Array.isArray(r.benefitOptions)){
+            // choose minimal rate option to approximate base added cost
+            const min = r.benefitOptions
+              .map((o:any)=> pickRate(o))
+              .filter((n:number)=> n>0)
+              .sort((a:number,b:number)=> a-b)[0];
+            if(min) total += min;
+          }
+        });
+      }
+      monthly = toMoney(total);
+    }
+    if(monthly==null) return null; // still invalid
+    const carrier = raw.carrier_name || raw.company || 'Unknown';
     return {
       id: `hospital:${raw.id}`,
       category: 'hospital',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
-      plan: { key: raw.id, display: raw.plan_name },
+      plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Hospital Indemnity Plan' },
       adapter: { category: 'hospital', version: 1 },
       metadata: {
         dailyBenefit: raw.daily_hospital_benefit,

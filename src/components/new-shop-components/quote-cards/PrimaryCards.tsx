@@ -104,13 +104,13 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
                 />
                 <CarrierLogoBlock name={carrier.name} logo={carrier.logo} />
                 <div className="flex-1 min-w-0 pr-1">
-                  <div className="font-semibold text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
                     {/* Allow wrapping to multiple rows (previously truncated) */}
                     <span className="max-w-full break-words whitespace-normal">{carrier.name}</span>
                   </div>
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
                     <AmBestStarRating amBestRating={carrier.rating} size="sm" showText={false} />
-                    <span className="text-[11px] text-slate-400 tracking-wide font-medium">AM BEST {carrier.rating || 'N/A'}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">AM BEST {carrier.rating || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
                       type="button"
                       onClick={() => onSelectPlan(p)}
                       className={`px-4 py-1 rounded-full text-[12px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                        ${active ? 'bg-blue-500/30 text-white border-blue-400/60 shadow-sm backdrop-blur-[1px]' : 'bg-transparent text-slate-200 border-slate-500 hover:border-slate-300 hover:text-white'}`}
+                        ${active ? 'bg-blue-600/10 text-blue-700 dark:text-white border-blue-300 dark:border-blue-400 shadow-sm' : 'bg-white/60 dark:bg-transparent text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-500 hover:bg-blue-50 dark:hover:border-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
                       aria-pressed={active}
                     >
                       {planBadges[p].label}

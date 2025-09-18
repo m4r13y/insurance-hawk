@@ -34,7 +34,7 @@ export const ComparisonRowCards: React.FC<Props> = ({ carriers, loading, planBad
             ))}
           </div>
         )}
-        {carriers.map(carrier => {
+  {carriers.map(carrier => {
           // Determine active plan to display; fallback to first available
           const available = planTypes.filter(p => carrier.plans && carrier.plans[p] != null);
             const activePlan = available.includes(selectedPlan) ? selectedPlan : (available[0] || 'G');
@@ -47,8 +47,8 @@ export const ComparisonRowCards: React.FC<Props> = ({ carriers, loading, planBad
               className="relative rounded-xl bg-gradient-to-br from-[#0f172a] via-[#142033] to-[#0f172a] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 sm:p-5 border border-slate-700/60 dark:border-slate-700 shadow-md hover:shadow-lg transition-shadow overflow-hidden group"
             >
               <div className="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(circle_at_85%_22%,rgba(56,189,248,0.18),transparent_65%)]" />
-              <div className="relative z-10 flex items-start justify-between gap-4 mb-2">
-                <div className="flex items-start gap-3 min-w-0">
+              <div className="relative z-10 flex items-center gap-4 justify-between">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {enableSave && (
                     <SaveToggleButton
                       saved={saved}
@@ -64,38 +64,36 @@ export const ComparisonRowCards: React.FC<Props> = ({ carriers, loading, planBad
                         <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-medium border-sky-400/60 text-sky-300 bg-sky-400/10">Preferred</Badge>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-2 flex-wrap">
+                    <div className="mt-0.5 flex items-center gap-2 flex-wrap">
                       <AmBestStarRating amBestRating={carrier.rating} size="sm" showText={false} />
                       <span className="text-[11px] text-slate-400 tracking-wide font-medium">AM BEST {carrier.rating || 'N/A'}</span>
+                      <span className="text-[11px] text-slate-400 tracking-wide">Plan {activePlan}</span>
                     </div>
-                     <div className="text-[11px] text-slate-400 tracking-wide mb-1">Plan {activePlan}</div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end text-right">
-                  <div className="text-3xl font-bold leading-none text-white">{price !== undefined ? `$${price.toFixed(0)}` : '—'}</div>
-                  {hasMultiple && (
-                    <div className="flex gap-1 mt-2 flex-wrap justify-end">
-                      {available.map(p => {
-                        const active = activePlan === p;
-                        return (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => onSelectPlan?.(p)}
-                            className={`px-3 py-0.5 rounded-full text-[11px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                              ${active ? 'bg-blue-500/30 text-white border-blue-400/60 shadow-sm' : 'bg-transparent text-slate-300 border-slate-600 hover:border-slate-400 hover:text-white'}`}
-                            aria-pressed={active}
-                          >
-                            {planBadges[p].label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                {hasMultiple && (
+                  <div className="flex gap-1 flex-wrap justify-end">
+                    {available.map(p => {
+                      const active = activePlan === p;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => onSelectPlan?.(p)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
+                            ${active ? 'bg-blue-500/30 text-white border-blue-400/60 shadow-sm' : 'bg-transparent text-slate-300 border-slate-600 hover:border-slate-400 hover:text-white'}`}
+                          aria-pressed={active}
+                        >
+                          {planBadges[p].label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center gap-6 pl-2">
+                  <div className="text-3xl font-bold leading-none text-white tabular-nums">{price !== undefined ? `$${price.toFixed(0)}` : '—'}</div>
+                  <DetailsButton onClick={() => onOpenPlanDetails?.(carrier)} carrierName={carrier.name} />
                 </div>
-              </div>
-              <div className="relative z-10 flex items-center justify-end mt-3">
-                <DetailsButton onClick={() => onOpenPlanDetails?.(carrier)} carrierName={carrier.name} />
               </div>
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>

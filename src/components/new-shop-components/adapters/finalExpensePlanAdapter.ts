@@ -3,13 +3,21 @@ import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary 
 
 export interface RawFinalExpenseQuote {
   id: string;
-  carrier_name: string;
-  plan_name: string;
-  monthly_premium: number;
+  carrier_name?: string;
+  carrier?: string;
+  company_name?: string;
+  plan_name?: string;
+  planName?: string;
+  monthly_premium?: number; // may be absent in raw
+  monthly_rate?: number; // alternate field name from action
   face_amount?: number; // death benefit
+  face_amount_min?: number;
+  face_amount_max?: number;
   graded?: boolean;
   immediate?: boolean;
   accidental_rider?: boolean;
+  am_best_rating?: string;
+  state?: string;
 }
 
 function normalizeMoney(v:any){ if(typeof v!=='number'||v<0||isNaN(v)) return undefined; return v>=1000? v/100 : v; }
@@ -18,17 +26,20 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
   category: 'final-expense',
   version: 1,
   normalize(raw: RawFinalExpenseQuote, _ctx: NormalizeContext){
-    const monthly = normalizeMoney(raw.monthly_premium); if(monthly==null) return null;
-    const carrier = raw.carrier_name || 'Unknown';
+    const monthly = normalizeMoney(raw.monthly_premium ?? raw.monthly_rate); if(monthly==null) return null;
+    const carrier = raw.carrier_name || raw.carrier || raw.company_name || 'Unknown';
     return {
       id: `final-expense:${raw.id}`,
       category: 'final-expense',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
-      plan: { key: raw.id, display: raw.plan_name },
+      plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Final Expense Plan' },
       adapter: { category: 'final-expense', version: 1 },
       metadata: {
         faceAmount: raw.face_amount,
+        faceAmountMin: raw.face_amount_min,
+        faceAmountMax: raw.face_amount_max,
+        rating: raw.am_best_rating,
         graded: raw.graded,
         immediate: raw.immediate,
         accidental: raw.accidental_rider,

@@ -286,6 +286,13 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   });
   const [isMedigapSelectionOpen, setIsMedigapSelectionOpen] = React.useState(false);
   const [selectedMedigapPlans, setSelectedMedigapPlans] = React.useState<string[]>([]);
+  // Loading state for quote generation (per category + generic flags)
+  const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
+  const isGenerating = !!loadingCategory;
+  // Edit / reset workflow state
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editCategory, setEditCategory] = React.useState<string | null>(null);
+  const [formMode, setFormMode] = React.useState<'new' | 'edit'>('new');
 
   const getRequiredFields = (category: string): string[] => {
     switch (category) {
@@ -346,6 +353,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   };
 
   const handleGenerateFromMoreOptions = (category: string) => {
+    if (isGenerating) return; // prevent re-entry while another generation is in progress
     if (!onGenerateQuotes) {
       // fallback just select category
       onSelectCategory?.(category);
@@ -364,7 +372,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     } else {
       setSelectedCategoryForQuote(category);
       setMissingFields(validation.missing);
-  setShowInlineQuoteForm(true);
+      setFormMode('new');
+      setShowInlineQuoteForm(true);
     }
   };
 
@@ -372,24 +381,34 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     const validation = validateRequiredData(selectedCategoryForQuote, formInputs);
     if (!validation.isValid || !onGenerateQuotes) return;
     persistFormData(formInputs);
-  setShowInlineQuoteForm(false);
+    setShowInlineQuoteForm(false);
     if (selectedCategoryForQuote === 'medigap') {
       setIsMedigapSelectionOpen(true);
     } else {
-  await onGenerateQuotes(selectedCategoryForQuote, formInputs);
-  setSelectedCategoryForQuote('');
-  setShowInlineQuoteForm(false);
+      try {
+        setLoadingCategory(selectedCategoryForQuote);
+        await onGenerateQuotes(selectedCategoryForQuote, formInputs);
+      } finally {
+        setLoadingCategory(null);
+        setSelectedCategoryForQuote('');
+        setShowInlineQuoteForm(false);
+      }
     }
   };
 
   const handleMedigapPlanConfirm = async () => {
     if (!onGenerateQuotes || selectedMedigapPlans.length === 0) return;
     persistFormData(formInputs);
-  setIsMedigapSelectionOpen(false);
-    await onGenerateQuotes(selectedCategoryForQuote, formInputs, selectedMedigapPlans);
-    setSelectedCategoryForQuote('');
-    setSelectedMedigapPlans([]);
-  setShowInlineQuoteForm(false);
+    setIsMedigapSelectionOpen(false);
+    try {
+      setLoadingCategory('medigap');
+      await onGenerateQuotes(selectedCategoryForQuote, formInputs, selectedMedigapPlans);
+    } finally {
+      setLoadingCategory(null);
+      setSelectedCategoryForQuote('');
+      setSelectedMedigapPlans([]);
+      setShowInlineQuoteForm(false);
+    }
   };
 
   const handleMedigapPlanCancel = () => {
@@ -410,10 +429,84 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
             if (Array.isArray(parsed)) setSelectedCategories(parsed);
         }
       } catch {}
+      const handler = () => {
+        try {
+          const raw2 = localStorage.getItem('medicare_selected_categories');
+          if (raw2) {
+            const parsed2 = JSON.parse(raw2);
+            if (Array.isArray(parsed2)) setSelectedCategories(parsed2);
+          }
+        } catch {}
+      };
+      window.addEventListener('selectedCategories:updated', handler as EventListener);
+      return () => window.removeEventListener('selectedCategories:updated', handler as EventListener);
     }, [activeTab]);
 
     const myQuotes = quoteCategories.filter(c => selectedCategories.includes(c));
     const moreOptions = quoteCategories.filter(c => !selectedCategories.includes(c));
+
+    // Start edit flow
+    const startEdit = () => {
+      if (!myQuotes.length) return;
+      setIsEditing(true);
+      setFormMode('edit');
+      if (myQuotes.length === 1) {
+        chooseEditCategory(myQuotes[0]);
+      }
+    };
+
+    const chooseEditCategory = (cat: string) => {
+      setEditCategory(cat);
+      setSelectedCategoryForQuote(cat);
+      const stored = loadStoredFormData();
+      setFormInputs(stored);
+      setMissingFields([]); // show all fields in edit mode
+      // Prefill medigap plans from existing quotes if possible
+      if (cat === 'medigap') {
+        try {
+          const raw = localStorage.getItem('medigap_plan_quotes_stub');
+          if (raw) {
+            const quotes = JSON.parse(raw);
+            if (Array.isArray(quotes)) {
+              const plans = Array.from(new Set(quotes.map((q:any)=> q?.plan).filter(Boolean)));
+              if (plans.length) setSelectedMedigapPlans(plans as string[]);
+            }
+          }
+        } catch {}
+      }
+      setShowInlineQuoteForm(true);
+    };
+
+    const cancelEdit = () => {
+      setIsEditing(false);
+      setEditCategory(null);
+      setFormMode('new');
+      setShowInlineQuoteForm(false);
+      setSelectedCategoryForQuote('');
+    };
+
+    const resetAllQuotes = () => {
+      if (isGenerating) return;
+      const QUOTE_KEYS = [
+        'medigap_plan_quotes_stub',
+        'medicare_advantage_quotes',
+        'medicare_drug_plan_quotes',
+        'medicare_dental_quotes',
+        'medicare_hospital_indemnity_quotes',
+        'medicare_final_expense_quotes',
+        'medicare_cancer_insurance_quotes'
+      ];
+      try {
+        QUOTE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+        localStorage.removeItem('medicare_selected_categories');
+        window.dispatchEvent(new CustomEvent('selectedCategories:updated'));
+        setSelectedCategories([]);
+        setIsEditing(false);
+        setEditCategory(null);
+        setShowInlineQuoteForm(false);
+        setSelectedCategoryForQuote('');
+      } catch {}
+    };
 
     const renderGroup = (title: string, cats: string[], mode: 'my' | 'more') => (
       <div className="space-y-2">
@@ -421,19 +514,20 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
         <div className="grid grid-cols-2 gap-2">
           {cats.map(cat => {
             const selected = activeCategory === cat;
-            const isLoading = loadingCategories.includes(cat);
+            const isLoading = loadingCategories.includes(cat) || loadingCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => mode === 'more' ? handleGenerateFromMoreOptions(cat) : onSelectCategory?.(cat)}
-                className={`relative px-2.5 py-1.5 rounded-md text-[11px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
-                  ${selected ? 'bg-blue-primary text-white border-blue-primary shadow-sm' : 'bg-slate-100/60 dark:bg-slate-700/40 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600/60'}`}
+                className={`relative px-3 py-2 rounded-md text-[12px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
+                  ${selected ? 'bg-blue-primary text-white border-blue-primary shadow-sm' : 'bg-slate-100/80 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700/70 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600/60'}`}
                 aria-pressed={selected}
                 disabled={isLoading}
               >
                 <span className="inline-flex items-center gap-1">
-                  {cat.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  {mode === 'more' && isLoading && <span className="ml-1 h-2 w-2 rounded-full bg-blue-primary animate-pulse" aria-hidden="true" />}
+                  {isLoading && <span className="inline-block h-3 w-3 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />}
+                  <span>{cat.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                  {mode === 'more' && !isLoading && <span className="sr-only">Generate quotes</span>}
                 </span>
               </button>
             );
@@ -444,48 +538,75 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
 
     return (
       <div className="space-y-4">
-  {!showInlineQuoteForm && myQuotes.length > 0 && renderGroup('My Quotes', myQuotes, 'my')}
-  {!showInlineQuoteForm && renderGroup(myQuotes.length ? 'More Options' : 'Quote Categories', moreOptions, 'more')}
-  {showInlineQuoteForm && (
-          <div className="mt-2 p-3 border rounded-lg bg-white/70 dark:bg-slate-700/40 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <h6 className="text-[11px] font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">Generate {selectedCategoryForQuote.replace(/-/g,' ') || 'Quotes'}</h6>
-                {!!missingFields.length && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Provide required fields below.</p>}
-              </div>
-              <button onClick={()=>{ setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); }} className="text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">✕</button>
-            </div>
+        {!showInlineQuoteForm && myQuotes.length > 0 && renderGroup('My Quotes', myQuotes, 'my')}
+        {!showInlineQuoteForm && moreOptions.length > 0 && renderGroup(myQuotes.length ? 'More Options' : 'Quote Categories', moreOptions, 'more')}
+        {!showInlineQuoteForm && myQuotes.length > 0 && (
+          <div className="flex justify-end gap-2 pt-1">
+            {!isEditing && (
+              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={startEdit} disabled={isGenerating}>Edit</Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-red-600 dark:text-red-400" onClick={resetAllQuotes} disabled={isGenerating}>Reset</Button>
+          </div>
+        )}
+        {isEditing && !showInlineQuoteForm && !editCategory && myQuotes.length > 1 && (
+          <div className="rounded-md border border-slate-300 dark:border-slate-600 p-2 space-y-2 bg-white/60 dark:bg-slate-800/50">
+            <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Select a category to edit:</p>
             <div className="grid grid-cols-2 gap-2">
-              {missingFields.includes('age') && (
+              {myQuotes.map(cat => (
+                <Button key={cat} size="sm" variant="outline" className="h-7 text-[11px]" onClick={()=>chooseEditCategory(cat)}>{cat.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</Button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={cancelEdit}>Cancel</Button>
+            </div>
+          </div>
+        )}
+        {showInlineQuoteForm && (
+          <div className="mt-2 pb-2 space-y-3 relative z-30">
+            <div className="flex items-start">
+              <div>
+                <h6 className="text-[11px] font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">{formMode==='edit' ? 'Edit' : 'Generate'} {selectedCategoryForQuote.replace(/-/g,' ') || 'Quotes'}</h6>
+                {formMode==='new' && !!missingFields.length && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Provide required fields below.</p>}
+                {formMode==='edit' && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Update fields and regenerate.</p>}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {(() => {
+                const allFields = selectedCategoryForQuote ? [...getRequiredFields(selectedCategoryForQuote), ...getAdditionalFields(selectedCategoryForQuote)] : [];
+                const showAll = formMode === 'edit';
+                const shouldShow = (field:string) => showAll ? allFields.includes(field) : missingFields.includes(field);
+                return (
+                <>
+              {shouldShow('age') && (
                 <div className="space-y-1 col-span-1">
                   <Label htmlFor="inline-age" className="text-[11px]">Age</Label>
                   <Input id="inline-age" type="number" className="h-7 text-[11px]" value={formInputs.age} onChange={(e)=>setFormInputs(p=>({...p, age: e.target.value? parseInt(e.target.value): ''}))} />
                 </div>
               )}
-              {missingFields.includes('zipCode') && (
+              {shouldShow('zipCode') && (
                 <div className="space-y-1 col-span-1">
                   <Label htmlFor="inline-zip" className="text-[11px]">ZIP Code</Label>
                   <Input id="inline-zip" className="h-7 text-[11px]" value={formInputs.zipCode} onChange={(e)=>setFormInputs(p=>({...p, zipCode: e.target.value}))} />
                 </div>
               )}
-              {missingFields.includes('gender') && (
+              {shouldShow('gender') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Gender</Label>
                   <Select value={formInputs.gender} onValueChange={(v)=>setFormInputs(p=>({...p, gender: v as 'male'|'female'}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Gender" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Gender" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative"> 
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {missingFields.includes('tobaccoUse') && (
+              {shouldShow('tobaccoUse') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Tobacco</Label>
                   <Select value={formInputs.tobaccoUse === null ? '' : formInputs.tobaccoUse.toString()} onValueChange={(v)=>setFormInputs(p=>({...p, tobaccoUse: v==='true'}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Use?" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Use?" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       <SelectItem value="false">No</SelectItem>
                       <SelectItem value="true">Yes</SelectItem>
                     </SelectContent>
@@ -493,97 +614,99 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 </div>
               )}
               {/* State (non-cancer) */}
-              {missingFields.includes('state') && selectedCategoryForQuote !== 'cancer' && (
+              {shouldShow('state') && selectedCategoryForQuote !== 'cancer' && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">State</Label>
                   <Select value={formInputs.state} onValueChange={(v)=>setFormInputs(p=>({...p, state: v}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="State" /></SelectTrigger>
-                    <SelectContent className="max-h-52">
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="State" /></SelectTrigger>
+                    <SelectContent className="max-h-52 z-[999] relative">
                       {['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].map(st=> <SelectItem key={st} value={st}>{st}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               )}
               {/* Cancer specific */}
-              {selectedCategoryForQuote === 'cancer' && missingFields.includes('state') && (
+              {selectedCategoryForQuote === 'cancer' && shouldShow('state') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">State</Label>
                   <Select value={formInputs.state} onValueChange={(v)=>setFormInputs(p=>({...p, state: v}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="State" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="State" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       <SelectItem value="TX">TX</SelectItem>
                       <SelectItem value="GA">GA</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {selectedCategoryForQuote === 'cancer' && missingFields.includes('familyType') && (
+              {selectedCategoryForQuote === 'cancer' && shouldShow('familyType') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Coverage</Label>
                   <Select value={formInputs.familyType} onValueChange={(v)=>setFormInputs(p=>({...p, familyType: v as 'individual'|'family'}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Type" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Type" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       <SelectItem value="individual">Individual</SelectItem>
                       <SelectItem value="family">Family</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {selectedCategoryForQuote === 'cancer' && missingFields.includes('carcinomaInSitu') && (
+              {selectedCategoryForQuote === 'cancer' && shouldShow('carcinomaInSitu') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">CIS %</Label>
                   <Select value={formInputs.carcinomaInSitu == null ? '' : formInputs.carcinomaInSitu.toString()} onValueChange={(v)=>setFormInputs(p=>({...p, carcinomaInSitu: v==='true'}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="%" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="%" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       <SelectItem value="false">25%</SelectItem>
                       <SelectItem value="true">100%</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {selectedCategoryForQuote === 'cancer' && missingFields.includes('premiumMode') && (
+              {selectedCategoryForQuote === 'cancer' && shouldShow('premiumMode') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Mode</Label>
                   <Select value={formInputs.premiumMode} onValueChange={(v)=>setFormInputs(p=>({...p, premiumMode: v as 'monthly'|'annual'}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Mode" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Mode" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       <SelectItem value="monthly">Monthly</SelectItem>
                       <SelectItem value="annual">Annual</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {selectedCategoryForQuote === 'cancer' && missingFields.includes('benefitAmount') && (
+              {selectedCategoryForQuote === 'cancer' && shouldShow('benefitAmount') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Benefit</Label>
                   <Select value={formInputs.benefitAmount} onValueChange={(v)=>setFormInputs(p=>({...p, benefitAmount: v}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Amount" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Amount" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       {['10000','25000','50000','75000','100000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               )}
-              {selectedCategoryForQuote === 'dental' && missingFields.includes('coveredMembers') && (
+              {selectedCategoryForQuote === 'dental' && shouldShow('coveredMembers') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Members</Label>
                   <Input className="h-7 text-[11px]" value={formInputs.coveredMembers} onChange={(e)=>setFormInputs(p=>({...p, coveredMembers: e.target.value}))} />
                 </div>
               )}
-              {selectedCategoryForQuote === 'final-expense' && missingFields.includes('desiredFaceValue') && (
+              {selectedCategoryForQuote === 'final-expense' && shouldShow('desiredFaceValue') && (
                 <div className="space-y-1 col-span-1">
                   <Label className="text-[11px]">Face Value</Label>
                   <Select value={formInputs.desiredFaceValue} onValueChange={(v)=>setFormInputs(p=>({...p, desiredFaceValue: v}))}>
-                    <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Amount" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Amount" /></SelectTrigger>
+                    <SelectContent className="z-[999] relative">
                       {['10000','15000','20000','25000','50000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               )}
+                </>
+                ); })()}
             </div>
             {/* Medigap plan selection inline (appears once base fields satisfied) */}
-            {selectedCategoryForQuote === 'medigap' && showInlineQuoteForm && missingFields.length === 0 && (
+            {selectedCategoryForQuote === 'medigap' && showInlineQuoteForm && ((formMode==='new' && missingFields.length === 0) || formMode==='edit') && (
               <div className="border-t pt-2 mt-2">
                 <p className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mb-1">Select Plans</p>
                 <div className="flex gap-2">
@@ -598,18 +721,19 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
               </div>
             )}
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={()=>{ setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); }}>Cancel</Button>
-              <Button size="sm" disabled={selectedCategoryForQuote==='medigap' && selectedMedigapPlans.length===0 && missingFields.length===0} onClick={async ()=>{
-                if (missingFields.length){
+              <Button variant="outline" size="sm" disabled={isGenerating} onClick={()=>{ if(isGenerating) return; setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); if(formMode==='edit'){ cancelEdit(); } }}>Cancel</Button>
+              <Button size="sm" disabled={isGenerating || (selectedCategoryForQuote==='medigap' && selectedMedigapPlans.length===0 && (formMode==='new' ? missingFields.length===0 : false))} onClick={async ()=>{
+                if (isGenerating) return;
+                if (formMode==='new' && missingFields.length){
                   await handleMissingFieldsSubmit();
                 } else if (selectedCategoryForQuote === 'medigap') {
                   await handleMedigapPlanConfirm();
                 } else {
                   await handleMissingFieldsSubmit();
                 }
-                // After generation hide form (in case handler path didn't already close it)
                 setShowInlineQuoteForm(false);
-              }}>Generate</Button>
+                if (formMode==='edit') { setIsEditing(false); setEditCategory(null); setFormMode('new'); }
+              }}>{isGenerating ? (formMode==='edit' ? 'Saving…' : 'Working…') : (formMode==='edit' ? 'Regenerate' : 'Generate')}</Button>
             </div>
           </div>
         )}
@@ -977,7 +1101,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 </div>
               )}
               {item.label === 'Quotes' && selectedCategories.length > 0 && (
-                <div className="mt-1 ml-10 flex flex-wrap gap-1.5 pr-1">
+                <div className="mt-1 flex flex-wrap gap-2 pr-1 pl-2">
                   {selectedCategories.map(cat => {
                     const cLabel = cat.replace(/-/g,' ').replace(/\b\w/g, m => m.toUpperCase());
                     const selected = activeCategory === cat;
@@ -986,7 +1110,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                         key={cat}
                         /* Selecting a quote category from the rail should NOT open the slideout panel. Only clicking the 'Quotes' nav item opens it. */
                         onClick={(e) => { e.stopPropagation(); onSelectCategory?.(cat); setActiveNav('Quotes'); /* intentionally omit openTab */ }}
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 ${selected ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
+                        className={`px-3 h-7 inline-flex items-center rounded-md text-[11px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 ${selected ? 'bg-blue-primary text-white border-blue-primary shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
                         aria-pressed={selected}
                       >{cLabel}</button>
                     );
@@ -1059,7 +1183,9 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           </div>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleMedigapPlanCancel}>Cancel</Button>
-            <Button size="sm" disabled={selectedMedigapPlans.length === 0} onClick={handleMedigapPlanConfirm}>Generate Quotes</Button>
+            <Button size="sm" disabled={selectedMedigapPlans.length === 0 || isGenerating} onClick={handleMedigapPlanConfirm}>
+              {isGenerating ? 'Generating…' : 'Generate Quotes'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

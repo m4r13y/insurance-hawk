@@ -3,12 +3,16 @@ import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary 
 
 export interface RawCancerQuote {
   id: string;
-  carrier_name: string;
-  plan_name: string;
-  monthly_premium: number;
+  carrier_name?: string;
+  carrier?: string; // action returns 'carrier'
+  plan_name?: string;
+  planName?: string;
+  monthly_premium?: number;
+  monthlyPremium?: number;
   lump_sum_benefit?: number; // e.g. base payout
   wellness_benefit?: number;
   recurrence_benefit?: boolean;
+  benefit_amount?: number; // action returns benefit_amount
 }
 
 function money(v:any){ if(typeof v!=='number'||v<0||isNaN(v)) return undefined; return v>=1000? v/100 : v; }
@@ -17,19 +21,20 @@ export const cancerPlanAdapter: CategoryAdapter<RawCancerQuote, NormalizedQuoteB
   category: 'cancer',
   version: 1,
   normalize(raw: RawCancerQuote, _ctx: NormalizeContext) {
-    const monthly = money(raw.monthly_premium); if(monthly==null) return null;
-    const carrier = raw.carrier_name || 'Unknown';
+    const monthly = money(raw.monthly_premium ?? raw.monthlyPremium); if(monthly==null) return null;
+    const carrier = raw.carrier_name || raw.carrier || 'Unknown';
     return {
       id: `cancer:${raw.id}`,
       category: 'cancer',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
-      plan: { key: raw.id, display: raw.plan_name },
+      plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Cancer Plan' },
       adapter: { category: 'cancer', version: 1 },
       metadata: {
         lumpSum: raw.lump_sum_benefit,
         wellness: raw.wellness_benefit,
         recurrence: raw.recurrence_benefit,
+        benefitAmount: raw.benefit_amount,
       }
     };
   },

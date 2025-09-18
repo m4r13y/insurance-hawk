@@ -4,9 +4,16 @@ import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary 
 
 export interface RawDentalQuote {
   id: string;
-  carrier_name: string;
-  plan_name: string;
-  monthly_premium: number;
+  // API variant fields (camelCase) from getDentalQuotes action
+  carrierName?: string;
+  planName?: string;
+  monthlyPremium?: number;
+  annualMaximum?: number;
+  deductible?: number;
+  // Legacy / alternate snake_case variant
+  carrier_name?: string;
+  plan_name?: string;
+  monthly_premium?: number;
   annual_maximum?: number;
   deductible_individual?: number;
   waiting_period_major?: string;
@@ -20,19 +27,19 @@ export const dentalPlanAdapter: CategoryAdapter<RawDentalQuote, NormalizedQuoteB
   category: 'dental',
   version: 1,
   normalize(raw: RawDentalQuote, _ctx: NormalizeContext) {
-    const monthly = safeCurrency(raw.monthly_premium);
+    const monthly = safeCurrency(raw.monthly_premium ?? raw.monthlyPremium);
     if (monthly == null) return null;
-    const carrier = raw.carrier_name || 'Unknown';
+    const carrier = raw.carrier_name || raw.carrierName || 'Unknown';
     return {
       id: `dental:${raw.id}`,
       category: 'dental',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
-      plan: { key: raw.id, display: raw.plan_name },
+      plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Dental Plan' },
       adapter: { category: 'dental', version: 1 },
       metadata: {
-        annualMax: raw.annual_maximum,
-        deductibleIndividual: raw.deductible_individual,
+        annualMax: raw.annual_maximum ?? raw.annualMaximum,
+        deductibleIndividual: raw.deductible_individual ?? raw.deductible,
         waitingMajor: raw.waiting_period_major,
         visionIncluded: raw.includes_vision,
         hearingIncluded: raw.includes_hearing,

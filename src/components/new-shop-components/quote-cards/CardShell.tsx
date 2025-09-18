@@ -23,16 +23,17 @@ export const CardShell = React.forwardRef<HTMLElement, CardShellProps>(
         ref={ref}
         className={cn(
           'relative rounded-xl p-4 sm:p-5 border shadow-md transition-shadow overflow-hidden group',
-          'bg-gradient-to-br from-[#0f172a] via-[#0f1d33] to-[#0f172a] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900',
-          highlight ? 'border-slate-500 shadow-lg' : 'border-slate-700/60 dark:border-slate-700 hover:shadow-lg',
+          // Light + dark adaptive gradient (previously dark bias only)
+          'bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900',
+          highlight ? 'border-blue-300 dark:border-slate-500 shadow-lg' : 'border-slate-200 dark:border-slate-700 hover:shadow-lg',
           'data-[visible=false]:opacity-0 data-[visible=true]:opacity-100 data-[visible=false]:translate-y-3 data-[visible=true]:translate-y-0 transition-all duration-500 ease-out',
           className
         )}
         data-visible={true}
       >
-        <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.18),transparent_65%)]" />
+        <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.14),transparent_65%)] dark:opacity-60" />
         {children}
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-blue-400 via-sky-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
       </Comp>
     );
   }

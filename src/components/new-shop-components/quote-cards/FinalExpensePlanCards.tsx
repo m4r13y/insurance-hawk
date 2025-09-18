@@ -25,8 +25,8 @@ const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarri
                 <SaveToggleButton saved={saved} onToggle={()=> toggle({ carrierId:c.id, carrierName:c.name, logo:c.logo, rating:'N/A', category:'final-expense', planType:'FE', price:c.min, min:c.planRange?.min, max:c.planRange?.max })} />
                 <CarrierLogoBlock name={c.name} logo={c.logo} />
                 <div className="flex-1 min-w-0 pr-1">
-                  <div className="font-semibold text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap"><span>{c.name}</span></div>
-                  <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-400 tracking-wide font-medium">{c.planName && <span className="truncate max-w-[12rem]" title={c.planName}>{c.planName}</span>}</div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap"><span>{c.name}</span></div>
+                  <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">{c.planName && <span className="truncate max-w-[12rem]" title={c.planName}>{c.planName}</span>}</div>
                 </div>
               </div>
               <div className="relative z-10 flex items-end justify-between mt-auto">

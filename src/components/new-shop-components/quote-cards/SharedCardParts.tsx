@@ -30,8 +30,12 @@ export interface SaveToggleButtonProps { saved: boolean; onToggle: () => void; v
 export const SaveToggleButton: React.FC<SaveToggleButtonProps> = ({ saved, onToggle, variant = 'overlay', ariaLabelSave = 'Save plan', ariaLabelUnsave = 'Unsave plan' }) => {
   const base = "w-8 h-8 inline-flex items-center justify-center rounded-md transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60";
   const style = variant === 'overlay'
-    ? saved ? 'absolute top-0 right-0 -mt-1 -mr-1 text-amber-400 hover:text-amber-300 bg-slate-700/60' : 'absolute top-0 right-0 -mt-1 -mr-1 text-slate-400 hover:text-white hover:bg-slate-700/60'
-    : saved ? 'text-amber-500 hover:text-amber-400 bg-slate-700/40' : 'text-slate-500 hover:text-slate-200';
+    ? saved
+      ? 'absolute top-0 right-0 -mt-1 -mr-1 text-amber-500 hover:text-amber-400 bg-white/70 dark:bg-slate-700/60 shadow'
+      : 'absolute top-0 right-0 -mt-1 -mr-1 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white bg-white/60 dark:bg-slate-700/60 shadow'
+    : saved
+      ? 'text-amber-600 hover:text-amber-500 bg-white/70 dark:bg-slate-700/40'
+      : 'text-slate-600 hover:text-blue-600 dark:text-slate-500 dark:hover:text-slate-200';
   return (
     <button type="button" aria-label={saved ? ariaLabelUnsave : ariaLabelSave} onClick={onToggle} className={cn(base, style)} aria-pressed={saved}>
       {saved ? <BookmarkFilledIcon className="w-4.5 h-4.5" aria-hidden="true"/> : <BookmarkIcon className="w-4.5 h-4.5" aria-hidden="true"/>}
@@ -71,9 +75,9 @@ export const PlanPriceBlock: React.FC<PlanPriceBlockProps> = ({ price, range, sh
   const showR = showRange && range && range.count > 1 && range.max !== range.min;
   return (
     <div className={cn('flex items-end gap-2', className)}>
-      <div className={cn(emphasize ? 'text-4xl font-bold leading-none' : 'text-2xl font-semibold', 'text-white')}>{price !== undefined ? `$${price.toFixed(0)}` : '—'}</div>
+      <div className={cn(emphasize ? 'text-4xl font-bold leading-none' : 'text-2xl font-semibold', 'text-slate-900 dark:text-white')}>{price !== undefined ? `$${price.toFixed(0)}` : '—'}</div>
       {showR && range && (
-        <div className="text-sm text-slate-400 mb-1">to ${range.max.toFixed(0)}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">to ${range.max.toFixed(0)}</div>
       )}
     </div>
   );
@@ -84,7 +88,7 @@ export const DetailsButton: React.FC<DetailsButtonProps> = ({ onClick, carrierNa
   <button
     type="button"
     onClick={onClick}
-    className="w-11 h-11 inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800/70 text-slate-200 hover:bg-slate-700 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 transition shadow-sm"
+  className="w-11 h-11 inline-flex items-center justify-center rounded-md border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800/70 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 transition shadow-sm"
     aria-label={`View plans for ${carrierName}`}
   >
     <ArrowRightIcon className="w-5 h-5" />

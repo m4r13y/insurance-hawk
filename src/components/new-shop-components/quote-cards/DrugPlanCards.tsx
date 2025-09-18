@@ -72,10 +72,10 @@ export const DrugPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrie
                 />
                 <CarrierLogoBlock name={c.name} logo={c.logo} />
                 <div className="flex-1 min-w-0 pr-1">
-                  <div className="font-semibold text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
                     <span className="max-w-full break-words whitespace-normal">{c.name}</span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-400 tracking-wide font-medium">
+                  <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">
                     <CMSStarRating rating={c.rating} showText={true} />
                     {c.planName && (
                       <span className="text-slate-500 dark:text-slate-400 truncate max-w-[12rem]" title={c.planName}>{c.planName}</span>

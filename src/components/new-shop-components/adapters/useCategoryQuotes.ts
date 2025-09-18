@@ -47,13 +47,18 @@ export function useCategoryQuotes<Raw, N extends NormalizedQuoteBase = Normalize
       if (errors.length < 5) errors.push({ error: 'derivePricingSummary failed', detail: e?.message });
     }
     const t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (rawQuotes.length > 0 && normalized.length === 0) {
+      console.warn(`[useCategoryQuotes] Category '${category}' produced 0 normalized quotes out of ${rawQuotes.length} raw. Check adapter mappings.`);
+    } else if (normalized.length > 0 && summaries.length === 0) {
+      console.warn(`[useCategoryQuotes] Category '${category}' produced normalized quotes (${normalized.length}) but no summaries.`);
+    }
     return {
       normalized,
       summaries,
       errors: { count: errors.length, samples: errors },
       timing: { ms: +(t1 - t0).toFixed(2), count: normalized.length }
     };
-  }, [active, adapter, rawQuotes, applyDiscounts]);
+  }, [active, adapter, rawQuotes, applyDiscounts, category]);
 
   // Side effect after normalization (shadow diff hook can plug in here)
   React.useEffect(() => {
