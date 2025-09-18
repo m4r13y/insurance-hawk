@@ -9,13 +9,17 @@ import { ComparisonRowCards } from '@/components/new-shop-components/quote-cards
 import { MinimalRateChips } from '@/components/new-shop-components/quote-cards/MinimalRateChips';
 import { DensityStressGrid } from '@/components/new-shop-components/quote-cards/DensityStressGrid';
 import { LightInverseCards } from '@/components/new-shop-components/quote-cards/PrimaryCards';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { planBadges } from '@/components/new-shop-components/constants/planBadges';
 import SidebarShowcase from '@/components/new-shop-components/sidebar/SidebarShowcase';
 import PlanDetailsShowcase from '@/components/new-shop-components/plan-details/PlanDetailsShowcase';
+import { useSavedPlans } from '@/contexts/SavedPlansContext';
 // Removed Tabs import after refactor to checkbox toggles inside Sandbox Controls
 import Image from 'next/image';
-import { getMedigapQuotes } from '@/lib/actions/medigap-quotes';
 import { filterPreferredCarriers } from '@/lib/carrier-system';
+import { loadFromStorage } from '@/components/medicare-shop/shared/storage';
+import { REAL_QUOTES_KEY, getAllMedigapStorageKeys } from '@/components/medicare-shop/shared/storage';
+import { SELECTED_CATEGORIES_KEY } from '@/components/medicare-shop/shared/storage';
 import { runCarrierStream } from '@/lib/streaming/medigapStreaming';
 
 /*
@@ -33,7 +37,9 @@ import { runCarrierStream } from '@/lib/streaming/medigapStreaming';
 
 // No mock carriers: show skeletons while loading / when empty.
 
-export default function CardsSandboxPage() {
+export interface CardsSandboxProps { initialCategory?: string }
+export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps) {
+  const { savedPlans } = useSavedPlans();
   // Real Medigap data (first carrier group) -------------------------------------------------
   const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
@@ -51,31 +57,7 @@ export default function CardsSandboxPage() {
   const [firstPlanVisibleMs, setFirstPlanVisibleMs] = useState<number | null>(null);
   const [allPlansCompleteMs, setAllPlansCompleteMs] = useState<number | null>(null);
 
-  // Basic demo params (mirrors typical default form selection)
-  const demoParams = { zipCode: '76116', age: '65', gender: 'M' as const, tobacco: '0' as const, plans: ['F','G','N'] };
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setLoadingQuotes(true); setQuoteError(null);
-      setFetchStartTs(performance.now());
-      setFetchEndTs(null); setFirstCarrierReadyTs(null);
-      try {
-        const res = await getMedigapQuotes(demoParams);
-        if (!mounted) return;
-        if (res.error) {
-          setQuoteError(res.error);
-        } else {
-          setQuotes(res.quotes || []);
-          setFetchEndTs(performance.now());
-        }
-      } catch (e:any) {
-        if (!mounted) return; setQuoteError(e.message || 'Failed to load quotes');
-      } finally { if (mounted) setLoadingQuotes(false); }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [reloadIndex]);
+  // (moved below activeCategory state)
 
   // Group quotes by carrier name (preferred carriers only if available)
   const firstCarrierGroup = useMemo(() => {
@@ -143,7 +125,7 @@ export default function CardsSandboxPage() {
     setVariantVisibility(v => ({ ...v, [key]: !v[key] }));
   }, []);
 
-  const handleRefetch = () => setReloadIndex(i => i + 1);
+  const handleRefetch = () => setReloadIndex(i => i + 1); // now just re-hydrates from storage
 
   // Simulated streaming demonstration (sandbox only)
   const simulateStreaming = async () => {
@@ -189,7 +171,53 @@ export default function CardsSandboxPage() {
   // (Removed Figma variant specific price helpers and plan-specific quote arrays after cleanup)
 
   // Category + View toggles (replacing upper tabs)
-  const [activeCategory, setActiveCategory] = useState('medigap');
+  const [activeCategory, setActiveCategory] = useState(initialCategory || 'medigap');
+
+  // Conditional quote hydration (no auto generation). We look for existing categories and medigap quotes.
+  useEffect(() => {
+    let mounted = true;
+    async function hydrateExisting() {
+      setQuoteError(null);
+      setFetchStartTs(performance.now());
+      setFetchEndTs(null); setFirstCarrierReadyTs(null);
+      if (typeof window === 'undefined') return;
+      try {
+        const raw = localStorage.getItem(SELECTED_CATEGORIES_KEY);
+        const selectedCategories: string[] = raw ? JSON.parse(raw) : [];
+        if (!selectedCategories.includes(activeCategory)) {
+          setQuotes([]);
+          return;
+        }
+        setLoadingQuotes(true);
+        let loadedQuotes: any[] = [];
+        if (activeCategory === 'medigap') {
+          const keys = getAllMedigapStorageKeys();
+          for (const k of keys) {
+            const part = await loadFromStorage(k, []);
+            if (Array.isArray(part) && part.length) loadedQuotes = loadedQuotes.concat(part);
+          }
+          if (!loadedQuotes.length) {
+            const legacy = await loadFromStorage(REAL_QUOTES_KEY, []);
+            if (Array.isArray(legacy) && legacy.length) loadedQuotes = legacy;
+          }
+        } else {
+          const key = `medicare_${activeCategory.replace(/-/g,'_')}_quotes`;
+          const data = await loadFromStorage(key, []);
+          if (Array.isArray(data)) loadedQuotes = data;
+        }
+        if (!mounted) return;
+        setQuotes(loadedQuotes);
+        setFetchEndTs(performance.now());
+      } catch (e:any) {
+        if (!mounted) return;
+        setQuoteError(e.message || 'Failed to load stored quotes');
+      } finally {
+        if (mounted) setLoadingQuotes(false);
+      }
+    }
+    hydrateExisting();
+    return () => { mounted = false; };
+  }, [activeCategory, reloadIndex]);
   const [viewVisibility, setViewVisibility] = useState({
     cards: true,
     planDetails: false,
@@ -201,6 +229,21 @@ export default function CardsSandboxPage() {
   const loadingActive = loadingQuotes && !carrierSummaries.length;
   const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
   const [closeSignal, setCloseSignal] = useState(0);
+
+  // URL navigation for plan details (sandbox experiment)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const openPlanDetails = useCallback((carrier: any) => {
+    if (!carrier) return;
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('carrier', carrier.id);
+    params.set('view', 'plan-details');
+    // future: optionally pass selected plan letter
+    router.push(`?${params.toString()}`);
+    // reveal plan details view section automatically
+    setViewVisibility(v => ({ ...v, planDetails: true }));
+  }, [router, searchParams]);
 
   return (
     <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
@@ -216,7 +259,12 @@ export default function CardsSandboxPage() {
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)] relative">
         <aside className="sticky hidden lg:block self-start h-fit top-28 z-[120]">
-          <SidebarShowcase onPanelStateChange={setSidebarPanelOpen} externalCloseSignal={closeSignal} />
+          <SidebarShowcase
+            onPanelStateChange={setSidebarPanelOpen}
+            externalCloseSignal={closeSignal}
+            activeCategory={activeCategory}
+            onSelectCategory={setActiveCategory}
+          />
         </aside>
         <div className={`space-y-12 ${sidebarPanelOpen ? 'lg:blur-sm lg:pointer-events-none' : ''}`} aria-busy={loadingActive} aria-describedby="carrier-loading-status">
         <span id="carrier-loading-status" role="status" aria-live="polite" className="sr-only">
@@ -251,7 +299,13 @@ export default function CardsSandboxPage() {
                     {['medigap','advantage','cancer','hospital','final-expense','drug-plan','dental'].map(cat => (
                       <button
                         key={cat}
-                        onClick={() => setActiveCategory(cat)}
+                        onClick={() => {
+                          setActiveCategory(cat);
+                          // push new path segment reflecting category
+                          if (typeof window !== 'undefined') {
+                            router.push(`/shop-components/${cat}` + (searchParams?.toString() ? `?${searchParams.toString()}` : ''));
+                          }
+                        }}
                         className={`px-2.5 py-1 rounded-md border text-[11px] transition ${activeCategory === cat ? 'bg-blue-primary text-white border-blue-primary' : 'bg-card/40 hover:bg-card/60 border-border'} `}
                       >
                         {cat.replace('-', ' ')}
@@ -281,7 +335,7 @@ export default function CardsSandboxPage() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Button size="sm" variant="outline" onClick={handleRefetch} disabled={loadingQuotes}>
-                  {loadingQuotes ? 'Refreshing…' : 'Refetch Quotes'}
+                  {loadingQuotes ? 'Loading…' : 'Reload Stored Quotes'}
                 </Button>
                 {streamingEnabled && (
                   <Button size="sm" onClick={simulateStreaming} disabled={streamingActive || loadingQuotes} className="btn-brand">
@@ -324,7 +378,27 @@ export default function CardsSandboxPage() {
 
           {variantVisibility.minimal && (
             <>
-              <MinimalRateChips carriers={effectiveCarriers} loading={loadingQuotes && !effectiveCarriers.length} />
+              {(() => {
+                // Build carriers from saved medigap plans only
+                const medigapSaved = savedPlans.filter(p => p.category === 'medigap');
+                const map: Record<string, { id:string; name:string; logo:string; rating:string; min?:number; max?:number; savedPlanTypes:string[] }> = {};
+                medigapSaved.forEach(p => {
+                  if (!map[p.carrierId]) {
+                    map[p.carrierId] = { id: p.carrierId, name: p.carrierName, logo: p.logo, rating: p.rating || 'N/A', min: p.min, max: p.max, savedPlanTypes: p.planType ? [p.planType] : [] };
+                  } else {
+                    if (p.planType && !map[p.carrierId].savedPlanTypes.includes(p.planType)) map[p.carrierId].savedPlanTypes.push(p.planType);
+                    if (typeof p.min === 'number') {
+                      if (map[p.carrierId].min === undefined || p.min < (map[p.carrierId].min as number)) map[p.carrierId].min = p.min;
+                    }
+                    if (typeof p.max === 'number') {
+                      if (map[p.carrierId].max === undefined || p.max > (map[p.carrierId].max as number)) map[p.carrierId].max = p.max;
+                    }
+                  }
+                });
+                const savedCarrierList = Object.values(map);
+                if (!savedCarrierList.length) return <p className="text-xs text-slate-500 dark:text-slate-400">No saved plans yet. Bookmark a plan to see it summarized here.</p>;
+                return <MinimalRateChips carriers={savedCarrierList} loading={false} />;
+              })()}
               <Separator />
             </>
           )}
@@ -337,6 +411,7 @@ export default function CardsSandboxPage() {
                 availablePlans={availablePlans}
                 selectedPlan={selectedPlan}
                 onSelectPlan={setSelectedPlan}
+                onOpenPlanDetails={openPlanDetails}
               />
               <Separator />
             </>

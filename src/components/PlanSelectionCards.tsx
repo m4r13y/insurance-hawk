@@ -3,8 +3,16 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { StarIcon as Star, StarFilledIcon as StarFilled } from "@radix-ui/react-icons";
-import { 
-  FaStethoscope, FaEye, FaHeadphones, FaPills, FaTooth, FaCar, FaUtensils
+import {
+  FaStethoscope,
+  FaEye,
+  FaPills,
+  FaTooth,
+  FaCar,
+  FaUtensils,
+  FaSyringe,
+  FaHeart,
+  FaDumbbell
 } from "react-icons/fa";
 
 interface MedicareAdvantageQuote {
@@ -161,7 +169,7 @@ export default function PlanSelectionCards({
                           <FaEye className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
                         )}
                         {getBenefitStatusDisplay(plan, 'Hearing services').status === 'covered' && (
-                          <FaHeadphones className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
+                          <FaSyringe className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
                         )}
                         {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
                           <FaCar className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
@@ -243,7 +251,7 @@ export default function PlanSelectionCards({
                             <FaEye className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
                           )}
                           {getBenefitStatusDisplay(plan, 'Hearing services').status === 'covered' && (
-                            <FaHeadphones className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
+                            <FaSyringe className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
                           )}
                           {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
                             <FaCar className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
@@ -327,271 +335,4 @@ export default function PlanSelectionCards({
       </div>
     </div>
   );
-}
-}: PlanSelectionCardsProps) {
-  const currentPlans = plans.slice(currentPage * plansPerPage, (currentPage + 1) * plansPerPage)
-
-  return (
-    <div className="lg:w-1/2 w-full">
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h2 className="text-xl font-bold mb-3">Available Plans ({plans.length})</h2>
-        
-        {/* Mobile layout */}
-        <div className="block lg:hidden space-y-3">
-          {currentPlans.map((plan) => (
-            <Button
-              key={plan.key}
-              variant="ghost"
-              className={`w-full h-auto p-3 text-left transition-all duration-200 rounded-lg ${
-                selectedPlan?.key === plan.key
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'hover:bg-gray-50 border border-gray-200'
-              }`}
-              onClick={() => setSelectedPlan(plan)}
-            >
-              <div className="w-full space-y-2">
-                {/* Plan name and stars row */}
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 pr-2">
-                    <div className={`font-semibold text-sm ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
-                      {plan.plan_name}
-                    </div>
-                    <div className={`text-xs ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
-                      {plan.organization_name}
-                    </div>
-                    <div className={`text-xs ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>
-                      Contract: {plan.contract_id}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
-                      {formatCurrency(plan.month_rate / 100)}/mo
-                    </div>
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`text-xs ${
-                            i < plan.overall_star_rating
-                              ? 'text-yellow-400'
-                              : selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-300'
-                          }`}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Icons and benefits row */}
-                <div className="flex justify-between items-center pt-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {getBenefitStatusDisplay(plan, 'Dental').status === 'covered' && (
-                      <FaTooth className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Dental" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Vision').status === 'covered' && (
-                      <FaEye className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Hearing').status === 'covered' && (
-                      <FaSyringe className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Wellness').status === 'covered' && (
-                      <FaHeart className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Wellness" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Fitness').status === 'covered' && (
-                      <FaDumbbell className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Fitness" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
-                      <FaCar className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
-                    )}
-                    {getBenefitStatusDisplay(plan, 'Meal Benefit').status === 'covered' && (
-                      <FaUtensils className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Meal Benefit" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Deductibles and MOOP row */}
-                <div className="space-y-1">
-                  {/* Show giveback if available */}
-                  {plan.part_b_reduction && plan.part_b_reduction !== "0" && (
-                    <div className="text-green-400 font-medium text-xs">Giveback: ${plan.part_b_reduction}</div>
-                  )}
-                  
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="flex items-center gap-1">
-                      <FaStethoscope className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className="font-medium">{getMedicalDeductible(plan)}</span>
-                    </div>
-                    {/* Only show drug deductible if plan has drug coverage */}
-                    {hasDrugCoverage(plan) && (
-                      <div className="flex items-center gap-1">
-                        <span className={`${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
-                        <FaPills className={`w-3 h-3 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className="font-medium">{getDrugDeductible(plan)}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="text-xs font-medium">
-                    <span className={`${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>MOOP:</span>
-                    {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' && (
-                      <span className="ml-1">{getMOOPData(plan).inNetwork}</span>
-                    )}
-                    {getMOOPData(plan).combined !== 'N/A' && getMOOPData(plan).combined !== 'Contact Plan' && (
-                      <span>
-                        {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' ? (
-                          <span className={`mx-1 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
-                        ) : ' '}
-                        {getMOOPData(plan).combined}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Button>
-          ))}
-        </div>
-
-        {/* Desktop layout */}
-        <div className="hidden lg:block space-y-2">
-          {currentPlans.map((plan) => (
-            <Button
-              key={plan.key}
-              variant="ghost"
-              className={`w-full h-auto p-3 text-left transition-all duration-200 rounded-lg ${
-                selectedPlan?.key === plan.key
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'hover:bg-gray-50 border border-gray-200'
-              }`}
-              onClick={() => setSelectedPlan(plan)}
-            >
-              <div className="w-full">
-                <div className="grid grid-cols-12 gap-3 items-center">
-                  <div className="col-span-7">
-                    <div className={`font-semibold text-sm ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
-                      {plan.plan_name}
-                    </div>
-                    <div className={`text-xs ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
-                      {plan.organization_name}
-                    </div>
-                    <div className={`text-xs ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>
-                      Contract: {plan.contract_id}
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-1 flex justify-center">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`text-xs ${
-                            i < plan.overall_star_rating
-                              ? 'text-yellow-400'
-                              : selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-300'
-                          }`}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-3 flex items-center justify-center">
-                    <div className="flex items-center gap-1.5 flex-wrap justify-center">
-                      {getBenefitStatusDisplay(plan, 'Dental').status === 'covered' && (
-                        <FaTooth className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Dental" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Vision').status === 'covered' && (
-                        <FaEye className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Vision" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Hearing').status === 'covered' && (
-                        <FaSyringe className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Hearing" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Wellness').status === 'covered' && (
-                        <FaHeart className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Wellness" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Fitness').status === 'covered' && (
-                        <FaDumbbell className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Fitness" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Transportation').status === 'covered' && (
-                        <FaCar className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Transportation" />
-                      )}
-                      {getBenefitStatusDisplay(plan, 'Meal Benefit').status === 'covered' && (
-                        <FaUtensils className={`w-4 h-4 ${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-700'}`} title="Meal Benefit" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-1 text-right flex flex-col justify-between h-full py-1">
-                    <div className={`text-xl font-bold ${selectedPlan?.key === plan.key ? 'text-white' : 'text-gray-900'}`}>
-                      {formatCurrency(plan.month_rate / 100)}/mo
-                    </div>
-                    
-                    <div className={`text-sm space-y-1 ${selectedPlan?.key === plan.key ? 'text-gray-200' : 'text-gray-600'}`}>
-                      {/* Show giveback if available */}
-                      {plan.part_b_reduction && plan.part_b_reduction !== "0" && (
-                        <div className="text-green-400 font-medium">Giveback: ${plan.part_b_reduction}</div>
-                      )}
-                      
-                      <div className="flex items-center justify-end gap-1.5">
-                        <FaStethoscope className={`w-3.5 h-3.5 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className="font-medium">{getMedicalDeductible(plan)}</span>
-                        {/* Only show drug deductible if plan has drug coverage */}
-                        {hasDrugCoverage(plan) && (
-                          <>
-                            <span className={`${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
-                            <FaPills className={`w-3.5 h-3.5 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-500'}`} />
-                            <span className="font-medium">{getDrugDeductible(plan)}</span>
-                          </>
-                        )}
-                      </div>
-                      
-                      <div className="font-medium">
-                        <span className={`${selectedPlan?.key === plan.key ? 'text-gray-300' : 'text-gray-500'}`}>MOOP:</span>
-                        {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' && (
-                          <span className="ml-1">{getMOOPData(plan).inNetwork}</span>
-                        )}
-                        {getMOOPData(plan).combined !== 'N/A' && getMOOPData(plan).combined !== 'Contact Plan' && (
-                          <span>
-                            {getMOOPData(plan).inNetwork !== 'N/A' && getMOOPData(plan).inNetwork !== 'Contact Plan' ? (
-                              <span className={`mx-1 ${selectedPlan?.key === plan.key ? 'text-gray-400' : 'text-gray-400'}`}>|</span>
-                            ) : ' '}
-                            {getMOOPData(plan).combined}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Button>
-          ))}
-        </div>
-        
-        {/* Pagination */}
-        {plans.length > plansPerPage && (
-          <div className="flex items-center justify-between pt-3 border-t">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-              disabled={currentPage === 0}
-              className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">
-              {currentPage + 1} of {Math.ceil(plans.length / plansPerPage)}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(plans.length / plansPerPage) - 1, prev + 1))}
-              disabled={currentPage >= Math.ceil(plans.length / plansPerPage) - 1}
-              className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
 }

@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface PlanBadges { [k:string]: { label: string; color: string } }
-export interface CarrierSummaryMinimal { id: string; name: string; logo: string; rating: string; min?: number; max?: number; }
+export interface CarrierSummaryMinimal { id: string; name: string; logo: string; rating: string; min?: number; max?: number; savedPlanTypes?: string[]; }
 interface Props { carriers: CarrierSummaryMinimal[]; loading: boolean; }
 
 export const MinimalRateChips: React.FC<Props> = ({ carriers, loading }) => {
@@ -29,7 +29,7 @@ export const MinimalRateChips: React.FC<Props> = ({ carriers, loading }) => {
             </div>
             <Separator orientation="vertical" className="h-5" />
             <div className="flex gap-1">
-              {(['F','G','N'] as const).map(p => (
+              {(carrier.savedPlanTypes && carrier.savedPlanTypes.length ? carrier.savedPlanTypes : (['F','G','N'] as const)).map(p => (
                 <span key={p} className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-600/60 text-[10px] font-medium text-slate-700 dark:text-slate-200">{p}</span>
               ))}
             </div>
