@@ -364,6 +364,19 @@ function getPreferredLookup(category: ProductCategory): Map<string,string> | und
     variants.add(pc.carrierId);
     [info.displayName, info.shortName, info.name].forEach(v => v && variants.add(v));
     info.namePatterns.forEach(p => variants.add(p));
+    // Synthetic alias expansion: compressed, initials, no-vowel simplification
+    const synthetic = new Set<string>();
+    variants.forEach(v => {
+      const base = v.trim();
+      if (!base) return;
+      const compressed = base.toLowerCase().replace(/[^a-z0-9]/g,'');
+      if (compressed.length > 4) synthetic.add(compressed);
+      const initials = base.split(/[^A-Za-z0-9]+/).filter(Boolean).map(w => w[0]).join('').toLowerCase();
+      if (initials.length >= 2) synthetic.add(initials);
+      const novowel = compressed.replace(/[aeiou]/g,'');
+      if (novowel.length >= 4) synthetic.add(novowel);
+    });
+    synthetic.forEach(syn => variants.add(syn));
     for (const v of variants) {
       const s = slugify(v);
       if (s) map.set(s, pc.carrierId);
@@ -545,6 +558,49 @@ export function findPreferredCarrier(quote: any, category: ProductCategory): Pre
     const carrierId = best[0];
     return { carrierId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===carrierId)?.priority) || 999 };
   }
+  // RELAXED FALLBACK: broader token match ignoring generic stop words & allowing partial pattern match.
+  try {
+    const STOP = new Set(['life','insurance','ins','company','co','inc','grp','group','health','assurance','national','america','american']);
+    const rawTokens = carrierNameRaw
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g,' ')
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((t: string) => !STOP.has(t));
+    if (rawTokens.length) {
+      let looseBest: { carrierId:string; score:number } | null = null;
+      const preferredList = getPreferredCarriers(category);
+      for (const pref of preferredList) {
+        const info = getCarrierById(pref.carrierId);
+        if (!info) continue;
+        const variants = new Set<string>([info.displayName, info.shortName, info.name, ...info.namePatterns]);
+        let bestVariantScore = 0;
+        for (const v of variants) {
+          if (!v) continue;
+            const vtoks = v
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g,' ')
+              .split(/\s+/)
+              .filter(Boolean)
+              .filter((t: string) => !STOP.has(t));
+            if (!vtoks.length) continue;
+            const inter = vtoks.filter(t => rawTokens.includes(t));
+            if (inter.length) {
+              const score = inter.length / Math.min(vtoks.length, rawTokens.length);
+              bestVariantScore = Math.max(bestVariantScore, score);
+            }
+        }
+        if (bestVariantScore >= 0.5) { // at least half overlap of the smaller token list
+          if (!looseBest || bestVariantScore > looseBest.score || (bestVariantScore === looseBest.score && pref.priority < (getPreferredCarriers(category).find(p=>p.carrierId===looseBest!.carrierId)?.priority || 999))) {
+            looseBest = { carrierId: pref.carrierId, score: bestVariantScore };
+          }
+        }
+      }
+      if (looseBest) {
+        return { carrierId: looseBest.carrierId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===looseBest.carrierId)?.priority) || 999 };
+      }
+    }
+  } catch { /* ignore relaxed fallback errors */ }
   return null;
 }
 

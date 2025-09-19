@@ -61,15 +61,20 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
       console.debug('[FE Adapter] Low monthly detected', { id: raw.id, rawValue, normalized: monthly });
     }
     // Sanitize carrier name: sometimes upstream provides objects; coerce to string early.
-    let rawCarrier: any = raw.carrier_name || raw.carrier || raw.company_name || 'Unknown';
+    let rawCarrier: any = raw.carrier_name || raw.carrier || raw.company_name || (raw as any)?.carrier_obj || 'Unknown';
     if (typeof rawCarrier !== 'string') {
+      const tryName = rawCarrier?.name || rawCarrier?.full_name || rawCarrier?.displayName;
+      rawCarrier = typeof tryName === 'string' ? tryName : JSON.stringify(rawCarrier);
       if (process.env.NODE_ENV !== 'production') {
         // eslint-disable-next-line no-console
-        console.warn('[final-expense adapter] Non-string carrier encountered', rawCarrier);
+        console.warn('[final-expense adapter] Non-string carrier coerced', rawCarrier);
       }
-      rawCarrier = String(rawCarrier?.name || rawCarrier?.displayName || rawCarrier || 'Unknown');
     }
-    const carrier = rawCarrier.trim() || 'Unknown';
+    // Canonicalize: collapse whitespace, remove corporate suffix clutter for better preferred matching later
+    const carrier = (rawCarrier || 'Unknown')
+      .replace(/\b(insurance|ins|company|co\.?|corp\.?|corporation|life|inc\.?|national|natl)\b/gi,'')
+      .replace(/\s{2,}/g,' ')
+      .trim() || 'Unknown';
     return {
       id: `final-expense:${raw.id}`,
       category: 'final-expense',

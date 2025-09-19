@@ -14,6 +14,53 @@ const SimplifiedHospitalIndemnityPlanBuilder = dynamic(
 interface HospitalIndemnityDetailsShowcaseProps { carrierName: string; quotes: any[]; onClose: () => void; }
 
 const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcaseProps> = ({ carrierName, quotes, onClose }) => {
+  // Detect whether quotes are already optimized (builder expects OptimizedHospitalIndemnityQuote shape)
+  const optimizedQuotes = useMemo(() => {
+    if (!Array.isArray(quotes)) return [] as any[];
+    if (!quotes.length) return [] as any[];
+    const looksOptimized = 'basePlans' in (quotes[0] || {}) && 'riders' in (quotes[0] || {});
+    if (looksOptimized) return quotes as any[];
+    // Attempt lightweight optimization from normalized raw quote shape used in shop page (pricing/metadata fields)
+    // Raw shape assumption: q.plan.display, q.pricing.monthly, q.carrier.name, q.metadata.dailyBenefit etc.
+    try {
+      const transformed = quotes.map((q: any, idx: number) => ({
+        id: q.id || `raw-${idx}`,
+        planName: q.plan?.display || 'Plan',
+        companyName: q.carrier?.name || carrierName,
+        companyFullName: q.carrier?.name || carrierName,
+        age: q.form?.age || 0,
+        gender: q.form?.gender || 'U',
+        state: q.form?.state || q.form?.residentState || 'XX',
+        monthlyPremium: q.pricing?.monthly ?? 0,
+        policyFee: q.pricing?.policyFee ?? 0,
+        hhDiscount: 0,
+        tobacco: q.form?.tobacco || false,
+        ambest: { rating: (q.carrier as any)?.ambestRating || 'NR', outlook: (q.carrier as any)?.ambestOutlook || '' },
+        basePlans: [
+          {
+            name: q.plan?.display || 'Base',
+            included: true,
+            benefitOptions: [
+              { amount: `$${q.metadata?.dailyBenefit ?? 0}`, rate: q.pricing?.monthly ?? 0, quantifier: `${q.metadata?.daysCovered ?? ''} days` }
+            ],
+            notes: null,
+          }
+        ],
+        riders: [
+          ...(q.metadata?.ambulance ? [{ name: 'Ambulance Services Rider', included: true, benefitOptions: [{ amount: `$${q.metadata.ambulance}`, rate: 0 }], notes: null }] : []),
+          ...(q.metadata?.icuUpgrade ? [{ name: 'ICU Upgrade Rider', included: true, benefitOptions: [{ amount: 'Included', rate: 0 }], notes: null }] : []),
+        ],
+        lastModified: new Date().toISOString(),
+        hasApplications: { brochure: false, pdfApp: false, eApp: false },
+      }));
+      try { console.debug('[hospital details] transformed raw quotes for builder', { carrierName, inputCount: quotes.length, transformedCount: transformed.length }); } catch {}
+      return transformed;
+    } catch (e) {
+      console.warn('[hospital details] failed to transform raw hospital quotes', e);
+      return [] as any[];
+    }
+  }, [quotes, carrierName]);
+
   const sorted = [...quotes].sort((a,b)=> (a.pricing?.monthly ?? 0) - (b.pricing?.monthly ?? 0));
   const [builderOpen, setBuilderOpen] = useState(false);
   const [builderResult, setBuilderResult] = useState<any | null>(null);
@@ -40,6 +87,8 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
     if(!builderResult) return;
     try { navigator.clipboard.writeText(JSON.stringify(builderResult, null, 2)); } catch {}
   }, [builderResult]);
+  // Log sample optimized quote for diagnostics
+  try { if (optimizedQuotes.length) console.debug('[hospital details] first optimizedQuote', optimizedQuotes[0]); } catch {}
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -102,7 +151,7 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
             {builderOpen ? (
               <div className="space-y-4">
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure variant mix & rider set. Uses simplified hospital indemnity builder.</p>
-                <SimplifiedHospitalIndemnityPlanBuilder quotes={optimizedLike as any} onPlanBuilt={handlePlanBuilt} />
+                <SimplifiedHospitalIndemnityPlanBuilder quotes={optimizedQuotes as any} onPlanBuilt={handlePlanBuilt} />
                 {builderResult && (
                   <div className="rounded-md border border-slate-300 dark:border-slate-700 p-3 text-[11px] space-y-1 bg-slate-50 dark:bg-slate-800/40">
                     <div className="font-medium text-slate-700 dark:text-slate-200">Last Build Result</div>

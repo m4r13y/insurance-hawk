@@ -95,6 +95,17 @@ const validateCategoryData = (category: string, data: any): { isValid: boolean; 
   };
 };
 
+// ----------------------------------------------------------------------------------
+// Safe numeric formatting utilities (prevents undefined.toFixed crashes)
+const safeToFixed = (v: any, digits: number = 2): string => {
+  const num = typeof v === 'number' && isFinite(v) ? v : 0;
+  try { return num.toFixed(digits); } catch { return '0.00'; }
+};
+const centsToDollars = (v: any): string => {
+  if (v == null || isNaN(v)) return '0.00';
+  return safeToFixed((v as number)/100, 2);
+};
+
 export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   quoteData,
   carrierQuotes,
@@ -749,11 +760,14 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   }, [flushPendingPersist]);
 
   // Helper functions from test-multi-plan
+  const safeMoney = (value: any): string => {
+    const n = typeof value === 'number' ? value : (typeof value === 'string' ? parseFloat(value) : NaN);
+    if (!isFinite(n)) return '—';
+    try { return n.toFixed(2); } catch { return '—'; }
+  };
   const formatRate = (rate: any) => {
-    if (typeof rate === 'number') {
-      return `$${rate.toFixed(2)}`;
-    }
-    return 'N/A';
+    const formatted = safeMoney(rate);
+    return formatted === '—' ? 'N/A' : `$${formatted}`;
   };
 
   // Load existing quotes from localStorage
@@ -1520,7 +1534,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                               </Button>
                             </div>
                               <div className="text-xl font-semibold">
-                                ${((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100).toFixed(2)}/mo
+                                ${centsToDollars((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0))}/mo
                               </div>
                               <div className='h-2'></div>
                             </div>
@@ -1607,7 +1621,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </Button>
                               </div>
                               <div className="text-xl font-semibold">
-                                ${selectedDentalPlan.monthlyPremium.toFixed(2)}/mo
+                                ${safeToFixed(selectedDentalPlan.monthlyPremium)}/mo
                               </div>
                               <div className='h-2'></div>
                             </div>
@@ -1694,7 +1708,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </Button>
                               </div>
                               <div className="text-xl font-semibold">
-                                ${(selectedCancerPlan.monthly_premium || 0).toFixed(2)}/mo
+                                ${safeToFixed(selectedCancerPlan.monthly_premium || 0)}/mo
                               </div>
                               <div className='h-2'></div>
                             </div>
@@ -2000,7 +2014,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     const dentalRate = selectedDentalPlan ? ((selectedDentalPlan as any).monthlyPremium || 0) : 0;
                     const cancerRate = selectedCancerPlan ? ((selectedCancerPlan.monthly_premium || 0)) : 0;
                     
-                    return (baseRate + drugRate + dentalRate + cancerRate).toFixed(2);
+                    return safeToFixed(baseRate + drugRate + dentalRate + cancerRate);
                   })()}
                 </div>
               </div>
@@ -2032,7 +2046,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                         <div className="text-xs text-gray-600 dark:text-slate-400">{selectedDrugPlan.organization_name || 'Drug Coverage'}</div>
                       </div>
                       <span className="font-medium">
-                        ${((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0) / 100).toFixed(2)}
+                        ${centsToDollars((selectedDrugPlan.month_rate || selectedDrugPlan.part_d_rate || 0))}
                       </span>
                     </div>
                   )}
@@ -2044,7 +2058,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                         <div className="text-xs text-gray-600 dark:text-slate-400">{(selectedDentalPlan as any).companyName}</div>
                       </div>
                       <span className="font-medium">
-                        ${(selectedDentalPlan as any).monthlyPremium.toFixed(2)}
+                        ${safeToFixed((selectedDentalPlan as any).monthlyPremium)}
                       </span>
                     </div>
                   )}
@@ -2056,7 +2070,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                         <div className="text-xs text-gray-600 dark:text-slate-400">{selectedCancerPlan.carrier || 'Cancer Coverage'}</div>
                       </div>
                       <span className="font-medium">
-                        ${(selectedCancerPlan.monthly_premium || 0).toFixed(2)}
+                        ${safeToFixed(selectedCancerPlan.monthly_premium || 0)}
                       </span>
                     </div>
                   )}
@@ -2116,7 +2130,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-semibold">
-                      ${((quote.month_rate || quote.part_d_rate || 0) / 100).toFixed(2)}/mo
+                      ${centsToDollars((quote.month_rate || quote.part_d_rate || 0))}/mo
                     </div>
                     <div className="space-x-2">
                       <Button
@@ -2203,7 +2217,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   <div className="text-right flex items-center gap-4">
                     <div>
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-300">
-                        ${quote.monthlyPremium.toFixed(2)}
+                        ${safeToFixed(quote.monthlyPremium)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-slate-500">per month</div>
                     </div>
@@ -2285,7 +2299,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-semibold">
-                      ${(quote.monthly_premium || 0).toFixed(2)}/mo
+                      ${safeToFixed(quote.monthly_premium || 0)}/mo
                     </div>
                     <div className="space-x-2">
                       <Button
