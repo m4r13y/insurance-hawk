@@ -64,10 +64,29 @@ export const dentalPlanAdapter: CategoryAdapter<RawDentalQuote, NormalizedQuoteB
   category: 'dental',
   version: 2, // bump after adding raw shape support
   normalize(raw: RawDentalQuote, _ctx: NormalizeContext) {
+    // Instrumentation counters (module-level singleton via closure static)
+    // Only active in development to avoid noise.
+    const dbg = (process.env.NEXT_PUBLIC_DENTAL_ADAPTER_DEBUG || process.env.NODE_ENV !== 'production');
+    // Lazy init global counter object on window (browser) or globalThis (SSR) for aggregated reporting.
+    let counterStore: any;
+    try {
+      const root: any = (typeof window !== 'undefined') ? window : globalThis;
+      root.__dentalAdapterStats = root.__dentalAdapterStats || { total: 0, normalized: 0, skipped: 0, reasons: {}, firstTs: Date.now(), lastTs: 0 };
+      counterStore = root.__dentalAdapterStats;
+    } catch { /* noop */ }
+    function incReason(reason: string, meta?: any) {
+      if (!counterStore) return;
+      counterStore.skipped++; counterStore.reasons[reason] = (counterStore.reasons[reason] || 0) + 1; counterStore.lastTs = Date.now();
+      if (dbg && (counterStore.reasons[reason] <= 5)) {
+        console.debug(`[dentalPlanAdapter] skip:${reason}`, meta ? { meta } : undefined);
+      }
+    }
+    if (counterStore) { counterStore.total++; }
     // Fast path for optimized / flattened shapes
   let monthly = safeCurrency(raw.monthly_premium ?? raw.monthlyPremium);
   let annualMax = parseAnnualMaximum(raw.annual_maximum ?? raw.annualMaximum);
-  let carrier = raw.carrier_name || raw.carrierName;
+  // Support optimized quote shape which may use companyName instead of carrierName
+  let carrier = raw.carrier_name || raw.carrierName || (raw as any).companyName;
   let planDisplay = raw.plan_name || raw.planName;
   let id = raw.id;
   let benefitNotes: string | undefined = (raw as any).benefit_notes || (raw as any).benefitNotes;
@@ -88,13 +107,19 @@ export const dentalPlanAdapter: CategoryAdapter<RawDentalQuote, NormalizedQuoteB
     }
 
     if (monthly == null) {
-      if (process.env.NODE_ENV !== 'production') {
-        // Provide a concise hint on why quote was skipped
-        // (only first few chars of potential identifiers to avoid log noise)
-        const hint = (raw.id || raw.key || raw.plan_name || '').toString().slice(0,12);
-        console.debug('[dentalPlanAdapter] Skipping quote - missing monthly premium', { hint });
-      }
+      const hint = (raw.id || raw.key || raw.plan_name || '').toString().slice(0,12);
+      incReason('missing_monthly_premium', { hint, hasBasePlans: Array.isArray(raw.base_plans), rateProbe: raw.base_plans?.[0]?.benefits?.[0]?.rate });
       return null;
+    }
+
+    if (carrier == null || carrier === '') {
+      incReason('missing_carrier_name', { id: raw.id, key: (raw as any).key });
+      carrier = 'Unknown';
+    }
+
+    if (!planDisplay) {
+      incReason('missing_plan_display', { carrier, rawPlan: raw.plan_name });
+      planDisplay = 'Dental Plan';
     }
 
     carrier = carrier || 'Unknown';
@@ -130,6 +155,20 @@ export const dentalPlanAdapter: CategoryAdapter<RawDentalQuote, NormalizedQuoteB
     };
     // Attach original raw for downstream enrichment (non-enumerable to avoid accidental serialization bloat)
     try { Object.defineProperty(normalized, '__raw', { value: raw, enumerable: false }); } catch {}
+    if (counterStore) { counterStore.normalized++; }
+    // Periodic aggregate log (every 50 processed or every 5 seconds since last log)
+    if (dbg && counterStore && counterStore.total > 0) {
+      const sinceLast = Date.now() - (counterStore._lastAggregateTs || 0);
+      if ((counterStore.total % 50 === 0) || sinceLast > 5000) {
+        counterStore._lastAggregateTs = Date.now();
+        console.info('[dentalPlanAdapter] aggregate', {
+          total: counterStore.total,
+            normalized: counterStore.normalized,
+            skipped: counterStore.skipped,
+            reasons: counterStore.reasons
+        });
+      }
+    }
     return normalized;
   },
   derivePricingSummary(quotes) {

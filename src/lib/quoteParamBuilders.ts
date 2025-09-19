@@ -70,9 +70,23 @@ export function buildCancerParams(form:any, opts?: { benefitStrategy?: 'fixed'|'
   };
 }
 
-export interface DentalParams { age: number; zipCode: string; gender: any; tobaccoUse: boolean; coveredMembers: number; }
+export interface DentalParams { age: number; zipCode: string; gender: GenderMF; tobaccoUse: boolean; coveredMembers: number; }
 export function buildDentalParams(form:any): DentalParams {
-  return { age: normalizeAge(form.age), zipCode: String(form.zipCode||''), gender: form.gender, tobaccoUse: !!form.tobaccoUse, coveredMembers: parseIntOr(form.coveredMembers, 1) };
+  const age = normalizeAge(form.age);
+  const gender = normalizeGender(form.gender);
+  const tobaccoUse = !!form.tobaccoUse;
+  const coveredMembers = parseIntOr(form.coveredMembers, 1);
+  if (process.env.NODE_ENV !== 'production') {
+    const missing: string[] = [];
+    if (form.age == null || form.age === '') missing.push('age');
+    if (!form.gender) missing.push('gender');
+    if (form.tobaccoUse == null) missing.push('tobaccoUse');
+    if (missing.length) {
+      // eslint-disable-next-line no-console
+      console.warn('[buildDentalParams] Missing user inputs; applying defaults', { missing, applied: { age, gender, tobaccoUse, coveredMembers } });
+    }
+  }
+  return { age, zipCode: String(form.zipCode||''), gender, tobaccoUse, coveredMembers };
 }
 
 export interface DrugPlanParams { zipCode: string; }

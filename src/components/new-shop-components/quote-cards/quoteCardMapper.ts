@@ -24,6 +24,7 @@
 // - Add badge derivation (plan letters, preferred flags) centrally.
 
 import { NormalizedQuoteBase, PricingSummary } from '../adapters/types';
+import { findPreferredCarrierByParams } from '@/lib/carrier-system';
 
 // Lightweight type describing the subset AdvantagePlanCards currently expects.
 export interface AdvantageCarrierCardShape {
@@ -81,10 +82,13 @@ export function buildAdvantageCarrierCards(opts: BuildAdvantageOptions): Advanta
       if (typeof r.metadata?.starRating === 'number' && star == null) star = r.metadata.starRating;
     });
     const representativeQuote = related[0];
-    const enhancedInfo = representativeQuote
-      ? getEnhancedCarrierInfo(representativeQuote, productCategory)
-      : { displayName: s.carrierName, logoUrl: (s as any).logoUrl || '/images/carrier-placeholder.svg', isPreferred: false, priority: undefined };
+    // Always invoke getEnhancedCarrierInfo so preferred detection works even when no normalized quotes present yet.
+    const enhancedInfo = getEnhancedCarrierInfo(
+      representativeQuote || { carrier: { name: s.carrierName, id: s.carrierId } },
+      productCategory
+    ) || { displayName: s.carrierName, logoUrl: (s as any).logoUrl || '/images/carrier-placeholder.svg', isPreferred: false, priority: undefined };
 
+    const fallbackPreferred = !enhancedInfo.isPreferred && findPreferredCarrierByParams(enhancedInfo.displayName || s.carrierName, productCategory as any);
     return {
       id: s.carrierId,
       name: enhancedInfo.displayName || s.carrierName,
@@ -98,18 +102,13 @@ export function buildAdvantageCarrierCards(opts: BuildAdvantageOptions): Advanta
       drugDeductible: drugDed,
       moop,
       count: related.length || (range?.count ?? 1),
-      __preferred: !!enhancedInfo.isPreferred,
-      __preferredPriority: (enhancedInfo as any).priority ?? 999,
+      __preferred: !!(enhancedInfo.isPreferred || fallbackPreferred),
+  __preferredPriority: (enhancedInfo as any).priority ?? (fallbackPreferred ? (fallbackPreferred as any).priority : 999),
     } as AdvantageCarrierCardShape;
   });
 
-  // Sorting: preferred first (by priority), then lowest min premium, then name.
+  // Sorting updated: pure price (min) ascending, then name; preferred no longer impacts order.
   cards.sort((a, b) => {
-    if (a.__preferred && !b.__preferred) return -1;
-    if (!a.__preferred && b.__preferred) return 1;
-    if (a.__preferred && b.__preferred && a.__preferredPriority !== b.__preferredPriority) {
-      return (a.__preferredPriority || 999) - (b.__preferredPriority || 999);
-    }
     const aMin = typeof a.min === 'number' ? a.min : Number.POSITIVE_INFINITY;
     const bMin = typeof b.min === 'number' ? b.min : Number.POSITIVE_INFINITY;
     if (aMin === bMin) return (a.name || '').localeCompare(b.name || '');

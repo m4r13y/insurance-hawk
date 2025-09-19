@@ -25,6 +25,8 @@ export interface CarrierInfo {
   phone?: string;
   website?: string;
   logoUrl?: string;
+  /** Inline preferred configuration: category -> { priority, active } */
+  preferred?: Partial<Record<ProductCategory, { priority: number; active?: boolean }>>;
 }
 
 export interface PreferredCarrier {
@@ -56,7 +58,7 @@ export const featuredCarriers = [
  * Only includes carriers we actually support/prefer
  */
 export const CARRIERS: CarrierInfo[] = [
-  // Medicare Supplement preferred carriers
+
   {
     id: 'bankers-fidelity',
     name: 'Bankers Fidelity Life Insurance Company',
@@ -70,7 +72,13 @@ export const CARRIERS: CarrierInfo[] = [
     ],
     phone: '800-241-1439',
     website: 'https://www.bankersfidelitylife.com',
-    logoUrl: 'https://logo.clearbit.com/bankersfidelity.com'
+    logoUrl: 'https://logo.clearbit.com/bankersfidelity.com',
+    preferred: {
+      'medicare-supplement': { priority: 1 },
+      'final-expense': { priority: 1 },
+      'hospital-indemnity': { priority: 1 },
+      'cancer': { priority: 1 }
+    }
   },
   {
     id: 'insurance-co-n-america',
@@ -80,7 +88,10 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['Insurance Co of N Amer', 'Insurance Co. of N. America', 'Insurance Co. of North America', 'Chubb'],
     phone: '215-640-1000',
     website: 'https://www.chubb.com',
-    logoUrl: 'https://logo.clearbit.com/chubb.com'
+    logoUrl: 'https://logo.clearbit.com/chubb.com',
+    preferred: {
+      'medicare-supplement': { priority: 2 }
+    }
   },
   {
     id: 'cigna',
@@ -101,7 +112,13 @@ export const CARRIERS: CarrierInfo[] = [
     ],
     phone: '512-451-2224',
     website: 'https://www.cigna.com',
-    logoUrl: 'https://logo.clearbit.com/cigna.com'
+    logoUrl: 'https://logo.clearbit.com/cigna.com',
+    preferred: {
+      'medicare-supplement': { priority: 3 },
+      'medicare-advantage': { priority: 2 },
+      'dental': { priority: 2 },
+      'final-expense': { priority: 2 }
+    }
   },
   {
     id: 'aflac',
@@ -111,7 +128,10 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['Aflac', 'American Family Life'],
     phone: '800-992-3522',
     website: 'https://www.aflac.com',
-    logoUrl: 'https://logo.clearbit.com/aflac.com'
+    logoUrl: 'https://logo.clearbit.com/aflac.com',
+    preferred: {
+      'medicare-supplement': { priority: 4 }
+    }
   },
   {
     id: 'bcbs',
@@ -121,7 +141,10 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['Blue Cross', 'BCBS', 'HCSC'],
     phone: '877-774-2267',
     website: 'https://www.bcbs.com',
-    logoUrl: 'https://logo.clearbit.com/bcbs.com'
+    logoUrl: 'https://logo.clearbit.com/bcbs.com',
+    preferred: {
+      'medicare-supplement': { priority: 5 }
+    }
   },
   {
     id: 'mutual-of-omaha',
@@ -138,7 +161,12 @@ export const CARRIERS: CarrierInfo[] = [
     ],
     phone: '402-342-7600',
     website: 'https://www.mutualofomaha.com',
-    logoUrl: 'https://logo.clearbit.com/mutualofomaha.com'
+    logoUrl: 'https://logo.clearbit.com/mutualofomaha.com',
+    preferred: {
+      'medicare-supplement': { priority: 6 },
+      'dental': { priority: 3 },
+      'final-expense': { priority: 3 }
+    }
   },
   {
     id: 'aetna',
@@ -154,7 +182,14 @@ export const CARRIERS: CarrierInfo[] = [
     ],
     phone: '800-872-3862',
     website: 'https://www.aetna.com',
-    logoUrl: 'https://logo.clearbit.com/aetna.com'
+    logoUrl: 'https://logo.clearbit.com/aetna.com',
+    preferred: {
+      'medicare-supplement': { priority: 7 },
+      'medicare-advantage': { priority: 4 },
+      'dental': { priority: 4 },
+      'final-expense': { priority: 4 },
+      'hospital-indemnity': { priority: 4 }
+    }
   },
   {
     id: 'nassau',
@@ -164,7 +199,10 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['Nassau', 'Nassau Life Insurance Company'],
     phone: '516-394-2000',
     website: 'https://www.nassaulife.com',
-    logoUrl: 'https://logo.clearbit.com/nfg.com'
+    logoUrl: 'https://logo.clearbit.com/nfg.com',
+    preferred: {
+      'medicare-supplement': { priority: 8 }
+    }
   },
   {
     id: 'humana',
@@ -174,7 +212,11 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['Humana', 'Humana Insurance'],
     phone: '502-580-1000',
     website: 'https://www.humana.com',
-    logoUrl: 'https://logo.clearbit.com/humana.com'
+    logoUrl: 'https://logo.clearbit.com/humana.com',
+    preferred: {
+      'medicare-supplement': { priority: 9 },
+      'medicare-advantage': { priority: 1 }
+    }
   },
   {
     id: 'united-healthcare',
@@ -184,7 +226,10 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['UnitedHealthcare', 'United Healthcare', 'UnitedHealth', 'AARP Medicare Supplement', 'Golden Rule Ins Co'],
     phone: '877-832-7734',
     website: 'https://www.uhc.com',
-    logoUrl: 'https://logo.clearbit.com/unitedhealthcare.com'
+    logoUrl: 'https://logo.clearbit.com/unitedhealthcare.com',
+    preferred: {
+      'medicare-advantage': { priority: 3 }
+    }
   },
   {
     id: 'united-american',
@@ -197,24 +242,18 @@ export const CARRIERS: CarrierInfo[] = [
     logoUrl: 'https://logo.clearbit.com/unitedamerican.com'
   },
   {
-    id: 'united-national-life',
-    name: 'United National Life Insurance Company of America',
-    shortName: 'United National Life',
-    displayName: 'United National Life',
-    namePatterns: ['United National Life', 'UNL'],
-    phone: '800-207-8050',
-    website: 'https://www.unlinsurance.com',
-    logoUrl: 'https://logo.clearbit.com/unl.com'
-  },
-  {
     id: 'manhattan-life',
     name: 'Manhattan Life Insurance Company',
     shortName: 'Manhattan Life',
     displayName: 'Manhattan Life',
-    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance'],
+    namePatterns: ['Manhattan Life', 'Manhattan Life Insurance', 'ManhattanLife Insurance and Annuity Company'],
     phone: '800-622-9525',
     website: 'https://www.manhattanlife.com',
-    logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
+    logoUrl: 'https://logo.clearbit.com/manhattanlife.com',
+    preferred: {
+      'dental': { priority: 5 },
+      'hospital-indemnity': { priority: 3 }
+    }
   },
   {
     id: 'guarantee-trust-life',
@@ -262,7 +301,7 @@ export const CARRIERS: CarrierInfo[] = [
     shortName: 'Manhattan Life',
     displayName: 'Manhattan Life',
     namePatterns: ['Manhattan Life', 'Manhattan Life Insurance', 'ManhattanLife Insurance and Annuity Company'],
-    phone: '800-879-6542',
+    phone: '800-622-9525',
     website: 'https://www.manhattanlife.com',
     logoUrl: 'https://logo.clearbit.com/manhattanlife.com'
   },
@@ -284,7 +323,11 @@ export const CARRIERS: CarrierInfo[] = [
     namePatterns: ['United National Life', 'UNL', 'United Natl Life Ins Co'],
     phone: '800-207-8050',
     website: 'https://unlinsurance.com/',
-    logoUrl: 'https://logo.clearbit.com/unlinsurance.com'
+    logoUrl: 'https://logo.clearbit.com/unlinsurance.com',
+    preferred: {
+      'dental': { priority: 1 },
+      'hospital-indemnity': { priority: 2 }
+    }
   }
 ];
 
@@ -294,6 +337,41 @@ export const CARRIERS: CarrierInfo[] = [
  * Create lookup maps for efficient searches
  */
 const carriersById = new Map(CARRIERS.map(c => [c.id, c]));
+
+// ===== NORMALIZATION HELPERS =====
+
+function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/\((.*?)\)/g,'') // drop parenthetical suffixes like (CIGNA)
+    .replace(/&/g,'and')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'')
+    .trim();
+}
+
+// Lazy-built lookup cache (rebuilt from inline preferred data)
+const PREFERRED_LOOKUPS: Partial<Record<ProductCategory, Map<string,string>>> = {};
+function getPreferredLookup(category: ProductCategory): Map<string,string> | undefined {
+  if (PREFERRED_LOOKUPS[category]) return PREFERRED_LOOKUPS[category];
+  const preferred = getPreferredCarriers(category);
+  if (!preferred.length) return undefined;
+  const map = new Map<string,string>();
+  for (const pc of preferred) {
+    const info = carriersById.get(pc.carrierId);
+    if (!info) continue;
+    const variants = new Set<string>();
+    variants.add(pc.carrierId);
+    [info.displayName, info.shortName, info.name].forEach(v => v && variants.add(v));
+    info.namePatterns.forEach(p => variants.add(p));
+    for (const v of variants) {
+      const s = slugify(v);
+      if (s) map.set(s, pc.carrierId);
+    }
+  }
+  PREFERRED_LOOKUPS[category] = map;
+  return map;
+}
 
 /**
  * Get carrier information by ID
@@ -311,14 +389,26 @@ export function findCarrierByName(carrierName: string): CarrierInfo | undefined 
   const raw = carrierName;
   const safeName = raw.trim();
   if (!safeName) return undefined;
-  const lowerSafe = safeName.toLowerCase();
-
-  const result = CARRIERS.find(carrier =>
+  // Produce a relaxed token signature: lowercase, remove punctuation & spaces
+  const signature = safeName.toLowerCase().replace(/[^a-z0-9]+/g,'');
+  const words = Array.from(new Set(safeName.toLowerCase().split(/[^a-z0-9]+/g).filter(Boolean)));
+  // Attempt direct pattern inclusion match first (legacy behavior)
+  let result = CARRIERS.find(carrier =>
     carrier.namePatterns.some(pattern => {
       const pl = pattern.toLowerCase();
-      return lowerSafe.includes(pl) || pl.includes(lowerSafe);
+      return safeName.toLowerCase().includes(pl) || pl.includes(safeName.toLowerCase());
     })
   );
+  if (result) return result;
+  // Fallback: signature containment (handles slug or compressed strings)
+  result = CARRIERS.find(carrier => {
+    const carrierSignature = carrier.displayName.toLowerCase().replace(/[^a-z0-9]+/g,'');
+    if (carrierSignature === signature) return true;
+    // Require at least two overlapping tokens for robustness
+    const patternTokens = new Set(carrier.namePatterns.flatMap(p => p.toLowerCase().split(/[^a-z0-9]+/g).filter(Boolean)));
+    const overlap = words.filter(w => patternTokens.has(w));
+    return overlap.length >= 2;
+  });
   return result;
 }
 
@@ -418,80 +508,43 @@ export function findPreferredCarrierByParams(
 }
 
 export function findPreferredCarrier(quote: any, category: ProductCategory): PreferredCarrier | null {
-  // Enhanced carrier name extraction - check multiple possible fields
-  // Handle both object format (quote.carrier.name) and string format (quote.carrier)
-  const carrierNameRaw = (typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name) ||
-    quote.company_base?.name ||
-    quote.company?.name ||
-    quote.carrier_name ||
-    quote.companyName ||
-    quote.company ||
-    '';
-  const carrierName = typeof carrierNameRaw === 'string' ? carrierNameRaw : '';
-  
-  // Debug logging for non-medigap categories
-  if (category !== 'medicare-supplement') {
-    console.log(`🔍 [${category}] findPreferredCarrier called:`, {
-      category,
-      carrierName,
-      quoteStructure: {
-        hasCarrier: !!quote.carrier,
-        carrierType: typeof quote.carrier,
-        hasCompanyBase: !!quote.company_base,
-        hasCompany: !!quote.company,
-        carrierValue: quote.carrier, // Show full carrier value (string or object)
-        carrierNameValue: typeof quote.carrier === 'object' ? quote.carrier?.name : null,
-        companyBaseNameValue: quote.company_base?.name,
-        companyNameValue: quote.company?.name,
-        carrierNameField: quote.carrier_name,
-        companyNameField: quote.companyName,
-        companyField: quote.company,
-        allQuoteKeys: Object.keys(quote)
-      }
-    });
+  const carrierNameRaw = (typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name)
+    || quote.company_base?.name
+    || quote.company?.name
+    || quote.carrier_name
+    || quote.companyName
+    || quote.company
+    || '';
+  if (!carrierNameRaw) return null;
+  const s = slugify(carrierNameRaw);
+  const lookup = getPreferredLookup(category);
+  if (!lookup || !lookup.size) return null;
+  // Direct slug match
+  const directId = lookup.get(s);
+  if (directId) return { carrierId: directId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===directId)?.priority) || 999 };
+  // Progressive suffix trimming (drop common insurance terms) then retry
+  const trimmed = s
+    .replace(/-(life|insurance|ins|company|co|inc|grp|group)$/,'')
+    .replace(/-(life|insurance|ins|company|co|inc|grp|group)$/,''); // second pass
+  if (trimmed !== s) {
+    const tId = lookup.get(trimmed);
+    if (tId) return { carrierId: tId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===tId)?.priority) || 999 };
   }
-  
-  const preferredCarriers = getPreferredCarriers(category);
-  
-  if (category !== 'medicare-supplement') {
-    console.log(`📋 [${category}] Preferred carriers for category:`, preferredCarriers.map(pc => pc.carrierId));
-  }
-  
-  for (const preferredCarrier of preferredCarriers) {
-    // Get the actual carrier info
-    const carrierInfo = getCarrierById(preferredCarrier.carrierId);
-    if (carrierInfo) {
-      if (category !== 'medicare-supplement') {
-        console.log(`🎯 [${category}] Testing carrier ${preferredCarrier.carrierId}:`, {
-          patterns: carrierInfo.namePatterns,
-          carrierName
-        });
-      }
-      
-      // Check name patterns from carrier info
-      for (const pattern of carrierInfo.namePatterns) {
-  const match = typeof carrierName === 'string' && carrierName.toLowerCase().includes(pattern.toLowerCase());
-        if (category !== 'medicare-supplement') {
-          console.log(`   Pattern "${pattern}" vs "${carrierName}": ${match ? '✅ MATCH' : '❌ no match'}`);
-        }
-        if (match) {
-          if (category !== 'medicare-supplement') {
-            console.log(`🎉 [${category}] FOUND MATCH! Returning preferred carrier:`, preferredCarrier);
-          }
-          return preferredCarrier;
-        }
-      }
-    } else {
-      if (category !== 'medicare-supplement') {
-        console.log(`❌ [${category}] No carrier info found for carrierId: ${preferredCarrier.carrierId}`);
-      }
+  // Token overlap fallback: count matches; choose highest overlap above threshold
+  const tokens = s.split('-').filter(Boolean);
+  const scoreMap: Record<string, number> = {};
+  for (const [slugVariant, carrierId] of lookup.entries()) {
+    const variantTokens = slugVariant.split('-').filter(Boolean);
+    const overlap = tokens.filter(t => variantTokens.includes(t));
+    if (overlap.length) {
+      scoreMap[carrierId] = Math.max(scoreMap[carrierId] || 0, overlap.length / variantTokens.length);
     }
   }
-  
-  if (category !== 'medicare-supplement') {
-    console.log(`🚫 [${category}] No preferred carrier match found for "${carrierName}"`);
+  const best = Object.entries(scoreMap).sort((a,b)=> b[1]-a[1])[0];
+  if (best && best[1] >= 0.6) { // 60% pattern token overlap heuristic
+    const carrierId = best[0];
+    return { carrierId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===carrierId)?.priority) || 999 };
   }
-  
   return null;
 }
 
@@ -640,54 +693,40 @@ export { getCarrierLogoUrl as getProperLogoUrl };
  * Based on agent requirements and product category specifications
  * References carrier IDs from the CARRIERS array
  */
-export const PREFERRED_CARRIERS: Record<ProductCategory, PreferredCarrier[]> = {
-  'medicare-supplement': [
-    { carrierId: 'bankers-fidelity', category: 'medicare-supplement', priority: 1, isActive: true },
-    { carrierId: 'insurance-co-n-america', category: 'medicare-supplement', priority: 2, isActive: true },
-    { carrierId: 'cigna', category: 'medicare-supplement', priority: 3, isActive: true },
-    { carrierId: 'aflac', category: 'medicare-supplement', priority: 4, isActive: true },
-    { carrierId: 'bcbs', category: 'medicare-supplement', priority: 5, isActive: true },
-    { carrierId: 'mutual-of-omaha', category: 'medicare-supplement', priority: 6, isActive: true },
-    { carrierId: 'aetna', category: 'medicare-supplement', priority: 7, isActive: true },
-    { carrierId: 'nassau', category: 'medicare-supplement', priority: 8, isActive: true },
-    { carrierId: 'humana', category: 'medicare-supplement', priority: 9, isActive: true }
-  ],
-  'medicare-advantage': [
-    { carrierId: 'humana', category: 'medicare-advantage', priority: 1, isActive: true },
-    { carrierId: 'cigna', category: 'medicare-advantage', priority: 2, isActive: true },
-    { carrierId: 'united-healthcare', category: 'medicare-advantage', priority: 3, isActive: true },
-    { carrierId: 'aetna', category: 'medicare-advantage', priority: 4, isActive: true }
-  ],
-  'dental': [
-    { carrierId: 'unl', category: 'dental', priority: 1, isActive: true },
-    { carrierId: 'cigna', category: 'dental', priority: 2, isActive: true },
-    { carrierId: 'mutual-of-omaha', category: 'dental', priority: 3, isActive: true },
-    { carrierId: 'aetna', category: 'dental', priority: 4, isActive: true },
-    { carrierId: 'manhattan-life', category: 'dental', priority: 5, isActive: true }
-  ],
-  'final-expense': [
-    { carrierId: 'bankers-fidelity', category: 'final-expense', priority: 1, isActive: true },
-    { carrierId: 'cigna', category: 'final-expense', priority: 2, isActive: true },
-    { carrierId: 'mutual-of-omaha', category: 'final-expense', priority: 3, isActive: true },
-    { carrierId: 'aetna', category: 'final-expense', priority: 4, isActive: true }
-  ],
-  'hospital-indemnity': [
-    { carrierId: 'bankers-fidelity', category: 'hospital-indemnity', priority: 1, isActive: true },
-    { carrierId: 'unl', category: 'hospital-indemnity', priority: 2, isActive: true },
-    { carrierId: 'manhattan-life', category: 'hospital-indemnity', priority: 3, isActive: true },
-    { carrierId: 'aetna', category: 'hospital-indemnity', priority: 4, isActive: true }
-  ],
-  'cancer': [
-    { carrierId: 'bankers-fidelity', category: 'cancer', priority: 1, isActive: true },
-  ],
-  'drug-plan': []
-};
+// ===== INLINE PREFERRED INDEX BUILD =====
+let PREFERRED_CARRIERS_CACHE: Record<ProductCategory, PreferredCarrier[]> | null = null;
+function buildPreferredIndex(): Record<ProductCategory, PreferredCarrier[]> {
+  const blank: Record<ProductCategory, PreferredCarrier[]> = {
+    'medicare-supplement': [],
+    'medicare-advantage': [],
+    'dental': [],
+    'final-expense': [],
+    'hospital-indemnity': [],
+    'cancer': [],
+    'drug-plan': []
+  };
+  for (const carrier of CARRIERS) {
+    if (!carrier.preferred) continue;
+    for (const [cat, meta] of Object.entries(carrier.preferred) as Array<[ProductCategory, { priority: number; active?: boolean }]>) {
+      if (!meta || meta.active === false) continue;
+      blank[cat].push({ carrierId: carrier.id, category: cat, priority: meta.priority, isActive: true });
+    }
+  }
+  // Sort by priority asc for deterministic order
+  (Object.keys(blank) as ProductCategory[]).forEach(cat => {
+    blank[cat].sort((a,b) => a.priority - b.priority);
+  });
+  return blank;
+}
 
 /**
  * Get preferred carriers for a specific product category
  */
 export function getPreferredCarriers(category: ProductCategory): PreferredCarrier[] {
-  return PREFERRED_CARRIERS[category] || [];
+  if (!PREFERRED_CARRIERS_CACHE) {
+    PREFERRED_CARRIERS_CACHE = buildPreferredIndex();
+  }
+  return PREFERRED_CARRIERS_CACHE[category] || [];
 }
 
 /**
@@ -700,6 +739,8 @@ export function mapUICategoryToProductCategory(uiCategory: string): ProductCateg
     'dental': 'dental',
     'final-expense': 'final-expense',
     'hospital-indemnity': 'hospital-indemnity',
+    // Alias: UI sometimes uses short 'hospital'; normalize it.
+    'hospital': 'hospital-indemnity',
     'cancer': 'cancer',
     'drug-plan': 'drug-plan'
   };

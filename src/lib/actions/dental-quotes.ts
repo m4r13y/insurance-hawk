@@ -128,3 +128,26 @@ export async function getDentalQuotes(formData: DentalQuoteRequest): Promise<Den
     };
   }
 }
+
+// Retry wrapper with exponential backoff + jitter for transient failures (e.g., deadline-exceeded)
+export async function getDentalQuotesWithRetry(formData: DentalQuoteRequest, opts: { attempts?: number; baseDelayMs?: number } = {}): Promise<DentalQuotesResponse> {
+  const attempts = opts.attempts ?? 3;
+  const base = opts.baseDelayMs ?? 750;
+  let lastErr: any;
+  for (let i=0;i<attempts;i++) {
+    const attemptNum = i + 1;
+    const res = await getDentalQuotes(formData);
+    if (res.success) return res;
+    lastErr = res.error;
+    // Only retry on known transient codes
+    const transient = typeof lastErr === 'string' && /deadline|unavailable|internal/i.test(lastErr);
+    if (!transient) return res; // non-transient: bail fast
+    if (attemptNum < attempts) {
+      const delay = Math.min(4000, base * Math.pow(1.8, i)) + Math.random()*250;
+      console.warn(`🦷 Retry dental quotes (attempt ${attemptNum}/${attempts}) after error: ${lastErr}. Waiting ${(delay).toFixed(0)}ms`);
+      await new Promise(r=>setTimeout(r, delay));
+      continue;
+    }
+  }
+  return { success:false, quotes: [], error: lastErr || 'Failed after retries' };
+}
