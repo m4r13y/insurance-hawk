@@ -1062,6 +1062,12 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           {activeCategory === 'dental' && (
             <section className="space-y-6">
               <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Dental Plans</h3>
+              {/* Quick access developer utility buttons for plan builder / field mapping */}
+              {dentalCarriers.length > 0 && (
+                <div className="flex flex-wrap gap-2 -mt-2">
+                  <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/dental-field-mapping','_blank'); } catch { router.push('/dental-field-mapping'); } }}>Field Mapping</Button>
+                </div>
+              )}
               {(!loadingQuotes && dentalCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No dental plans loaded.</div>)}
               <DentalPlanCards carriers={dentalCarriers as any} loading={loadingQuotes && dentalCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'dental')} />
             </section>
@@ -1076,6 +1082,12 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           {activeCategory === 'hospital' && (
             <section className="space-y-6">
               <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Hospital Indemnity Plans</h3>
+              {hospitalCarriers.length > 0 && (
+                <div className="flex flex-wrap gap-2 -mt-2">
+                  <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-field-mapping','_blank'); } catch { router.push('/hospital-indemnity-field-mapping'); } }}>Field Mapping</Button>
+                  <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-plan-builder','_blank'); } catch { router.push('/hospital-indemnity-plan-builder'); } }}>Plan Builder</Button>
+                </div>
+              )}
               {(!loadingQuotes && hospitalCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No hospital indemnity plans loaded.</div>)}
               <HospitalIndemnityPlanCards carriers={hospitalCarriers as any} loading={loadingQuotes && hospitalCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'hospital')} />
             </section>

@@ -1,19 +1,45 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimplifiedHospitalIndemnityPlanBuilder } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder';
+import dynamic from 'next/dynamic';
+
+// Lazy load builder (mirrors dental pattern) to keep details lightweight
+const SimplifiedHospitalIndemnityPlanBuilder = dynamic(
+  () => import('@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder')
+    .then(m => m.SimplifiedHospitalIndemnityPlanBuilder),
+  { ssr: false, loading: () => <div className="text-xs text-slate-500">Loading hospital builder...</div> }
+);
 
 interface HospitalIndemnityDetailsShowcaseProps { carrierName: string; quotes: any[]; onClose: () => void; }
 
 const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcaseProps> = ({ carrierName, quotes, onClose }) => {
   const sorted = [...quotes].sort((a,b)=> (a.pricing?.monthly ?? 0) - (b.pricing?.monthly ?? 0));
-  const [showBuilder, setShowBuilder] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [builderResult, setBuilderResult] = useState<any | null>(null);
-
-  const handlePlanBuilt = (config: any) => {
+  const handlePlanBuilt = useCallback((config: any) => {
     setBuilderResult(config);
-  };
+    try { console.debug('[hospital builder] plan built', config); } catch {}
+  }, []);
+
+  // Shape quotes into simplified builder expected model where feasible (if builder needs original quotes we just passthrough)
+  const optimizedLike = useMemo(() => sorted.map(q => ({
+    id: q.plan?.key || q.id,
+    planName: q.plan?.display || 'Plan',
+    companyName: q.carrier?.name || carrierName,
+    companyFullName: q.carrier?.name || carrierName,
+    monthlyPremium: q.pricing?.monthly ?? 0,
+    dailyHospitalBenefit: q.metadata?.dailyBenefit,
+    daysCovered: q.metadata?.daysCovered,
+    ambulanceBenefit: q.metadata?.ambulance,
+    icuUpgrade: q.metadata?.icuUpgrade,
+    raw: q,
+  })), [sorted, carrierName]);
+
+  const copyLastBuild = useCallback(() => {
+    if(!builderResult) return;
+    try { navigator.clipboard.writeText(JSON.stringify(builderResult, null, 2)); } catch {}
+  }, [builderResult]);
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -54,19 +80,29 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
         <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60">
           <CardHeader className="pb-2"><CardTitle className="text-sm">Highlights</CardTitle></CardHeader>
           <CardContent className="text-xs space-y-2 text-slate-600 dark:text-slate-300">
-            <p>Daily benefit multiplied by covered days provides core inpatient coverage; ambulance & ICU upgrade indicate enhanced riders.</p>
-            <p className="text-[11px] opacity-70">Future: add surgical / observation benefits if available.</p>
+            <p>Daily benefit × covered days = core inpatient coverage. Ambulance & ICU indicators reflect common rider enhancements.</p>
+            <p className="text-[11px] opacity-70">Future: add observation & surgical benefit parsing.</p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-field-mapping','_blank'); } catch { location.href='/hospital-indemnity-field-mapping'; } }}>Field Mapping</Button>
+              <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-plan-builder','_blank'); } catch { location.href='/hospital-indemnity-plan-builder'; } }}>Standalone Builder</Button>
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60 col-span-full lg:col-span-2">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Customize Plan</CardTitle>
-            <Button size="sm" variant="outline" onClick={() => setShowBuilder(v=>!v)}>{showBuilder ? 'Hide Builder' : 'Show Builder'}</Button>
+        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60 col-span-full">
+          <CardHeader className="pb-2 flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">Interactive Builder</CardTitle>
+            <div className="flex items-center gap-2">
+              {builderResult && <Button size="sm" variant="outline" onClick={copyLastBuild}>Copy JSON</Button>}
+              <Button variant="outline" size="sm" onClick={()=> setBuilderOpen(o=>!o)} aria-expanded={builderOpen} aria-controls="hospital-builder-panel">
+                {builderOpen ? 'Hide Builder' : 'Customize'}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="pt-2">
-            {showBuilder ? (
+          <CardContent id="hospital-builder-panel" className="pt-2">
+            {builderOpen ? (
               <div className="space-y-4">
-                <SimplifiedHospitalIndemnityPlanBuilder quotes={quotes as any} onPlanBuilt={handlePlanBuilt} />
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure variant mix & rider set. Uses simplified hospital indemnity builder.</p>
+                <SimplifiedHospitalIndemnityPlanBuilder quotes={optimizedLike as any} onPlanBuilt={handlePlanBuilt} />
                 {builderResult && (
                   <div className="rounded-md border border-slate-300 dark:border-slate-700 p-3 text-[11px] space-y-1 bg-slate-50 dark:bg-slate-800/40">
                     <div className="font-medium text-slate-700 dark:text-slate-200">Last Build Result</div>
@@ -75,7 +111,7 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
                 )}
               </div>
             ) : (
-              <p className="text-xs text-slate-500">Open the builder to configure a custom hospital indemnity package using the available variants.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Open the builder to tailor a hospital indemnity configuration for {carrierName}.</p>
             )}
           </CardContent>
         </Card>

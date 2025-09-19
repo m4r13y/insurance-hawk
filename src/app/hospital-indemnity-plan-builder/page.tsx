@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SimplifiedHospitalIndemnityPlanBuilder } from '@/components/medicare-shop/hospital-indemnity/hospital-indemnity-field-mapping/SimplifiedHospitalIndemnityPlanBuilder';
-import { OptimizedHospitalIndemnityQuote } from '@/lib/hospital-indemnity-quote-optimizer';
+import { OptimizedHospitalIndemnityQuote, optimizeHospitalIndemnityQuotes } from '@/lib/hospital-indemnity-quote-optimizer';
 import { loadFromStorage, HOSPITAL_INDEMNITY_QUOTES_KEY } from '@/components/medicare-shop/shared/storage';
 
 export default function HospitalIndemnityPlanBuilderPage() {
@@ -15,7 +15,17 @@ export default function HospitalIndemnityPlanBuilderPage() {
     const loadQuotes = async () => {
       try {
         console.log('🏥 Loading hospital indemnity quotes from Firestore...');
-        const savedQuotes = await loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []) as OptimizedHospitalIndemnityQuote[];
+        const savedQuotesRaw = await loadFromStorage(HOSPITAL_INDEMNITY_QUOTES_KEY, []);
+        let savedQuotes = savedQuotesRaw as OptimizedHospitalIndemnityQuote[];
+        // Detect raw (unoptimized) quotes by presence of snake_case keys and absence of monthlyPremium
+        if (Array.isArray(savedQuotesRaw) && savedQuotesRaw.length && !('monthlyPremium' in (savedQuotesRaw[0] || {})) && ('base_plans' in (savedQuotesRaw[0] || {}))) {
+          try {
+            console.log('🧮 Detected raw hospital quotes, running optimizer...');
+            savedQuotes = optimizeHospitalIndemnityQuotes(savedQuotesRaw as any) as any;
+          } catch (optErr) {
+            console.warn('⚠️ Failed to optimize raw hospital quotes:', optErr);
+          }
+        }
         
         if (savedQuotes && savedQuotes.length > 0) {
           console.log(`✅ Found ${savedQuotes.length} hospital indemnity quotes`);
