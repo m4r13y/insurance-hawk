@@ -389,7 +389,11 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     if (!preferredOnly) return arr;
     if (!categorySupportsPreferredCarriers(uiCategory)) return arr;
     const preferred = arr.filter(c => c.__preferred);
-    return preferred.length ? preferred : arr;
+    if (!preferred.length && process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.info(`[preferredFilter] No preferred carriers matched for category '${uiCategory}'. Returning empty list.`);
+    }
+    return preferred;
   }, [preferredOnly]);
 
   // Add advantage adapter hook usage
@@ -408,68 +412,98 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
 
   // New category adapter integrations ----------------------------------------------------
   const { summaries: dentalSummaries, normalized: dentalNormalized } = useCategoryQuotes<any>('dental', activeCategory==='dental' ? quotes : [], { enabled: true });
-  const dentalCarriers = useMemo(() => {
-    if (activeCategory !== 'dental') return [] as any[];
-    const productCategory = mapUICategoryToProductCategory('dental') || 'dental';
-    const enriched = dentalSummaries.map(s => {
-      const range = s.planRanges?.DENTAL; const related = dentalNormalized.filter(q => q.carrier.id === s.carrierId);
-      let annualMax: number|undefined; let deductibleIndividual: number|undefined; let visionIncluded: boolean|undefined; let hearingIncluded: boolean|undefined; let planName: string|undefined;
-      related.forEach(r => {
-        if (annualMax == null && typeof r.metadata?.annualMax === 'number') annualMax = r.metadata.annualMax;
-        if (deductibleIndividual == null && typeof r.metadata?.deductibleIndividual === 'number') deductibleIndividual = r.metadata.deductibleIndividual;
-        if (visionIncluded == null && typeof r.metadata?.visionIncluded === 'boolean') visionIncluded = r.metadata.visionIncluded;
-        if (hearingIncluded == null && typeof r.metadata?.hearingIncluded === 'boolean') hearingIncluded = r.metadata.hearingIncluded;
-        if (!planName) planName = r.plan.display;
-      });
-  const representativeQuote = related[0];
-  const enhancedInfo = getEnhancedCarrierInfo(representativeQuote || { carrier: { name: s.carrierName, id: s.carrierId } }, productCategory as any) as any;
-      return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, annualMax, deductibleIndividual, visionIncluded, hearingIncluded, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
-    });
-    // Sorting updated: price (min) only, then name. Preferred status no longer affects order.
-    enriched.sort((a:any,b:any)=>{ 
-      const aMin=typeof a.min==='number'?a.min:Infinity; 
-      const bMin=typeof b.min==='number'?b.min:Infinity; 
-      if(aMin===bMin){ 
-        const aName = typeof a.name==='string'?a.name:String(a.name??'');
-        const bName = typeof b.name==='string'?b.name:String(b.name??'');
-        return aName.localeCompare(bName);
-      } 
-      return aMin-bMin;
-    });
+
+  // Generic multi-category carrier enrichment with canonical name + second-pass preferred detection
+  const normalizeCarrierName = useCallback((rawName: string) => {
+    if (!rawName) return rawName;
+    let n = rawName.toLowerCase();
+    n = n.replace(/(insurance|healthcare|solutions|company|companies|life|health|senior|plans|corp\.?|corporation|inc\.?|holdings)/g,'')
+         .replace(/[^a-z0-9\s]/g,'')
+         .replace(/\s+/g,' ') // collapse whitespace
+         .trim();
+    return n.split(' ').map(w=> w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+  }, []);
+
+  interface GenericEnrichedArgs { categoryKey: string; planKey: string; summaries: any[]; normalized: any[]; overrideNormalized?: any[] }
+  const buildGenericCarriers = useCallback(({ categoryKey, planKey, summaries, normalized, overrideNormalized }: GenericEnrichedArgs) => {
+    const dataset = overrideNormalized || normalized;
+    const productCategory = mapUICategoryToProductCategory(categoryKey) || categoryKey;
+    const map = new Map<string, any>();
+    for (const s of summaries) {
+      const range = s.planRanges?.[planKey];
+      const related = dataset.filter(q => q.carrier.id === s.carrierId);
+      const representativeQuote = related[0];
+      let enhancedInfo = getEnhancedCarrierInfo(representativeQuote || { carrier: { name: s.carrierName, id: s.carrierId } }, productCategory as any) as any;
+      if (!enhancedInfo.isPreferred) {
+        const canonical = normalizeCarrierName(s.carrierName || '');
+        if (canonical && canonical !== s.carrierName) {
+          const second = getEnhancedCarrierInfo({ carrier: { name: canonical } } as any, productCategory as any) as any;
+          if (second?.isPreferred) enhancedInfo = second;
+        }
+      }
+      // Category-specific aggregation
+      const extra: Record<string, any> = {};
+      if (categoryKey === 'dental') {
+        let annualMax: number|undefined; let deductibleIndividual: number|undefined; let visionIncluded: boolean|undefined; let hearingIncluded: boolean|undefined; let planName: string|undefined;
+        related.forEach(r => {
+          if (annualMax == null && typeof r.metadata?.annualMax === 'number') annualMax = r.metadata.annualMax;
+          if (deductibleIndividual == null && typeof r.metadata?.deductibleIndividual === 'number') deductibleIndividual = r.metadata.deductibleIndividual;
+          if (visionIncluded == null && typeof r.metadata?.visionIncluded === 'boolean') visionIncluded = r.metadata.visionIncluded;
+          if (hearingIncluded == null && typeof r.metadata?.hearingIncluded === 'boolean') hearingIncluded = r.metadata.hearingIncluded;
+          if (!planName) planName = r.plan.display;
+        });
+        Object.assign(extra, { annualMax, deductibleIndividual, visionIncluded, hearingIncluded, planName });
+      } else if (categoryKey === 'cancer') {
+        let lumpSum: number|undefined; let wellness: number|undefined; let recurrence: boolean|undefined; let planName: string|undefined;
+        related.forEach(r => { if (lumpSum == null && typeof r.metadata?.lumpSum === 'number') lumpSum = r.metadata.lumpSum; if (wellness == null && typeof r.metadata?.wellness === 'number') wellness = r.metadata.wellness; if (recurrence == null && typeof r.metadata?.recurrence === 'boolean') recurrence = r.metadata.recurrence; if (!planName) planName = r.plan.display; });
+        Object.assign(extra, { lumpSum, wellness, recurrence, planName });
+      } else if (categoryKey === 'hospital') {
+        let dailyBenefit: number|undefined; let daysCovered: number|undefined; let ambulance: number|undefined; let icuUpgrade: boolean|undefined; let planName: string|undefined;
+        related.forEach(r => { if (dailyBenefit == null && typeof r.metadata?.dailyBenefit === 'number') dailyBenefit = r.metadata.dailyBenefit; if (daysCovered == null && typeof r.metadata?.daysCovered === 'number') daysCovered = r.metadata.daysCovered; if (ambulance == null && typeof r.metadata?.ambulance === 'number') ambulance = r.metadata.ambulance; if (icuUpgrade == null && typeof r.metadata?.icuUpgrade === 'boolean') icuUpgrade = r.metadata.icuUpgrade; if (!planName) planName = r.plan.display; });
+        Object.assign(extra, { dailyBenefit, daysCovered, ambulance, icuUpgrade, planName });
+      }
+      const key = (enhancedInfo.displayName || s.carrierName || s.carrierId).toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        // merge price ranges and counts
+        if (typeof range?.min === 'number') existing.min = Math.min(existing.min ?? Infinity, range.min);
+        if (typeof range?.max === 'number') existing.max = Math.max(existing.max ?? -Infinity, range.max);
+        existing.count += related.length;
+        Object.entries(extra).forEach(([k,v])=> { if (existing[k] == null && v != null) existing[k] = v; });
+      } else {
+        map.set(key, {
+          id: s.carrierId,
+          name: enhancedInfo.displayName || s.carrierName,
+          logo: enhancedInfo.logoUrl || s.logoUrl || '/images/carrier-placeholder.svg',
+          min: range?.min,
+          max: range?.max,
+          planRange: range,
+          count: related.length,
+          __preferred: !!enhancedInfo.isPreferred,
+          __preferredPriority: enhancedInfo.priority ?? 999,
+          ...extra,
+        });
+      }
+    }
+    const enriched = Array.from(map.values());
+    enriched.sort((a:any,b:any)=>{ const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin){ return String(a.name??'').localeCompare(String(b.name??'')); } return aMin-bMin; });
+    if (process.env.NODE_ENV !== 'production') {
+      const preferredCount = enriched.filter(e=>e.__preferred).length;
+      // eslint-disable-next-line no-console
+      console.debug(`[carrierEnrichment:${categoryKey}] total=${enriched.length} preferred=${preferredCount}`);
+      if (!preferredCount) {
+        // eslint-disable-next-line no-console
+        console.debug(`[carrierEnrichment:${categoryKey}] sample names`, enriched.slice(0,5).map(e=>e.name));
+      }
+    }
     return enriched;
-  }, [activeCategory, dentalSummaries, dentalNormalized]);
+  }, [normalizeCarrierName]);
+
+  const dentalCarriers = useMemo(()=> activeCategory==='dental' ? buildGenericCarriers({ categoryKey:'dental', planKey:'DENTAL', summaries: dentalSummaries, normalized: dentalNormalized }) : [], [activeCategory, dentalSummaries, dentalNormalized, buildGenericCarriers]);
   const filteredDentalCarriers = useMemo(()=> applyPreferredFilter(dentalCarriers, 'dental'), [dentalCarriers, applyPreferredFilter]);
 
   const { summaries: cancerSummaries, normalized: cancerNormalized } = useCategoryQuotes<any>('cancer', activeCategory==='cancer' ? quotes : [], { enabled: true });
-  const cancerCarriers = useMemo(() => {
-    if (activeCategory !== 'cancer') return [] as any[];
-    const productCategory = mapUICategoryToProductCategory('cancer') || 'cancer';
-    const enriched = cancerSummaries.map(s => {
-      const range = s.planRanges?.CANCER; const related = cancerNormalized.filter(q => q.carrier.id === s.carrierId);
-      let lumpSum: number|undefined; let wellness: number|undefined; let recurrence: boolean|undefined; let planName: string|undefined;
-      related.forEach(r => {
-        if (lumpSum == null && typeof r.metadata?.lumpSum === 'number') lumpSum = r.metadata.lumpSum;
-        if (wellness == null && typeof r.metadata?.wellness === 'number') wellness = r.metadata.wellness;
-        if (recurrence == null && typeof r.metadata?.recurrence === 'boolean') recurrence = r.metadata.recurrence;
-        if (!planName) planName = r.plan.display;
-      });
-  const representativeQuote = related[0];
-  const enhancedInfo = getEnhancedCarrierInfo(representativeQuote || { carrier: { name: s.carrierName, id: s.carrierId } }, productCategory as any) as any;
-      return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, lumpSum, wellness, recurrence, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
-    });
-    // Sorting updated: price (min) only, then name. Preferred status no longer affects order.
-    enriched.sort((a:any,b:any)=>{ 
-      const aMin=typeof a.min==='number'?a.min:Infinity; 
-      const bMin=typeof b.min==='number'?b.min:Infinity; 
-      if(aMin===bMin){
-        const aName = typeof a.name==='string'?a.name:String(a.name??'');
-        const bName = typeof b.name==='string'?b.name:String(b.name??'');
-        return aName.localeCompare(bName);
-      }
-      return aMin-bMin;
-    });
-    return enriched;
-  }, [activeCategory, cancerSummaries, cancerNormalized]);
+  const cancerCarriers = useMemo(()=> activeCategory==='cancer' ? buildGenericCarriers({ categoryKey:'cancer', planKey:'CANCER', summaries: cancerSummaries, normalized: cancerNormalized }) : [], [activeCategory, cancerSummaries, cancerNormalized, buildGenericCarriers]);
   const filteredCancerCarriers = useMemo(()=> applyPreferredFilter(cancerCarriers, 'cancer'), [cancerCarriers, applyPreferredFilter]);
 
   // Use canonical id 'hospital-indemnity' for adapter consistency
@@ -492,36 +526,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     && stickyHospitalQuotes.length > 0)
     ? stickyHospitalAdapter.normalized
     : hospitalNormalized;
-  const hospitalCarriers = useMemo(() => {
-    if (activeCategory !== 'hospital') return [] as any[];
-    const productCategory = mapUICategoryToProductCategory('hospital-indemnity') || 'hospital-indemnity';
-    const enriched = hospitalSummaries.map(s => {
-      const range = s.planRanges?.HOSP; const related = (effectiveHospitalNormalized || hospitalNormalized).filter(q => q.carrier.id === s.carrierId);
-      let dailyBenefit: number|undefined; let daysCovered: number|undefined; let ambulance: number|undefined; let icuUpgrade: boolean|undefined; let planName: string|undefined;
-      related.forEach(r => {
-        if (dailyBenefit == null && typeof r.metadata?.dailyBenefit === 'number') dailyBenefit = r.metadata.dailyBenefit;
-        if (daysCovered == null && typeof r.metadata?.daysCovered === 'number') daysCovered = r.metadata.daysCovered;
-        if (ambulance == null && typeof r.metadata?.ambulance === 'number') ambulance = r.metadata.ambulance;
-        if (icuUpgrade == null && typeof r.metadata?.icuUpgrade === 'boolean') icuUpgrade = r.metadata.icuUpgrade;
-        if (!planName) planName = r.plan.display;
-      });
-  const representativeQuote = related[0];
-  const enhancedInfo = getEnhancedCarrierInfo(representativeQuote || { carrier: { name: s.carrierName, id: s.carrierId } }, productCategory as any) as any;
-      return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, dailyBenefit, daysCovered, ambulance, icuUpgrade, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
-    });
-    // Sorting updated: price (min) only, then name. Preferred status no longer affects order.
-    enriched.sort((a:any,b:any)=>{ 
-      const aMin=typeof a.min==='number'?a.min:Infinity; 
-      const bMin=typeof b.min==='number'?b.min:Infinity; 
-      if(aMin===bMin){
-        const aName = typeof a.name==='string'?a.name:String(a.name??'');
-        const bName = typeof b.name==='string'?b.name:String(b.name??'');
-        return aName.localeCompare(bName);
-      }
-      return aMin-bMin;
-    });
-    return enriched;
-  }, [activeCategory, hospitalSummaries, hospitalNormalized]);
+  const hospitalCarriers = useMemo(()=> activeCategory==='hospital' ? buildGenericCarriers({ categoryKey:'hospital', planKey:'HOSP', summaries: hospitalSummaries, normalized: hospitalNormalized, overrideNormalized: (effectiveHospitalNormalized || hospitalNormalized) }) : [], [activeCategory, hospitalSummaries, hospitalNormalized, effectiveHospitalNormalized, buildGenericCarriers]);
   const filteredHospitalCarriers = useMemo(()=> applyPreferredFilter(hospitalCarriers, 'hospital'), [hospitalCarriers, applyPreferredFilter]);
 
   const { summaries: finalExpenseSummaries, normalized: finalExpenseNormalized } = useCategoryQuotes<any>('final-expense', activeCategory==='final-expense' ? quotes : [], { enabled: true });
@@ -529,17 +534,18 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     if (activeCategory !== 'final-expense') return [] as any[];
     const productCategory = mapUICategoryToProductCategory('final-expense') || 'final-expense';
     // Grab requested face value (if any) from stored form state (same source used in header display)
-  let requestedFace: number | undefined; let feMode: 'face'|'rate' = 'face'; let targetRate: number | undefined;
-  try { const raw = typeof window!=='undefined'? localStorage.getItem('medicare_form_state'):null; if(raw){ const o=JSON.parse(raw); if(o?.finalExpenseQuoteMode==='rate') feMode='rate'; if(o?.desiredFaceValue){ const v=parseInt(o.desiredFaceValue,10); if(!isNaN(v)) requestedFace=v; } if(o?.desiredRate){ const r=parseFloat(o.desiredRate); if(!isNaN(r)) targetRate=r; } } } catch {}
+    let requestedFace: number | undefined; let feMode: 'face'|'rate' = 'face'; let targetRate: number | undefined;
+    try {
+      const raw = typeof window!=='undefined'? localStorage.getItem('medicare_form_state'):null;
+      if(raw){ const o=JSON.parse(raw); if(o?.finalExpenseQuoteMode==='rate') feMode='rate'; if(o?.desiredFaceValue){ const v=parseInt(o.desiredFaceValue,10); if(!isNaN(v)) requestedFace=v; } if(o?.desiredRate){ const r=parseFloat(o.desiredRate); if(!isNaN(r)) targetRate=r; } }
+    } catch {/* ignore */}
     const FACE_TOLERANCE = 0.2; // ±20%
-    const enriched = finalExpenseSummaries.map(s => {
+    interface FEEntry { id:string; name:string; logo:string; min?:number; max?:number; fullMin?:number; fullMax?:number; planRange?:any; planNames:string[]; faceAmount?:number; faceAmountMin?:number; faceAmountMax?:number; graded?:boolean; immediate?:boolean; accidental?:boolean; underwritingType?:string; requestedFace?:number; quoteMode: 'face'|'rate'; targetRate?:number; count:number; __preferred:boolean; __preferredPriority:number; }
+    const aggregate = new Map<string, FEEntry>();
+    for (const s of finalExpenseSummaries) {
       const range = s.planRanges?.FE; const related = finalExpenseNormalized.filter(q => q.carrier.id === s.carrierId);
-      let faceAmount: number|undefined; let graded: boolean|undefined; let immediate: boolean|undefined; let accidental: boolean|undefined; let planName: string|undefined;
-      // New aggregated metadata fields
-      let faceAmountMin: number|undefined; let faceAmountMax: number|undefined; let underwritingType: string|undefined;
-      // Collect pricing arrays
-      const allPrices: number[] = [];
-      const requestedBandPrices: number[] = [];
+      let faceAmount: number|undefined; let graded: boolean|undefined; let immediate: boolean|undefined; let accidental: boolean|undefined; let planName: string|undefined; let underwritingType: string|undefined; let faceAmountMin: number|undefined; let faceAmountMax: number|undefined;
+      const allPrices: number[] = []; const requestedBandPrices: number[] = [];
       related.forEach(r => {
         if (faceAmount == null && typeof r.metadata?.faceAmount === 'number') faceAmount = r.metadata.faceAmount;
         if (typeof r.metadata?.faceAmount === 'number') {
@@ -550,11 +556,11 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         if (typeof total === 'number') {
           allPrices.push(total);
           const fv = (r.metadata as any)?.faceValue || r.metadata?.faceAmount;
-          if (feMode === 'face' && requestedFace && typeof fv === 'number') {
-            const lower = requestedFace * (1 - FACE_TOLERANCE);
-            const upper = requestedFace * (1 + FACE_TOLERANCE);
-            if (fv >= lower && fv <= upper) requestedBandPrices.push(total);
-          }
+            if (feMode === 'face' && requestedFace && typeof fv === 'number') {
+              const lower = requestedFace * (1 - FACE_TOLERANCE);
+              const upper = requestedFace * (1 + FACE_TOLERANCE);
+              if (fv >= lower && fv <= upper) requestedBandPrices.push(total);
+            }
         }
         if (graded == null && typeof r.metadata?.graded === 'boolean') graded = r.metadata.graded;
         if (immediate == null && typeof r.metadata?.immediate === 'boolean') immediate = r.metadata.immediate;
@@ -566,50 +572,87 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         }
       });
       const representativeQuote = related[0];
-      const enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
-      // Coerce name to string early; in dev warn if object sneaks through
-      let rawName: any = enhancedInfo.displayName || s.carrierName;
-      if (process.env.NODE_ENV !== 'production' && typeof rawName !== 'string') {
-        // eslint-disable-next-line no-console
-        console.warn('Non-string final expense carrier name encountered', rawName);
+      let enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
+      if (!enhancedInfo.isPreferred) {
+        // second pass with canonical name
+        try { const canonical = (typeof normalizeCarrierName === 'function') ? (normalizeCarrierName(enhancedInfo.displayName || s.carrierName || '')) : undefined; if (canonical && canonical !== (enhancedInfo.displayName||s.carrierName)) { const second = getEnhancedCarrierInfo({ carrier:{ name: canonical } } as any, productCategory as any) as any; if (second?.isPreferred) enhancedInfo = second; } } catch {/* ignore */}
       }
+      const rawName: any = enhancedInfo.displayName || s.carrierName;
       const name = typeof rawName === 'string' ? rawName : String(rawName ?? 'Unknown');
-      // Determine display min/max: prioritize requested band if available
-  const displayPrices = (feMode === 'face' && requestedFace && requestedBandPrices.length) ? requestedBandPrices : allPrices;
+      const displayPrices = (feMode === 'face' && requestedFace && requestedBandPrices.length) ? requestedBandPrices : allPrices;
       const displayMin = displayPrices.length ? Math.min(...displayPrices) : undefined;
       const displayMax = displayPrices.length ? Math.max(...displayPrices) : undefined;
       const fullMin = allPrices.length ? Math.min(...allPrices) : displayMin;
       const fullMax = allPrices.length ? Math.max(...allPrices) : displayMax;
-  return { id: s.carrierId, name, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: displayMin, max: displayMax, fullMin, fullMax, planRange: { ...(range||{}), min: displayMin, max: displayMax }, planName, faceAmount, faceAmountMin, faceAmountMax, graded, immediate, accidental, underwritingType, requestedFace, quoteMode: feMode, targetRate, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
-    });
+      const key = name.toLowerCase();
+      const existing = aggregate.get(key);
+      if (existing) {
+        existing.min = Math.min(existing.min ?? Infinity, displayMin ?? Infinity);
+        existing.max = Math.max(existing.max ?? -Infinity, displayMax ?? -Infinity);
+        existing.fullMin = Math.min(existing.fullMin ?? Infinity, fullMin ?? Infinity);
+        existing.fullMax = Math.max(existing.fullMax ?? -Infinity, fullMax ?? -Infinity);
+        existing.count += related.length;
+        if (planName && !existing.planNames.includes(planName)) existing.planNames.push(planName);
+        existing.faceAmountMin = faceAmountMin != null ? Math.min(existing.faceAmountMin ?? faceAmountMin, faceAmountMin) : existing.faceAmountMin;
+        existing.faceAmountMax = faceAmountMax != null ? Math.max(existing.faceAmountMax ?? faceAmountMax, faceAmountMax) : existing.faceAmountMax;
+        existing.faceAmount = existing.faceAmount ?? faceAmount;
+        existing.graded = existing.graded ?? graded;
+        existing.immediate = existing.immediate ?? immediate;
+        existing.accidental = existing.accidental ?? accidental;
+        existing.underwritingType = existing.underwritingType ?? underwritingType;
+        existing.__preferred = existing.__preferred || !!enhancedInfo.isPreferred;
+        existing.__preferredPriority = Math.min(existing.__preferredPriority, enhancedInfo.priority ?? 999);
+      } else {
+        aggregate.set(key, {
+          id: s.carrierId,
+          name,
+          logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png',
+          min: displayMin,
+          max: displayMax,
+          fullMin,
+          fullMax,
+          planRange: { ...(range||{}), min: displayMin, max: displayMax },
+          planNames: planName ? [planName] : [],
+          faceAmount,
+          faceAmountMin,
+          faceAmountMax,
+          graded,
+          immediate,
+          accidental,
+          underwritingType,
+          requestedFace,
+          quoteMode: feMode,
+          targetRate,
+          count: related.length,
+          __preferred: !!enhancedInfo.isPreferred,
+          __preferredPriority: enhancedInfo.priority ?? 999,
+        });
+      }
+    }
+    const enriched = Array.from(aggregate.values());
+    // Diagnostics (retain suspicious pricing detection, aggregated now)
     if (process.env.NODE_ENV !== 'production') {
       try {
-        const diagnostics = enriched.filter(e=> typeof e.min==='number').map(e=>({ carrier:e.name, min:e.min, max:e.max, fullMin:e.fullMin, fullMax:e.fullMax, requestedFace:e.requestedFace, count:e.count }));
-        const suspicious = diagnostics.filter(d=> d.min!=null && d.min < 30); // heuristic threshold
+        const diagnostics = enriched.filter(e=> typeof e.min==='number').map(e=>({ carrier:e.name, min:e.min, max:e.max, fullMin:e.fullMin, fullMax:e.fullMax, count:e.count }));
+        const suspicious = diagnostics.filter(d=> d.min!=null && d.min < 30);
         if (suspicious.length) {
           // eslint-disable-next-line no-console
-            console.groupCollapsed('[FE Pricing Diagnostics] Suspicious low mins');
-            console.table(suspicious);
-            const rawMap: Record<string, number[]> = {};
-            finalExpenseNormalized.forEach(q=>{ const price=(q.pricing as any).totalMonthly ?? q.pricing.monthly; rawMap[q.carrier.name] = rawMap[q.carrier.name] || []; if(typeof price==='number') rawMap[q.carrier.name].push(price); });
-            Object.entries(rawMap).forEach(([k,v])=>{ if(v.some(x=> x<30)) { console.log('Raw monthly values for', k, v.sort((a,b)=>a-b)); } });
-            console.groupEnd();
+          console.groupCollapsed('[FE Pricing Diagnostics] Suspicious low mins (aggregated)');
+          console.table(suspicious);
+          console.groupEnd();
+        }
+        const preferredCount = enriched.filter(e=>e.__preferred).length;
+        // eslint-disable-next-line no-console
+        console.debug(`[carrierEnrichment:final-expense] total=${enriched.length} preferred=${preferredCount}`);
+        if (!preferredCount) {
+          // eslint-disable-next-line no-console
+          console.debug('[carrierEnrichment:final-expense] sample names', enriched.slice(0,5).map(e=>e.name));
         }
       } catch {/* noop */}
     }
-    // Sorting updated: price (min) only, then name. Preferred status no longer affects order.
-    enriched.sort((a:any,b:any)=>{ 
-      const aMin=typeof a.min==='number'?a.min:Infinity; 
-      const bMin=typeof b.min==='number'?b.min:Infinity; 
-      if(aMin===bMin){
-        const aName = typeof a.name==='string'?a.name:String(a.name??'');
-        const bName = typeof b.name==='string'?b.name:String(b.name??'');
-        return aName.localeCompare(bName);
-      }
-      return aMin-bMin;
-    });
+    enriched.sort((a:any,b:any)=>{ const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin){ return String(a.name??'').localeCompare(String(b.name??'')); } return aMin-bMin; });
     return enriched;
-  }, [activeCategory, finalExpenseSummaries, finalExpenseNormalized]);
+  }, [activeCategory, finalExpenseSummaries, finalExpenseNormalized, normalizeCarrierName]);
   const filteredFinalExpenseCarriers = useMemo(()=> applyPreferredFilter(finalExpenseCarriers, 'final-expense'), [finalExpenseCarriers, applyPreferredFilter]);
 
   const filteredPdpCarriers = useMemo(()=> applyPreferredFilter(pdpCarriers, 'drug-plan'), [pdpCarriers, applyPreferredFilter]);
@@ -1335,7 +1378,21 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <FinalExpenseDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={finalExpenseNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
+            quotes={( () => {
+              const related = finalExpenseNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier));
+              // Enrich each variant with aggregated range stats so the details page can show variants list
+              // (Some of these may already exist; keep idempotent.)
+              let faceMin: number|undefined; let faceMax: number|undefined;
+              related.forEach(r=> { const fv = r.metadata?.faceAmount ?? r.metadata?.faceValue; if(typeof fv==='number'){ if(faceMin==null||fv<faceMin) faceMin=fv; if(faceMax==null||fv>faceMax) faceMax=fv; } });
+              return related.map(r => ({
+                ...r,
+                metadata: {
+                  ...r.metadata,
+                  faceAmountMin: r.metadata?.faceAmountMin ?? faceMin,
+                  faceAmountMax: r.metadata?.faceAmountMax ?? faceMax,
+                }
+              }));
+            })()}
             onClose={closePlanDetails}
           />
         </div>
