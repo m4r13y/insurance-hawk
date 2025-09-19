@@ -64,6 +64,10 @@ interface QuoteFormData {
   premiumMode?: 'monthly' | 'annual' | '';
   coveredMembers?: string;
   desiredFaceValue?: string;
+  // Dual-mode Final Expense support: if quote by monthly rate, capture desiredRate and set finalExpenseQuoteMode
+  finalExpenseQuoteMode?: 'face' | 'rate';
+  finalExpenseBenefitType?: string; // New: benefit_name filter for Final Expense quotes
+  desiredRate?: string; // monthly rate target when finalExpenseQuoteMode === 'rate'
   benefitAmount?: string;
   state?: string;
 }
@@ -186,6 +190,9 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     try { window.dispatchEvent(new CustomEvent('quoteViewMode:changed', { detail: { mode } })); } catch {}
   }, []);
 
+  // resetAllQuotes defined later after concurrent loading helpers; placeholder will be overwritten
+  const resetAllQuotesRef = React.useRef<() => void>(()=>{});
+
   // Carrier search (previously an inline IIFE with hooks inside Filters panel causing hook order issues)
   const [carrierSearch, setCarrierSearch] = React.useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -224,6 +231,9 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const lastFocusedTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  // Track whether the user has already focused an element inside the slide-out panel
+  // so we don't keep stealing focus back to the close button (causing apparent input blur).
+  const userFocusedInsideRef = React.useRef(false);
   const { savedPlans } = useSavedPlans();
   // Selected quote categories (persisted) for inline display under Quotes nav
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
@@ -236,6 +246,22 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
         if (Array.isArray(parsed)) setSelectedCategories(parsed);
       }
     } catch {}
+  }, []);
+  // Listen for updates so newly generated categories appear immediately in rail
+  React.useEffect(() => {
+    const handler = () => {
+      try {
+        const raw = localStorage.getItem('medicare_selected_categories');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setSelectedCategories(parsed);
+        } else {
+          setSelectedCategories([]);
+        }
+      } catch {}
+    };
+    window.addEventListener('selectedCategories:updated', handler as EventListener);
+    return () => window.removeEventListener('selectedCategories:updated', handler as EventListener);
   }, []);
 
   // Persist active nav
@@ -260,10 +286,25 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
 
   // When panel opens, move focus to first focusable (close button)
   React.useEffect(() => {
-    if (activeTab && closeButtonRef.current) {
+    if (activeTab && closeButtonRef.current && !userFocusedInsideRef.current) {
       closeButtonRef.current.focus();
     }
+    if (!activeTab) {
+      // Reset when panel fully closes so next open will autofocus again
+      userFocusedInsideRef.current = false;
+    }
   }, [activeTab]);
+
+  // Global focusin listener to detect first user interaction inside the panel
+  React.useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      if (panelRef.current && e.target instanceof Element && panelRef.current.contains(e.target)) {
+        userFocusedInsideRef.current = true;
+      }
+    };
+    window.addEventListener('focusin', handleFocusIn as any, true);
+    return () => window.removeEventListener('focusin', handleFocusIn as any, true);
+  }, []);
 
   // Quotes panel subcomponent (defined before tabs to allow reference)
   // Quote generation support state (mirrors MedicareShopLayout logic simplified)
@@ -281,18 +322,55 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     premiumMode: '',
     coveredMembers: '',
     desiredFaceValue: '',
+    finalExpenseQuoteMode: 'face',
+  finalExpenseBenefitType: '__all',
+    desiredRate: '',
     benefitAmount: '',
     state: ''
   });
-  const [isMedigapSelectionOpen, setIsMedigapSelectionOpen] = React.useState(false);
+  // Ref & focus restoration helpers for inline form to mitigate any parent re-mounts
+  const inlineFormRef = React.useRef<HTMLDivElement | null>(null);
+  const lastActiveFieldNameRef = React.useRef<string | null>(null);
+
+  // Capture last focused input name on focus events
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      if (!(e.target instanceof HTMLElement)) return;
+      if (inlineFormRef.current && inlineFormRef.current.contains(e.target)) {
+        const name = e.target.getAttribute('id') || e.target.getAttribute('name');
+        if (name) lastActiveFieldNameRef.current = name;
+      }
+    };
+    window.addEventListener('focusin', handler as any);
+    return () => window.removeEventListener('focusin', handler as any);
+  }, []);
+
+  // NOTE: Focus restoration effect moved below formMode state declaration to avoid TS temporal dead zone errors.
+  // Removed separate Medigap selection modal; selection now always inline once base fields satisfied
   const [selectedMedigapPlans, setSelectedMedigapPlans] = React.useState<string[]>([]);
-  // Loading state for quote generation (per category + generic flags)
-  const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
-  const isGenerating = !!loadingCategory;
+  // Concurrent loading state (allow multiple categories generating simultaneously)
+  const [loadingCategoriesLocal, setLoadingCategoriesLocal] = React.useState<string[]>([]);
+  const addLoading = React.useCallback((cat:string) => setLoadingCategoriesLocal(prev => prev.includes(cat) ? prev : [...prev, cat]), []);
+  const removeLoading = React.useCallback((cat:string) => setLoadingCategoriesLocal(prev => prev.filter(c => c !== cat)), []);
+  const isCategoryLoading = React.useCallback((cat:string) => loadingCategoriesLocal.includes(cat) || loadingCategories.includes(cat), [loadingCategoriesLocal, loadingCategories]);
+  const anyGenerating = React.useMemo(() => loadingCategoriesLocal.length > 0 || loadingCategories.length > 0, [loadingCategoriesLocal, loadingCategories]);
   // Edit / reset workflow state
   const [isEditing, setIsEditing] = React.useState(false);
   const [editCategory, setEditCategory] = React.useState<string | null>(null);
   const [formMode, setFormMode] = React.useState<'new' | 'edit'>('new');
+
+  // After each render where the inline form is visible, if focus was lost due to a panel re-render, attempt to restore it.
+  React.useEffect(() => {
+    if (!showInlineQuoteForm) return;
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    if (active && inlineFormRef.current && inlineFormRef.current.contains(active)) return;
+    if (lastActiveFieldNameRef.current && inlineFormRef.current) {
+      const candidate = inlineFormRef.current.querySelector<HTMLElement>(`#${CSS.escape(lastActiveFieldNameRef.current)}`);
+      if (candidate) {
+        try { candidate.focus(); } catch {}
+      }
+    }
+  }, [showInlineQuoteForm, formInputs, selectedCategoryForQuote, missingFields, formMode]);
 
   const getRequiredFields = (category: string): string[] => {
     switch (category) {
@@ -304,7 +382,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       case 'hospital-indemnity':
         return ['age','zipCode','gender','tobaccoUse'];
       case 'final-expense':
-        return ['zipCode'];
+        // Require core demographics to avoid backend rejection
+        return ['age','zipCode','gender','tobaccoUse'];
       case 'cancer':
         return ['age','gender','tobaccoUse'];
       case 'medigap':
@@ -320,6 +399,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       case 'dental':
         return ['coveredMembers'];
       case 'final-expense':
+        // For dual mode final expense, we conditionally require desiredFaceValue OR desiredRate.
+        // Keep returning desiredFaceValue here for backward compatibility; validation below will handle mode switch.
         return ['desiredFaceValue'];
       default:
         return [];
@@ -327,7 +408,15 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   };
 
   const validateRequiredData = (category: string, data: QuoteFormData): { isValid: boolean; missing: string[] } => {
-    const required = [...getRequiredFields(category), ...getAdditionalFields(category)];
+    let required = [...getRequiredFields(category), ...getAdditionalFields(category)];
+    // Final expense dual mode adjustment
+    if (category === 'final-expense') {
+      // If quoting by rate, replace desiredFaceValue with desiredRate; if by face (default), keep existing
+      if (data.finalExpenseQuoteMode === 'rate') {
+        required = required.filter(r => r !== 'desiredFaceValue');
+        required.push('desiredRate');
+      }
+    }
     const missing = required.filter(field => {
       const value = (data as any)[field];
       return value === '' || value === null || value === undefined;
@@ -350,10 +439,87 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   const persistFormData = (data: QuoteFormData) => {
     if (typeof window === 'undefined') return;
     try { localStorage.setItem('medicare_quote_form_data', JSON.stringify(data)); } catch {}
+    // Also persist to broader form state key for other components (details panels, fetch filters)
+    try {
+      const existingRaw = localStorage.getItem('medicare_form_state');
+      let merged: any = {};
+      if (existingRaw) { try { merged = JSON.parse(existingRaw); } catch {} }
+      merged = { ...merged, ...data };
+      localStorage.setItem('medicare_form_state', JSON.stringify(merged));
+    } catch {}
   };
 
+  // Optimistically add a category to localStorage (and dispatch update) so the sidebar button appears immediately when generation starts.
+  const optimisticAddCategory = React.useCallback((category: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('medicare_selected_categories');
+      let arr: string[] = [];
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) arr = parsed;
+      }
+      if (!arr.includes(category)) {
+        arr.push(category);
+        localStorage.setItem('medicare_selected_categories', JSON.stringify(arr));
+        window.dispatchEvent(new CustomEvent('selectedCategories:updated'));
+      }
+    } catch {}
+  }, []);
+
+  // Implement resetAllQuotes now that loading state helpers (anyGenerating) exist further down via useEffect ordering safety.
+  const resetAllQuotes = React.useCallback(() => {
+    // anyGenerating may not yet be declared at this point (hoisted later) so access via function that checks local state directly if undefined
+    const generating = (loadingCategoriesLocal.length > 0) || (loadingCategories.length > 0);
+    if (generating) return;
+    const QUOTE_KEYS = [
+      'medigap_plan_quotes_stub',
+      'medicare_advantage_quotes',
+      'medicare_drug_plan_quotes',
+      'medicare_dental_quotes',
+      'medicare_hospital_indemnity_quotes',
+      'medicare_final_expense_quotes',
+      'medicare_cancer_insurance_quotes'
+    ];
+    try {
+      QUOTE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+      const EXTRA_KEYS = [
+        'medicare_selected_categories',
+        'medicare_quote_form_data', // inline quote form persistence
+        'medicare_form_state',      // broader form state used in other flows
+        'saved_plans_v1',           // saved plans cache
+        'carrier_search_query',
+        'quote_view_mode',
+        'visitor_id'
+      ];
+      EXTRA_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+      window.dispatchEvent(new CustomEvent('selectedCategories:updated'));
+      window.dispatchEvent(new CustomEvent('carrierSearch:changed', { detail: { query: '' } }));
+      window.dispatchEvent(new CustomEvent('quoteViewMode:changed', { detail: { mode: 'card' } }));
+      setSelectedCategories([]);
+      setCarrierSearch('');
+      setQuoteViewMode('card');
+      setIsEditing(false);
+      setEditCategory(null);
+      setShowInlineQuoteForm(false);
+      setSelectedCategoryForQuote('');
+      setFormInputs({
+        age: '', zipCode: '', gender: '', tobaccoUse: null, familyType: '', carcinomaInSitu: null, premiumMode: '', coveredMembers: '', desiredFaceValue: '', finalExpenseQuoteMode: 'face', desiredRate: '', benefitAmount: '', state: '', finalExpenseBenefitType: ''
+      });
+      try { localStorage.removeItem('plan_builder_cache_v1'); } catch {}
+      try { window.dispatchEvent(new CustomEvent('planBuilder:updated')); } catch {}
+    } catch {}
+  }, [loadingCategoriesLocal, loadingCategories]);
+  resetAllQuotesRef.current = resetAllQuotes;
+
+  // Confirmation dialog state for destructive reset
+  const [showResetConfirm, setShowResetConfirm] = React.useState(false);
+  const confirmReset = () => { setShowResetConfirm(true); };
+  const executeConfirmedReset = () => { setShowResetConfirm(false); resetAllQuotes(); };
+  const cancelReset = () => setShowResetConfirm(false);
+
   const handleGenerateFromMoreOptions = (category: string) => {
-    if (isGenerating) return; // prevent re-entry while another generation is in progress
+    if (isCategoryLoading(category)) return; // prevent duplicate generation for same category
     if (!onGenerateQuotes) {
       // fallback just select category
       onSelectCategory?.(category);
@@ -363,11 +529,22 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     setFormInputs(stored);
     const validation = validateRequiredData(category, stored);
     if (validation.isValid) {
+      // For medigap we still show inline form (to pick plans) instead of auto-generating
       if (category === 'medigap') {
         setSelectedCategoryForQuote(category);
-        setIsMedigapSelectionOpen(true);
+        setMissingFields([]);
+        setFormMode('new');
+        setShowInlineQuoteForm(true);
       } else {
-        onGenerateQuotes(category, stored);
+        (async () => {
+          try {
+            addLoading(category);
+            optimisticAddCategory(category);
+            await onGenerateQuotes(category, stored);
+          } finally {
+            removeLoading(category);
+          }
+        })();
       }
     } else {
       setSelectedCategoryForQuote(category);
@@ -382,29 +559,27 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     if (!validation.isValid || !onGenerateQuotes) return;
     persistFormData(formInputs);
     setShowInlineQuoteForm(false);
-    if (selectedCategoryForQuote === 'medigap') {
-      setIsMedigapSelectionOpen(true);
-    } else {
-      try {
-        setLoadingCategory(selectedCategoryForQuote);
-        await onGenerateQuotes(selectedCategoryForQuote, formInputs);
-      } finally {
-        setLoadingCategory(null);
-        setSelectedCategoryForQuote('');
-        setShowInlineQuoteForm(false);
-      }
+    if (selectedCategoryForQuote === 'medigap') return;
+    try {
+      addLoading(selectedCategoryForQuote);
+      optimisticAddCategory(selectedCategoryForQuote);
+      await onGenerateQuotes(selectedCategoryForQuote, formInputs);
+    } finally {
+      removeLoading(selectedCategoryForQuote);
+      setSelectedCategoryForQuote('');
+      setShowInlineQuoteForm(false);
     }
   };
 
   const handleMedigapPlanConfirm = async () => {
     if (!onGenerateQuotes || selectedMedigapPlans.length === 0) return;
     persistFormData(formInputs);
-    setIsMedigapSelectionOpen(false);
     try {
-      setLoadingCategory('medigap');
+      addLoading('medigap');
+      optimisticAddCategory('medigap');
       await onGenerateQuotes(selectedCategoryForQuote, formInputs, selectedMedigapPlans);
     } finally {
-      setLoadingCategory(null);
+      removeLoading('medigap');
       setSelectedCategoryForQuote('');
       setSelectedMedigapPlans([]);
       setShowInlineQuoteForm(false);
@@ -412,7 +587,6 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   };
 
   const handleMedigapPlanCancel = () => {
-  setIsMedigapSelectionOpen(false);
     setSelectedCategoryForQuote('');
     setSelectedMedigapPlans([]);
   setShowInlineQuoteForm(false);
@@ -485,28 +659,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       setSelectedCategoryForQuote('');
     };
 
-    const resetAllQuotes = () => {
-      if (isGenerating) return;
-      const QUOTE_KEYS = [
-        'medigap_plan_quotes_stub',
-        'medicare_advantage_quotes',
-        'medicare_drug_plan_quotes',
-        'medicare_dental_quotes',
-        'medicare_hospital_indemnity_quotes',
-        'medicare_final_expense_quotes',
-        'medicare_cancer_insurance_quotes'
-      ];
-      try {
-        QUOTE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
-        localStorage.removeItem('medicare_selected_categories');
-        window.dispatchEvent(new CustomEvent('selectedCategories:updated'));
-        setSelectedCategories([]);
-        setIsEditing(false);
-        setEditCategory(null);
-        setShowInlineQuoteForm(false);
-        setSelectedCategoryForQuote('');
-      } catch {}
-    };
+    const resetAllQuotes = () => resetAllQuotesRef.current();
 
     const renderGroup = (title: string, cats: string[], mode: 'my' | 'more') => (
       <div className="space-y-2">
@@ -514,7 +667,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
         <div className="grid grid-cols-2 gap-2">
           {cats.map(cat => {
             const selected = activeCategory === cat;
-            const isLoading = loadingCategories.includes(cat) || loadingCategory === cat;
+            const isLoading = isCategoryLoading(cat);
             return (
               <button
                 key={cat}
@@ -543,9 +696,19 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
         {!showInlineQuoteForm && myQuotes.length > 0 && (
           <div className="flex justify-end gap-2 pt-1">
             {!isEditing && (
-              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={startEdit} disabled={isGenerating}>Edit</Button>
+              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={startEdit} disabled={anyGenerating}>Edit</Button>
             )}
-            <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-red-600 dark:text-red-400" onClick={resetAllQuotes} disabled={isGenerating}>Reset</Button>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] text-red-600 dark:text-red-400" onClick={confirmReset} disabled={anyGenerating}>Reset</Button>
+          </div>
+        )}
+        {showResetConfirm && !showInlineQuoteForm && (
+          <div className="rounded-md border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 p-3 space-y-2 animate-in fade-in slide-in-from-top-1">
+            <p className="text-[11px] font-semibold text-red-700 dark:text-red-300">Reset All Data?</p>
+            <p className="text-[11px] text-red-600 dark:text-red-200 leading-snug">This will permanently clear quotes, form inputs, saved plans, visitor id, and preferences. This cannot be undone.</p>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={cancelReset}>Cancel</Button>
+              <Button size="sm" className="h-7 px-2 text-[11px] bg-red-600 hover:bg-red-700 text-white" onClick={executeConfirmedReset}>Yes, Reset</Button>
+            </div>
           </div>
         )}
         {isEditing && !showInlineQuoteForm && !editCategory && myQuotes.length > 1 && (
@@ -562,7 +725,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           </div>
         )}
         {showInlineQuoteForm && (
-          <div className="mt-2 pb-2 space-y-3 relative z-30">
+          <div ref={inlineFormRef} className="mt-2 pb-2 space-y-3 relative z-30">
             <div className="flex items-start">
               <div>
                 <h6 className="text-[11px] font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">{formMode==='edit' ? 'Edit' : 'Generate'} {selectedCategoryForQuote.replace(/-/g,' ') || 'Quotes'}</h6>
@@ -693,37 +856,69 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
               )}
               {selectedCategoryForQuote === 'final-expense' && shouldShow('desiredFaceValue') && (
                 <div className="space-y-1 col-span-1">
-                  <Label className="text-[11px]">Face Value</Label>
-                  <Select value={formInputs.desiredFaceValue} onValueChange={(v)=>setFormInputs(p=>({...p, desiredFaceValue: v}))}>
-                    <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Amount" /></SelectTrigger>
-                    <SelectContent className="z-[999] relative">
-                      {['10000','15000','20000','25000','50000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-[11px] flex items-center justify-between w-full">
+                    <span>Quote By</span>
+                    <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400">{formInputs.finalExpenseQuoteMode === 'face' ? 'Face Value' : 'Monthly Rate'}</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    <button type="button" onClick={()=> setFormInputs(p=>({...p, finalExpenseQuoteMode: 'face'}))} className={`text-[10px] px-1 py-1 rounded border ${formInputs.finalExpenseQuoteMode==='face' ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'}`}>Face</button>
+                    <button type="button" onClick={()=> setFormInputs(p=>({...p, finalExpenseQuoteMode: 'rate'}))} className={`text-[10px] px-1 py-1 rounded border ${formInputs.finalExpenseQuoteMode==='rate' ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'}`}>Rate</button>
+                  </div>
+                    <div className="mt-1">
+                      <Label className="text-[10px]">Benefit Type</Label>
+                      <Select value={formInputs.finalExpenseBenefitType || '__all'} onValueChange={(v)=> setFormInputs(p=>({...p, finalExpenseBenefitType: v}))}>
+                        <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="All" /></SelectTrigger>
+                        <SelectContent className="z-[999] relative max-h-60">
+                          {[{val:'__all', label:'All'}, {val:'Level Benefit', label:'Level Benefit'}, {val:'Graded Benefit', label:'Graded Benefit'}, {val:'Modified Benefit', label:'Modified Benefit'}, {val:'Single Pay', label:'Single Pay'}, {val:'10 Pay', label:'10 Pay'}].map(opt => <SelectItem key={opt.val} value={opt.val}>{opt.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  {formInputs.finalExpenseQuoteMode === 'face' ? (
+                    <div className="mt-1">
+                      <Label className="text-[10px]">Face Value</Label>
+                      <Select value={formInputs.desiredFaceValue} onValueChange={(v)=>setFormInputs(p=>({...p, desiredFaceValue: v}))}>
+                        <SelectTrigger className="h-7 text-[11px] relative z-50"><SelectValue placeholder="Amount" /></SelectTrigger>
+                        <SelectContent className="z-[999] relative">
+                          {['10000','15000','20000','25000','50000'].map(val => <SelectItem key={val} value={val}>${val}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="mt-1">
+                      <Label className="text-[10px]">Target Monthly Rate</Label>
+                      <Input className="h-7 text-[11px]" placeholder="e.g. 40" value={formInputs.desiredRate || ''} onChange={(e)=> setFormInputs(p=>({...p, desiredRate: e.target.value }))} />
+                    </div>
+                  )}
                 </div>
               )}
                 </>
                 ); })()}
-            </div>
-            {/* Medigap plan selection inline (appears once base fields satisfied) */}
+            {/* Inline Medigap plan selection moved INTO field grid for cohesive layout */}
             {selectedCategoryForQuote === 'medigap' && showInlineQuoteForm && ((formMode==='new' && missingFields.length === 0) || formMode==='edit') && (
-              <div className="border-t pt-2 mt-2">
-                <p className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mb-1">Select Plans</p>
-                <div className="flex gap-2">
+              <div className="col-span-2 mt-1">
+                <Label className="text-[11px] mb-1 block">Plans</Label>
+                <div className="flex gap-2 flex-wrap">
                   {['G','N','F'].map(pl => {
                     const active = selectedMedigapPlans.includes(pl);
                     return (
-                      <button key={pl} onClick={()=> setSelectedMedigapPlans(prev => active ? prev.filter(p=>p!==pl) : [...prev, pl])} className={`px-2 py-1 rounded-md text-[11px] border ${active ? 'bg-blue-primary text-white border-blue-primary' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'}`}>Plan {pl}</button>
+                      <button
+                        type="button"
+                        key={pl}
+                        onClick={()=> setSelectedMedigapPlans(prev => active ? prev.filter(p=>p!==pl) : [...prev, pl])}
+                        className={`px-2 py-1 rounded-md text-[11px] border transition-colors ${active ? 'bg-blue-primary text-white border-blue-primary shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                        aria-pressed={active}
+                      >Plan {pl}</button>
                     );
                   })}
                 </div>
                 {selectedMedigapPlans.length === 0 && <p className="text-[10px] text-slate-500 mt-1">Select at least one.</p>}
               </div>
             )}
+            </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" size="sm" disabled={isGenerating} onClick={()=>{ if(isGenerating) return; setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); if(formMode==='edit'){ cancelEdit(); } }}>Cancel</Button>
-              <Button size="sm" disabled={isGenerating || (selectedCategoryForQuote==='medigap' && selectedMedigapPlans.length===0 && (formMode==='new' ? missingFields.length===0 : false))} onClick={async ()=>{
-                if (isGenerating) return;
+              <Button variant="outline" size="sm" onClick={()=>{ setShowInlineQuoteForm(false); setSelectedCategoryForQuote(''); if(formMode==='edit'){ cancelEdit(); } }}>Cancel</Button>
+              <Button size="sm" disabled={(selectedCategoryForQuote && isCategoryLoading(selectedCategoryForQuote)) || (selectedCategoryForQuote==='medigap' && ((formMode==='new' && missingFields.length===0 && selectedMedigapPlans.length===0) || (formMode==='edit' && selectedMedigapPlans.length===0)))} onClick={async ()=>{
+                if (selectedCategoryForQuote && isCategoryLoading(selectedCategoryForQuote)) return;
                 if (formMode==='new' && missingFields.length){
                   await handleMissingFieldsSubmit();
                 } else if (selectedCategoryForQuote === 'medigap') {
@@ -733,7 +928,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 }
                 setShowInlineQuoteForm(false);
                 if (formMode==='edit') { setIsEditing(false); setEditCategory(null); setFormMode('new'); }
-              }}>{isGenerating ? (formMode==='edit' ? 'Saving…' : 'Working…') : (formMode==='edit' ? 'Regenerate' : 'Generate')}</Button>
+              }}>{(selectedCategoryForQuote && isCategoryLoading(selectedCategoryForQuote)) ? (formMode==='edit' ? 'Saving…' : 'Working…') : (formMode==='edit' ? 'Regenerate' : 'Generate')}</Button>
             </div>
           </div>
         )}
@@ -868,7 +1063,6 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                   <button type="button" aria-pressed={quoteViewMode==='list'} onClick={()=>persistQuoteViewMode('list')} className={`px-2 h-6 rounded text-[10px] font-medium transition ${quoteViewMode==='list' ? 'bg-blue-primary text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-600/50'}`}>List</button>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Switch between spacious card layout and compact list rows for Medigap quotes.</p>
               <Separator className="my-1" />
               {/* Carrier Search */}
               <div className="space-y-1">
@@ -906,7 +1100,6 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${preferredOnly ? 'translate-x-4' : 'translate-x-0.5'}`} />
                 </button>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Limits quote results to carriers designated as preferred partners.</p>
               <Separator className="my-1" />
               <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-700 dark:text-slate-200">
                 <span>Apply Discounts</span>
@@ -920,18 +1113,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ${applyDiscounts ? 'translate-x-4' : 'translate-x-0.5'}`} />
                 </button>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">Shows rates with household or other eligible discounts applied when available.</p>
             </div>
-            {generatedCats.filter(c => c !== 'medigap').length > 0 && (
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/40 p-3 border border-slate-200 dark:border-slate-700/60 space-y-2">
-                <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Category Filters (Coming Soon)</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {generatedCats.filter(c => c !== 'medigap').map(c => (
-                    <span key={c} className="px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 text-[10px] text-slate-700 dark:text-slate-300 capitalize">{c.replace(/-/g,' ')}</span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : activeNav === 'Saved' ? (
           <div className="space-y-6">
@@ -1122,7 +1304,27 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
         })}
         <Separator className="my-1" />
         <div className="flex gap-2 px-1.5">
-          <Button size="sm" className="h-8 text-xs flex-1 btn-brand">New Quote</Button>
+          <Button
+            size="sm"
+            className="h-8 text-xs flex-1 btn-brand"
+            onClick={() => {
+              // Open the Quotes panel and start a fresh inline form immediately for fast UX feedback
+              setActiveNav('Quotes');
+              if (activeTab !== 'nav') {
+                openTab('nav');
+              }
+              // Default to Medigap (most common) if no existing selection; surface its required fields
+              const defaultCat = 'medigap';
+              setSelectedCategoryForQuote(defaultCat);
+              const stored = loadStoredFormData();
+              const merged = { ...stored };
+              setFormInputs(merged);
+              const validation = validateRequiredData(defaultCat, merged);
+              setMissingFields(validation.missing);
+              setFormMode('new');
+              setShowInlineQuoteForm(true);
+            }}
+          >New Quote</Button>
         </div>
 
         {/* Collapsible Tab Panel (slides out) */}
@@ -1130,7 +1332,11 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           id={tabPanelId}
           role="tabpanel"
           aria-hidden={activeTab == null}
-          className={`absolute top-0 left-full ml-3 ${activeNav === 'Saved' ? 'w-[25rem] sm:w-[28rem]' : 'w-72 sm:w-80'} transition-all duration-300 ${activeTab ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-2'} z-10`}
+          // NOTE: Previously width changed between Saved (w-[25rem]) and others (w-72) while using transition-all,
+          // causing layout + transform jank (flash/jitter) on rapid nav switching. We now pin a stable panel width
+          // and only transition opacity + transform for smoother GPU-friendly animation.
+          className={`absolute top-0 left-full ml-3 w-[25rem] sm:w-[28rem] transform-gpu transition-opacity duration-250 ease-out ${activeTab ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-2'} z-10`}
+          data-active={!!activeTab}
         >
           <div ref={panelRef} className="rounded-2xl border bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 shadow-md relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_85%_18%,hsl(var(--blue-primary)/0.15),transparent_60%)]" />
@@ -1157,38 +1363,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           </div>
         </div>
       </div>
-      {/* Medigap Plan Selection Modal (still separate for multi-plan choose; could be inlined similarly) */}
-      <Dialog open={isMedigapSelectionOpen} onOpenChange={setIsMedigapSelectionOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Medigap Plans</DialogTitle>
-            <DialogDescription>Choose one or more plans to include.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              {['G','N','F'].map(plan => (
-                <div key={plan} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`plan-${plan}`}
-                    checked={selectedMedigapPlans.includes(plan)}
-                    onCheckedChange={(checked: boolean) => {
-                      setSelectedMedigapPlans(prev => checked ? [...prev, plan] : prev.filter(p => p !== plan));
-                    }}
-                  />
-                  <Label htmlFor={`plan-${plan}`} className="text-sm font-medium">Plan {plan}</Label>
-                </div>
-              ))}
-            </div>
-            {selectedMedigapPlans.length === 0 && <p className="text-xs text-slate-500 dark:text-slate-400">Select at least one plan to continue.</p>}
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleMedigapPlanCancel}>Cancel</Button>
-            <Button size="sm" disabled={selectedMedigapPlans.length === 0 || isGenerating} onClick={handleMedigapPlanConfirm}>
-              {isGenerating ? 'Generating…' : 'Generate Quotes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Removed separate Medigap plan selection modal; selection handled inline in the form */}
     </div>
   );
 };

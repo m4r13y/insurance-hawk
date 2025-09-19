@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,9 @@ import { ComparisonRowCards } from '@/components/new-shop-components/quote-cards
 import { MinimalRateChips } from '@/components/new-shop-components/quote-cards/MinimalRateChips';
 import { DensityStressGrid } from '@/components/new-shop-components/quote-cards/DensityStressGrid';
 import { LightInverseCards } from '@/components/new-shop-components/quote-cards/PrimaryCards';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { planBadges } from '@/components/new-shop-components/constants/planBadges';
+// legacyGetBaseRate no longer needed after adapter dual pricing implementation
 import SidebarShowcase from '@/components/new-shop-components/sidebar/SidebarShowcase';
 import { filterPreferredCarriers } from '@/lib/carrier-system';
 import PlanDetailsShowcase from '@/components/new-shop-components/plan-details/PlanDetailsShowcase';
@@ -46,6 +47,7 @@ import { getDentalQuotes } from '@/lib/actions/dental-quotes';
 import { getCancerInsuranceQuotes } from '@/lib/actions/cancer-insurance-quotes';
 import { getHospitalIndemnityQuotes } from '@/lib/actions/hospital-indemnity-quotes';
 import { getFinalExpenseLifeQuotes } from '@/lib/actions/final-expense-quotes';
+import { buildFinalExpenseParams, buildHospitalParams, buildCancerParams, buildDentalParams } from '@/lib/quoteParamBuilders';
 // Always-live adapter mode (shadow diff removed)
 
 /*
@@ -66,6 +68,8 @@ import { getFinalExpenseLifeQuotes } from '@/lib/actions/final-expense-quotes';
 export interface CardsSandboxProps { initialCategory?: string }
 export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { savedPlans } = useSavedPlans();
   // Real Medigap data (first carrier group) -------------------------------------------------
   const [loadingQuotes, setLoadingQuotes] = useState(false);
@@ -76,17 +80,45 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // UI panel + details state (restored after refactor removal)
   const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
   const [closeSignal, setCloseSignal] = useState(0);
+  // viewVisibility controls whether the carrier card grid or the plan details panel is shown.
+  // Requirement: plan details should REPLACE (not append below) the cards area and restore prior scroll on close.
   const [viewVisibility, setViewVisibility] = useState({ cards: true, planDetails: false });
+  const previousScrollRef = useRef(0);
   const toggleView = (k: keyof typeof viewVisibility) => setViewVisibility(v => ({ ...v, [k]: !v[k] }));
   const [activeCarrierId, setActiveCarrierId] = useState<string | null>(null);
-  const openPlanDetails = (carrier: { id: string }) => { setActiveCarrierId(carrier.id); setViewVisibility(v => ({ ...v, planDetails: true })); };
-  const closePlanDetails = () => { setActiveCarrierId(null); setViewVisibility(v => ({ ...v, planDetails: false })); };
+  const openPlanDetails = (carrier: { id: string }) => {
+    try { previousScrollRef.current = window.scrollY || 0; } catch {}
+    setActiveCarrierId(carrier.id);
+    // Hide cards while showing details
+    setViewVisibility({ cards: false, planDetails: true });
+    // Scroll to top so details start at viewport top for better focus
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch {}
+  };
+  const closePlanDetails = () => {
+    setActiveCarrierId(null);
+    // Restore cards view
+    setViewVisibility({ cards: true, planDetails: false });
+    // Restore previous scroll position after next paint
+    try {
+      const y = previousScrollRef.current || 0;
+  requestAnimationFrame(() => { try { window.scrollTo({ top: y, behavior: 'auto' }); } catch {} });
+    } catch {}
+  };
   const openPdpDetails = (carrier: { id: string }) => { openPlanDetails(carrier as any); };
   const openCategoryDetails = (carrierName: string, _category: string) => { openPlanDetails({ id: carrierName }); };
   // Quote view mode (retain list vs cards for Medigap experimentation)
   const [quoteViewMode, setQuoteViewMode] = useState<'list' | 'cards'>('cards');
   // Discount toggle lives early so summary memo can depend on it
   const [applyDiscounts, setApplyDiscounts] = useState(false);
+  // Global selected plan (moved earlier so carrier sorting can depend on it)
+  const [selectedPlan, setSelectedPlan] = useState<'F'|'G'|'N'>('G');
+
+  // Utility: robust carrier identity matcher (id OR name OR displayName/company)
+  const carrierMatches = useCallback((activeId: string, carrier: any) => {
+    if (!activeId || !carrier) return false;
+    const candidates = [carrier.id, carrier.name, carrier.displayName, carrier.company, carrier.carrierName];
+    return candidates.filter(Boolean).some(v => v === activeId);
+  }, []);
 
   // Performance / instrumentation
   const [fetchStartTs, setFetchStartTs] = useState<number | null>(null);
@@ -139,8 +171,51 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   }, []);
 
   // Category + View toggles (replacing upper tabs)
-  const [activeCategory, setActiveCategory] = useState(initialCategory || 'medigap');
+  // Hydrate activeCategory from URL (?category=) taking precedence over prop and default.
+  // Hydration-safe initial category: derive purely from searchParams (same on server & client) to avoid mismatch.
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const urlCat = searchParams?.get('category');
+    if (urlCat && ['medigap','advantage','drug-plan','dental','cancer','hospital','final-expense','hospital-indemnity'].includes(urlCat)) {
+      return urlCat === 'hospital-indemnity' ? 'hospital' : urlCat; // internal alias uses 'hospital'
+    }
+    return initialCategory || 'medigap';
+  });
   const [preferredOnly, setPreferredOnly] = useState(true);
+
+  // Sync activeCategory into URL query string (shallow) without full reload.
+  // NOTE: Removed searchParams from dependency list & added guard ref to prevent rapid oscillation
+  // that was triggering repeated GET /shop-components?category=medigap|advantage requests.
+  const lastSyncedCategoryRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pathname) return;
+    const canonical = activeCategory === 'hospital' ? 'hospital-indemnity' : activeCategory;
+    // If we've already synced this canonical value, skip.
+    if (lastSyncedCategoryRef.current === canonical) return;
+    const current = searchParams?.get('category');
+    if (current === canonical) {
+      // Record that we're in sync to avoid another replace when activeCategory updates again.
+      lastSyncedCategoryRef.current = canonical;
+      return;
+    }
+    const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+    params.set('category', canonical);
+    try {
+      lastSyncedCategoryRef.current = canonical;
+      router.replace(`${pathname}?${params.toString()}` as any, { scroll: false });
+    } catch (e) {
+      console.warn('Failed to update category param', e);
+    }
+  }, [activeCategory, pathname, router]);
+
+  // Respond to manual URL changes (back/forward) by updating state.
+  useEffect(() => {
+    const urlCat = searchParams?.get('category');
+    if (!urlCat) return;
+    const normalized = urlCat === 'hospital-indemnity' ? 'hospital' : urlCat;
+    if (['medigap','advantage','drug-plan','dental','cancer','hospital','final-expense'].includes(normalized) && normalized !== activeCategory) {
+      setActiveCategory(normalized as any);
+    }
+  }, [searchParams, activeCategory]);
 
   // Adapter shadow integration (Medigap only for now) – must run after activeCategory declaration
   const [medigapPlanQuotes, setMedigapPlanQuotes] = useState<{F:any[];G:any[];N:any[]}>({F:[],G:[],N:[]});
@@ -157,6 +232,11 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Hydrate quotes for active category (Firestore-only). This was removed during refactor; restored here.
   useEffect(() => {
     let cancelled = false;
+    const quotesUpdatedHandler = () => {
+      // Force hydration of latest quotes without manual refresh
+      setReloadIndex(i => i + 1);
+    };
+    try { window.addEventListener('quotes:updated', quotesUpdatedHandler as EventListener); } catch {}
     (async () => {
       try {
         if (activeCategory === 'medigap') {
@@ -171,7 +251,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         if (!cancelled) setQuoteError((e as any)?.message || 'Failed to load stored quotes');
       }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; try { window.removeEventListener('quotes:updated', quotesUpdatedHandler as EventListener); } catch {} };
   }, [activeCategory, reloadIndex]);
 
   // Resolve carriers (legacy vs adapter derived) early so downstream memos (availablePlans, pagination) use unified source
@@ -180,10 +260,37 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       const productCategory = mapUICategoryToProductCategory('medigap') || 'medicare-supplement';
       const enriched = adapterMedigapSummaries.map((s: any) => {
         const planKeys = ['F','G','N'] as const;
+        // Baseline (non-discount) and discountedPlans (if present) emitted by adapter
+        const discountedPlans: Record<string, number | undefined> | undefined = (s as any).discountedPlans;
+        const discountMeta = (s as any).__discountMeta;
+        // When applying discounts, we only override individual plan prices that have a discounted value.
+        // Carriers or plan letters without a discount should continue to display their baseline price.
+        let activePlans: Record<string, number | undefined> = s.plans;
+        if (applyDiscounts && discountedPlans) {
+          activePlans = { ...s.plans };
+          for (const k of Object.keys(discountedPlans)) {
+            const dv = (discountedPlans as any)[k];
+            if (typeof dv === 'number' && !Number.isNaN(dv)) {
+              activePlans[k] = dv;
+            }
+          }
+        }
         const candidatePrices: number[] = [];
-        planKeys.forEach(pk => { const p = s.plans[pk]; if (typeof p === 'number') candidatePrices.push(p); });
+        planKeys.forEach(pk => { const p = activePlans[pk]; if (typeof p === 'number') candidatePrices.push(p); });
         const min = candidatePrices.length ? Math.min(...candidatePrices) : undefined;
         const max = candidatePrices.length ? Math.max(...candidatePrices) : undefined;
+        // Compute potential savings: compare baseline vs discounted across tracked plans
+        let savings: number | undefined;
+        if (discountMeta?.perPlan) {
+          const deltas: number[] = [];
+          for (const pk of planKeys) {
+            const meta = discountMeta.perPlan[pk];
+            if (meta?.baseline != null && meta?.discounted != null && meta.discounted < meta.baseline) {
+              deltas.push(meta.baseline - meta.discounted);
+            }
+          }
+          if (deltas.length) savings = Math.max(...deltas); // largest plan-specific savings as headline
+        }
         // Find a representative quote from normalized adapter quotes for enrichment
         const representativeQuote = adapterMedigapQuotes?.find((q: any) => q.carrier?.id === s.carrierId || q.carrier?.name === s.carrierName);
         const enhancedInfo = representativeQuote
@@ -196,29 +303,37 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           rating: s.rating || 'N/A',
           min,
           max,
-          plans: s.plans,
+          plans: activePlans,
           planRanges: s.planRanges,
           __preferred: !!enhancedInfo.isPreferred,
           __preferredPriority: enhancedInfo.priority ?? 999,
+          __discountsApplied: !!applyDiscounts && !!discountedPlans,
+          __savings: savings,
         };
       });
-      // Sort: preferred first by priority, then by min rate, then name
+      // Sort: strictly by selected plan's active (possibly discounted) price ascending.
+      // Preferred carriers only act as a secondary tie-breaker (price always wins for clarity).
+      const getSortPrice = (c: any) => {
+        const p = c.plans?.[selectedPlan];
+        if (typeof p === 'number' && !Number.isNaN(p)) return p;
+        return Number.POSITIVE_INFINITY; // sink carriers lacking this plan
+      };
+      enriched.forEach((c:any)=>{ c.__sortPrice = getSortPrice(c); });
       enriched.sort((a: any, b: any) => {
+        if (a.__sortPrice !== b.__sortPrice) return a.__sortPrice - b.__sortPrice;
+        // Price tie: preferred first by priority
         if (a.__preferred && !b.__preferred) return -1;
         if (!a.__preferred && b.__preferred) return 1;
-        if (a.__preferred && b.__preferred) {
-          if (a.__preferredPriority !== b.__preferredPriority) return a.__preferredPriority - b.__preferredPriority;
+        if (a.__preferred && b.__preferred && a.__preferredPriority !== b.__preferredPriority) {
+          return a.__preferredPriority - b.__preferredPriority;
         }
-        const aMin = typeof a.min === 'number' ? a.min : Number.POSITIVE_INFINITY;
-        const bMin = typeof b.min === 'number' ? b.min : Number.POSITIVE_INFINITY;
-        if (aMin === bMin) return (a.name || '').localeCompare(b.name || '');
-        return aMin - bMin;
+        return (a.name || '').localeCompare(b.name || '');
       });
       return enriched;
     }
     // Fallback: use legacy computed summaries (still hydrated above) if adapter produced none
     return carrierSummaries;
-  }, [activeCategory, adapterMedigapSummaries, adapterMedigapQuotes, carrierSummaries]);
+  }, [activeCategory, adapterMedigapSummaries, adapterMedigapQuotes, carrierSummaries, applyDiscounts, selectedPlan]);
 
   // When leaving Medigap and coming back, we want to briefly show skeletons instead of stale carrier boxes.
   // We detect a return by tracking previous category and clearing transient carrier arrays; hydrateExisting() will repopulate.
@@ -305,7 +420,19 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       const enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
       return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, annualMax, deductibleIndividual, visionIncluded, hearingIncluded, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
     });
-    enriched.sort((a:any,b:any)=>{ if(a.__preferred&&!b.__preferred) return -1; if(!a.__preferred&&b.__preferred) return 1; if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin) return (a.name||'').localeCompare(b.name||''); return aMin-bMin;});
+    enriched.sort((a:any,b:any)=>{ 
+      if(a.__preferred&&!b.__preferred) return -1; 
+      if(!a.__preferred&&b.__preferred) return 1; 
+      if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; 
+      const aMin=typeof a.min==='number'?a.min:Infinity; 
+      const bMin=typeof b.min==='number'?b.min:Infinity; 
+      if(aMin===bMin){ 
+        const aName = typeof a.name==='string'?a.name:String(a.name??'');
+        const bName = typeof b.name==='string'?b.name:String(b.name??'');
+        return aName.localeCompare(bName);
+      } 
+      return aMin-bMin;
+    });
     return enriched;
   }, [activeCategory, dentalSummaries, dentalNormalized]);
 
@@ -326,11 +453,24 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       const enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
       return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, lumpSum, wellness, recurrence, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
     });
-    enriched.sort((a:any,b:any)=>{ if(a.__preferred&&!b.__preferred) return -1; if(!a.__preferred&&b.__preferred) return 1; if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin) return (a.name||'').localeCompare(b.name||''); return aMin-bMin;});
+    enriched.sort((a:any,b:any)=>{ 
+      if(a.__preferred&&!b.__preferred) return -1; 
+      if(!a.__preferred&&b.__preferred) return 1; 
+      if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; 
+      const aMin=typeof a.min==='number'?a.min:Infinity; 
+      const bMin=typeof b.min==='number'?b.min:Infinity; 
+      if(aMin===bMin){
+        const aName = typeof a.name==='string'?a.name:String(a.name??'');
+        const bName = typeof b.name==='string'?b.name:String(b.name??'');
+        return aName.localeCompare(bName);
+      }
+      return aMin-bMin;
+    });
     return enriched;
   }, [activeCategory, cancerSummaries, cancerNormalized]);
 
-  const { summaries: hospitalSummaries, normalized: hospitalNormalized } = useCategoryQuotes<any>('hospital', activeCategory==='hospital' ? quotes : [], { enabled: true });
+  // Use canonical id 'hospital-indemnity' for adapter consistency
+  const { summaries: hospitalSummaries, normalized: hospitalNormalized } = useCategoryQuotes<any>('hospital-indemnity', activeCategory==='hospital' ? quotes : [], { enabled: true });
   // Defensive: if hospital quotes flicker (appear then disappear), keep a sticky snapshot while active session
   const [stickyHospitalQuotes, setStickyHospitalQuotes] = useState<any[]>([]);
   useEffect(() => {
@@ -341,7 +481,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Always invoke hooks unconditionally to satisfy Rules of Hooks. We create a secondary adapter instance
   // that is only enabled when we actually want to use the sticky snapshot. This avoids conditional
   // invocation while preserving fallback behavior for flickering hospital quotes.
-  const stickyHospitalAdapter = useCategoryQuotes<any>('hospital', stickyHospitalQuotes, {
+  const stickyHospitalAdapter = useCategoryQuotes<any>('hospital-indemnity', stickyHospitalQuotes, {
     enabled: activeCategory === 'hospital' && hospitalNormalized.length === 0 && stickyHospitalQuotes.length > 0,
   });
   const effectiveHospitalNormalized = (activeCategory === 'hospital'
@@ -366,7 +506,19 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       const enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
       return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, dailyBenefit, daysCovered, ambulance, icuUpgrade, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
     });
-    enriched.sort((a:any,b:any)=>{ if(a.__preferred&&!b.__preferred) return -1; if(!a.__preferred&&b.__preferred) return 1; if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin) return (a.name||'').localeCompare(b.name||''); return aMin-bMin;});
+    enriched.sort((a:any,b:any)=>{ 
+      if(a.__preferred&&!b.__preferred) return -1; 
+      if(!a.__preferred&&b.__preferred) return 1; 
+      if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; 
+      const aMin=typeof a.min==='number'?a.min:Infinity; 
+      const bMin=typeof b.min==='number'?b.min:Infinity; 
+      if(aMin===bMin){
+        const aName = typeof a.name==='string'?a.name:String(a.name??'');
+        const bName = typeof b.name==='string'?b.name:String(b.name??'');
+        return aName.localeCompare(bName);
+      }
+      return aMin-bMin;
+    });
     return enriched;
   }, [activeCategory, hospitalSummaries, hospitalNormalized]);
 
@@ -374,21 +526,88 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const finalExpenseCarriers = useMemo(() => {
     if (activeCategory !== 'final-expense') return [] as any[];
     const productCategory = mapUICategoryToProductCategory('final-expense') || 'final-expense';
+    // Grab requested face value (if any) from stored form state (same source used in header display)
+  let requestedFace: number | undefined; let feMode: 'face'|'rate' = 'face'; let targetRate: number | undefined;
+  try { const raw = typeof window!=='undefined'? localStorage.getItem('medicare_form_state'):null; if(raw){ const o=JSON.parse(raw); if(o?.finalExpenseQuoteMode==='rate') feMode='rate'; if(o?.desiredFaceValue){ const v=parseInt(o.desiredFaceValue,10); if(!isNaN(v)) requestedFace=v; } if(o?.desiredRate){ const r=parseFloat(o.desiredRate); if(!isNaN(r)) targetRate=r; } } } catch {}
+    const FACE_TOLERANCE = 0.2; // ±20%
     const enriched = finalExpenseSummaries.map(s => {
       const range = s.planRanges?.FE; const related = finalExpenseNormalized.filter(q => q.carrier.id === s.carrierId);
       let faceAmount: number|undefined; let graded: boolean|undefined; let immediate: boolean|undefined; let accidental: boolean|undefined; let planName: string|undefined;
+      // New aggregated metadata fields
+      let faceAmountMin: number|undefined; let faceAmountMax: number|undefined; let underwritingType: string|undefined;
+      // Collect pricing arrays
+      const allPrices: number[] = [];
+      const requestedBandPrices: number[] = [];
       related.forEach(r => {
         if (faceAmount == null && typeof r.metadata?.faceAmount === 'number') faceAmount = r.metadata.faceAmount;
+        if (typeof r.metadata?.faceAmount === 'number') {
+          if (faceAmountMin == null || r.metadata.faceAmount < faceAmountMin) faceAmountMin = r.metadata.faceAmount;
+          if (faceAmountMax == null || r.metadata.faceAmount > faceAmountMax) faceAmountMax = r.metadata.faceAmount;
+        }
+        const total = (r.pricing as any).totalMonthly ?? r.pricing.monthly;
+        if (typeof total === 'number') {
+          allPrices.push(total);
+          const fv = (r.metadata as any)?.faceValue || r.metadata?.faceAmount;
+          if (feMode === 'face' && requestedFace && typeof fv === 'number') {
+            const lower = requestedFace * (1 - FACE_TOLERANCE);
+            const upper = requestedFace * (1 + FACE_TOLERANCE);
+            if (fv >= lower && fv <= upper) requestedBandPrices.push(total);
+          }
+        }
         if (graded == null && typeof r.metadata?.graded === 'boolean') graded = r.metadata.graded;
         if (immediate == null && typeof r.metadata?.immediate === 'boolean') immediate = r.metadata.immediate;
         if (accidental == null && typeof r.metadata?.accidental === 'boolean') accidental = r.metadata.accidental;
         if (!planName) planName = r.plan.display;
+        if (!underwritingType) {
+          const uw = (r.metadata as any)?.underwritingType || (r.metadata as any)?.underwriting;
+          if (typeof uw === 'string' && uw.trim()) underwritingType = uw.trim();
+        }
       });
       const representativeQuote = related[0];
       const enhancedInfo = representativeQuote ? getEnhancedCarrierInfo(representativeQuote, productCategory as any) : { displayName: s.carrierName, logoUrl: s.logoUrl, isPreferred: false, priority: undefined };
-      return { id: s.carrierId, name: enhancedInfo.displayName || s.carrierName, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: range?.min, max: range?.max, planRange: range, planName, faceAmount, graded, immediate, accidental, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
+      // Coerce name to string early; in dev warn if object sneaks through
+      let rawName: any = enhancedInfo.displayName || s.carrierName;
+      if (process.env.NODE_ENV !== 'production' && typeof rawName !== 'string') {
+        // eslint-disable-next-line no-console
+        console.warn('Non-string final expense carrier name encountered', rawName);
+      }
+      const name = typeof rawName === 'string' ? rawName : String(rawName ?? 'Unknown');
+      // Determine display min/max: prioritize requested band if available
+  const displayPrices = (feMode === 'face' && requestedFace && requestedBandPrices.length) ? requestedBandPrices : allPrices;
+      const displayMin = displayPrices.length ? Math.min(...displayPrices) : undefined;
+      const displayMax = displayPrices.length ? Math.max(...displayPrices) : undefined;
+      const fullMin = allPrices.length ? Math.min(...allPrices) : displayMin;
+      const fullMax = allPrices.length ? Math.max(...allPrices) : displayMax;
+  return { id: s.carrierId, name, logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png', min: displayMin, max: displayMax, fullMin, fullMax, planRange: { ...(range||{}), min: displayMin, max: displayMax }, planName, faceAmount, faceAmountMin, faceAmountMax, graded, immediate, accidental, underwritingType, requestedFace, quoteMode: feMode, targetRate, count: related.length, __preferred: !!enhancedInfo.isPreferred, __preferredPriority: enhancedInfo.priority ?? 999 };
     });
-    enriched.sort((a:any,b:any)=>{ if(a.__preferred&&!b.__preferred) return -1; if(!a.__preferred&&b.__preferred) return 1; if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; const aMin=typeof a.min==='number'?a.min:Infinity; const bMin=typeof b.min==='number'?b.min:Infinity; if(aMin===bMin) return (a.name||'').localeCompare(b.name||''); return aMin-bMin;});
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const diagnostics = enriched.filter(e=> typeof e.min==='number').map(e=>({ carrier:e.name, min:e.min, max:e.max, fullMin:e.fullMin, fullMax:e.fullMax, requestedFace:e.requestedFace, count:e.count }));
+        const suspicious = diagnostics.filter(d=> d.min!=null && d.min < 30); // heuristic threshold
+        if (suspicious.length) {
+          // eslint-disable-next-line no-console
+            console.groupCollapsed('[FE Pricing Diagnostics] Suspicious low mins');
+            console.table(suspicious);
+            const rawMap: Record<string, number[]> = {};
+            finalExpenseNormalized.forEach(q=>{ const price=(q.pricing as any).totalMonthly ?? q.pricing.monthly; rawMap[q.carrier.name] = rawMap[q.carrier.name] || []; if(typeof price==='number') rawMap[q.carrier.name].push(price); });
+            Object.entries(rawMap).forEach(([k,v])=>{ if(v.some(x=> x<30)) { console.log('Raw monthly values for', k, v.sort((a,b)=>a-b)); } });
+            console.groupEnd();
+        }
+      } catch {/* noop */}
+    }
+    enriched.sort((a:any,b:any)=>{ 
+      if(a.__preferred&&!b.__preferred) return -1; 
+      if(!a.__preferred&&b.__preferred) return 1; 
+      if(a.__preferred&&b.__preferred&&a.__preferredPriority!==b.__preferredPriority) return a.__preferredPriority-b.__preferredPriority; 
+      const aMin=typeof a.min==='number'?a.min:Infinity; 
+      const bMin=typeof b.min==='number'?b.min:Infinity; 
+      if(aMin===bMin){
+        const aName = typeof a.name==='string'?a.name:String(a.name??'');
+        const bName = typeof b.name==='string'?b.name:String(b.name??'');
+        return aName.localeCompare(bName);
+      }
+      return aMin-bMin;
+    });
     return enriched;
   }, [activeCategory, finalExpenseSummaries, finalExpenseNormalized]);
 
@@ -409,15 +628,16 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Pagination for carrier-based sections --------------------------------------------------
   const CARRIER_PAGE_SIZE = 12; // configurable page size
   const [carrierPage, setCarrierPage] = useState(1);
-  // Hydrate stored page index
+  // Hydrate stored page index (per-category key to prevent cross-category jumping)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const raw = localStorage.getItem('medigap_carrier_page');
+      const key = `carrier_page_${activeCategory}`;
+      const raw = localStorage.getItem(key);
       const parsed = raw ? parseInt(raw, 10) : 1;
       if (parsed > 0) setCarrierPage(parsed);
     } catch {}
-  }, []);
+  }, [activeCategory]);
 
   // Use enriched medigap carriers (adapter derived) when active; otherwise legacy summaries.
   const effectiveCarriers = (streamingEnabled && streamedCarriers.length)
@@ -436,7 +656,8 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const filteredCarriers = useMemo(() => {
     const base = searchedCarriers;
     if (preferredOnly && activeCategory === 'medigap') {
-      return base.filter((c: any) => c.__preferred);
+      const preferredList = base.filter((c: any) => c.__preferred);
+      return preferredList.length ? preferredList : base; // fallback to avoid empty UI confusion
     }
     return base;
   }, [searchedCarriers, preferredOnly, activeCategory]);
@@ -452,12 +673,12 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     return filteredCarriers.slice(start, start + CARRIER_PAGE_SIZE);
   }, [filteredCarriers, carrierPage]);
 
-  // Persist page index
+  // Persist page index with per-category key
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      try { localStorage.setItem('medigap_carrier_page', String(carrierPage)); } catch {}
+      try { localStorage.setItem(`carrier_page_${activeCategory}`, String(carrierPage)); } catch {}
     }
-  }, [carrierPage]);
+  }, [carrierPage, activeCategory]);
 
   const handlePageChange = (dir: 'prev' | 'next') => {
     setCarrierPage(p => {
@@ -488,8 +709,6 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     );
   };
 
-  // Global selected plan letter for dark inverse experiment (could be per-carrier later)
-  const [selectedPlan, setSelectedPlan] = useState<'F'|'G'|'N'>('G');
   // Variant visibility toggles (developer aids)
   const [variantVisibility, setVariantVisibility] = useState({
     minimal: true,
@@ -588,13 +807,21 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
       {/* Page-level overlay for sidebar panel (modal-style) */}
       {sidebarPanelOpen && (
-        <button
-          type="button"
-          aria-hidden="true"
-          tabIndex={-1}
-          onClick={() => setCloseSignal(s => s + 1)}
-          className="fixed inset-0 z-[110] hidden lg:block bg-slate-950/5 dark:bg-black/5 backdrop-blur-xsm"
-        />
+        <>
+          {/* Visual deemphasis overlay (non-blur for perf; mild backdrop blur optional) */}
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-[110] hidden lg:block bg-white/50 dark:bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+          />
+          {/* Click-catcher */}
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setCloseSignal(s => s + 1)}
+            className="fixed inset-0 z-[111] hidden lg:block cursor-default"
+          />
+        </>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)] relative">
         <aside className="sticky hidden lg:block self-start h-fit top-28 z-[120]">
@@ -609,17 +836,18 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
             onToggleApplyDiscounts={setApplyDiscounts}
             onGenerateQuotes={async (category, formData: any, plansList) => {
               try {
+                // Immediately show skeletons for target category
+                setLoadingQuotes(true);
                 // Early add category to selected list so button appears immediately
                 let selected: string[] = [];
                 try {
-                  const rawEarly = localStorage.getItem('medicare_selected_categories');
+                  const rawEarly = localStorage.getItem(SELECTED_CATEGORIES_KEY);
                   if (rawEarly) selected = JSON.parse(rawEarly);
                 } catch {}
                 const alreadyHad = selected.includes(category);
                 if (!alreadyHad) {
                   selected.push(category);
-                  try { localStorage.setItem('medicare_selected_categories', JSON.stringify(selected)); } catch {}
-                  // Dispatch event so sidebar can re-read instantly
+                  try { localStorage.setItem(SELECTED_CATEGORIES_KEY, JSON.stringify(selected)); } catch {}
                   try { window.dispatchEvent(new CustomEvent('selectedCategories:updated')); } catch {}
                 }
                 // Firestore-backed persistence (reuse production storage helpers)
@@ -664,54 +892,90 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   if (error) throw new Error(error);
                   if (quotes) await persistQuotes(DRUG_PLAN_QUOTES_KEY, quotes);
                 } else if (category === 'dental') {
-                  const { success, quotes, error } = await getDentalQuotes({
-                    age: formData.age,
-                    zipCode: String(formData.zipCode),
-                    gender: formData.gender,
-                    tobaccoUse: !!formData.tobaccoUse,
-                    coveredMembers: formData.coveredMembers ? parseInt(formData.coveredMembers,10) : undefined
-                  });
+                  const dentalParams = buildDentalParams(formData);
+                  const { success, quotes, error } = await getDentalQuotes(dentalParams as any);
                   if (!success) throw new Error(error || 'Dental quote fetch failed');
                   await persistQuotes(DENTAL_QUOTES_KEY, quotes);
                 } else if (category === 'cancer') {
-                  const cancerParams = {
-                    state: formData.state || 'TX',
-                    age: parseInt(formData.age,10) || 65,
-                    familyType: formData.familyType === 'family' ? 'Applicant and Spouse' : 'Applicant Only',
-                    tobaccoStatus: formData.tobaccoUse ? 'Tobacco' : 'Non-Tobacco',
-                    premiumMode: formData.premiumMode === 'annual' ? 'Annual' : 'Monthly Bank Draft',
-                    carcinomaInSitu: formData.carcinomaInSitu ? '100%' : '25%',
-                    benefitAmount: parseInt(formData.benefitAmount || '10000', 10)
-                  } as any;
-                  const { quotes, success, error } = await getCancerInsuranceQuotes(cancerParams);
+                  const cancerParams = buildCancerParams(formData, { benefitStrategy: 'form' });
+                  const { quotes, success, error } = await getCancerInsuranceQuotes(cancerParams as any);
                   if (!success) throw new Error(error || 'Cancer quote fetch failed');
                   await persistQuotes(CANCER_INSURANCE_QUOTES_KEY, quotes);
                 } else if (category === 'hospital') {
-                  const hospParams = {
-                    zipCode: String(formData.zipCode),
-                    age: parseInt(formData.age,10) || 65,
-                    gender: (formData.gender || 'male').toString().toLowerCase().startsWith('m') ? 'M' : 'F',
-                    tobaccoUse: !!formData.tobaccoUse
-                  };
+                  const hospParams = buildHospitalParams(formData);
+                  if (process.env.NODE_ENV !== 'production') {
+                    // eslint-disable-next-line no-console
+                    console.debug('[hospital quotes] requesting with params', hospParams);
+                  }
                   const { quotes, success, error } = await getHospitalIndemnityQuotes(hospParams as any);
+                  if (process.env.NODE_ENV !== 'production') {
+                    // eslint-disable-next-line no-console
+                    console.debug('[hospital quotes] response meta', { success, error, count: quotes?.length });
+                    if (quotes && quotes.length > 0) {
+                      // eslint-disable-next-line no-console
+                      console.debug('[hospital quotes] first quote sample', {
+                        id: quotes[0]?.key || quotes[0]?.id,
+                        carrier: quotes[0]?.company,
+                        plan: quotes[0]?.plan_name,
+                        policy_fee: quotes[0]?.policy_fee,
+                        base_plans: Array.isArray(quotes[0]?.base_plans) ? quotes[0].base_plans.length : undefined,
+                        riders: Array.isArray(quotes[0]?.riders) ? quotes[0].riders.length : undefined
+                      });
+                    }
+                  }
                   if (!success) throw new Error(error || 'Hospital Indemnity quote fetch failed');
                   await persistQuotes(HOSPITAL_INDEMNITY_QUOTES_KEY, quotes);
+                  if (process.env.NODE_ENV !== 'production') {
+                    // eslint-disable-next-line no-console
+                    console.debug('[hospital quotes] persisted', { key: HOSPITAL_INDEMNITY_QUOTES_KEY, storedCount: quotes?.length });
+                  }
                 } else if (category === 'final-expense') {
-                  const feParams = {
-                    zipCode: String(formData.zipCode),
-                    age: parseInt(formData.age,10) || 65,
-                    gender: (formData.gender || 'male').toString().toLowerCase().startsWith('m') ? 'M' : 'F',
-                    tobaccoUse: !!formData.tobaccoUse,
-                    desiredFaceValue: formData.desiredFaceValue ? parseInt(formData.desiredFaceValue,10) : 10000
-                  };
-                  const { quotes, success, error } = await getFinalExpenseLifeQuotes(feParams as any);
+                  const feParams = buildFinalExpenseParams(formData);
+                  // Defensive defaults if user skipped fields (should be required now, but guard anyway)
+                  if(!feParams.age) (feParams as any).age = 65;
+                  if(!feParams.gender) (feParams as any).gender = 'M';
+                  if(typeof feParams.tobaccoUse !== 'boolean') (feParams as any).tobaccoUse = false;
+                  // Read benefit type selection (persisted) to pass upstream if provided
+                  let benefitNameParam: string | undefined = undefined;
+                  try {
+                    const rawState = localStorage.getItem('medicare_form_state');
+                    if (rawState) {
+                      const s = JSON.parse(rawState);
+                      const bt = s?.finalExpenseBenefitType;
+                      if (bt && bt !== '__all' && bt !== 'All' && bt !== '') benefitNameParam = bt;
+                    }
+                  } catch {}
+                  const { quotes, success, error } = await getFinalExpenseLifeQuotes({
+                    zipCode: feParams.zipCode,
+                    age: feParams.age,
+                    gender: feParams.gender,
+                    tobaccoUse: feParams.tobaccoUse,
+                    desiredFaceValue: feParams.quoteMode === 'face' ? feParams.desiredFaceValue : undefined,
+                    desiredRate: feParams.quoteMode === 'rate' ? feParams.desiredRate : undefined
+                  } as any); // benefitName intentionally omitted (client-side filtering only)
                   if (!success) throw new Error(error || 'Final Expense quote fetch failed');
-                  await persistQuotes(FINAL_EXPENSE_QUOTES_KEY, quotes);
+                  // Benefit Type filtering (client-side) based on stored form state
+                  let filtered = quotes;
+                  try {
+                    const rawState = localStorage.getItem('medicare_form_state');
+                    if(rawState){
+                      const s = JSON.parse(rawState);
+                      const benefitType = s?.finalExpenseBenefitType;
+                      if(benefitType && benefitType !== '__all' && benefitType !== 'All'){
+                        filtered = quotes.filter((q:any)=> (q.benefit_name||q.benefitName||'').toLowerCase() === String(benefitType).toLowerCase());
+                      }
+                    }
+                  } catch {}
+                  await persistQuotes(FINAL_EXPENSE_QUOTES_KEY, filtered);
+                  try {
+                    // Persist last raw FE response (compact) for copy helper
+                    localStorage.setItem('last_final_expense_raw_response', JSON.stringify({ fetchedAt: new Date().toISOString(), params: feParams, quotes, filteredCount: filtered.length }, null, 2));
+                  } catch {}
                 }
 
                 // Finalize selected categories list (already added above if new)
-                // Trigger reload to hydrate
-                setReloadIndex(i => i + 1);
+                // Dispatch event so any listeners (including hydration effect) can reload sooner
+                try { window.dispatchEvent(new CustomEvent('quotes:updated', { detail: { category } })); } catch {}
               } catch (e) {
                 console.error('Quote generation failed', e);
                 // Roll back early category addition if quotes failed and no quotes key stored
@@ -719,18 +983,22 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   const key = `medicare_${category.replace(/-/g,'_')}_quotes`;
                   const hasQuotes = !!localStorage.getItem(category==='medigap' ? 'medigap_plan_quotes_stub' : key);
                   if (!hasQuotes) {
-                    const rawRollback = localStorage.getItem('medicare_selected_categories');
+                    const rawRollback = localStorage.getItem(SELECTED_CATEGORIES_KEY);
                     if (rawRollback) {
                       let arr = [] as string[];
                       try { arr = JSON.parse(rawRollback); } catch {}
                       const next = arr.filter(c => c !== category);
                       if (next.length !== arr.length) {
-                        localStorage.setItem('medicare_selected_categories', JSON.stringify(next));
+                        localStorage.setItem(SELECTED_CATEGORIES_KEY, JSON.stringify(next));
                         try { window.dispatchEvent(new CustomEvent('selectedCategories:updated')); } catch {}
                       }
                     }
                   }
                 } catch {}
+              }
+              finally {
+                // Allow a slight delay to ensure persistence before clearing loading (avoid flicker if extremely fast)
+                setTimeout(()=> setLoadingQuotes(false), 50);
               }
             }}
           />
@@ -744,16 +1012,9 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
           {/* View mode (card | list) handled via top-level hook now */}
           {/* Developer Controls moved to bottom */}
 
-          {filteredCarriers.length === 0 && !loadingQuotes && (
-            <div className="rounded-md border border-dashed border-slate-300 dark:border-slate-600 p-6 text-center space-y-2">
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No carriers match your filters</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Try clearing the search{preferredOnly ? ' or disabling Preferred filter' : ''}.
-              </p>
-            </div>
-          )}
+          {/* Removed empty-state notice per request (prevent persistent box) */}
 
-          {/* Unified saved plans chip strip (all categories) */}
+          {/* Saved plans strip */}
           <SavedPlanChips
             onOpen={(category, carrierName) => {
               switch (category) {
@@ -819,9 +1080,15 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
               <HospitalIndemnityPlanCards carriers={hospitalCarriers as any} loading={loadingQuotes && hospitalCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'hospital')} />
             </section>
           )}
-          {activeCategory === 'final-expense' && (
+              {activeCategory === 'final-expense' && (
             <section className="space-y-6">
-              <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200">Final Expense Plans</h3>
+              {(() => { let faceVal: string | null = null; try { const raw = localStorage.getItem('medicare_form_state'); if(raw){ const obj = JSON.parse(raw); if(obj?.desiredFaceValue) faceVal = obj.desiredFaceValue; } } catch {} return (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-200 flex items-center gap-2">Final Expense Plans {(() => { let badge: string | null = null; try { const raw = localStorage.getItem('medicare_form_state'); if(raw){ const obj = JSON.parse(raw); if(obj?.finalExpenseQuoteMode === 'rate' && obj?.desiredRate){ badge = `(Target: $${obj.desiredRate}/mo)`; } else if (obj?.desiredFaceValue){ badge = `(Requested: $${obj.desiredFaceValue})`; } } } catch {} return badge ? <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{badge}</span> : null; })()}</h3>
+                </div>
+              );})()}
+              {/* Auto-populate capture if quotes exist but no snapshot stored (e.g., page reload) */}
+              {(() => { try { if(!localStorage.getItem('last_final_expense_raw_response')){ const stored = localStorage.getItem('medicare_final_expense_quotes'); if(stored){ const quotes = JSON.parse(stored); if(Array.isArray(quotes) && quotes.length){ const paramsRaw = localStorage.getItem('medicare_form_state'); let params: any = undefined; try { if(paramsRaw) params = JSON.parse(paramsRaw); } catch {} localStorage.setItem('last_final_expense_raw_response', JSON.stringify({ fetchedAt: new Date().toISOString(), params, quotes }, null, 2)); } } } } catch {} return null; })()}
               {(!loadingQuotes && finalExpenseCarriers.length === 0) && (<div className="text-xs text-slate-500 dark:text-slate-400">No final expense plans loaded.</div>)}
               <FinalExpensePlanCards carriers={finalExpenseCarriers as any} loading={loadingQuotes && finalExpenseCarriers.length===0} onOpenCarrierDetails={(c)=> openCategoryDetails(c.name,'final-expense')} />
             </section>
@@ -885,7 +1152,10 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <PlanDetailsShowcase
             carrierId={activeCarrierId}
-            quotes={quotes.filter(q => (q.carrier?.name || q.company) === activeCarrierId)}
+            quotes={adapterMedigapQuotes.filter((q:any) => carrierMatches(activeCarrierId, q.carrier)).map((q:any) => {
+              // If discounts are applied, prefer quotes whose metadata facet is with_hhd; else sans_hhd -> with_hhd -> unknown
+              return q; // details component will internally compute display using plan key + discount state if needed
+            })}
             plan={selectedPlan}
             onClose={closePlanDetails}
           />
@@ -895,7 +1165,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <PdpDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={pdpNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            quotes={pdpNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
             onClose={closePlanDetails}
           />
         </div>
@@ -904,25 +1174,113 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <AdvantageDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={advantageNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            quotes={advantageNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
             onClose={closePlanDetails}
           />
         </div>
       )}
       {viewVisibility.planDetails && activeCarrierId && activeCategory === 'dental' && (
         <div className="space-y-8">
-          <DentalDetailsShowcase
-            carrierName={activeCarrierId}
-            quotes={dentalNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
-            onClose={closePlanDetails}
-          />
+          {(() => {
+            const norm = (s: string) => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+            // First pass: strict match via carrierMatches helper
+            let related = dentalNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier));
+
+            // Second pass: simple substring fuzzy (existing behavior)
+            if (!related.length) {
+              const target = norm(activeCarrierId);
+              related = dentalNormalized.filter(q => {
+                const variants = [q.carrier?.id, q.carrier?.name, (q as any).carrier?.displayName]
+                  .filter(Boolean)
+                  .map(v => norm(String(v)));
+                return variants.some(v => v && (v.includes(target) || target.includes(v)));
+              });
+            }
+
+            // Third pass: token-based similarity ignoring generic suffix words (Inc, Insurance, Company, Life, Corp, Dental, Plan, Co, The)
+            if (!related.length) {
+              const stop = new Set(['inc','insurance','company','life','corp','corporation','dental','plan','co','the']);
+              const tokenize = (s: string) => (s||'')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g,' ')
+                .split(/\s+/)
+                .filter(w => w && !stop.has(w));
+              const targetTokens = tokenize(activeCarrierId);
+              const targetSet = new Set(targetTokens);
+              const targetLen = targetTokens.length || 1;
+              related = dentalNormalized.filter(q => {
+                const rawNames = [q.carrier?.name, q.carrier?.id, (q as any).carrier?.displayName].filter(Boolean) as string[];
+                return rawNames.some(name => {
+                  const toks = tokenize(name);
+                  if (!toks.length) return false;
+                  const overlap = toks.filter(t => targetSet.has(t));
+                  // Require at least half of the smaller token list to overlap, or a single exact token if only one remains
+                  const smaller = Math.min(toks.length, targetLen);
+                  return overlap.length >= Math.max(1, Math.ceil(smaller * 0.5));
+                });
+              });
+            }
+
+            // As a last resort pick carriers with minimal Levenshtein distance on normalized strings (cheap manual implementation threshold)
+            if (!related.length && dentalNormalized.length) {
+              const a = norm(activeCarrierId);
+              function dist(x: string, y: string) {
+                const m = x.length, n = y.length;
+                const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1));
+                for (let i=0;i<=m;i++) dp[i][0]=i;
+                for (let j=0;j<=n;j++) dp[0][j]=j;
+                for (let i=1;i<=m;i++) {
+                  for (let j=1;j<=n;j++) {
+                    const cost = x[i-1] === y[j-1] ? 0 : 1;
+                    dp[i][j] = Math.min(
+                      dp[i-1][j] + 1,
+                      dp[i][j-1] + 1,
+                      dp[i-1][j-1] + cost
+                    );
+                  }
+                }
+                return dp[m][n];
+              }
+              let best: any[] = [];
+              let bestScore = Infinity;
+              dentalNormalized.forEach(q => {
+                const candidates = [q.carrier?.name, q.carrier?.id, (q as any).carrier?.displayName].filter(Boolean) as string[];
+                candidates.forEach(c => {
+                  const d = dist(a, norm(c));
+                  if (d < bestScore) { bestScore = d; best = [q]; }
+                  else if (d === bestScore) { best.push(q); }
+                });
+              });
+              if (bestScore <= Math.max(3, Math.floor(a.length * 0.3))) { // accept reasonably similar
+                related = Array.from(new Set(best));
+              }
+            }
+
+            try {
+              const sampleCarrierNames = dentalNormalized.slice(0,10).map(q => q.carrier?.name || q.carrier?.id);
+              console.debug('[dental details] carrier lookup', {
+                request: activeCarrierId,
+                totalDental: dentalNormalized.length,
+                matched: related.length,
+                sampleCarrierNames,
+                firstMatch: related[0]
+              });
+            } catch {}
+            return (
+              <DentalDetailsShowcase
+                carrierName={activeCarrierId}
+                quotes={related}
+                onClose={closePlanDetails}
+              />
+            );
+          })()}
         </div>
       )}
       {viewVisibility.planDetails && activeCarrierId && activeCategory === 'cancer' && (
         <div className="space-y-8">
           <CancerDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={cancerNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            quotes={cancerNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
             onClose={closePlanDetails}
           />
         </div>
@@ -931,7 +1289,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <HospitalIndemnityDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={hospitalNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            quotes={hospitalNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
             onClose={closePlanDetails}
           />
         </div>
@@ -940,129 +1298,15 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         <div className="space-y-8">
           <FinalExpenseDetailsShowcase
             carrierName={activeCarrierId}
-            quotes={finalExpenseNormalized.filter(q => (q.carrier.id === activeCarrierId || q.carrier.name === activeCarrierId))}
+            quotes={finalExpenseNormalized.filter(q => carrierMatches(activeCarrierId, q.carrier))}
             onClose={closePlanDetails}
           />
         </div>
       )}
-
-      {/* 8. Next Steps */}
-      <section className="space-y-4 pt-4" id="next-steps">
-        <h2 className="text-xl font-semibold tracking-tight">Next Steps & Notes</h2>
-        <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
-          <li>Decide preferred baseline structure (compact vs expanded) for Medigap grouping.</li>
-          <li>Abstract price block + plan badge cluster into reusable subcomponents.</li>
-          <li>Add interaction states (selected, compared, disabled) & skeleton variants.</li>
-          <li>Integrate discount / payment mode toggles inline (chip cluster or dropdown).</li>
-          <li>Run quick Lighthouse/CLS checks for density stress grid once virtualized.</li>
-        </ul>
-      </section>
         </div>
-        </div>
-        {/* Bottom Sandbox Controls */}
-        <div className="mt-12">
-          <Card className="bg-white/60 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Sandbox Controls</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-4">
-              <div className="flex flex-wrap gap-3">
-                {(['minimal','lightInverse','comparison'] as const).map(k => (
-                  <label key={k} className="flex items-center gap-1 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      className="accent-blue-primary"
-                      checked={variantVisibility[k]}
-                      onChange={() => toggleVariant(k)}
-                    />
-                    <span className="capitalize">{k}</span>
-                  </label>
-                ))}
-              </div>
-              <Separator className="my-2" />
-              <div className="flex flex-wrap gap-6 text-[11px]">
-                <div className="space-y-1">
-                  <div className="font-semibold text-xs opacity-80">Category</div>
-                  <div className="flex flex-wrap gap-2">
-                    {['medigap','advantage','cancer','hospital','final-expense','drug-plan','dental'].map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          setActiveCategory(cat);
-                          if (typeof window !== 'undefined') {
-                            router.push(`/shop-components/${cat}${window.location.search || ''}`);
-                          }
-                        }}
-                        className={`px-2.5 py-1 rounded-md border text-[11px] transition ${activeCategory === cat ? 'bg-blue-primary text-white border-blue-primary' : 'bg-card/40 hover:bg-card/60 border-border'} `}
-                      >
-                        {cat.replace('-', ' ')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="font-semibold text-xs opacity-80">Views</div>
-                  <div className="flex flex-wrap gap-2">
-                    {([
-                      { key: 'cards', label: 'Cards' },
-                      { key: 'planDetails', label: 'Plan Details' },
-                    ] as const).map(v => (
-                      <label key={v.key} className="flex items-center gap-1 cursor-pointer select-none px-2 py-1 rounded-md border border-border bg-card/40 hover:bg-card/60">
-                        <input
-                          type="checkbox"
-                          className="accent-blue-primary"
-                          checked={viewVisibility[v.key]}
-                          onChange={() => toggleView(v.key as any)}
-                        />
-                        <span className="text-[11px]">{v.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button size="sm" variant="outline" onClick={handleRefetch} disabled={loadingQuotes}>
-                  {loadingQuotes ? 'Loading…' : 'Reload Stored Quotes'}
-                </Button>
-                {streamingEnabled && (
-                  <Button size="sm" onClick={simulateStreaming} disabled={streamingActive || loadingQuotes} className="btn-brand">
-                    {streamingActive ? 'Streaming…' : 'Simulate Streaming'}
-                  </Button>
-                )}
-                {quoteError && <span className="text-red-600 dark:text-red-400">{quoteError}</span>}
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-[11px] leading-tight">
-                <div>
-                  <span className="font-medium">Carriers:</span> {carrierSummaries.length || 0}
-                </div>
-                <div>
-                  <span className="font-medium">Plans Available:</span> {availablePlans.join(', ')}
-                </div>
-                <div>
-                  <span className="font-medium">Fetch Duration:</span> {fetchDuration ? `${fetchDuration.toFixed(0)} ms` : '—'}
-                </div>
-                <div>
-                  <span className="font-medium">TTFCP:</span> {ttfcp ? `${ttfcp.toFixed(0)} ms` : '—'}
-                </div>
-                <div>
-                  <span className="font-medium">First Plan Visible:</span> {firstPlanVisibleMs ? `${firstPlanVisibleMs.toFixed(0)} ms` : '—'}
-                </div>
-                <div>
-                  <span className="font-medium">All Plans Complete:</span> {allPlansCompleteMs ? `${allPlansCompleteMs.toFixed(0)} ms` : '—'}
-                </div>
-              </div>
-              {streamingEnabled && (
-                <div className="text-[11px] flex items-center gap-2">
-                  <span className="font-medium">Streaming Mode:</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
-                    {streamingActive ? 'Active' : streamedCarriers.length ? 'Complete' : 'Idle'}
-                  </Badge>
-                  <span className="opacity-70">({streamedCarriers.length}/{carrierSummaries.length})</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
     </div>
   );
 }
+
+

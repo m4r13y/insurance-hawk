@@ -25,6 +25,11 @@ export interface QuoteFormData {
   premiumMode?: 'monthly' | 'annual' | '';
   coveredMembers?: string;
   desiredFaceValue?: string;
+  // New dual-mode Final Expense support
+  // finalExpenseQuoteMode indicates whether user is searching by face value (default) or by monthly rate
+  finalExpenseQuoteMode?: 'face' | 'rate';
+  // desiredRate captured when finalExpenseQuoteMode === 'rate'
+  desiredRate?: string;
   benefitAmount?: string;
   state?: string;
 }
@@ -58,6 +63,8 @@ export function MissingFieldsModal({
     premiumMode: '',
     coveredMembers: '',
     desiredFaceValue: '',
+    finalExpenseQuoteMode: 'face',
+    desiredRate: '',
     benefitAmount: '',
     state: ''
   });
@@ -84,6 +91,8 @@ export function MissingFieldsModal({
         premiumMode: '',
         coveredMembers: '',
         desiredFaceValue: '',
+        finalExpenseQuoteMode: 'face',
+        desiredRate: '',
         benefitAmount: '',
         state: '',
         ...initialFormData
@@ -145,6 +154,7 @@ export function MissingFieldsModal({
       case 'dental':
         return ['coveredMembers'];
       case 'final-expense':
+        // Base additional field is desiredFaceValue for backward compatibility; dynamic validation below will swap if rate mode
         return ['desiredFaceValue'];
       default:
         return [];
@@ -154,7 +164,12 @@ export function MissingFieldsModal({
   // Check if we have all required data to generate quotes for a category
   const validateRequiredData = (category: string, data: QuoteFormData): { isValid: boolean; missing: string[] } => {
     const requiredFields = getRequiredFields(category);
-    const additionalFields = getAdditionalFields(category);
+    let additionalFields = getAdditionalFields(category);
+    // Dual-mode final expense: if rate mode, require desiredRate instead of desiredFaceValue
+    if (category === 'final-expense' && data.finalExpenseQuoteMode === 'rate') {
+      additionalFields = additionalFields.filter(f => f !== 'desiredFaceValue');
+      additionalFields.push('desiredRate');
+    }
     const allRequired = [...requiredFields, ...additionalFields];
     
     const missing = allRequired.filter(field => {
@@ -502,28 +517,45 @@ export function MissingFieldsModal({
               </div>
             )}
             
-            {/* Final Expense specific fields */}
-            {categoryId === 'final-expense' && initialMissingFields.includes('desiredFaceValue') && (
-              <div className="space-y-2">
-                <Label htmlFor="desiredFaceValue">Desired Coverage Amount</Label>
-                <Select 
-                  value={formInputs.desiredFaceValue} 
-                  onValueChange={(value) => setFormInputs(prev => ({ 
-                    ...prev, 
-                    desiredFaceValue: value 
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select coverage amount" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10000">$10,000</SelectItem>
-                    <SelectItem value="15000">$15,000</SelectItem>
-                    <SelectItem value="20000">$20,000</SelectItem>
-                    <SelectItem value="25000">$25,000</SelectItem>
-                    <SelectItem value="50000">$50,000</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Final Expense specific fields (dual mode) */}
+            {categoryId === 'final-expense' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center justify-between">Quote By <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{formInputs.finalExpenseQuoteMode === 'rate' ? 'Monthly Rate' : 'Face Value'}</span></Label>
+                  <div className="flex gap-2">
+                    <Button type="button" variant={formInputs.finalExpenseQuoteMode==='face' ? 'default':'outline'} size="sm" onClick={()=> setFormInputs(p=>({...p, finalExpenseQuoteMode: 'face'}))}>Face</Button>
+                    <Button type="button" variant={formInputs.finalExpenseQuoteMode==='rate' ? 'default':'outline'} size="sm" onClick={()=> setFormInputs(p=>({...p, finalExpenseQuoteMode: 'rate'}))}>Rate</Button>
+                  </div>
+                </div>
+                {formInputs.finalExpenseQuoteMode !== 'rate' && initialMissingFields.includes('desiredFaceValue') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="desiredFaceValue">Desired Coverage Amount</Label>
+                    <Select 
+                      value={formInputs.desiredFaceValue} 
+                      onValueChange={(value) => setFormInputs(prev => ({ 
+                        ...prev, 
+                        desiredFaceValue: value 
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select coverage amount" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10000">$10,000</SelectItem>
+                        <SelectItem value="15000">$15,000</SelectItem>
+                        <SelectItem value="20000">$20,000</SelectItem>
+                        <SelectItem value="25000">$25,000</SelectItem>
+                        <SelectItem value="50000">$50,000</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {formInputs.finalExpenseQuoteMode === 'rate' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="desiredRate">Target Monthly Rate</Label>
+                    <Input id="desiredRate" placeholder="e.g. 40" value={formInputs.desiredRate || ''} onChange={(e)=> setFormInputs(p=>({...p, desiredRate: e.target.value }))} />
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -50,6 +50,8 @@ interface QuoteFormData {
   desiredFaceValue?: string;
   desiredRate?: string;
   underwritingType?: 'Guaranteed' | 'Simplified' | 'Full' | 'No Preference' | '';
+  /** Optional upstream Final Expense filter. '__all' or empty string means no filtering. */
+  finalExpenseBenefitType?: string;
   // Cancer Insurance specific fields
   benefitAmount?: string;
   // State field for cancer insurance

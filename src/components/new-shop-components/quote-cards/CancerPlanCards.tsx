@@ -19,16 +19,14 @@ const CancerPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDeta
       {carriers.map(c => {
         const saved = isSaved(c.id,'CANCER','cancer');
         const showRange = c.planRange && c.planRange.count>1 && c.planRange.min!==c.planRange.max;
-        const CardInner: React.FC = () => { const { ref, visible } = useCardVisibility(); const showSkeleton = !visible && loading; return (
+  const CardInner: React.FC = () => { const { ref, visible } = useCardVisibility(undefined, undefined, c.id); const showSkeleton = !visible && loading; return (
           <CardShell ref={ref as any} className="p-4 sm:p-5">
-            {showSkeleton && (
-              <div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true">
-                <Skeleton className="h-10 w-10 rounded-md" />
-                <Skeleton className="h-4 w-40" />
-                <div className="mt-auto space-y-2"><Skeleton className="h-8 w-32" /><Skeleton className="h-9 w-11 rounded-md" /></div>
-              </div>
-            )}
-            {visible && (<>
+            <div className={`absolute inset-0 flex flex-col p-4 gap-4 transition-opacity duration-300 ${showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden="true">
+              <Skeleton className="h-10 w-10 rounded-md" />
+              <Skeleton className="h-4 w-40" />
+              <div className="mt-auto space-y-2"><Skeleton className="h-8 w-32" /><Skeleton className="h-9 w-11 rounded-md" /></div>
+            </div>
+            <div className={`relative z-10 flex flex-col h-full transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton saved={saved} onToggle={()=> toggle({ carrierId:c.id, carrierName:c.name, logo:c.logo, rating:'N/A', category:'cancer', planType:'CANCER', price:c.min, min:c.planRange?.min, max:c.planRange?.max })} />
                 <CarrierLogoBlock name={c.name} logo={c.logo} />
@@ -47,7 +45,7 @@ const CancerPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDeta
                 </div>
                 <DetailsButton onClick={()=>{ if(onOpenCarrierDetails) onOpenCarrierDetails(c); else { const params=new URLSearchParams({carrier:c.name, view:'plan-details', category:'cancer'}); router.push(`/shop-components?${params.toString()}`); } }} carrierName={c.name} />
               </div>
-            </>)}
+            </div>
           </CardShell>
         ); };
         return <CardInner key={c.id} />;

@@ -6,7 +6,7 @@ import { CarrierLogoBlock, SaveToggleButton, DetailsButton, PlanPriceBlock } fro
 import { CardShell, useCardVisibility } from './CardShell';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export interface FinalExpenseCarrierSummary { id:string; name:string; logo:string; min?:number; max?:number; planRange?:{min:number;max:number;count:number}; planName?:string; faceAmount?:number; graded?:boolean; immediate?:boolean; accidental?:boolean; count:number; }
+export interface FinalExpenseCarrierSummary { id:string; name:string; logo:string; min?:number; max?:number; fullMin?:number; fullMax?:number; requestedFace?:number; planRange?:{min:number;max:number;count:number}; planName?:string; faceAmount?:number; faceAmountMin?:number; faceAmountMax?:number; graded?:boolean; immediate?:boolean; accidental?:boolean; underwritingType?:string; count:number; }
 interface Props { carriers: FinalExpenseCarrierSummary[]; loading:boolean; onOpenCarrierDetails?: (c:FinalExpenseCarrierSummary)=>void; }
 
 const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDetails }) => {
@@ -14,9 +14,52 @@ const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarri
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {carriers.length===0 && loading && Array.from({length:6}).map((_,i)=><Skeleton key={i} className="h-64 rounded-xl" />)}
-      {carriers.map(c => {
+      {(() => {
+        const usedKeys = new Set<string>();
+        const makeKey = (id: string, name: string) => {
+          const base = `${id}::${name}`;
+          if (!usedKeys.has(base)) { usedKeys.add(base); return base; }
+          let i = 1; let candidate = `${base}::${i}`;
+          while (usedKeys.has(candidate)) { i++; candidate = `${base}::${i}`; }
+          usedKeys.add(candidate); return candidate;
+        };
+        return carriers.map(raw => {
+        // Sanitize per item to avoid duplicate key '[object Object]' and invalid name usage
+        let safeName: string;
+        if (typeof raw.name === 'string') safeName = raw.name; else safeName = String((raw as any).name?.displayName || (raw as any).carrierName || raw.name || 'Unknown Carrier');
+        // Replace common bad string patterns
+        if (/^\[object Object\]$/.test(safeName)) safeName = 'Unknown Carrier';
+        // Some upstream artifacts show a solitary '[' or ']' when object coercion partially happened
+        if (safeName === '[' || safeName === ']') safeName = 'Unknown Carrier';
+        safeName = safeName.trim();
+        if (!safeName) safeName = 'Unknown Carrier';
+        const c: FinalExpenseCarrierSummary = {
+          ...raw,
+          id: typeof raw.id === 'string' ? raw.id : String(raw.id ?? `fe-${Math.random().toString(36).slice(2)}`),
+            name: safeName,
+          logo: typeof raw.logo === 'string' && raw.logo ? raw.logo : '/images/carrier-placeholder.svg'
+        };
         const saved = isSaved(c.id,'FE','final-expense');
         const showRange = c.planRange && c.planRange.count>1 && c.planRange.min!==c.planRange.max;
+        // Derive face range if embedded in planName suffix patterns like:
+        //   "Plan Something - Up to $50,000" or "Plan Something - $10,000 - $49,999"
+        let displayPlanName = c.planName || '';
+        let derivedMin: number | undefined; let derivedMax: number | undefined;
+        if (displayPlanName) {
+          const upToMatch = /-\s*Up to \$(\d{1,3}(?:,\d{3})*)$/i.exec(displayPlanName);
+          const rangeMatch = /-\s*\$(\d{1,3}(?:,\d{3})*)\s*-\s*\$(\d{1,3}(?:,\d{3})*)$/i.exec(displayPlanName);
+          if (upToMatch) {
+            derivedMax = parseInt(upToMatch[1].replace(/,/g,''),10);
+            displayPlanName = displayPlanName.replace(upToMatch[0],'').trim();
+          } else if (rangeMatch) {
+            derivedMin = parseInt(rangeMatch[1].replace(/,/g,''),10);
+            derivedMax = parseInt(rangeMatch[2].replace(/,/g,''),10);
+            displayPlanName = displayPlanName.replace(rangeMatch[0],'').trim();
+          }
+        }
+        // Merge derived range only if original metadata missing
+        const effectiveFaceMin = c.faceAmountMin ?? derivedMin ?? c.faceAmount;
+        const effectiveFaceMax = c.faceAmountMax ?? derivedMax ?? c.faceAmount;
         const CardInner: React.FC = () => { const { ref, visible } = useCardVisibility(); const showSkeleton = !visible && loading; return (
           <CardShell ref={ref as any} className="p-4 sm:p-5">
             {showSkeleton && (<div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true"><Skeleton className="h-10 w-10 rounded-md"/><Skeleton className="h-4 w-40"/><div className="mt-auto space-y-2"><Skeleton className="h-8 w-32"/><Skeleton className="h-9 w-11 rounded-md"/></div></div>)}
@@ -24,15 +67,27 @@ const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarri
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton saved={saved} onToggle={()=> toggle({ carrierId:c.id, carrierName:c.name, logo:c.logo, rating:'N/A', category:'final-expense', planType:'FE', price:c.min, min:c.planRange?.min, max:c.planRange?.max })} />
                 <CarrierLogoBlock name={c.name} logo={c.logo} />
-                <div className="flex-1 min-w-0 pr-1">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap"><span>{c.name}</span></div>
-                  <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">{c.planName && <span className="truncate max-w-[12rem]" title={c.planName}>{c.planName}</span>}</div>
+                <div className="flex-1 min-w-0 pr-6">{/* pr-6 gives breathing room so long names don't run under the bookmark */}
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 leading-snug text-base flex gap-2 flex-wrap">
+                    <span className="break-words whitespace-normal max-w-full" style={{wordBreak:'break-word'}}>{c.name}</span>
+                  </div>
+                  <div className="mt-1 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">
+                    {displayPlanName && <span className="truncate max-w-[14rem]" title={c.planName}>{displayPlanName}</span>}
+                    {(effectiveFaceMin!=null||effectiveFaceMax!=null) && (
+                      <span className="text-[10px] text-slate-400">Face ${effectiveFaceMin?.toLocaleString() || '—'}{effectiveFaceMax && effectiveFaceMax!==effectiveFaceMin ? ` – $${effectiveFaceMax.toLocaleString()}`:''}</span>
+                    )}
+                    {c.underwritingType && <span className="text-[10px] text-slate-400">{c.underwritingType}</span>}
+                  </div>
                 </div>
               </div>
               <div className="relative z-10 flex items-end justify-between mt-auto">
                 <div className="flex flex-col">
                   <PlanPriceBlock price={c.min} range={c.planRange as any} showRange={showRange} />
-                  {c.faceAmount != null && <div className="text-[11px] text-slate-400 mt-1">Face ${c.faceAmount}</div>}
+                  {typeof c.fullMin==='number' && typeof c.fullMax==='number' && ( (c.fullMin!==c.min) || (c.fullMax!==c.max) ) && (
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                      Other coverage: ${c.fullMin.toFixed(2)} - ${c.fullMax.toFixed(2)}
+                    </div>
+                  )}
                   {c.graded && <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Graded</div>}
                   {c.immediate && <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Immediate</div>}
                   {c.accidental && <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Accidental Rider</div>}
@@ -43,8 +98,10 @@ const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarri
             </>)}
           </CardShell>
         ); };
-        return <CardInner key={c.id} />;
-      })}
+          const key = makeKey(c.id, c.name);
+          return <CardInner key={key} />;
+        });
+      })()}
     </div>
   );
 };

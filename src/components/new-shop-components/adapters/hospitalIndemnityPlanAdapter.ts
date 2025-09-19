@@ -21,7 +21,8 @@ export interface RawHospitalIndemnityQuote {
 function toMoney(v:any){ if(typeof v!=='number'||v<0||isNaN(v)) return undefined; return v>=1000? v/100 : v; }
 
 export const hospitalIndemnityPlanAdapter: CategoryAdapter<RawHospitalIndemnityQuote, NormalizedQuoteBase> = {
-  category: 'hospital',
+  // Canonical category id aligned with storage key and legacy selection mapping
+  category: 'hospital-indemnity',
   version: 1,
   normalize(raw: RawHospitalIndemnityQuote, _ctx: NormalizeContext){
     let monthly = toMoney(raw.monthly_premium);
@@ -49,15 +50,21 @@ export const hospitalIndemnityPlanAdapter: CategoryAdapter<RawHospitalIndemnityQ
       }
       monthly = toMoney(total);
     }
-    if(monthly==null) return null; // still invalid
+    if(monthly==null){
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.debug('[hospital adapter] dropping quote: could not derive monthly', { id: raw.id, carrier: raw.carrier_name||raw.company, policy_fee: raw.policy_fee, base_plans: raw.base_plans?.length, riders: raw.riders?.length });
+      }
+      return null; // still invalid
+    }
     const carrier = raw.carrier_name || raw.company || 'Unknown';
     return {
       id: `hospital:${raw.id}`,
-      category: 'hospital',
+      category: 'hospital-indemnity',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
       plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Hospital Indemnity Plan' },
-      adapter: { category: 'hospital', version: 1 },
+      adapter: { category: 'hospital-indemnity', version: 1 },
       metadata: {
         dailyBenefit: raw.daily_hospital_benefit,
         daysCovered: raw.days_covered,

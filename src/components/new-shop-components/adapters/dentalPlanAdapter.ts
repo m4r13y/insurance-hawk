@@ -2,49 +2,135 @@
 // Normalizes raw dental quotes to shared NormalizedQuoteBase shape.
 import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary } from './types';
 
+// NOTE: The dental API currently has at least two observed shapes:
+// 1. Optimized/flattened quotes returned by firebase callable (fields: id, carrierName, planName, monthlyPremium, annualMaximum, deductible, ...)
+// 2. Raw admin repository export style with: key, plan_name, company_base{name,name_full}, base_plans[ { included, benefits[ { rate, amount } ], name } ]
+// This adapter now tolerates both shapes. If neither premium path yields a usable number the quote is skipped.
 export interface RawDentalQuote {
-  id: string;
-  // API variant fields (camelCase) from getDentalQuotes action
-  carrierName?: string;
-  planName?: string;
-  monthlyPremium?: number;
-  annualMaximum?: number;
-  deductible?: number;
-  // Legacy / alternate snake_case variant
-  carrier_name?: string;
-  plan_name?: string;
-  monthly_premium?: number;
-  annual_maximum?: number;
-  deductible_individual?: number;
-  waiting_period_major?: string;
-  includes_vision?: boolean;
-  includes_hearing?: boolean;
+  // Flattened / optimized
+  id?: string;
+  carrierName?: string; planName?: string; monthlyPremium?: number; annualMaximum?: number; deductible?: number;
+  // Alt snake_case (legacy optimized)
+  carrier_name?: string; plan_name?: string; monthly_premium?: number; annual_maximum?: number; deductible_individual?: number;
+  waiting_period_major?: string; includes_vision?: boolean; includes_hearing?: boolean;
+  // Raw complex shape
+  key?: string; company_base?: { name?: string; name_full?: string };
+  base_plans?: Array<{ included?: boolean; name?: string; benefits?: Array<{ rate?: number; amount?: string | number }>; benefit_notes?: string; limitation_notes?: string }>;
 }
 
-function safeCurrency(v: any): number | undefined { if (typeof v !== 'number' || v < 0 || isNaN(v)) return undefined; return v >= 1000 ? v / 100 : v; }
+function safeCurrency(v: any): number | undefined {
+  if (v == null) return undefined;
+  if (typeof v === 'string') {
+    const num = parseFloat(v.replace(/[^0-9.]/g,''));
+    if (!isFinite(num)) return undefined;
+    v = num;
+  }
+  if (typeof v !== 'number' || v < 0 || isNaN(v)) return undefined;
+  // Some feeds provide cents when value >= 1000 (e.g. 3759 => 37.59)
+  return v >= 1000 ? v / 100 : v;
+}
+
+function parseAnnualMaximum(v: any): number | undefined {
+  if (v == null) return undefined;
+  if (typeof v === 'string') {
+    const n = parseInt(v.replace(/[^0-9]/g,''),10);
+    if (isNaN(n)) return undefined; return n;
+  }
+  if (typeof v === 'number') return v;
+  return undefined;
+}
+
+function extractFromRawShape(raw: RawDentalQuote) {
+  if (!raw.base_plans || !Array.isArray(raw.base_plans) || !raw.base_plans.length) return null;
+  const base = raw.base_plans.find(p => p.included) || raw.base_plans[0];
+  if (!base) return null;
+  const benefit = base.benefits?.[0];
+  if (!benefit) return null;
+  const monthly = safeCurrency(benefit.rate);
+  const annualMax = parseAnnualMaximum(benefit.amount);
+  const carrier = raw.company_base?.name_full || raw.company_base?.name || 'Unknown';
+  const planDisplay = base.name || raw.plan_name || raw.planName || 'Dental Plan';
+  const id = raw.key || raw.id || raw.plan_name || planDisplay;
+  return {
+    id, carrier, monthly, annualMax, planDisplay,
+    benefitNotes: base.benefit_notes || (base as any).benefitNotes,
+    limitationNotes: base.limitation_notes || (base as any).limitationNotes,
+    basePlanName: base.name,
+    rawBenefitAmount: benefit.amount
+  };
+}
 
 export const dentalPlanAdapter: CategoryAdapter<RawDentalQuote, NormalizedQuoteBase> = {
   category: 'dental',
-  version: 1,
+  version: 2, // bump after adding raw shape support
   normalize(raw: RawDentalQuote, _ctx: NormalizeContext) {
-    const monthly = safeCurrency(raw.monthly_premium ?? raw.monthlyPremium);
-    if (monthly == null) return null;
-    const carrier = raw.carrier_name || raw.carrierName || 'Unknown';
-    return {
-      id: `dental:${raw.id}`,
+    // Fast path for optimized / flattened shapes
+  let monthly = safeCurrency(raw.monthly_premium ?? raw.monthlyPremium);
+  let annualMax = parseAnnualMaximum(raw.annual_maximum ?? raw.annualMaximum);
+  let carrier = raw.carrier_name || raw.carrierName;
+  let planDisplay = raw.plan_name || raw.planName;
+  let id = raw.id;
+  let benefitNotes: string | undefined = (raw as any).benefit_notes || (raw as any).benefitNotes;
+  let limitationNotes: string | undefined = (raw as any).limitation_notes || (raw as any).limitationNotes;
+
+    if (monthly == null) {
+      // Attempt extraction from raw admin style payload
+      const ext = extractFromRawShape(raw);
+      if (ext) {
+        monthly = ext.monthly;
+        annualMax = annualMax ?? ext.annualMax;
+        carrier = carrier || ext.carrier;
+        planDisplay = planDisplay || ext.planDisplay;
+        id = id || ext.id;
+        benefitNotes = benefitNotes || ext.benefitNotes;
+        limitationNotes = limitationNotes || ext.limitationNotes;
+      }
+    }
+
+    if (monthly == null) {
+      if (process.env.NODE_ENV !== 'production') {
+        // Provide a concise hint on why quote was skipped
+        // (only first few chars of potential identifiers to avoid log noise)
+        const hint = (raw.id || raw.key || raw.plan_name || '').toString().slice(0,12);
+        console.debug('[dentalPlanAdapter] Skipping quote - missing monthly premium', { hint });
+      }
+      return null;
+    }
+
+    carrier = carrier || 'Unknown';
+    planDisplay = planDisplay || 'Dental Plan';
+    id = id || `${carrier}:${planDisplay}`;
+
+    // Attempt deductible extraction from planDisplay if not explicitly present (e.g. "$100 Deductible")
+    const dedExplicit = raw.deductible_individual ?? raw.deductible;
+    let deductible = typeof dedExplicit === 'number' ? dedExplicit : undefined;
+    if (deductible == null && planDisplay) {
+      const m = planDisplay.match(/\$(\d{2,4})\s*Deductible/i);
+      if (m) deductible = parseInt(m[1],10);
+    }
+
+    const normalized: any = {
+      id: `dental:${id}`,
       category: 'dental',
       carrier: { id: carrier, name: carrier },
       pricing: { monthly },
-      plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Dental Plan' },
-      adapter: { category: 'dental', version: 1 },
+      plan: { key: id, display: planDisplay },
+      adapter: { category: 'dental', version: 2 },
       metadata: {
-        annualMax: raw.annual_maximum ?? raw.annualMaximum,
-        deductibleIndividual: raw.deductible_individual ?? raw.deductible,
+        annualMax,
+        deductibleIndividual: deductible,
         waitingMajor: raw.waiting_period_major,
         visionIncluded: raw.includes_vision,
         hearingIncluded: raw.includes_hearing,
+        benefitNotes,
+        limitationNotes,
+        basePlanName: (raw as any).basePlanName,
+        source: raw.key ? 'raw-admin' : 'optimized'
       }
     };
+    // Attach original raw for downstream enrichment (non-enumerable to avoid accidental serialization bloat)
+    try { Object.defineProperty(normalized, '__raw', { value: raw, enumerable: false }); } catch {}
+    return normalized;
   },
   derivePricingSummary(quotes) {
     if (!quotes.length) return [];

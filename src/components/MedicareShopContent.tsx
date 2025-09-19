@@ -136,6 +136,7 @@ function MedicareShopContent() {
     desiredFaceValue: '',
     desiredRate: '',
     underwritingType: '',
+    finalExpenseBenefitType: '', // client-side only benefit type filter (no upstream param)
     // Cancer Insurance specific fields  
     benefitAmount: '',
     // State field for cancer insurance
@@ -1590,7 +1591,7 @@ function MedicareShopContent() {
           } : {})
         };
         
-        const response = await getFinalExpenseLifeQuotes(finalExpenseParams);
+  const response = await getFinalExpenseLifeQuotes(finalExpenseParams);
         console.log('🔥 Final Expense Life API Response:', response);
         
         if (response.error) {
@@ -1598,12 +1599,19 @@ function MedicareShopContent() {
           setQuotesError(response.error);
         } else if (response.quotes && Array.isArray(response.quotes)) {
           console.log('🔥 Success! Received final expense life quotes:', response.quotes.length);
-          console.log('🔥 Setting finalExpenseQuotes state with:', response.quotes.length, 'quotes');
-          setFinalExpenseQuotes(response.quotes);
+          // Client-side benefit type filtering (no upstream benefit_name param sent)
+          let feFiltered = response.quotes;
+          const benefitFilter = quoteFormData.finalExpenseBenefitType;
+          if (benefitFilter && benefitFilter !== '__all' && benefitFilter.toLowerCase() !== 'all') {
+            feFiltered = response.quotes.filter(q => (q.benefit_name || '').toLowerCase() === benefitFilter.toLowerCase());
+            console.log(`🎯 Applied client-side FE benefit filter '${benefitFilter}': ${feFiltered.length}/${response.quotes.length}`);
+          }
+          console.log('🔥 Setting finalExpenseQuotes state with:', feFiltered.length, 'quotes (filtered)');
+          setFinalExpenseQuotes(feFiltered);
           
           // Save final expense life quotes to Firestore
-          console.log('💾 Saving final expense quotes to Firestore:', response.quotes.length, 'quotes');
-          await saveToStorage(FINAL_EXPENSE_QUOTES_KEY, response.quotes);
+          console.log('💾 Saving final expense quotes to Firestore:', feFiltered.length, 'quotes (filtered)');
+          await saveToStorage(FINAL_EXPENSE_QUOTES_KEY, feFiltered);
           
           // Verify save was successful
           const verified = await loadFromStorage(FINAL_EXPENSE_QUOTES_KEY, []);
@@ -1882,6 +1890,7 @@ function MedicareShopContent() {
       desiredFaceValue: data.desiredFaceValue || "",
       desiredRate: data.desiredRate || "",
       underwritingType: data.underwritingType || "",
+      finalExpenseBenefitType: data.finalExpenseBenefitType || data.benefitName || "", // support legacy field names
       // Cancer Insurance specific fields
       benefitAmount: data.benefitAmount || "",
       // State field for cancer insurance

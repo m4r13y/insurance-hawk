@@ -21,8 +21,16 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
   getCurrentRate,
   formatCurrency
 }) => {
-  const logoUrl = getCarrierLogoUrl(quoteData.company_base.name);
+  // Defensive: legacy quotes may have company_base, adapter quotes may have carrier
+  const companyBaseName = (quoteData as any)?.company_base?.name || (quoteData as any)?.company_base?.name_full;
+  const carrierObj = (quoteData as any).carrier;
+  const fallbackName = carrierObj?.displayName || carrierObj?.name || (quoteData as any).company || 'Unknown Carrier';
+  const displayName = companyBaseName || fallbackName;
+  const logoUrl = getCarrierLogoUrl(displayName);
   const currentRate = getCurrentRate();
+  // Plan may be string or object { key, display }
+  const rawPlan = (quoteData as any).plan;
+  const planDisplay = typeof rawPlan === 'string' ? rawPlan : (rawPlan?.key ? rawPlan.key : (rawPlan?.display || ''));
   return (
     <div className="sticky top-20 z-40 backdrop-blur-sm pt-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,16 +43,16 @@ export const PlanDetailsHeader: React.FC<PlanDetailsHeaderProps> = ({
             <Separator orientation="vertical" className="h-5" />
             <div className="flex items-center space-x-2">
               <div className="w-6 h-6 relative flex-shrink-0">
-                <Image src={logoUrl} alt={quoteData.company_base.name} fill sizes="24px" className="object-contain" onError={(e) => { const t = e.target as HTMLImageElement; t.style.display = 'none'; }} />
+                <Image src={logoUrl} alt={displayName} fill sizes="24px" className="object-contain" onError={(e) => { const t = e.target as HTMLImageElement; t.style.display = 'none'; }} />
               </div>
               <div>
-                <h1 className="font-medium text-base text-slate-800 dark:text-slate-100">{quoteData.company_base.name}</h1>
+                <h1 className="font-medium text-base text-slate-800 dark:text-slate-100">{displayName}</h1>
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <div className="text-sm text-slate-500 dark:text-slate-400">Plan {quoteData.plan}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Plan {planDisplay}</div>
               <div className="font-semibold text-slate-900 dark:text-slate-100">
                 {currentRate !== null ? (
                   `${formatCurrency(currentRate)}/mo`

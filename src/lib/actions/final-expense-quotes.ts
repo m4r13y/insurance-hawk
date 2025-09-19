@@ -12,6 +12,7 @@ export interface FinalExpenseQuoteParams {
   desiredRate?: number; // For quotes by monthly rate
   desiredFaceValue?: number; // For quotes by face value
   offset?: number;
+  // benefitName?: string; // (Removed) We now always fetch full set and filter client-side for consistency
 }
 
 // Updated to match hawknest-admin successful response format
@@ -88,6 +89,10 @@ export async function getFinalExpenseLifeQuotes(params: FinalExpenseQuoteParams)
       functionParams.quote_type = 'by_face_value';
       functionParams.desired_face_value = 10000; // Default $10,000 face value
     }
+
+    // NOTE: Intentionally not passing benefit_name upstream. We fetch the full cohort and
+    // apply benefit type filtering client-side so users can pivot without another network call.
+    // This also avoids backend variance if benefit_name filtering logic changes.
 
     console.log('💰 Transformed function parameters:', functionParams);
 

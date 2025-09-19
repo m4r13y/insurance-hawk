@@ -2,6 +2,7 @@
 // These were previously scattered; consolidating here to avoid circular re-exports.
 
 import { savePlanBuilderData, loadPlanBuilderData, type PlanBuilderData } from '@/lib/services/temporary-storage';
+import { Timestamp } from 'firebase/firestore';
 
 // Types kept lightweight to avoid importing the enormous PlanBuilderTab types graph.
 // The builder only cares about a snapshot shape that can be serialized.
@@ -81,15 +82,13 @@ export async function persistPlanBuilderState(args: PlanBuilderPersistArgs): Pro
 		schemaVersion: 1,
 		medigapPlan: {
 			plan: snapshot.quote?.plan || snapshot.quote?.planType || 'UNKNOWN',
-			carrier: snapshot.quote?.carrier || snapshot.quote?.carrierName || 'UNKNOWN',
+			carrier: (typeof snapshot.quote?.carrier === 'string' ? snapshot.quote?.carrier : (snapshot.quote?.carrier?.name || snapshot.quote?.carrierName)) || 'UNKNOWN',
 			monthlyRate: snapshot.currentRate,
 			selected: true
 		},
 		medicareAB: {
 			selected: true,
-			// The storage service expects a Firestore Timestamp; create a dummy compatible object if not available.
-			// We avoid importing Timestamp directly to keep this util light; fallback to Date.now style object.
-			selectedAt: (snapshot.quote?.selectedAt) || ({ seconds: Math.floor(Date.now()/1000), nanoseconds: 0, toDate: () => new Date() }) as any
+			selectedAt: (snapshot.quote?.selectedAt && snapshot.quote.selectedAt instanceof Timestamp) ? snapshot.quote.selectedAt : Timestamp.fromMillis(Date.now())
 		},
 		selectedPlans: {
 			drugPlan: snapshot.drugPlan,
@@ -100,8 +99,36 @@ export async function persistPlanBuilderState(args: PlanBuilderPersistArgs): Pro
 		chartData: snapshot.chartData || [],
 		totalMonthlyCost: snapshot.currentRate + computeAncillaryMonthly(snapshot),
 		coverageQuality: 'n/a',
-		lastUpdated: (snapshot.quote?.lastUpdated) || ({ seconds: Math.floor(Date.now()/1000), nanoseconds: 0, toDate: () => new Date() }) as any,
+		lastUpdated: (snapshot.quote?.lastUpdated && snapshot.quote.lastUpdated instanceof Timestamp) ? snapshot.quote.lastUpdated : Timestamp.fromMillis(Date.now()),
 	};
+	// Firestore disallows undefined nested values. Deeply sanitize selectedPlans (esp. medigapPlanOption.plan.discountType)
+	try {
+		if (planBuilderData.selectedPlans?.medigapPlanOption) {
+			const mpo: any = planBuilderData.selectedPlans.medigapPlanOption;
+			if (mpo.plan && typeof mpo.plan === 'object' && mpo.plan.discountType === undefined) {
+				// Remove key entirely to avoid undefined serialization
+				try { delete mpo.plan.discountType; } catch {}
+			}
+			// Recursively strip any undefined fields at shallow levels we control
+			['rate','plan','carrier','metadata'].forEach(k => {
+				const ref: any = mpo[k];
+				if (ref && typeof ref === 'object') {
+					Object.keys(ref).forEach(sub => { if (ref[sub] === undefined) delete ref[sub]; });
+				}
+			});
+		}
+		// Also cleanse chartData items
+		if (Array.isArray(planBuilderData.chartData)) {
+			planBuilderData.chartData = planBuilderData.chartData.map((c: any) => {
+				if (c && typeof c === 'object') {
+					Object.keys(c).forEach(k => { if (c[k] === undefined) delete c[k]; });
+				}
+				return c;
+			});
+		}
+	} catch (e) {
+		console.warn('PlanBuilder persistence sanitize step failed (continuing)', e);
+	}
 	try {
 		await savePlanBuilderData(planBuilderData); // remote / indexed layer
 	} catch (e) {

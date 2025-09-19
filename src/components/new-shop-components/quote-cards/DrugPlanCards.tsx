@@ -39,22 +39,19 @@ export const DrugPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrie
         const saved = isSaved(c.id, 'PDP', 'drug-plan');
         const showRange = c.planRange && c.planRange.count > 1 && c.planRange.max !== c.planRange.min;
         const CardInner: React.FC = () => {
-          const { ref, visible } = useCardVisibility();
+          const { ref, visible } = useCardVisibility(undefined, undefined, c.id);
           const showSkeleton = !visible && loading;
           return (
             <CardShell ref={ref as any} highlight={false} className="p-4 sm:p-5" key={c.id}>
-              {showSkeleton && (
-                <div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true">
-                  <Skeleton className="h-10 w-10 rounded-md" />
-                  <Skeleton className="h-4 w-40" />
-                  <div className="mt-auto space-y-2">
-                    <Skeleton className="h-8 w-32" />
-                    <Skeleton className="h-9 w-11 rounded-md" />
-                  </div>
+              <div className={`absolute inset-0 flex flex-col p-4 gap-4 transition-opacity duration-300 ${showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden="true">
+                <Skeleton className="h-10 w-10 rounded-md" />
+                <Skeleton className="h-4 w-40" />
+                <div className="mt-auto space-y-2">
+                  <Skeleton className="h-8 w-32" />
+                  <Skeleton className="h-9 w-11 rounded-md" />
                 </div>
-              )}
-              {visible && (
-              <>
+              </div>
+              <div className={`relative z-10 flex flex-col h-full transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton
                   saved={saved}
@@ -106,8 +103,7 @@ export const DrugPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrie
                   carrierName={c.name}
                 />
               </div>
-              </>
-              )}
+              </div>
             </CardShell>
           );
         };

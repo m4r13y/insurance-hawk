@@ -80,22 +80,22 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
           const saved = isCarrierPlanSaved(carrier.id, selectedPlan);
           // Removed quote count display per design update
           const CardInner: React.FC = () => {
-            const { ref, visible } = useCardVisibility();
-            const showSkeleton = !visible && loading;
+            const { ref, visible } = useCardVisibility(undefined, undefined, carrier.id);
+            // Always reserve layout space (CardShell has min-h). Show lightweight shimmer until visible.
+            const showSkeleton = loading && !visible;
             return (
-              <CardShell ref={ref as any} highlight={saved} className="p-4 sm:p-5">
-                {showSkeleton && (
-                  <div className="absolute inset-0 flex flex-col p-4 gap-4" aria-hidden="true">
-                    <Skeleton className="h-10 w-10 rounded-md" />
-                    <Skeleton className="h-4 w-40" />
-                    <div className="mt-auto space-y-2">
-                      <Skeleton className="h-8 w-32" />
-                      <Skeleton className="h-9 w-11 rounded-md" />
-                    </div>
+              <CardShell ref={ref as any} highlight={saved} className="p-4 sm:p-5" minHeight={loading ? 250 : undefined}>
+                {/* Skeleton overlay fades out; does not collapse height */}
+                <div className={`absolute inset-0 flex flex-col p-4 gap-4 transition-opacity duration-300 ${showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden="true">
+                  <Skeleton className="h-10 w-10 rounded-md" />
+                  <Skeleton className="h-4 w-40" />
+                  <div className="mt-auto space-y-2">
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="h-9 w-11 rounded-md" />
                   </div>
-                )}
-                {visible && (
-                <>
+                </div>
+                {/* Content mounted immediately to eliminate mount-time layout shift; opacity handles reveal */}
+                <div className={`relative z-10 flex flex-col h-full transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
               {/* Header */}
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton
@@ -107,6 +107,7 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
                   <div className="font-semibold text-slate-900 dark:text-slate-100 leading-tight text-base flex items-center gap-2 flex-wrap">
                     {/* Allow wrapping to multiple rows (previously truncated) */}
                     <span className="max-w-full break-words whitespace-normal">{carrier.name}</span>
+                    {/* savings badge removed per request */}
                   </div>
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
                     <AmBestStarRating amBestRating={carrier.rating} size="sm" showText={false} />
@@ -139,8 +140,7 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
                 </div>
                 <DetailsButton onClick={() => onOpenPlanDetails?.(carrier)} carrierName={carrier.name} />
               </div>
-                </>
-                )}
+                </div>
               </CardShell>
             );
           };

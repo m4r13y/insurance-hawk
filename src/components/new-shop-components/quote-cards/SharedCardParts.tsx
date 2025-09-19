@@ -8,19 +8,29 @@ import { cn } from '@/lib/utils';
 export interface CarrierLogoBlockProps { name: string; logo: string; size?: number; className?: string; }
 export const CarrierLogoBlock: React.FC<CarrierLogoBlockProps> = ({ name, logo, size = 48, className }) => {
   const [errored, setErrored] = React.useState(false);
+  // Defensive: coerce any non-string name to string early (some upstream enrichers may pass objects)
+  const safeName = typeof name === 'string' ? name : (name == null ? '' : String((name as any).displayName || (name as any).name || name));
+  const initial = safeName.trim().charAt(0) || '?';
+  // CLS: reserve exact box with aspect-square & shrink prevention so surrounding text doesn't shift
   return (
-    <div className={cn("relative flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden text-slate-700 dark:text-slate-200 font-semibold", className)} style={{ width: size, height: size }}>
-      <span className="absolute select-none" aria-hidden={errored}>{name.charAt(0)}</span>
+    <div
+      className={cn(
+        'relative flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden text-slate-700 dark:text-slate-200 font-semibold aspect-square flex-shrink-0',
+        className
+      )}
+      style={{ width: size, height: size }}
+    >
+      <span className="absolute select-none" aria-hidden={errored}>{initial}</span>
       {!errored && (
         <Image
           src={logo}
-          alt={name}
-            width={size}
-            height={size}
-            className="object-contain relative z-10"
-            onError={() => setErrored(true)}
-            loading="lazy"
-          />
+          alt={safeName || 'Carrier Logo'}
+          width={size}
+          height={size}
+          className="object-contain relative z-10"
+          onError={() => setErrored(true)}
+          loading="lazy"
+        />
       )}
     </div>
   );
@@ -70,14 +80,61 @@ export const PlanTypeToggleGroup: React.FC<PlanTypeToggleGroupProps> = ({ planBa
   );
 };
 
-export interface PlanPriceBlockProps { price?: number; range?: {min:number; max:number; count:number}; showRange?: boolean; emphasize?: boolean; className?: string; }
-export const PlanPriceBlock: React.FC<PlanPriceBlockProps> = ({ price, range, showRange, emphasize=true, className }) => {
+export interface PlanPriceBlockProps { price?: number; range?: {min:number; max:number; count:number}; showRange?: boolean; emphasize?: boolean; className?: string; disableAnimation?: boolean; }
+export const PlanPriceBlock: React.FC<PlanPriceBlockProps> = ({ price, range, showRange, emphasize=true, className, disableAnimation=false }) => {
   const showR = showRange && range && range.count > 1 && range.max !== range.min;
+  const prevRef = React.useRef<number | undefined>(price);
+  const [animating, setAnimating] = React.useState(false);
+  const [displayPrev, setDisplayPrev] = React.useState<number | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (disableAnimation) {
+      prevRef.current = price;
+      setAnimating(false);
+      setDisplayPrev(undefined);
+      return;
+    }
+    if (price !== prevRef.current) {
+      setDisplayPrev(prevRef.current);
+      setAnimating(true);
+      const t = setTimeout(() => {
+        setAnimating(false);
+        setDisplayPrev(undefined);
+      }, 240);
+      prevRef.current = price;
+      return () => clearTimeout(t);
+    }
+  }, [price, disableAnimation]);
+
+  const PriceSpan = ({ value, fadingOut=false }: { value: number | undefined; fadingOut?: boolean }) => (
+    <span
+      className={cn(
+        'inline-flex items-end',
+        emphasize ? 'text-4xl font-bold leading-none' : 'text-2xl font-semibold',
+        'text-slate-900 dark:text-white',
+        disableAnimation ? '' : 'transition-all duration-200 ease-out',
+        fadingOut ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+      )}
+      aria-hidden={fadingOut}
+    >
+      {value !== undefined ? `$${value.toFixed(0)}` : '—'}
+    </span>
+  );
+
   return (
-    <div className={cn('flex items-end gap-2', className)}>
-      <div className={cn(emphasize ? 'text-4xl font-bold leading-none' : 'text-2xl font-semibold', 'text-slate-900 dark:text-white')}>{price !== undefined ? `$${price.toFixed(0)}` : '—'}</div>
+    <div className={cn('flex flex-col', className)} aria-live="polite" aria-atomic="true">
+      <div className="flex items-end gap-2">
+        <div className={cn('relative flex items-end', emphasize ? 'min-w-[3.4ch]' : 'min-w-[2.8ch]')}>
+          {displayPrev !== undefined && animating && !disableAnimation && <PriceSpan value={displayPrev} fadingOut />}
+          <PriceSpan value={price} />
+        </div>
+        {/* Inline range only if plenty of horizontal space and short value */}
+        {showR && range && (
+          <div className="hidden sm:block text-sm text-slate-500 dark:text-slate-400 mb-1 whitespace-nowrap">to ${range.max.toFixed(0)}</div>
+        )}
+      </div>
       {showR && range && (
-          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">to ${range.max.toFixed(0)}</div>
+        <div className="sm:hidden text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">to ${range.max.toFixed(0)}</div>
       )}
     </div>
   );

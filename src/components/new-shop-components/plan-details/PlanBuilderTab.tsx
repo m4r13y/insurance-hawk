@@ -105,6 +105,18 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   hasUserSelection = false
 }) => {
   const [applyDiscounts, setApplyDiscounts] = useDiscountState();
+  // Normalize plan key for legacy (string) or adapter (object) representations
+  const resolvePlanKey = (q: any): string => {
+    const p = q?.plan;
+    if (!p) return '';
+    if (typeof p === 'string') return p;
+    if (typeof p === 'object') {
+      if (typeof p.key === 'string') return p.key;
+      if (typeof p.display === 'string') return p.display.replace(/Plan\s+/i,'');
+    }
+    return String(p);
+  };
+  const currentPlanKey = resolvePlanKey(quoteData);
   const [selectedPlanOption, setSelectedPlanOption] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [realQuotes, setRealQuotes] = useState<QuoteData[]>([]);
@@ -160,6 +172,12 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
   const [drugPlanQuotes, setDrugPlanQuotes] = useState<any[]>([]);
   const [dentalQuotes, setDentalQuotes] = useState<OptimizedDentalQuote[]>([]);
   const [cancerInsuranceQuotes, setCancerInsuranceQuotes] = useState<any[]>([]);
+
+  // Shared safe currency formatter for cent-based integer values
+  const safeFormatCents = React.useCallback((val: any): string => {
+    const num = typeof val === 'number' && !isNaN(val) ? val : 0;
+    return (num / 100).toFixed(2);
+  }, []);
 
   // Effect to open modal after form data is loaded
   useEffect(() => {
@@ -1204,8 +1222,19 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                     </div>
                     {(() => {
                       // Get available plan options
+                      const resolvePlanKey = (q: any): string => {
+                        const p = q?.plan;
+                        if (!p) return '';
+                        if (typeof p === 'string') return p;
+                        if (typeof p === 'object') {
+                          if (typeof p.key === 'string') return p.key;
+                          if (typeof p.display === 'string') return p.display.replace(/Plan\s+/i,'');
+                        }
+                        return String(p);
+                      };
+                      const currentPlanKey = resolvePlanKey(quoteData);
                       const planSpecificQuotes = carrierQuotes?.filter(quote => 
-                        quote.plan === quoteData.plan
+                        resolvePlanKey(quote) === currentPlanKey
                       ) || [];
                       
                       console.log('PlanBuilderTab: planSpecificQuotes found:', planSpecificQuotes.length);
@@ -1222,7 +1251,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
 
                       // Create plan object for processOptionsForDisplay function
                       const planData = {
-                        plan: quoteData.plan,
+                        plan: currentPlanKey,
                         options: availableOptions
                       };
 
@@ -1290,7 +1319,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                               console.log('🎯 User selected new plan option:', {
                                 option,
                                 currentCarrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
-                                currentPlan: quoteData.plan
+                                    currentPlan: currentPlanKey
                               });
                               setSelectedPlanOption(option);
                               setCarrierChangeInfo(null); // Clear notification when plan is selected
@@ -1303,7 +1332,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                     {option.name || 
                                      (option.rating_class ? `${option.rating_class} Class` : '') ||
                                      (option.discount_category ? `${option.discount_category} Rate` : '') ||
-                                     `Plan ${quoteData.plan} Option ${index + 1}`}
+                                     `Plan ${currentPlanKey} Option ${index + 1}`}
                                   </span>
                                   {option.isRecommended && <Badge className="text-xs">Recommended</Badge>}
                                   {option.isCalculatedDiscount && (
@@ -1353,7 +1382,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                               </div>
                               <div className="text-right">
                                 <div className="text-lg font-semibold">
-                                  ${((option.rate?.month || 0) / 100).toFixed(2)}/mo
+                                  ${safeFormatCents(option.rate?.month)}/mo
                                 </div>
                                 {option.rate?.annual && (
                                   <div className="text-xs text-muted-foreground">
@@ -1362,7 +1391,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 )}
                                 {option.savings && (
                                   <div className="text-xs text-green-600 dark:text-green-400">
-                                    Save ${((option.savings || 0) / 100).toFixed(2)}/mo
+                                    Save ${safeFormatCents(option.savings)}/mo
                                   </div>
                                 )}
                               </div>
@@ -1431,7 +1460,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}
                               </h4>
                               <p className="text-xs mt-1">
-                                Plan {quoteData.plan}
+                                Plan {currentPlanKey}
                               </p>
                               {selectedPlanOption.description && (
                                 <p className="text-xs mt-1">{selectedPlanOption.description}</p>
@@ -1449,7 +1478,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                                 </Button>
                               </div>
                               <div className="text-xl font-semibold">
-                                ${((selectedPlanOption.rate?.month || 0) / 100).toFixed(2)}/mo
+                                ${safeFormatCents(selectedPlanOption.rate?.month)}/mo
                               </div>
                               <div className='h-2'></div>
                             </div>
@@ -1459,7 +1488,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                         <div className="border-red-500 dark:border-red-400/70 border rounded-lg p-4 bg-red-50 dark:bg-red-500/10 opacity-70 dark:opacity-90 backdrop-blur-sm">
                           <div className="flex items-center justify-between">
                             <div>
-                              <h5 className="font-medium text-red-900 dark:text-red-300">Plan {quoteData.plan}</h5>
+                              <h5 className="font-medium text-red-900 dark:text-red-300">Plan {currentPlanKey}</h5>
                               <p className="text-sm text-red-700 dark:text-red-400">Select a Medigap plan option</p>
                             </div>
                             <div className="font-medium text-red-900 dark:text-red-300">
@@ -1984,7 +2013,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 border border-blue-200 dark:border-blue-400/40 rounded-md bg-white/60 dark:bg-slate-800/40">
                     <div>
-                      <div className="text-sm font-medium">Plan {quoteData.plan}</div>
+                      <div className="text-sm font-medium">Plan {currentPlanKey}</div>
                       <div className="text-xs text-gray-600 dark:text-slate-400">{getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}</div>
                     </div>
                     <span className="font-medium">

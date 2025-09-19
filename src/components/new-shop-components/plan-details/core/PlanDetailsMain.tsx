@@ -10,6 +10,8 @@ import { loadTemporaryData } from "@/lib/services/temporary-storage";
 import { REAL_QUOTES_KEY, getAllMedigapStorageKeys } from "@/components/medicare-shop/shared/storage";
 import { getBaseRate } from "@/lib/medigap-utils";
 import { useDiscountState } from "@/lib/services/discount-state";
+import { getMedigapQuotes } from '@/lib/actions/medigap-quotes';
+import { savePlanQuotes } from '@/lib/medigap/planStorage';
 
 // Internal relative imports now reflect new structure
 import type { QuoteData } from '../types';
@@ -34,6 +36,45 @@ interface PlanConfiguration {
   discounts: string[];
 }
 
+// Helper to adapt normalized adapter quotes into the legacy shape expected by existing builder logic.
+// Normalized quote shape (adapter): { pricing.monthly, plan:{key,display}, metadata.discountFacet, __raw }
+// Legacy builder expects: rate.month, plan (string), view_type tokens, discounts array, rating_class, etc.
+const adaptNormalizedQuote = (q: any) => {
+  if (!q || typeof q !== 'object') return q;
+  // If it already looks legacy (rate.month exists) just return
+  if (q.rate?.month != null) return q;
+  if (q.pricing?.monthly != null) {
+    const planKey = typeof q.plan === 'string' ? q.plan : (q.plan?.key || q.plan?.display || '');
+    const discountFacet = q.metadata?.discountFacet;
+    const viewType = discountFacet === 'with_hhd' ? ['with_hhd'] : (discountFacet === 'sans_hhd' ? ['sans_hhd'] : []);
+    const raw = q.__raw || {};
+    return {
+      // Preserve normalized for potential future reference
+      __normalized: q,
+      // Spread raw first so adapter-derived fields override if duplicates
+      ...raw,
+      // For legacy code paths treat carrier as a simple string (avoid rendering object errors)
+      carrier: q.carrier?.name || raw.carrier?.name || raw.company || 'Unknown Carrier',
+      company: q.carrier?.name || raw.company,
+      plan: planKey,
+      planLetter: planKey,
+      view_type: viewType,
+      rate: { month: q.pricing.monthly, annual: q.pricing.monthly * 12 },
+      discounts: raw.discounts || [],
+      rating_class: raw.rating_class || 'Standard'
+    };
+  }
+  return q; // fallback unchanged
+};
+
+// Ensure carrier field is always a primitive string for rendering (older persisted snapshots may store { name: 'Carrier' }).
+const coerceCarrierToString = (q: any) => {
+  if (q && q.carrier && typeof q.carrier === 'object' && q.carrier.name && typeof q.carrier.name === 'string') {
+    return { ...q, carrier: q.carrier.name };
+  }
+  return q;
+};
+
 const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuotes, plan, onClose }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -41,6 +82,7 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuo
   const [quoteData, setQuoteData] = React.useState<QuoteData | null>(null);
   const [carrierQuotes, setCarrierQuotes] = React.useState<QuoteData[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [addingPlan, setAddingPlan] = React.useState<null | 'F' | 'G' | 'N'>(null);
   const [showGenerateQuote, setShowGenerateQuote] = React.useState(false);
 
   const [applyDiscounts] = useDiscountState();
@@ -96,10 +138,31 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuo
       const planType = plan || searchParams.get('plan');
       setCurrentSelection({ ratingClass: '', discounts: [] });
 
+      // Helper: safely resolve a plan token from either legacy string quotes or new adapter normalized shape.
+      const resolvePlanToken = (q: any): string => {
+        const p = q?.plan;
+        if (!p) return '';
+        if (typeof p === 'string') return p;
+        // Adapter normalized shape: { key, display }
+        if (typeof p === 'object') {
+          if (typeof p.key === 'string') return p.key;
+          if (typeof p.display === 'string') return p.display;
+        }
+        return String(p);
+      };
+      const planMatches = (q: any, target: string): boolean => {
+        if (!target) return true;
+        const token = resolvePlanToken(q).toUpperCase();
+        const tgt = target.toUpperCase();
+        return token === tgt || token.endsWith(tgt);
+      };
+
       if (initialQuotes?.length) {
-        let subset = initialQuotes;
+        // Adapt any normalized quotes into legacy-like shape for builder
+  let adapted = initialQuotes.map(q => coerceCarrierToString(adaptNormalizedQuote(q)));
+        let subset = adapted;
         if (planType) {
-          const pf = subset.filter(q => (q.plan || '').toUpperCase().endsWith(planType.toUpperCase()));
+          const pf = subset.filter(q => planMatches(q, planType));
           if (pf.length) subset = pf;
         }
         setQuoteData(subset[0]);
@@ -119,13 +182,14 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuo
               const baseName = (quote.company_base?.name || '').toLowerCase();
               const fullName = (quote.company_base?.name_full || '').toLowerCase();
               const matchesCarrier = !carrier || [company, nestedName, baseName, fullName].some(v => v && v === carrierNorm);
-              const matchesPlan = !planType || quote.plan === planType || (quote.plan || '').toUpperCase().endsWith(planType.toUpperCase());
+              const matchesPlan = !planType || planMatches(quote, planType);
               return matchesCarrier && matchesPlan;
             });
         }
         if (filtered.length) {
-          setQuoteData(filtered[0]);
-          setCarrierQuotes(filtered);
+          const adapted = filtered.map(q => coerceCarrierToString(adaptNormalizedQuote(q)));
+            setQuoteData(adapted[0]);
+            setCarrierQuotes(adapted);
         } else { setShowGenerateQuote(true); }
       } else { setShowGenerateQuote(true); }
       setLoading(false);
@@ -137,6 +201,46 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuo
     let discountedRate = rate;
     discounts.forEach(d => { if (d.type === 'percent') discountedRate *= (1 - d.value); else if (d.type === 'fixed') discountedRate -= d.value; });
     return Math.round(discountedRate);
+  };
+
+  // Derive which plan letters are present among current carrierQuotes
+  const presentPlans = React.useMemo(() => {
+    const s = new Set<string>();
+    carrierQuotes.forEach(q => { const p = (q as any)?.plan || (q as any)?.planLetter; if (p) s.add(String(p).toUpperCase()); });
+    return ['F','G','N'].filter(l => s.has(l));
+  }, [carrierQuotes]);
+  const missingPlans = React.useMemo(() => ['F','G','N'].filter(l => !presentPlans.includes(l)), [presentPlans]);
+
+  const handleAddPlan = async (planLetter: 'F'|'G'|'N') => {
+    if (addingPlan || presentPlans.includes(planLetter)) return;
+    setAddingPlan(planLetter);
+    try {
+      // Attempt to pull demographic context from persisted form state (sandbox + production parity)
+      let age = 65, zipCode = '', gender = 'M', tobacco = '0';
+      try {
+        const raw = localStorage.getItem('medicare_form_state');
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj?.age) age = parseInt(obj.age,10) || age;
+          if (obj?.zipCode) zipCode = String(obj.zipCode);
+          if (obj?.gender) gender = obj.gender.toString().toLowerCase().startsWith('m') ? 'M' : 'F';
+          if (typeof obj?.tobaccoUse === 'boolean') tobacco = obj.tobaccoUse ? '1':'0';
+        }
+      } catch {}
+      // Fallback to quoteData context if missing
+      if (!zipCode && (quoteData as any)?.zip5) zipCode = (quoteData as any).zip5;
+      const params: any = { zipCode: String(zipCode), age: String(age), gender, tobacco, plans: [planLetter] };
+      const { quotes: fetched, error } = await getMedigapQuotes(params);
+      if (error) throw new Error(error);
+      if (fetched && fetched.length) {
+        await savePlanQuotes(planLetter, fetched);
+        setCarrierQuotes(prev => [...prev, ...fetched as any]);
+      }
+    } catch (e) {
+      console.error('Failed to add plan', planLetter, e);
+    } finally {
+      setAddingPlan(null);
+    }
   };
 
   const getCurrentSelectionRate = () => {
@@ -187,6 +291,23 @@ const PlanDetailsMain: React.FC<PlanDetailsMainProps> = ({ carrierId, initialQuo
         getCurrentRate={getCurrentSelectionRate}
         formatCurrency={formatCurrency}
       />
+      {missingPlans.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="flex flex-wrap gap-2 text-[11px] items-center">
+            <span className="text-slate-500 dark:text-slate-400">Add more plans:</span>
+            {missingPlans.map(pl => (
+              <Button
+                key={pl}
+                size="sm"
+                variant="outline"
+                disabled={addingPlan === pl}
+                onClick={()=> handleAddPlan(pl as 'F'|'G'|'N')}
+                className={`h-6 px-2 py-0 text-[11px] ${addingPlan===pl? 'opacity-70 cursor-wait':''}`}
+              >{addingPlan===pl ? `Adding ${pl}…` : `Plan ${pl}`}</Button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         <Tabs defaultValue="builder" className="space-y-6">
           {/* Tab list lives inside PlanBuilderTab composition now */}

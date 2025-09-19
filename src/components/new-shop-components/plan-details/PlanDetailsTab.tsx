@@ -20,11 +20,24 @@ export const PlanDetailsTab: React.FC<PlanDetailsTabProps> = ({
     }).format(amount / 100);
   };
 
+  // Normalize plan representation (legacy string vs adapter object)
+  const resolvePlanKey = (q: any): string => {
+    const p = q?.plan;
+    if (!p) return '';
+    if (typeof p === 'string') return p;
+    if (typeof p === 'object') {
+      if (typeof p.key === 'string') return p.key;
+      if (typeof p.display === 'string') return p.display.replace(/Plan\s+/i,'');
+    }
+    return String(p);
+  };
+  const planKey = resolvePlanKey(quoteData);
+
   return (
     <TabsContent value="plan" className="space-y-6">
   <Card className="h-fit bg-white/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 backdrop-blur">
         <CardHeader>
-          <CardTitle>Medicare Supplement Plan {quoteData.plan} Coverage</CardTitle>
+          <CardTitle>Medicare Supplement Plan {planKey} Coverage</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -51,7 +64,7 @@ export const PlanDetailsTab: React.FC<PlanDetailsTabProps> = ({
                   <CheckIcon className="w-4 h-4 text-green-600 flex-shrink-0" />
                   <span className="text-sm">Hospice Care Coinsurance</span>
                 </div>
-                {quoteData.plan === 'F' || quoteData.plan === 'G' ? (
+                {planKey === 'F' || planKey === 'G' ? (
                   <div className="flex items-center space-x-2">
                     <CheckIcon className="w-4 h-4 text-green-600 flex-shrink-0" />
                     <span className="text-sm">Medicare Part B Deductible</span>

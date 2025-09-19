@@ -149,7 +149,8 @@ export const CARRIERS: CarrierInfo[] = [
       'Aetna', 
       'Continental Life Insurance Company', 
       'Continental Life Ins Co',
-      'Continental Life Ins Co Brentwood'
+      'Continental Life Ins Co Brentwood',
+      'Accendo Ins Co'
     ],
     phone: '800-872-3862',
     website: 'https://www.aetna.com',
@@ -305,20 +306,19 @@ export function getCarrierById(id: string): CarrierInfo | undefined {
  * Find carrier by name patterns
  */
 export function findCarrierByName(carrierName: string): CarrierInfo | undefined {
-  // console.log(`🔍 findCarrierByName called with: "${carrierName}"`);
-  
-  const result = CARRIERS.find(carrier => 
+  // Normalize defensively; if not a string or empty after trim, bail early.
+  if (typeof carrierName !== 'string') return undefined;
+  const raw = carrierName;
+  const safeName = raw.trim();
+  if (!safeName) return undefined;
+  const lowerSafe = safeName.toLowerCase();
+
+  const result = CARRIERS.find(carrier =>
     carrier.namePatterns.some(pattern => {
-      const matches = carrierName.toLowerCase().includes(pattern.toLowerCase()) ||
-                     pattern.toLowerCase().includes(carrierName.toLowerCase());
-      // if (matches) {
-      //   console.log(`✅ Matched pattern "${pattern}" for carrier "${carrier.displayName}"`);
-      // }
-      return matches;
+      const pl = pattern.toLowerCase();
+      return lowerSafe.includes(pl) || pl.includes(lowerSafe);
     })
   );
-  
-  // console.log(`🎯 findCarrierByName result for "${carrierName}":`, result ? `${result.displayName} (${result.id})` : 'NOT FOUND');
   return result;
 }
 
@@ -393,9 +393,11 @@ export function getSubsidiaryName(carrierName: string, category: ProductCategory
  * Find preferred carrier by name (simplified without NAIC)
  */
 export function findPreferredCarrierByParams(
-  carrierName: string, 
+  carrierName: string,
   category: ProductCategory = 'medicare-supplement'
 ): PreferredCarrier | null {
+  if (typeof carrierName !== 'string' || !carrierName.trim()) return null;
+  const lower = carrierName.toLowerCase();
   const preferredCarriers = getPreferredCarriers(category);
   
   for (const preferredCarrier of preferredCarriers) {
@@ -404,7 +406,8 @@ export function findPreferredCarrierByParams(
     if (carrierInfo) {
       // Check name patterns from carrier info
       for (const pattern of carrierInfo.namePatterns) {
-        if (carrierName.toLowerCase().includes(pattern.toLowerCase())) {
+        const pl = pattern.toLowerCase();
+        if (lower.includes(pl)) {
           return preferredCarrier;
         }
       }
@@ -417,13 +420,14 @@ export function findPreferredCarrierByParams(
 export function findPreferredCarrier(quote: any, category: ProductCategory): PreferredCarrier | null {
   // Enhanced carrier name extraction - check multiple possible fields
   // Handle both object format (quote.carrier.name) and string format (quote.carrier)
-  const carrierName = (typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name) ||
-                     quote.company_base?.name || 
-                     quote.company?.name ||
-                     quote.carrier_name ||
-                     quote.companyName ||
-                     quote.company ||
-                     '';
+  const carrierNameRaw = (typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name) ||
+    quote.company_base?.name ||
+    quote.company?.name ||
+    quote.carrier_name ||
+    quote.companyName ||
+    quote.company ||
+    '';
+  const carrierName = typeof carrierNameRaw === 'string' ? carrierNameRaw : '';
   
   // Debug logging for non-medigap categories
   if (category !== 'medicare-supplement') {
@@ -466,7 +470,7 @@ export function findPreferredCarrier(quote: any, category: ProductCategory): Pre
       
       // Check name patterns from carrier info
       for (const pattern of carrierInfo.namePatterns) {
-        const match = carrierName.toLowerCase().includes(pattern.toLowerCase());
+  const match = typeof carrierName === 'string' && carrierName.toLowerCase().includes(pattern.toLowerCase());
         if (category !== 'medicare-supplement') {
           console.log(`   Pattern "${pattern}" vs "${carrierName}": ${match ? '✅ MATCH' : '❌ no match'}`);
         }

@@ -1,6 +1,10 @@
 "use client";
 import React, { useMemo } from 'react';
 import { CMSStarRating } from '@/components/ui/cms-star-rating';
+import { getBenefitStatusDisplay } from '@/utils/benefit-status';
+import { getBenefitData } from '@/utils/medicare-advantage-data';
+import { getBenefitIcon } from '@/utils/benefit-icons';
+import { formatBenefitText } from '@/components/medicare-shop/advantage/benefit-formatter';
 
 interface NormalizedAdvantageQuote {
   id: string;
@@ -23,6 +27,12 @@ interface NormalizedAdvantageQuote {
     county?: string;
     state?: string;
     gapCoverage?: boolean;
+    benefits?: Array<{
+      benefit_type: string;
+      full_description: string;
+      summary_description?: { in_network?: string; out_network?: string };
+      pd_view_display: boolean;
+    }>;
   };
 }
 
@@ -45,10 +55,90 @@ const AdvantageDetailsShowcase: React.FC<AdvantageDetailsShowcaseProps> = ({ car
       if (q.metadata?.drugDeductible && !drugDed) drugDed = q.metadata.drugDeductible;
     });
     return { min, max, star, medDed, drugDed };
-  }, [quotes]);
+  }, [quotes])
 
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
   const selectedQuote = useMemo(() => quotes.find(q => q.id === selectedPlanId) || null, [quotes, selectedPlanId]);
+
+  // Benefit category definitions (mirrors legacy benefits-overview grouping)
+  const outpatientServices = [
+    "Doctor's office visits",
+    'Annual Physical Exam',
+    'Preventive Care',
+    'Outpatient Hospital',
+    'Outpatient rehabilitation',
+    'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)',
+    'Additional Telehealth Services',
+    'Emergency Care',
+    'Ambulance'
+  ];
+  const inpatientFacility = [
+    'Inpatient Hospital',
+    'Skilled Nursing Facility (SNF)',
+    'Dialysis Services',
+    'Medical Equipment',
+    'Health Plan Deductible',
+    'Other Deductibles',
+    'Medicare Part B',
+    'Non Opioid Pain Management',
+    'Opioid Treatment Services'
+  ];
+  const specialtyBenefits = [
+    'Vision',
+    'Hearing services',
+    'Mental health care',
+    'Foot care (podiatry services)',
+    'Comprehensive Dental Service',
+    'Preventive Dental Service',
+    'Transportation',
+    'Transportation Services',
+    'Wellness Programs',
+    'Meal Benefit',
+    'Otc Items',
+    'Defined Supplemental Benefits',
+    'Optional Supplemental Benefits',
+    'Worldwide Emergency Urgent Coverage'
+  ];
+
+  const pharmaceuticalType = 'Outpatient prescription drugs';
+
+  // Helper to build benefit objects for a given category using selectedQuote metadata.benefits
+  const createBenefitCards = (categoryBenefits: string[]) => {
+    if (!selectedQuote?.metadata?.benefits) return [] as any[];
+    const displayNameMap: Record<string,string> = {
+      'Comprehensive Dental Service': 'Dental (Comprehensive)',
+      'Preventive Dental Service': 'Dental (Preventive)',
+      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 'Diagnostic Services'
+    };
+    const descriptionMap: Record<string,string> = {
+      'Diagnostic tests lab and radiology services and x-rays (Costs for these services may be different if received in an outpatient surgery setting)': 'Costs may differ if received in outpatient surgery setting'
+    };
+    const planBenefitTypes = selectedQuote.metadata.benefits.map(b => b.benefit_type);
+    // Build a minimal legacy-shaped object for existing utility functions that expect plan.benefits
+    const legacyPlan: any = { benefits: selectedQuote.metadata.benefits };
+    return planBenefitTypes
+      .filter(bt => bt !== pharmaceuticalType && categoryBenefits.includes(bt))
+      .map((bt, i) => {
+        const statusDisplay = getBenefitStatusDisplay(legacyPlan, bt);
+        const benefitData = statusDisplay.status === 'covered' ? getBenefitData(legacyPlan, bt) : 'Not Available';
+        const benefit = selectedQuote.metadata?.benefits?.find(b => b.benefit_type.toLowerCase() === bt.toLowerCase());
+        return {
+          benefitType: bt,
+            displayName: displayNameMap[bt] || bt,
+            description: descriptionMap[bt],
+            index: `${bt}-${i}`,
+            statusDisplay,
+            benefitData,
+            benefit
+        };
+      });
+  };
+
+  const inpatientCards = createBenefitCards(inpatientFacility);
+  const outpatientCards = createBenefitCards(outpatientServices);
+  const specialtyCards = createBenefitCards(specialtyBenefits);
+
+  const pharmaBenefit = selectedQuote?.metadata?.benefits?.find(b => b.benefit_type === pharmaceuticalType);
 
   return (
     <div className="space-y-10">
@@ -114,20 +204,45 @@ const AdvantageDetailsShowcase: React.FC<AdvantageDetailsShowcaseProps> = ({ car
           </div>
         </section>
         <section className="mt-14">
-          <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase mb-4">Key Benefits</h2>
+          <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase mb-4">All Plan Benefits</h2>
           {!selectedQuote && (
-            <div className="text-xs text-slate-400 bg-slate-900/40 border border-slate-800/60 rounded-md p-4">Select a plan above to view key in-network benefit cost sharing.</div>
+            <div className="text-xs text-slate-400 bg-slate-900/40 border border-slate-800/60 rounded-md p-4">Select a plan above to view full benefit coverage details.</div>
           )}
           {selectedQuote && (
-            <div className="grid md:grid-cols-3 gap-5">
-              <BenefitCard label="Primary Care" value={selectedQuote.metadata?.primaryCare} />
-              <BenefitCard label="Specialist" value={selectedQuote.metadata?.specialist} />
-              <BenefitCard label="OTC Allowance" value={selectedQuote.metadata?.otc} />
-              <BenefitCard label="Medical Deductible" value={selectedQuote.metadata?.medicalDeductible} />
-              <BenefitCard label="Drug Deductible" value={selectedQuote.metadata?.drugDeductible} />
-              <BenefitCard label="MOOP" value={selectedQuote.metadata?.moop} />
-              {selectedQuote.metadata?.partBReduction && <BenefitCard label="Part B Reduction" value={selectedQuote.metadata?.partBReduction} />}
-              {selectedQuote.metadata?.gapCoverage != null && <BenefitCard label="Gap Coverage" value={selectedQuote.metadata?.gapCoverage ? 'Yes' : 'No'} />}
+            <div className="space-y-10">
+              {/* Summary snapshot row (retain quick glance cards) */}
+              <div className="grid md:grid-cols-3 gap-5">
+                <BenefitCard label="Primary Care" value={selectedQuote.metadata?.primaryCare} />
+                <BenefitCard label="Specialist" value={selectedQuote.metadata?.specialist} />
+                <BenefitCard label="OTC Allowance" value={selectedQuote.metadata?.otc} />
+                <BenefitCard label="Medical Deductible" value={selectedQuote.metadata?.medicalDeductible} />
+                <BenefitCard label="Drug Deductible" value={selectedQuote.metadata?.drugDeductible} />
+                <BenefitCard label="MOOP" value={selectedQuote.metadata?.moop} />
+                {selectedQuote.metadata?.partBReduction && <BenefitCard label="Part B Reduction" value={selectedQuote.metadata?.partBReduction} />}
+                {selectedQuote.metadata?.gapCoverage != null && <BenefitCard label="Gap Coverage" value={selectedQuote.metadata?.gapCoverage ? 'Yes' : 'No'} />}
+              </div>
+
+              {/* Pharmaceutical (full width) */}
+              {pharmaBenefit && (
+                <div className="border border-slate-800/60 rounded-lg bg-slate-900/40 p-4">
+                  <div className="flex items-center gap-2 mb-3 text-slate-200 font-semibold text-sm">
+                    {getBenefitIcon(pharmaceuticalType)}
+                    <span>{pharmaceuticalType}</span>
+                  </div>
+                  <div className="text-xs text-slate-300 space-y-2">
+                    {formatBenefitText(pharmaBenefit.full_description)}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid gap-8 lg:grid-cols-3">
+                {/* Inpatient/Facility */}
+                <BenefitCategory title="Inpatient / Facility" cards={inpatientCards} />
+                {/* Outpatient */}
+                <BenefitCategory title="Outpatient Services" cards={outpatientCards} />
+                {/* Specialty */}
+                <BenefitCategory title="Specialty & Other" cards={specialtyCards} />
+              </div>
             </div>
           )}
         </section>
@@ -146,3 +261,50 @@ const BenefitCard: React.FC<{ label: string; value?: string | number | boolean }
 };
 
 export default AdvantageDetailsShowcase;
+
+// Category section component
+const BenefitCategory: React.FC<{ title: string; cards: any[] }> = ({ title, cards }) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-xs font-semibold tracking-wide text-slate-400 uppercase">{title}</h3>
+      {cards.length === 0 && (
+        <div className="text-[11px] text-slate-500 italic">No benefits in this category.</div>
+      )}
+      <div className="space-y-3">
+        {cards.map(({ benefitType, displayName, description, statusDisplay, benefitData, benefit, index }) => (
+          <div key={index} className="rounded-md border border-slate-800/60 bg-slate-900/40 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {getBenefitIcon(benefitType)}
+                <span className="text-sm font-medium text-slate-100">{displayName}</span>
+              </div>
+              <div className="flex items-center gap-2">{statusDisplay.icon}</div>
+            </div>
+            {description && <div className="mt-1 text-[11px] text-slate-500 italic leading-snug">{description}</div>}
+            {benefit && (
+              <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-slate-300">
+                {benefit.summary_description?.in_network && (
+                  <div className="bg-slate-800/50 p-2 rounded">
+                    <strong className="text-slate-200">In-Network:</strong>
+                    <div className="mt-1">{formatBenefitText(benefit.summary_description.in_network)}</div>
+                  </div>
+                )}
+                {benefit.summary_description?.out_network && (
+                  <div className="bg-slate-800/50 p-2 rounded">
+                    <strong className="text-slate-200">Out-of-Network:</strong>
+                    <div className="mt-1">{formatBenefitText(benefit.summary_description.out_network)}</div>
+                  </div>
+                )}
+                {!benefit.summary_description?.in_network && !benefit.summary_description?.out_network && (
+                  <div className="bg-slate-800/40 p-2 rounded">
+                    {formatBenefitText(benefitData)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

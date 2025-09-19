@@ -4,6 +4,17 @@
 // Focus: premium, MOOP, deductibles, star rating, core visit copays, OTC allowance indicator.
 
 import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase, PricingSummary } from './types'
+// Reuse legacy utilities for Medicare Advantage benefit parsing to ensure consistency with
+// existing (non-normalized) Medicare shop components.
+import {
+  getMedicalDeductible,
+  getDrugDeductible,
+  getPrimaryCareData,
+  getSpecialistCareData,
+  getOTCBenefit,
+  getMOOPData
+} from '@/utils/medicare-advantage-data';
+import type { MedicareAdvantageQuote } from '@/types/medicare-advantage';
 
 // Raw shape (subset); align with getMedicareAdvantageQuotes action.
 export interface RawAdvantageQuote {
@@ -42,84 +53,16 @@ export interface RawAdvantageQuote {
 }
 
 // ---------------- Parsing Helpers ----------------
-
+// Advantage upstream premiums appear to be represented in cents (e.g. 600 => $6.00, 2500 => $25.00).
+// If a value does NOT end with two zeros (e.g. 47) we assume it's already dollars.
 function currency(val: number | undefined | null): number | undefined {
-  if (typeof val !== 'number' || isNaN(val) || val < 0) return undefined
-  // Heuristic: treat >= 1000 as cents.
-  return val >= 1000 ? val / 100 : val
-}
-
-interface BenefitLookupResult {
-  text: string
-  inNetwork?: string
-  outNetwork?: string
-  raw: string
-}
-
-const _benefitCache = new Map<string, BenefitLookupResult | undefined>()
-
-function lookupBenefit(raw: RawAdvantageQuote, keyword: string): BenefitLookupResult | undefined {
-  const cacheKey = raw.key + '::' + keyword.toLowerCase()
-  if (_benefitCache.has(cacheKey)) return _benefitCache.get(cacheKey)
-  const kw = keyword.toLowerCase()
-  const found = raw.benefits.find(b => b.benefit_type.toLowerCase().includes(kw))
-  if (!found) { _benefitCache.set(cacheKey, undefined); return undefined }
-  const cleanFull = found.full_description.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim()
-  const val: BenefitLookupResult = {
-    text: found.summary_description?.in_network || cleanFull || '',
-    inNetwork: found.summary_description?.in_network,
-    outNetwork: found.summary_description?.out_network,
-    raw: found.full_description
-  }
-  _benefitCache.set(cacheKey, val)
-  return val
-}
-
-function extractMedicalDeductible(raw: RawAdvantageQuote): string | undefined {
-  const b = lookupBenefit(raw, 'medical deductible') || lookupBenefit(raw, 'health plan deductible')
-  if (!b) return undefined
-  const match = b.text.match(/\$?\d+[\,\d]*/)
-  return match ? match[0].startsWith('$') ? match[0] : '$' + match[0] : b.text || undefined
-}
-
-function extractDrugDeductible(raw: RawAdvantageQuote): string | undefined {
-  if (typeof raw.annual_drug_deductible === 'number') return '$' + (currency(raw.annual_drug_deductible) ?? 0)
-  const b = lookupBenefit(raw, 'drug deductible') || lookupBenefit(raw, 'prescription deductible')
-  if (!b) return undefined
-  const match = b.text.match(/\$?\d+[\,\d]*/)
-  return match ? (match[0].startsWith('$') ? match[0] : '$' + match[0]) : b.text || undefined
-}
-
-function extractPrimaryCare(raw: RawAdvantageQuote): string | undefined {
-  const b = lookupBenefit(raw, "doctor's office visits") || lookupBenefit(raw, 'primary care')
-  if (!b) return undefined
-  const match = b.text.match(/\$?\d+\s*copay.*Primary/i)
-  if (match) return match[0]
-  const simple = b.text.match(/\$\d+/)
-  return simple ? simple[0] + ' copay (Primary)' : b.text
-}
-
-function extractSpecialist(raw: RawAdvantageQuote): string | undefined {
-  const b = lookupBenefit(raw, "doctor's office visits") || lookupBenefit(raw, 'specialist')
-  if (!b) return undefined
-  const match = b.text.match(/\$?\d+\s*copay.*Specialist/i)
-  if (match) return match[0]
-  const simple = b.text.match(/\$\d+/)
-  return simple ? simple[0] + ' copay (Specialist)' : b.text
-}
-
-function extractOTC(raw: RawAdvantageQuote): string | undefined {
-  const b = lookupBenefit(raw, 'otc items') || lookupBenefit(raw, 'over-the-counter') || lookupBenefit(raw, 'over the counter')
-  if (!b) return undefined
-  const amt = b.text.match(/\$\d+/)
-  if (amt) return amt[0]
-  if (/some coverage/i.test(b.text)) return 'Some Coverage'
-  if (/not covered|no coverage/i.test(b.text)) return 'Not Covered'
-  return b.text
+  if (typeof val !== 'number' || isNaN(val) || val < 0) return undefined;
+  if (val === 0) return 0;
+  return val % 100 === 0 ? val / 100 : val; // safe divide for typical cent-encoded patterns
 }
 
 function chooseCarrierName(raw: RawAdvantageQuote) {
-  return raw.organization_name || 'Unknown Carrier'
+  return raw.organization_name || 'Unknown Carrier';
 }
 
 // ---------------- Adapter Implementation ----------------
@@ -128,18 +71,30 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
   category: 'advantage',
   version: 1,
   normalize(raw: RawAdvantageQuote, ctx: NormalizeContext) {
-    // Premium: prefer part_c_rate + part_d_rate aggregate if month_rate unreliable, else month_rate.
-    const monthlyBase = currency(raw.month_rate) ?? (currency(raw.part_c_rate) || 0) + (currency(raw.part_d_rate) || 0)
+    // Premium selection logic:
+    // Historically month_rate sometimes already reflected the combined total or appeared in cent form.
+    // We normalize each candidate then choose the first non-null signal.
+    const monthRateNorm = currency(raw.month_rate);
+    const partCNorm = currency(raw.part_c_rate);
+    const partDNorm = currency(raw.part_d_rate);
+    const aggParts = (partCNorm || 0) + (partDNorm || 0);
+    const monthlyBase = monthRateNorm != null ? monthRateNorm : aggParts;
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.debug('[advantage adapter] premium normalize', { raw_month_rate: raw.month_rate, monthRateNorm, part_c_rate: raw.part_c_rate, partCNorm, part_d_rate: raw.part_d_rate, partDNorm, monthlyBase })
+    }
     if (monthlyBase == null) return null
     const carrierName = chooseCarrierName(raw)
     const planKey = `${raw.contract_id || 'X'}-${raw.plan_id}-${raw.segment_id}`
     const id = `advantage:${planKey}`
-
-    const medicalDed = extractMedicalDeductible(raw)
-    const drugDed = extractDrugDeductible(raw)
-    const primaryCare = extractPrimaryCare(raw)
-    const specialist = extractSpecialist(raw)
-    const otc = extractOTC(raw)
+    // Reuse legacy parsing helpers (ensures consistency with benefits-overview & other legacy UI)
+    const legacyPlan = raw as unknown as MedicareAdvantageQuote;
+    const medicalDed = getMedicalDeductible(legacyPlan);
+    const drugDed = getDrugDeductible(legacyPlan);
+    const primaryCare = getPrimaryCareData(legacyPlan);
+    const specialist = getSpecialistCareData(legacyPlan);
+    const otc = getOTCBenefit(legacyPlan);
+    const moopData = getMOOPData(legacyPlan);
 
     return {
       id,
@@ -155,7 +110,8 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
         primaryCare,
         specialist,
         otc,
-        moop: raw.in_network_moop,
+  moop: moopData.inNetwork || raw.in_network_moop,
+  moopCombined: moopData.combined,
         zeroPremiumLIS: raw.zero_premium_with_full_low_income_subsidy,
         partBReduction: raw.part_b_reduction,
         drugBenefitType: raw.drug_benefit_type || raw.drug_benefit_type_detail,
@@ -163,6 +119,7 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
         county: raw.county,
         state: raw.state,
         gapCoverage: raw.additional_drug_coverage_offered_in_the_gap || raw.additional_coverage_offered_in_the_gap
+        ,benefits: raw.benefits // expose raw benefits for comprehensive details rendering
       },
       __raw: process.env.NODE_ENV === 'development' ? raw : undefined,
     }
