@@ -41,7 +41,7 @@ import { useDiscountState } from "@/lib/services/discount-state";
 import {
   MedicareShopLayout,
   MedicareShopHeader,
-  MedicareShopSidebar,
+  // MedicareShopSidebar, // replaced by global SidebarShowcase
   MedicareShopNavigation,
   PaginationControls,
   type QuoteFormData,
@@ -67,6 +67,8 @@ import {
   PlanCardsSkeleton,
   hasQuotes
 } from "@/components/medicare-shop/shared";
+// New unified sidebar
+import SidebarShowcase from '@/components/new-shop-components/sidebar/SidebarShowcase';
 
 import {
   MedigapPlanTypeControls,
@@ -2651,26 +2653,49 @@ function MedicareShopContent() {
               return (
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
                   {/* Enhanced Sidebar with Combined Filters */}
-                  <MedicareShopSidebar
-                      searchQuery={searchQuery}
-                      setSearchQuery={setSearchQuery}
-                      priceRange={priceRange}
-                      setPriceRange={setPriceRange}
-                      selectedCoverageLevel={selectedCoverageLevel}
-                      setSelectedCoverageLevel={setSelectedCoverageLevel}
-                      selectedCategory={selectedCategory}
-                      selectedQuotePlans={selectedQuotePlans}
-                      setSelectedQuotePlans={handlePlanSelection}
-                      applyDiscounts={applyDiscounts}
-                      setApplyDiscounts={setApplyDiscounts}
-                      paymentMode={paymentMode}
-                      setPaymentMode={setPaymentMode}
-                      quoteFormData={quoteFormData}
-                      realQuotes={getCurrentCategoryQuotes()}
-                      onClearFilters={clearFilters}
-                      showPreferredOnly={showPreferredOnly}
-                      setShowPreferredOnly={setShowPreferredOnly}
-                />
+                  {/* Global unified sidebar (replaces MedicareShopSidebar + category-specific variants) */}
+                  <SidebarShowcase
+                    activeCategory={selectedCategory}
+                    onSelectCategory={(cat) => {
+                      // Map sandbox 'hospital' alias back to 'hospital-indemnity'
+                      const mapped = cat === 'hospital' ? 'hospital-indemnity' : cat;
+                      handleManualCategorySelect(mapped);
+                    }}
+                    preferredOnly={showPreferredOnly}
+                    onTogglePreferred={(val) => setShowPreferredOnly(!!val)}
+                    applyDiscounts={applyDiscounts}
+                    onToggleApplyDiscounts={(val) => setApplyDiscounts(!!val)}
+                    onGenerateQuotes={(category, formData, plansList) => {
+                      // Bridge to existing quote generation path
+                      const mapped = category === 'hospital' ? 'hospital-indemnity' : category;
+                      // Convert SidebarShowcase formData shape to existing QuoteFormData expectations
+                      const bridged: QuoteFormData = {
+                        age: (formData.age as any) ?? quoteFormData.age,
+                        zipCode: formData.zipCode || quoteFormData.zipCode,
+                        gender: (formData.gender as any) || quoteFormData.gender,
+                        tobaccoUse: (formData.tobaccoUse as any),
+                        familyType: (formData.familyType as any) || quoteFormData.familyType || '',
+                        carcinomaInSitu: (formData.carcinomaInSitu as any) ?? quoteFormData.carcinomaInSitu ?? null,
+                        premiumMode: (formData.premiumMode as any) || quoteFormData.premiumMode || '',
+                        coveredMembers: (formData.coveredMembers as any) || quoteFormData.coveredMembers || '',
+                        desiredFaceValue: (formData.desiredFaceValue as any) || quoteFormData.desiredFaceValue || '',
+                        desiredRate: (formData.desiredRate as any) || quoteFormData.desiredRate || '',
+                        underwritingType: quoteFormData.underwritingType || '',
+                        finalExpenseBenefitType: (formData.finalExpenseBenefitType as any) || quoteFormData.finalExpenseBenefitType || '',
+                        benefitAmount: (formData.benefitAmount as any) || quoteFormData.benefitAmount || '',
+                        state: (formData.state as any) || quoteFormData.state || ''
+                      };
+                      setQuoteFormData(bridged);
+                      if (mapped === 'medigap' && plansList && plansList.length > 0) {
+                        handleQuoteFormSubmitWithData(bridged, mapped, plansList, true, true);
+                      } else {
+                        handleQuoteFormSubmitWithData(bridged, mapped, undefined, true, true);
+                      }
+                    }}
+                    loadingCategories={expectedQuoteTypes}
+                    completedQuoteTypes={completedQuoteTypes}
+                    initialFormData={quoteFormData as any}
+                  />
 
               {/* Main Product Grid */}
               <main className="lg:col-span-3">
