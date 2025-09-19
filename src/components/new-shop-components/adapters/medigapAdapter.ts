@@ -9,6 +9,7 @@ import { CategoryAdapter, NormalizeContext, NormalizedQuoteBase } from './types'
 export interface RawMedigapQuote {
   plan?: string;             // e.g. 'Plan G'
   plan_name?: string;        // alternate field
+  planLetter?: string;       // sometimes already isolated ('G')
   carrier?: { name?: string; logo_url?: string; ambest_rating?: string };
   company?: string;          // fallback name
   company_base?: { ambest_rating?: string };
@@ -16,10 +17,14 @@ export interface RawMedigapQuote {
   rate?: number;             // sometimes cents (>=1000)
   monthly_rate?: number;     // alternate naming
   base_rate?: number;        // fallback
+  premium?: number;          // alternate naming seen in some datasets
+  monthly_premium?: number;  // alternate naming
+  total_premium?: number;    // alternate naming (pre-discount)
   state?: string;
   effective_date?: string;
   rating?: string;           // generic rating fallback
   ambest_rating?: string;    // alternate rating field
+  carrier_id?: string;       // sometimes separate id
 }
 
 function coerceViewType(v: RawMedigapQuote['view_type']): string[] {
@@ -29,9 +34,14 @@ function coerceViewType(v: RawMedigapQuote['view_type']): string[] {
 }
 
 function derivePlanLetter(raw: RawMedigapQuote): string {
+  if (raw.planLetter && /^[A-Z]$/i.test(raw.planLetter)) return raw.planLetter.toUpperCase();
   const src = raw.plan || raw.plan_name || '';
   const match = src.match(/Plan\s+([A-Z])/i);
-  return match ? match[1].toUpperCase() : (src.slice(-1).toUpperCase() || 'G');
+  if (match) return match[1].toUpperCase();
+  // Fallback: last alpha char
+  const alpha = src.replace(/[^A-Za-z]/g,'');
+  if (alpha) return alpha.slice(-1).toUpperCase();
+  return 'G';
 }
 
 function normalizeRate(raw: RawMedigapQuote): { monthly: number; rawBase?: number; rateSource: string } | null {
@@ -39,6 +49,9 @@ function normalizeRate(raw: RawMedigapQuote): { monthly: number; rawBase?: numbe
     { val: raw.rate, source: 'rate' },
     { val: raw.monthly_rate, source: 'monthly_rate' },
     { val: raw.base_rate, source: 'base_rate' },
+    { val: raw.premium, source: 'premium' },
+    { val: raw.monthly_premium, source: 'monthly_premium' },
+    { val: raw.total_premium, source: 'total_premium' },
   ];
   for (const c of candidates) {
     if (typeof c.val === 'number' && !isNaN(c.val) && c.val > 0) {
@@ -71,8 +84,8 @@ export const medigapAdapter: CategoryAdapter<RawMedigapQuote, NormalizedQuoteBas
     const viewTypes = coerceViewType(raw.view_type);
     const rateInfo = normalizeRate(raw);
     if (!rateInfo) return null; // drop un-priced quotes
-    const carrierName = raw.carrier?.name || raw.company || 'Unknown Carrier';
-    const carrierId = carrierName; // keep 1:1 for now (slug later if needed)
+  const carrierName = raw.carrier?.name || raw.company || 'Unknown Carrier';
+  const carrierId = raw.carrier_id || carrierName; // prefer explicit id if present
     const discountActive = !!ctx.applyDiscounts;
 
     // Determine discount facet selection: prefer matching token, else fall back to available

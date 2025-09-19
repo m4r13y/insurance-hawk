@@ -17,15 +17,17 @@ import PlanDetailsShowcase from '@/components/new-shop-components/plan-details/P
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
 // Removed Tabs import after refactor to checkbox toggles inside Sandbox Controls
 import Image from 'next/image';
-import { loadFromStorage } from '@/components/medicare-shop/shared/storage';
-import { REAL_QUOTES_KEY, getAllMedigapStorageKeys } from '@/components/medicare-shop/shared/storage';
-import { SELECTED_CATEGORIES_KEY } from '@/components/medicare-shop/shared/storage';
+import { REAL_QUOTES_KEY, getAllMedigapStorageKeys, saveToStorage, loadFromStorage, ADVANTAGE_QUOTES_KEY, DRUG_PLAN_QUOTES_KEY, DENTAL_QUOTES_KEY, HOSPITAL_INDEMNITY_QUOTES_KEY, FINAL_EXPENSE_QUOTES_KEY, CANCER_INSURANCE_QUOTES_KEY, getMedigapStorageKey, SELECTED_CATEGORIES_KEY } from '@/components/medicare-shop/shared/storage';
+// New storage abstractions for sandbox parity
+import { flattenPlanQuotes, loadAllStoredPlanQuotes, savePlanQuotes } from '@/lib/medigap/planStorage';
+import { loadCategoryQuotes, type NonMedigapCategory } from '@/lib/storage/categoryStorage';
 import { runCarrierStream } from '@/lib/streaming/medigapStreaming';
 // Reuse shared Medigap discount utilities instead of ad‑hoc logic
 import { getBaseRate } from '@/lib/medigap-utils';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useCategoryQuotes } from '@/components/new-shop-components/adapters/useCategoryQuotes';
 import { getEnhancedCarrierInfo, mapUICategoryToProductCategory } from '@/lib/carrier-system';
+import { buildAdvantageCarrierCards } from '@/components/new-shop-components/quote-cards/quoteCardMapper';
 import DrugPlanCards from '@/components/new-shop-components/quote-cards/DrugPlanCards';
 import { SavedPlanChips } from '@/components/new-shop-components/quote-cards/SavedPlanChips';
 import PdpDetailsShowcase from '@/components/new-shop-components/plan-details/PdpDetailsShowcase';
@@ -63,6 +65,7 @@ import { getFinalExpenseLifeQuotes } from '@/lib/actions/final-expense-quotes';
 
 export interface CardsSandboxProps { initialCategory?: string }
 export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps) {
+  const router = useRouter();
   const { savedPlans } = useSavedPlans();
   // Real Medigap data (first carrier group) -------------------------------------------------
   const [loadingQuotes, setLoadingQuotes] = useState(false);
@@ -70,6 +73,18 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const [quotes, setQuotes] = useState<any[]>([]);
   const [carrierSummaries, setCarrierSummaries] = useState<any[]>([]);
   const [reloadIndex, setReloadIndex] = useState(0);
+  // UI panel + details state (restored after refactor removal)
+  const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
+  const [closeSignal, setCloseSignal] = useState(0);
+  const [viewVisibility, setViewVisibility] = useState({ cards: true, planDetails: false });
+  const toggleView = (k: keyof typeof viewVisibility) => setViewVisibility(v => ({ ...v, [k]: !v[k] }));
+  const [activeCarrierId, setActiveCarrierId] = useState<string | null>(null);
+  const openPlanDetails = (carrier: { id: string }) => { setActiveCarrierId(carrier.id); setViewVisibility(v => ({ ...v, planDetails: true })); };
+  const closePlanDetails = () => { setActiveCarrierId(null); setViewVisibility(v => ({ ...v, planDetails: false })); };
+  const openPdpDetails = (carrier: { id: string }) => { openPlanDetails(carrier as any); };
+  const openCategoryDetails = (carrierName: string, _category: string) => { openPlanDetails({ id: carrierName }); };
+  // Quote view mode (retain list vs cards for Medigap experimentation)
+  const [quoteViewMode, setQuoteViewMode] = useState<'list' | 'cards'>('cards');
   // Discount toggle lives early so summary memo can depend on it
   const [applyDiscounts, setApplyDiscounts] = useState(false);
 
@@ -78,117 +93,21 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const [fetchEndTs, setFetchEndTs] = useState<number | null>(null);
   const [firstCarrierReadyTs, setFirstCarrierReadyTs] = useState<number | null>(null);
   const [streamingActive, setStreamingActive] = useState(false);
+  // Derived loading flag for aria (after streamingActive declared)
+  const loadingActive = loadingQuotes || streamingActive;
+
+  // Simple refetch bumps reloadIndex
+  const handleRefetch = () => setReloadIndex(i => i + 1);
+  const simulateStreaming = () => {/* no-op placeholder */};
   const [streamedCarriers, setStreamedCarriers] = useState<any[]>([]);
   const streamingEnabled = process.env.NEXT_PUBLIC_ENABLE_MEDIGAP_STREAMING === '1';
   const [firstPlanVisibleMs, setFirstPlanVisibleMs] = useState<number | null>(null);
   const [allPlansCompleteMs, setAllPlansCompleteMs] = useState<number | null>(null);
 
   // (moved below activeCategory state)
+  // (Removed legacy firstCarrierGroup aggregation; adapter summaries now drive displays.)
 
-  // Group quotes by carrier name (preferred carriers only if available)
-  const firstCarrierGroup = useMemo(() => {
-    if (!quotes || quotes.length === 0) return null;
-    const category = 'medicare-supplement' as const;
-    // Always start from full quotes list; preferred filtering now handled at display time
-    const preferredSubset = filterPreferredCarriers(quotes, category);
-    const preferredIds = new Set(preferredSubset.map(p => p.carrier?.name || p.company));
-    const map: Record<string, any[]> = {};
-    for (const q of quotes) {
-      const name = q.carrier?.name || q.company || 'Unknown';
-      if (!map[name]) map[name] = []; map[name].push(q);
-    }
-    const entries = Object.entries(map);
-    let summaries = entries.map(([name, cQuotes], idx) => {
-      const logo = cQuotes[0]?.carrier?.logo_url || `/carrier-logos/${(idx % 9)+1}.png`;
-      // Filter quotes to respect discount toggle for pre‑calculated variants (with_hhd vs sans_hhd)
-      const filtered = cQuotes.filter(q => {
-        const vt = Array.isArray(q.view_type) ? q.view_type : [];
-        const hasHHDVariants = vt.some((s: string) => s.includes('hhd'));
-        if (!hasHHDVariants) return true; // calculated or standard pattern – keep for now and later rate calc will apply discounts if needed
-        if (applyDiscounts) return vt.includes('with_hhd');
-        return vt.includes('sans_hhd');
-      });
 
-      // Build normalized rates using shared getBaseRate so calculated discount pattern applies when requested
-      const enriched = filtered.map(q => {
-        const raw = getBaseRate(q, applyDiscounts);
-        // Heuristic: API sometimes returns cents (e.g. 13014 -> $130.14). Treat 4+ digit values as cents.
-        const norm = raw >= 1000 ? raw / 100 : raw; // avoid dividing valid dollar figures like 130
-        return { quote: q, normRate: norm };
-      }).filter(item => typeof item.normRate === 'number' && !isNaN(item.normRate));
-
-      // Representative lowest prices per plan (legacy quick access) & range stats
-      const planPrices: Record<string, number | undefined> = { F: undefined, G: undefined, N: undefined };
-      const planRanges: Record<string, { min: number; max: number; count: number } | undefined> = { F: undefined, G: undefined, N: undefined };
-
-      enriched.forEach(({ quote, normRate }) => {
-        const planLetter = (quote.plan || quote.plan_name || '').slice(-1).toUpperCase();
-        if (!['F','G','N'].includes(planLetter)) return;
-        if (planPrices[planLetter] == null || normRate < (planPrices[planLetter] as number)) {
-          planPrices[planLetter] = normRate;
-        }
-        const existing = planRanges[planLetter];
-        if (!existing) {
-          planRanges[planLetter] = { min: normRate, max: normRate, count: 1 };
-        } else {
-          if (normRate < existing.min) existing.min = normRate;
-          if (normRate > existing.max) existing.max = normRate;
-          existing.count += 1;
-        }
-      });
-
-      const allRates = enriched.map(e => e.normRate);
-      const min = allRates.length ? Math.min(...allRates) : undefined;
-      const max = allRates.length ? Math.max(...allRates) : undefined;
-
-      // --- AM Best rating derivation ----------------------------------------------------
-      // Collect potential rating fields from quotes (company_base.ambest_rating, ambest_rating, rating)
-  const ratingCandidates: string[] = [];
-  cQuotes.forEach((q:any) => {
-        const r1 = q?.company_base?.ambest_rating;
-        const r2 = q?.company?.ambest_rating; // in case structure differs for some carriers
-        const r3 = q?.ambest_rating;
-        const r4 = q?.rating; // last resort generic field
-        [r1,r2,r3,r4].forEach(r => {
-          if (typeof r === 'string' && r.trim()) ratingCandidates.push(r.trim().toUpperCase());
-        });
-      });
-      let derivedRating: string | undefined;
-      if (ratingCandidates.length) {
-        // Mode (most frequent) to smooth inconsistencies
-        const freq = ratingCandidates.reduce<Record<string, number>>((acc, r) => { acc[r] = (acc[r]||0)+1; return acc; }, {});
-        derivedRating = Object.entries(freq).sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]))[0][0];
-      }
-      // Basic normalization for variants like 'A+' vs 'A PLUS' could be added here if encountered.
-
-      return { id: name, name, logo, rating: derivedRating || undefined, min, max, plans: planPrices, planRanges, __preferred: preferredIds.has(name) } as any;
-    });
-    // Sort carriers by lowest normalized rate (ascending). If tie, fallback to name.
-    summaries.sort((a, b) => {
-      if (a.min == null && b.min == null) return a.name.localeCompare(b.name);
-      if (a.min == null) return 1;
-      if (b.min == null) return -1;
-      if (a.min === b.min) return a.name.localeCompare(b.name);
-      return a.min - b.min;
-    });
-    // Sort carriers by lowest available (normalized) rate to align with primary shop behavior
-    const sorted = [...summaries].sort((a, b) => {
-      const aMin = typeof a.min === 'number' ? a.min : Number.POSITIVE_INFINITY;
-      const bMin = typeof b.min === 'number' ? b.min : Number.POSITIVE_INFINITY;
-      if (aMin === bMin) return (a.name || '').localeCompare(b.name || '');
-      return aMin - bMin;
-    });
-    setCarrierSummaries(sorted);
-    if (!firstCarrierReadyTs && summaries.length > 0) {
-      const ts = performance.now();
-      setFirstCarrierReadyTs(ts);
-      if (!firstPlanVisibleMs && fetchStartTs) setFirstPlanVisibleMs(ts - fetchStartTs);
-    }
-    const [carrierName, carrierQuotes] = entries[0];
-    return { carrierName, carrierQuotes };
-  }, [quotes, applyDiscounts]);
-
-  // Adapter integration: legacy grouping still computed (for fallback) but UI always prefers adapter summaries.
 
   // Carrier search (listens to sidebar events / storage)
   // Hydration-safe default; apply persisted carrier search after mount to avoid SSR mismatch.
@@ -224,7 +143,9 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const [preferredOnly, setPreferredOnly] = useState(true);
 
   // Adapter shadow integration (Medigap only for now) – must run after activeCategory declaration
-  const { normalized: adapterMedigapQuotes, summaries: adapterMedigapSummaries, timing: adapterTiming } = useCategoryQuotes<any>('medigap', activeCategory==='medigap' ? quotes : [], {
+  const [medigapPlanQuotes, setMedigapPlanQuotes] = useState<{F:any[];G:any[];N:any[]}>({F:[],G:[],N:[]});
+  const flattenedMedigapQuotes = useMemo(()=>flattenPlanQuotes(medigapPlanQuotes),[medigapPlanQuotes]);
+  const { normalized: adapterMedigapQuotes, summaries: adapterMedigapSummaries, timing: adapterTiming } = useCategoryQuotes<any>('medigap', activeCategory==='medigap' ? flattenedMedigapQuotes : [], {
     applyDiscounts,
     enabled: true,
   });
@@ -232,6 +153,26 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     // eslint-disable-next-line no-console
     console.debug('ADAPTER_PERF medigap', adapterTiming);
   }
+
+  // Hydrate quotes for active category (Firestore-only). This was removed during refactor; restored here.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (activeCategory === 'medigap') {
+          const { planQuotes } = await loadAllStoredPlanQuotes();
+          if (!cancelled) setMedigapPlanQuotes(planQuotes);
+        } else {
+          const cat = (activeCategory === 'hospital' ? 'hospital-indemnity' : activeCategory) as NonMedigapCategory;
+          const arr = await loadCategoryQuotes(cat);
+          if (!cancelled) setQuotes(Array.isArray(arr) ? arr : []);
+        }
+      } catch (e) {
+        if (!cancelled) setQuoteError((e as any)?.message || 'Failed to load stored quotes');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeCategory, reloadIndex]);
 
   // Resolve carriers (legacy vs adapter derived) early so downstream memos (availablePlans, pagination) use unified source
   const carriers = useMemo(() => {
@@ -298,14 +239,6 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
 
   // PDP (drug-plan) adapters integration (simplified first pass)
   const { summaries: pdpSummaries, normalized: pdpNormalized } = useCategoryQuotes<any>('drug-plan', activeCategory==='drug-plan' ? quotes : [], { enabled: true });
-  // Persist PDP normalized quotes for details page (lightweight cache)
-  useEffect(() => {
-    if (pdpNormalized && pdpNormalized.length) {
-      try {
-        localStorage.setItem('drug_plan_normalized_quotes', JSON.stringify(pdpNormalized));
-      } catch {}
-    }
-  }, [pdpNormalized]);
   const pdpCarriers = useMemo(() => {
     if (activeCategory !== 'drug-plan') return [] as any[];
     const productCategory = mapUICategoryToProductCategory('drug-plan') || 'drug-plan';
@@ -342,53 +275,15 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
 
   // Add advantage adapter hook usage
   const { summaries: advantageSummaries, normalized: advantageNormalized } = useCategoryQuotes<any>('advantage', activeCategory==='advantage' ? quotes : [], { enabled: true });
-  // Persist advantage normalized quotes lightly for details if needed
-  useEffect(()=>{ if(advantageNormalized?.length){ try{ localStorage.setItem('advantage_normalized_quotes', JSON.stringify(advantageNormalized)); }catch{} } },[advantageNormalized]);
   const advantageCarriers = useMemo(()=> {
     if (activeCategory !== 'advantage') return [] as any[];
     const productCategory = mapUICategoryToProductCategory('advantage') || 'medicare-advantage';
-    const enriched = advantageSummaries.map(s => {
-      const range = s.planRanges?.MA;
-      const related = advantageNormalized.filter(q => q.carrier.id === s.carrierId);
-      let medDed: string|undefined; let drugDed: string|undefined; let star: number|undefined; let moop: string|undefined; let planName: string|undefined;
-      related.forEach(r => {
-        if (!medDed && r.metadata?.medicalDeductible) medDed = r.metadata.medicalDeductible;
-        if (!drugDed && r.metadata?.drugDeductible) drugDed = r.metadata.drugDeductible;
-        if (!moop && r.metadata?.moop) moop = r.metadata.moop;
-        if (!planName) planName = r.plan.display;
-        if (typeof r.metadata?.starRating === 'number' && star == null) star = r.metadata.starRating;
-      });
-      const representativeQuote = related[0];
-      const enhancedInfo = representativeQuote
-        ? getEnhancedCarrierInfo(representativeQuote, productCategory as any)
-        : { displayName: s.carrierName, logoUrl: s.logoUrl || '/images/carrier-placeholder.svg', isPreferred: false, priority: undefined };
-      return {
-        id: s.carrierId,
-        name: enhancedInfo.displayName || s.carrierName,
-        logo: enhancedInfo.logoUrl || s.logoUrl || '/carrier-logos/1.png',
-        rating: star,
-        min: range?.min,
-        max: range?.max,
-        planRange: range,
-        planName,
-        medicalDeductible: medDed,
-        drugDeductible: drugDed,
-        moop,
-        count: related.length,
-        __preferred: !!enhancedInfo.isPreferred,
-        __preferredPriority: enhancedInfo.priority ?? 999,
-      };
+    return buildAdvantageCarrierCards({
+      summaries: advantageSummaries as any,
+      normalized: advantageNormalized as any,
+      productCategory,
+      getEnhancedCarrierInfo: getEnhancedCarrierInfo as any,
     });
-    enriched.sort((a: any, b: any) => {
-      if (a.__preferred && !b.__preferred) return -1;
-      if (!a.__preferred && b.__preferred) return 1;
-      if (a.__preferred && b.__preferred && a.__preferredPriority !== b.__preferredPriority) return a.__preferredPriority - b.__preferredPriority;
-      const aMin = typeof a.min === 'number' ? a.min : Number.POSITIVE_INFINITY;
-      const bMin = typeof b.min === 'number' ? b.min : Number.POSITIVE_INFINITY;
-      if (aMin === bMin) return (a.name || '').localeCompare(b.name || '');
-      return aMin - bMin;
-    });
-    return enriched;
   }, [activeCategory, advantageSummaries, advantageNormalized]);
 
   // New category adapter integrations ----------------------------------------------------
@@ -443,8 +338,16 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
       setStickyHospitalQuotes(prev => prev.length >= quotes.length ? prev : quotes);
     }
   }, [activeCategory, quotes]);
-  const effectiveHospitalNormalized = activeCategory==='hospital' && hospitalNormalized.length===0 && stickyHospitalQuotes.length
-    ? useCategoryQuotes<any>('hospital', stickyHospitalQuotes, { enabled: true }).normalized
+  // Always invoke hooks unconditionally to satisfy Rules of Hooks. We create a secondary adapter instance
+  // that is only enabled when we actually want to use the sticky snapshot. This avoids conditional
+  // invocation while preserving fallback behavior for flickering hospital quotes.
+  const stickyHospitalAdapter = useCategoryQuotes<any>('hospital', stickyHospitalQuotes, {
+    enabled: activeCategory === 'hospital' && hospitalNormalized.length === 0 && stickyHospitalQuotes.length > 0,
+  });
+  const effectiveHospitalNormalized = (activeCategory === 'hospital'
+    && hospitalNormalized.length === 0
+    && stickyHospitalQuotes.length > 0)
+    ? stickyHospitalAdapter.normalized
     : hospitalNormalized;
   const hospitalCarriers = useMemo(() => {
     if (activeCategory !== 'hospital') return [] as any[];
@@ -498,6 +401,11 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     }
   }, [activeCategory, adapterMedigapSummaries, firstCarrierReadyTs, fetchStartTs, firstPlanVisibleMs]);
 
+  // (Removed duplicated pagination & hydration block after integrating new storage abstractions above.)
+
+  // Update hospital category usages in render conditionals to canonical id
+  // NOTE: For backward URL compatibility we still accept 'hospital' in buttons but state stores 'hospital-indemnity'.
+
   // Pagination for carrier-based sections --------------------------------------------------
   const CARRIER_PAGE_SIZE = 12; // configurable page size
   const [carrierPage, setCarrierPage] = useState(1);
@@ -511,9 +419,10 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
     } catch {}
   }, []);
 
-  const effectiveCarriers = streamingEnabled && streamedCarriers.length
+  // Use enriched medigap carriers (adapter derived) when active; otherwise legacy summaries.
+  const effectiveCarriers = (streamingEnabled && streamedCarriers.length)
     ? streamedCarriers
-    : carrierSummaries;
+    : carriers;
 
 
   // Apply search filter first (case-insensitive substring on carrier name)
@@ -602,20 +511,8 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Compute which plans exist in any carrier (based on planRanges count or presence in fallback)
   const availablePlans = useMemo(() => {
     const letters: ('F'|'G'|'N')[] = ['F','G','N'];
-    const availability = letters.filter(l => carriers.some(c => c.planRanges?.[l]?.count > 0 || (c.plans && c.plans[l] != null)));
-    return availability.length ? availability : letters; // fallback to all if nothing found
-  }, [carriers]);
-
-  // (Removed earlier attempt to wrap original /cards page)
-  // Ensure selectedPlan is still valid when availability changes
-  useEffect(() => {
-    if (!availablePlans.includes(selectedPlan)) {
-      const fallback = (['G','N','F'] as const).find(p => availablePlans.includes(p));
-      if (fallback) setSelectedPlan(fallback);
-    }
-  }, [availablePlans, selectedPlan]);
-
-  // (Removed Figma variant specific price helpers and plan-specific quote arrays after cleanup)
+    return letters.filter(l => medigapPlanQuotes[l].length > 0);
+  }, [medigapPlanQuotes]);
 
   // Category + View toggles (replacing upper tabs)
   // (moved activeCategory earlier for pagination dependency ordering)
@@ -623,188 +520,69 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   // Conditional quote hydration (no auto generation). We look for existing categories and medigap quotes.
   useEffect(() => {
     let mounted = true;
-    async function hydrateExisting() {
-      setQuoteError(null);
-      setFetchStartTs(performance.now());
-      setFetchEndTs(null); setFirstCarrierReadyTs(null);
+    async function hydrate() {
       if (typeof window === 'undefined') return;
+      setLoadingQuotes(true);
       try {
-        const raw = localStorage.getItem(SELECTED_CATEGORIES_KEY);
-        const selectedCategories: string[] = raw ? JSON.parse(raw) : [];
+        // Read selected categories list (lightweight UI marker)
+        let selectedCategories: string[] = [];
+        try { const raw = localStorage.getItem(SELECTED_CATEGORIES_KEY); if (raw) selectedCategories = JSON.parse(raw); } catch {}
+        // Always normalize hospital -> hospital-indemnity
+        selectedCategories = selectedCategories.map(c => c === 'hospital' ? 'hospital-indemnity' : c);
         if (!selectedCategories.includes(activeCategory)) {
-          setQuotes([]);
+          // Clear current category quotes if deselected
+          if (activeCategory === 'medigap') {
+            setMedigapPlanQuotes({F:[],G:[],N:[]});
+          } else {
+            setQuotes([]);
+          }
+          setLoadingQuotes(false);
           return;
         }
-        setLoadingQuotes(true);
-        let loadedQuotes: any[] = [];
         if (activeCategory === 'medigap') {
-          const keys = getAllMedigapStorageKeys();
-          for (const k of keys) {
-            const part = await loadFromStorage(k, []);
-            if (Array.isArray(part) && part.length) loadedQuotes = loadedQuotes.concat(part);
-          }
-          if (!loadedQuotes.length) {
-            const legacy = await loadFromStorage(REAL_QUOTES_KEY, []);
-            if (Array.isArray(legacy) && legacy.length) loadedQuotes = legacy;
-          }
+          const { planQuotes } = await loadAllStoredPlanQuotes();
+            if (!mounted) return;
+            setMedigapPlanQuotes(planQuotes);
         } else {
-          // Resolve primary + legacy storage keys for non-medigap categories
-          const resolveKeys = (cat: string): string[] => {
-            if (cat === 'hospital') return ['medicare_hospital_indemnity_quotes','medicare_hospital_quotes'];
-            return [`medicare_${cat.replace(/-/g,'_')}_quotes`];
-          };
-          const primaryKeys = resolveKeys(activeCategory);
-          for (const key of primaryKeys) {
-            const data = await loadFromStorage(key, []);
-            if (Array.isArray(data) && data.length) { loadedQuotes = data; break; }
-          }
-          // Fallback: attempt legacy storage keys if nothing loaded (backward compatibility)
-          if ((!loadedQuotes || loadedQuotes.length === 0)) {
-            const LEGACY_KEYS: Record<string,string[]> = {
-              'dental': ['dental_quotes','medicare_dental_quotes','dentalQuotes'],
-              'cancer': ['cancer_insurance_quotes','medicare_cancer_insurance_quotes'],
-              'hospital': ['hospital_indemnity_quotes','medicare_hospital_indemnity_quotes'],
-              'final-expense': ['final_expense_quotes','final_expense_life_quotes','medicare_final_expense_life_quotes']
-            };
-            const fallbacks = LEGACY_KEYS[activeCategory] || [];
-            for (const fk of fallbacks) {
-              try {
-                const legacy = await loadFromStorage(fk, []);
-                if (Array.isArray(legacy) && legacy.length) {
-                  loadedQuotes = legacy;
-                  console.info(`[hydrateExisting] Loaded ${legacy.length} ${activeCategory} quotes from legacy key '${fk}'.`);
-                  break;
-                }
-              } catch {}
-            }
-          }
+          const cat = (activeCategory === 'hospital' ? 'hospital-indemnity' : activeCategory) as NonMedigapCategory;
+          const arr = await loadCategoryQuotes(cat);
+          if (!mounted) return;
+          setQuotes(Array.isArray(arr)?arr:[]);
         }
-        if (!mounted) return;
-        setQuotes(loadedQuotes);
-        setFetchEndTs(performance.now());
       } catch (e:any) {
-        if (!mounted) return;
-        setQuoteError(e.message || 'Failed to load stored quotes');
+        if (mounted) setQuoteError(e.message || 'Failed to hydrate quotes');
       } finally {
         if (mounted) setLoadingQuotes(false);
       }
     }
-    hydrateExisting();
+    hydrate();
     return () => { mounted = false; };
   }, [activeCategory, reloadIndex]);
-  // Consolidated state (removed duplicate inner component)
-  const [viewVisibility, setViewVisibility] = useState({ cards: true, planDetails: false });
-  const [activeCarrierId, setActiveCarrierId] = useState<string | null>(null);
-  const [sidebarPanelOpen, setSidebarPanelOpen] = useState(false);
-  const [closeSignal, setCloseSignal] = useState(0);
-  const loadingActive = loadingQuotes && !carrierSummaries.length;
-  const router = useRouter();
-  const toggleView = (key: keyof typeof viewVisibility) => setViewVisibility(v => ({ ...v, [key]: !v[key] }));
-  const handleRefetch = () => setReloadIndex(i => i + 1);
-  // (CARRIER_PAGE_SIZE declared earlier – avoid redeclaration)
-  const simulateStreaming = async () => {
-    if (streamingActive) return;
-    setStreamingActive(true);
-    setStreamedCarriers([]);
-    const snapshot = [...carrierSummaries];
-    await runCarrierStream(snapshot, {
-      delayMs: 400,
-      onFirst: () => {
-        if (fetchStartTs && !firstPlanVisibleMs) setFirstPlanVisibleMs(performance.now() - fetchStartTs);
-      },
-      onComplete: () => {
-        setStreamingActive(false);
-        if (fetchStartTs && !allPlansCompleteMs) setAllPlansCompleteMs(performance.now() - fetchStartTs);
-      }
-    }, (carrier) => setStreamedCarriers(prev => [...prev, carrier]));
-  };
 
-  // Query helper (avoid useSearchParams to remove Suspense split)
-  const updateQuery = useCallback((mutate: (p: URLSearchParams) => void) => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    mutate(params);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [router]);
-
-  // Deep-link hydration
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Incremental Medigap plan add (sandbox parity with production)
+  const addMedigapPlan = useCallback(async (planLetter: 'F'|'G'|'N', formData: any) => {
+    if (!formData) return;
+    const params = {
+      zipCode: String(formData.zipCode || ''),
+      age: String(formData.age || ''),
+      gender: (formData.gender || 'male').toString().toLowerCase().startsWith('m') ? 'M' : 'F',
+      tobacco: formData.tobaccoUse ? '1' : '0',
+      plans: [planLetter]
+    } as any;
     try {
-      const params = new URLSearchParams(window.location.search);
-      const viewParam = params.get('view');
-      const carrierParam = params.get('carrier');
-      const categoryParam = params.get('category');
-      if (categoryParam && categoryParam !== activeCategory) setActiveCategory(categoryParam);
-      if (viewParam === 'plan-details' && carrierParam) {
-        setActiveCarrierId(carrierParam);
-        setViewVisibility({ cards: false, planDetails: true });
+      const { quotes: newQuotes, error } = await getMedigapQuotes(params);
+      if (error) throw new Error(error);
+      if (newQuotes && newQuotes.length) {
+        await savePlanQuotes(planLetter, newQuotes);
+        setMedigapPlanQuotes(prev => ({ ...prev, [planLetter]: newQuotes }));
       }
-    } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) {
+      console.error('Failed to add Medigap plan', planLetter, e);
+    }
   }, []);
 
-  const openPlanDetails = useCallback((carrier: any) => {
-    if (!carrier) return;
-    setActiveCarrierId(carrier.id);
-    updateQuery(p => { p.set('carrier', carrier.id); p.set('view', 'plan-details'); });
-    setViewVisibility({ cards: false, planDetails: true });
-  }, [updateQuery]);
-
-  const openPdpDetails = useCallback((carrier: any) => {
-    if (!carrier) return;
-    setActiveCarrierId(carrier.id);
-    updateQuery(p => { p.set('carrier', carrier.id); p.set('view', 'plan-details'); p.set('category', 'drug-plan'); });
-    setViewVisibility({ cards: false, planDetails: true });
-  }, [updateQuery]);
-
-  // Generic helper for new categories (advantage, dental, cancer, hospital, final-expense)
-  const openCategoryDetails = useCallback((carrierId: string, category: string) => {
-    if (!carrierId) return;
-    setActiveCarrierId(carrierId);
-    updateQuery(p => { p.set('carrier', carrierId); p.set('view', 'plan-details'); p.set('category', category); });
-    setActiveCategory(category);
-    setViewVisibility({ cards: false, planDetails: true });
-  }, [updateQuery]);
-
-  const closePlanDetails = useCallback(() => {
-    setViewVisibility({ cards: true, planDetails: false });
-    setActiveCarrierId(null);
-    updateQuery(p => { p.delete('carrier'); p.delete('view'); p.delete('category'); });
-  }, [updateQuery]);
-
-  // (removed duplicate handlers after consolidation)
-
-  // View mode (card | list) - moved from inline IIFE to satisfy Rules of Hooks
-  // Hydration-safe default; apply persisted view mode post-mount.
-  const [quoteViewMode, setQuoteViewMode] = useState<'card' | 'list'>('card');
-  useEffect(() => {
-    try {
-      const persisted = localStorage.getItem('quote_view_mode') as 'card' | 'list' | null;
-      if (persisted === 'card' || persisted === 'list') setQuoteViewMode(persisted);
-    } catch {}
-  }, []);
-  useEffect(() => {
-    const STORAGE_KEY = 'quote_view_mode';
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        const val = (e.newValue as 'card' | 'list') || 'card';
-        setQuoteViewMode(val === 'list' ? 'list' : 'card');
-      }
-    };
-    const handleCustom = (e: any) => {
-      const mode = e?.detail?.mode;
-      if (mode === 'list' || mode === 'card') setQuoteViewMode(mode);
-    };
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('quoteViewMode:changed', handleCustom as EventListener);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('quoteViewMode:changed', handleCustom as EventListener);
-    };
-  }, []);
-
-  // (deep link sync handled on initial mount above)
+  // Update hospital category usages in render conditionals to canonical id
+  // NOTE: For backward URL compatibility we still accept 'hospital' in buttons but state stores 'hospital-indemnity'.
 
   return (
     <div className="relative min-h-screen w-full px-4 py-10 mx-auto max-w-7xl">
@@ -844,93 +622,18 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   // Dispatch event so sidebar can re-read instantly
                   try { window.dispatchEvent(new CustomEvent('selectedCategories:updated')); } catch {}
                 }
-                // Safe persistence helper to avoid localStorage quota errors
-                const persistQuotes = (key: string, quotes: any[]) => {
-                  if (typeof window === 'undefined') return;
-                  const attemptSave = (data: any) => {
-                    localStorage.setItem(key, JSON.stringify(data));
-                  };
-                  const compressOne = (q: any) => {
-                    if (!q || typeof q !== 'object') return q;
-                    const copy: any = { ...q };
-                    // Remove known large / rarely used fields
-                    const largeFields = [
-                      'description','long_description','detailed_description','terms','conditions','legal_text','disclaimer','benefits_description','coverage_details','exclusions','limitations','rider_description','plan_description',
-                      'fullDescription','detailedBenefits','termsAndConditions','marketingMaterials','disclosures','legalDisclaimer','benefitDetails','underwritingGuidelines'
-                    ];
-                    largeFields.forEach(f => { if (f in copy) delete copy[f]; });
-                    // Trim large string fields
-                    Object.keys(copy).forEach(k => {
-                      const v = copy[k];
-                      if (typeof v === 'string' && v.length > 600) {
-                        copy[k] = v.slice(0, 600) + '…';
-                      }
-                    });
-                    // Limit large arrays
-                    const arrayFields = ['benefits','features','riders'];
-                    arrayFields.forEach(f => { if (Array.isArray(copy[f]) && copy[f].length > 12) copy[f] = copy[f].slice(0,12); });
-                    return copy;
-                  };
-                  // Basic order by premium-ish field so truncation keeps most relevant
-                  const sortByPremium = (arr: any[]) => [...arr].sort((a,b)=>{
-                    const getP = (o:any)=> Number(o?.monthly_rate ?? o?.monthlyRate ?? o?.premium ?? o?.rate ?? o?.annual_rate ?? Infinity);
-                    return getP(a)-getP(b);
-                  });
-                  const tryStrategies = (original: any[]) => {
-                    const strategies: (()=>any[])[] = [];
-                    strategies.push(()=> original); // full
-                    strategies.push(()=> sortByPremium(original).slice(0,100)); // top 100
-                    strategies.push(()=> sortByPremium(original).slice(0,60)); // top 60
-                    strategies.push(()=> sortByPremium(original).slice(0,40).map(compressOne)); // top 40 compressed
-                    strategies.push(()=> sortByPremium(original).slice(0,20).map(compressOne)); // top 20 compressed
-                    for (const build of strategies) {
-                      const data = build();
-                      try {
-                        attemptSave(data);
-                        if (data.length && data.length < original.length) {
-                          console.warn(`⚠️ Stored truncated quotes for ${key}: kept ${data.length} of ${original.length}`);
-                        }
-                        return;
-                      } catch (e:any) {
-                        if (!(e instanceof DOMException) || !/quota/i.test(e.name+e.message)) {
-                          console.error('Unexpected quote save error', e);
-                          return; // non-quota error; abort
-                        }
-                      }
-                    }
-                    try {
-                      attemptSave([]);
-                      console.warn(`⚠️ Could not store quotes for ${key}; saved empty array after all strategies failed.`);
-                    } catch {}
-                  };
+                // Firestore-backed persistence (reuse production storage helpers)
+                const persistQuotes = async (key: string, quotes: any[]) => {
+                  if (!Array.isArray(quotes) || !quotes.length) return;
                   try {
-                    attemptSave(quotes);
-                  } catch (e:any) {
-                    if (e instanceof DOMException && /quota/i.test(e.name+e.message)) {
-                      console.warn('LocalStorage quota exceeded, applying pruning/compression strategies for', key);
-                      // Free up space by removing older quote categories (except current)
-                      try {
-                        const quoteKeysToClear = [
-                          'medigap_plan_quotes_stub',
-                          'medicare_advantage_quotes',
-                          'medicare_drug_plan_quotes',
-                          'medicare_dental_quotes',
-                          'medicare_hospital_indemnity_quotes',
-                          'medicare_final_expense_quotes',
-                          'medicare_cancer_insurance_quotes'
-                        ].filter(k=>k!==key);
-                        quoteKeysToClear.forEach(k=>{ try { localStorage.removeItem(k); } catch {} });
-                      } catch {}
-                      tryStrategies(quotes);
-                    } else {
-                      console.error('Failed to save quotes for', key, e);
-                    }
+                    await saveToStorage(key, quotes);
+                  } catch (e) {
+                    console.error('Failed to persist quotes to Firestore', key, e);
                   }
                 };
                 let storageKey = `medicare_${category.replace(/-/g,'_')}_quotes`;
                 if (category === 'medigap') {
-                  // Store per-plan using existing storage util pattern if possible; fallback single key
-                  // We'll aggregate results from all selected plans
+                  // Store per-plan using canonical plan-specific keys (F/G/N)
                   const plans = plansList && plansList.length ? plansList : ['G'];
                   const medigapParams = {
                     zipCode: String(formData.zipCode || ''),
@@ -942,18 +645,24 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   const { quotes: mgQuotes, error } = await getMedigapQuotes(medigapParams);
                   if (error) throw new Error(error);
                   if (mgQuotes && mgQuotes.length) {
-                    // Persist under combined stub key (could refine to per-plan keys later)
-                    persistQuotes('medigap_plan_quotes_stub', mgQuotes);
-                    storageKey = 'medigap_plan_quotes_stub';
+                    const byPlan: Record<string, any[]> = {};
+                    mgQuotes.forEach(q => {
+                      const letter = String((q.plan || q.plan_name || '').slice(-1)).toUpperCase();
+                      if (!['F','G','N'].includes(letter)) return;
+                      if (!byPlan[letter]) byPlan[letter] = [];
+                      byPlan[letter].push(q);
+                    });
+                    await Promise.all(Object.entries(byPlan).map(([pl, arr]) => persistQuotes(getMedigapStorageKey(pl), arr)));
+                    storageKey = REAL_QUOTES_KEY; // logical grouping placeholder; actual writes done per plan
                   }
                 } else if (category === 'advantage') {
                   const { quotes, error } = await getMedicareAdvantageQuotes({ zipCode: String(formData.zipCode) });
                   if (error) throw new Error(error);
-                  if (quotes) persistQuotes(storageKey, quotes);
+                  if (quotes) await persistQuotes(ADVANTAGE_QUOTES_KEY, quotes);
                 } else if (category === 'drug-plan') {
                   const { quotes, error } = await getDrugPlanQuotes({ zipCode: String(formData.zipCode) } as any);
                   if (error) throw new Error(error);
-                  if (quotes) persistQuotes(storageKey, quotes);
+                  if (quotes) await persistQuotes(DRUG_PLAN_QUOTES_KEY, quotes);
                 } else if (category === 'dental') {
                   const { success, quotes, error } = await getDentalQuotes({
                     age: formData.age,
@@ -963,7 +672,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                     coveredMembers: formData.coveredMembers ? parseInt(formData.coveredMembers,10) : undefined
                   });
                   if (!success) throw new Error(error || 'Dental quote fetch failed');
-                  persistQuotes(storageKey, quotes);
+                  await persistQuotes(DENTAL_QUOTES_KEY, quotes);
                 } else if (category === 'cancer') {
                   const cancerParams = {
                     state: formData.state || 'TX',
@@ -976,7 +685,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   } as any;
                   const { quotes, success, error } = await getCancerInsuranceQuotes(cancerParams);
                   if (!success) throw new Error(error || 'Cancer quote fetch failed');
-                  persistQuotes(storageKey, quotes);
+                  await persistQuotes(CANCER_INSURANCE_QUOTES_KEY, quotes);
                 } else if (category === 'hospital') {
                   const hospParams = {
                     zipCode: String(formData.zipCode),
@@ -986,9 +695,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   };
                   const { quotes, success, error } = await getHospitalIndemnityQuotes(hospParams as any);
                   if (!success) throw new Error(error || 'Hospital Indemnity quote fetch failed');
-                  persistQuotes(storageKey, quotes);
-                  // Also persist to canonical hospital_indemnity key for legacy tools & new adapter
-                  try { persistQuotes('medicare_hospital_indemnity_quotes', quotes); } catch {}
+                  await persistQuotes(HOSPITAL_INDEMNITY_QUOTES_KEY, quotes);
                 } else if (category === 'final-expense') {
                   const feParams = {
                     zipCode: String(formData.zipCode),
@@ -999,7 +706,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
                   };
                   const { quotes, success, error } = await getFinalExpenseLifeQuotes(feParams as any);
                   if (!success) throw new Error(error || 'Final Expense quote fetch failed');
-                  persistQuotes(storageKey, quotes);
+                  await persistQuotes(FINAL_EXPENSE_QUOTES_KEY, quotes);
                 }
 
                 // Finalize selected categories list (already added above if new)
@@ -1030,7 +737,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
         </aside>
         <div className={`space-y-12 ${sidebarPanelOpen ? 'lg:blur-sm lg:pointer-events-none' : ''}`} aria-busy={loadingActive} aria-describedby="carrier-loading-status">
         <span id="carrier-loading-status" role="status" aria-live="polite" className="sr-only">
-          {loadingActive ? 'Loading Medigap carriers…' : carrierSummaries.length ? `${carrierSummaries.length} Medigap carriers loaded.` : 'No carriers.'}
+          {loadingActive ? 'Loading Medigap carriers…' : (carriers && carriers.length ? `${carriers.length} Medigap carriers loaded.` : 'No carriers.')}
         </span>
   {viewVisibility.cards && (
         <div className="space-y-8">

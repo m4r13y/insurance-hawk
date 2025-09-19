@@ -865,10 +865,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         
         setRealQuotes(updatedQuotes);
         
-        // Also save to localStorage
-        localStorage.setItem('medigapQuotes', JSON.stringify(updatedQuotes));
-        
-        console.log(`Plan Builder - successfully generated and stored quotes for plan ${planType}`);
+  console.log(`Plan Builder - generated quotes for plan ${planType} (Firestore plan keys handle persistence)`);
       } else {
         console.error(`Plan Builder - no quotes returned for plan ${planType}`);
       }

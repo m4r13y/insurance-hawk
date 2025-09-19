@@ -751,21 +751,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     return 'N/A';
   };
 
-  // Load existing quotes from localStorage
-  const loadExistingQuotes = () => {
-    try {
-      const storedQuotes = localStorage.getItem('medigapQuotes');
-      if (storedQuotes) {
-        const quotes = JSON.parse(storedQuotes);
-        console.log('Plan Builder - loaded existing quotes:', quotes.length);
-        setRealQuotes(quotes);
-        return quotes;
-      }
-    } catch (error) {
-      console.error('Error loading existing quotes:', error);
-    }
-    return [];
-  };
+  // Removed legacy localStorage medigapQuotes cache (Firestore is source of truth)
 
   // Check if we have quotes for a specific plan
   const hasQuotesForPlan = (planType: string): boolean => {
@@ -878,10 +864,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
         
         setRealQuotes(updatedQuotes);
         
-        // Also save to localStorage
-        localStorage.setItem('medigapQuotes', JSON.stringify(updatedQuotes));
-        
-        console.log(`Plan Builder - successfully generated and stored quotes for plan ${planType}`);
+  console.log(`Plan Builder - generated quotes for plan ${planType} (persisted via plan-specific Firestore keys elsewhere)`);
       } else {
         console.error(`Plan Builder - no quotes returned for plan ${planType}`);
       }
@@ -1164,15 +1147,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
     }
   };
 
-  useEffect(() => {
-    // Load existing quotes when component mounts
-    loadExistingQuotes();
-  }, [quoteData.plan]);
-
-  // Reload quotes when the component mounts or when we need to refresh
-  useEffect(() => {
-    loadExistingQuotes();
-  }, []);
+  // Removed legacy localStorage quote hydration (Firestore plan-specific storage now authoritative)
 
   return (
     <TabsContent value="builder" className="space-y-6">

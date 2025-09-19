@@ -22,7 +22,7 @@ import { getFinalExpenseLifeQuotes } from "@/lib/actions/final-expense-quotes";
 import { getCancerInsuranceQuotes } from "@/lib/actions/cancer-insurance-quotes";
 import { optimizeDentalQuotes, OptimizedDentalQuote, filter2025Quotes } from "@/lib/dental-quote-optimizer";
 import { optimizeHospitalIndemnityQuotes, OptimizedHospitalIndemnityQuote } from "@/lib/hospital-indemnity-quote-optimizer";
-import { saveDentalQuotesToStorage } from "@/lib/dental-storage";
+// Removed local dental storage fallback (Firestore is sole quote persistence)
 import { quoteService } from "@/lib/services/quote-service";
 import { cancelAllRequests } from "@/lib/services/temporary-storage";
 import { 
@@ -617,8 +617,10 @@ function MedicareShopContent() {
     setLoadingPlanButton(planType);
     
     try {
-      // Use provided form data, current state, or stored form data as fallback
-      const dataToUse = formData || quoteFormData || loadFromStorage(QUOTE_FORM_DATA_KEY, null);
+      // Use provided form data, current state, or stored form data as fallback (ensure awaited)
+  // NOTE: Previously missing an `await` here which could result in a Promise being passed
+  // to getMedigapQuotes params, producing subtle failures. Fixed for sandbox parity.
+  const dataToUse = formData || quoteFormData || await loadFromStorage(QUOTE_FORM_DATA_KEY, null);
       
       console.log('🔍 fetchIndividualPlanQuotes - dataToUse:', dataToUse);
       console.log('🔍 fetchIndividualPlanQuotes - planType:', planType);
@@ -1416,18 +1418,8 @@ function MedicareShopContent() {
             } catch (error) {
               console.error('❌ Failed to save dental quotes to Firebase:', error);
               // Fallback to localStorage-only storage
-              const saveSuccess = saveDentalQuotesToStorage(
-                optimizationResult.quotes,
-                dentalParams,
-                {
-                  originalSize: optimizationResult.originalSize,
-                  optimizedSize: optimizationResult.optimizedSize,
-                  compressionRatio: optimizationResult.compressionRatio
-                }
-              );
-              if (saveSuccess) {
-                console.log('💾 Dental quotes saved to localStorage as fallback');
-              }
+              // Fallback local storage disabled per architecture: log only
+              console.warn('⚠️ Dental Firestore save failed; local fallback disabled. Quotes not persisted this session.');
             }
             
             // Mark Dental Insurance as completed
