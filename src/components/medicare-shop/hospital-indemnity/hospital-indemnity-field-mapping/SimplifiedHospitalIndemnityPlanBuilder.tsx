@@ -209,15 +209,32 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
   }, [automaticBenefitIncrease, gpoRider, selectedPlanTier]);
 
   // Filter valid quotes
+  // Normalize company names (strip common suffixes, extra spaces) for grouping
+  const normalizeCompany = (name: string | undefined): string => {
+    if (!name) return '';
+    return name
+      .replace(/life insurance company$/i,'')
+      .replace(/insurance company$/i,'')
+      .replace(/insurance co\.?$/i,'')
+      .replace(/company$/i,'')
+      .replace(/\s+/g,' ') // collapse spaces
+      .trim();
+  };
+
   const availableQuotes = useMemo(() => {
-    return quotes.filter(quote => hasValidBenefitStructure(quote));
+    const valid = quotes.filter(quote => hasValidBenefitStructure(quote));
+    if (valid.length) return valid;
+    // Fallback: if optimizer produced zero "valid" quotes, allow raw quotes through so user can still build minimally
+    console.warn('[hospital builder] no quotes passed hasValidBenefitStructure; falling back to all quotes (len=' + quotes.length + ')');
+    return quotes;
   }, [quotes]);
 
   // Get available companies
   const availableCompanies = useMemo(() => {
     const companies = new Map<string, OptimizedHospitalIndemnityQuote[]>();
     availableQuotes.forEach(quote => {
-      const company = quote.companyFullName || quote.companyName;
+      const companyRaw = quote.companyFullName || quote.companyName;
+      const company = normalizeCompany(companyRaw) || companyRaw || 'Unknown Carrier';
       if (!companies.has(company)) {
         companies.set(company, []);
       }
@@ -229,57 +246,82 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
   // Get quotes for selected company
   const companyQuotes = useMemo(() => {
     if (!selectedCompany) return [];
-    return availableQuotes.filter(q => 
-      (q.companyFullName || q.companyName) === selectedCompany
-    );
+    return availableQuotes.filter(q => {
+      const companyRaw = q.companyFullName || q.companyName;
+      return normalizeCompany(companyRaw) === selectedCompany || companyRaw === selectedCompany;
+    });
   }, [availableQuotes, selectedCompany]);
 
-  // Get available plan options (simplified base plans without riders and tiers)
+  // BENEFIT LABELS (reintroduced after refactor) --------------------------------------------------
+  const benefitLabels = useMemo(() => {
+    // Detect benefit type from first company quote (very lightweight heuristic)
+    const sample = companyQuotes[0];
+    // If any benefit option mentions 'admission' choose admission labeling; else default daily benefit
+    const looksAdmission = sample?.basePlans?.some((bp: any) => bp?.benefitOptions?.some((o: any) => /admission/i.test(o?.amount || '')));
+    if (looksAdmission) {
+      return {
+        label: 'Admission Benefit Amount',
+        placeholder: 'Choose admission amount...',
+        format: (amount: number) => `$${amount}`
+      };
+    }
+    return {
+      label: 'Daily Benefit Amount',
+      placeholder: 'Choose daily benefit...',
+      format: (amount: number) => `$${amount}/day`
+    };
+  }, [companyQuotes]);
+
+  // Get available plan options (simplified) with defensive fallback synthesis if list is empty
   const availablePlanOptions = useMemo(() => {
     if (!selectedCompany) return [];
-    const planNames = [...new Set(companyQuotes.map(q => q.planName))];
-    
+    const rawNames = companyQuotes.map(q => q.planName).filter(Boolean) as string[];
+    const planNames = [...new Set(rawNames)];
     console.log('🔍 Original plan names for', selectedCompany + ':', planNames);
-    
-    // Extract unique base plan names, removing riders and tiers
-    const simplifiedPlans = planNames.map(planName => {
-      // Remove riders like "with GPO Rider", "with Automatic Benefit Increase Rider"
-      let basePlan = planName
+
+    // Fallback chain if empty:
+    if (planNames.length === 0) {
+      // Attempt to derive distinct main benefit descriptors to present as pseudo plan options
+      const benefitDerived = companyQuotes
+        .map(q => {
+          try {
+            const main = getMainBenefit(q as any);
+            if (main?.name) return main.name.replace(/Benefit$/i,'').trim();
+          } catch {}
+          return null;
+        })
+        .filter(Boolean) as string[];
+      const uniqueBenefitNames = [...new Set(benefitDerived)];
+      if (uniqueBenefitNames.length) {
+        console.warn('⚠️ Using main benefit names as plan options:', uniqueBenefitNames);
+        return uniqueBenefitNames;
+      }
+      if (companyQuotes.length) {
+        console.warn('⚠️ Using generic fallback plan option');
+        return ['Base Plan'];
+      }
+      return [];
+    }
+
+    const simplified = planNames.map(name => {
+      let base = name
         .replace(/\s+with\s+GPO\s+Rider/gi, '')
-        .replace(/\s+with\s+Automatic\s+Benefit\s+Increase\s+Rider/gi, '');
-      
-      // Remove tier/option indicators like "Core Option", "Preferred Option", "Premier Option", "Elite"
-      basePlan = basePlan
+        .replace(/\s+with\s+Automatic\s+Benefit\s+Increase\s+Rider/gi, '')
         .replace(/\s*-\s*(Core|Preferred|Premier|Elite)\s+Option\s+\d+/gi, '')
         .replace(/\s+(Elite|Core|Premier|Preferred)\s*/gi, ' ')
         .replace(/\s+/g, ' ')
         .trim();
-      
-      console.log('📝 Simplified:', planName, '->', basePlan);
-      
-      return basePlan;
+      console.log('📝 Simplified:', name, '->', base);
+      return base || name || 'Plan';
     });
-    
-    // Remove duplicates and sort
-    const uniquePlans = [...new Set(simplifiedPlans)];
-    
-    console.log('✅ Final simplified plan options:', uniquePlans);
-    
-    return uniquePlans.sort((a, b) => {
-      // Extract day numbers for sorting
-      const dayMatchA = a.match(/(\d+)\s*(?:benefit\s*)?days?/i);
-      const dayMatchB = b.match(/(\d+)\s*(?:benefit\s*)?days?/i);
-      
-      if (dayMatchA && dayMatchB) {
-        const daysA = parseInt(dayMatchA[1]);
-        const daysB = parseInt(dayMatchB[1]);
-        return daysA - daysB;
-      }
-      
-      // Fallback to alphabetical if no day numbers found
-      return a.localeCompare(b);
-    });
-  }, [companyQuotes]);
+    const unique = [...new Set(simplified)].filter(Boolean);
+    if (!unique.length && companyQuotes.length) {
+      console.warn('⚠️ Simplification produced empty list, falling back to raw first name');
+      return [companyQuotes[0].planName || 'Plan'];
+    }
+    console.log('✅ Final simplified plan options:', unique);
+    return unique;
+  }, [companyQuotes, selectedCompany]);
 
   // Helper function to construct actual plan name from all selected options
   const getActualPlanName = (
@@ -533,45 +575,17 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     return finalQuote;
   }, [selectedCompany, companyQuotes, selectedPlanOption, selectedBenefitDays, selectedDailyBenefit, selectedPlanTier, automaticBenefitIncrease, gpoRider, availableDailyBenefits]);
 
-  // Get available riders for current quote
+  // Riders available for current quote (extracted from structure)
   const availableRiders = useMemo(() => {
-    if (!currentQuote) return [];
-    return getAvailableRiderOptions(currentQuote);
-  }, [currentQuote]);
-
-  // Get included benefits for informational display
-  const includedBenefits = useMemo(() => {
-    if (!currentQuote) return [];
-    return getIncludedBenefits(currentQuote);
-  }, [currentQuote]);
-
-  // Get benefit type for dynamic labeling (based on company quotes)
-  const benefitType = useMemo(() => {
-    if (!selectedCompany || companyQuotes.length === 0) return 'daily';
-    
-    // Check the first available quote to determine benefit type
-    const sampleQuote = companyQuotes[0];
-    return getMainBenefitType(sampleQuote);
-  }, [selectedCompany, companyQuotes]);
-
-  // Get dynamic labels based on benefit type
-  const benefitLabels = useMemo(() => {
-    switch (benefitType) {
-      case 'admission':
-        return {
-          label: 'Hospital Admission Benefit',
-          placeholder: 'Choose admission benefit...',
-          format: (amount: number) => `$${amount}/admission`
-        };
-      case 'daily':
-      default:
-        return {
-          label: 'Daily Benefit Amount',
-          placeholder: 'Choose daily benefit...',
-          format: (amount: number) => `$${amount}/day`
-        };
+    if (!currentQuote) return [] as any[];
+    try {
+      return getAdditionalRiders(currentQuote) || [];
+    } catch {
+      return [] as any[];
     }
-  }, [benefitType]);
+  }, [currentQuote]);
+
+  // NOTE: removed duplicate availablePlanOptions useMemo & erroneous switch fragment introduced during refactor
 
   // Determine if we should show the main benefit selection dropdown
   const showMainBenefitSelection = useMemo(() => {
@@ -764,6 +778,12 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
     }
     return groupRelatedRiders(availableRiders);
   }, [currentQuote, availableRiders]);
+
+  // Included benefits for summary sections
+  const includedBenefits = useMemo(() => {
+    if (!currentQuote) return [] as any[];
+    try { return getIncludedBenefits(currentQuote); } catch { return [] as any[]; }
+  }, [currentQuote]);
 
   // Get carrier display name with fallback
   const getCarrierDisplayName = (company: string): string => {
@@ -983,7 +1003,7 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                               )}
                               {benefit.notes && (
                                 <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                                  {benefit.notes.split(/(\$\d+(?:,\d{3})*(?:\.\d{2})?|\d+(?:\.\d+)?%)/g).map((part, index) => {
+                                  {benefit.notes.split(/(\$\d+(?:,\d{3})*(?:\.\d{2})?|\d+(?:\.\d+)?%)/g).map((part: string, index: number) => {
                                     if (part.match(/^\$\d+(?:,\d{3})*(?:\.\d{2})?$/) || part.match(/^\d+(?:\.\d+)?%$/)) {
                                       return <span key={index} className="font-bold">{part}</span>;
                                     }
@@ -1198,7 +1218,7 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
 
               {selectedDailyBenefit && (
                 <div>
-                  <h4 className="text-xs font-medium text-gray-600">{benefitType === 'admission' ? 'Admission Benefit:' : 'Daily Benefit:'}</h4>
+                  <h4 className="text-xs font-medium text-gray-600">{benefitLabels.label.replace(/ Amount$/,'')}:</h4>
                   <p className="text-sm font-medium">
                     <span className="font-bold">{benefitLabels.format(selectedDailyBenefit)}</span>
                   </p>

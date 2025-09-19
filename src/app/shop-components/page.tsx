@@ -18,7 +18,7 @@ import PlanDetailsShowcase from '@/components/new-shop-components/plan-details/P
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
 // Removed Tabs import after refactor to checkbox toggles inside Sandbox Controls
 import Image from 'next/image';
-import { REAL_QUOTES_KEY, getAllMedigapStorageKeys, saveToStorage, loadFromStorage, ADVANTAGE_QUOTES_KEY, DRUG_PLAN_QUOTES_KEY, DENTAL_QUOTES_KEY, HOSPITAL_INDEMNITY_QUOTES_KEY, FINAL_EXPENSE_QUOTES_KEY, CANCER_INSURANCE_QUOTES_KEY, getMedigapStorageKey, SELECTED_CATEGORIES_KEY } from '@/components/medicare-shop/shared/storage';
+import { REAL_QUOTES_KEY, getAllMedigapStorageKeys, saveToStorage, loadFromStorage, ADVANTAGE_QUOTES_KEY, DRUG_PLAN_QUOTES_KEY, DENTAL_QUOTES_KEY, HOSPITAL_INDEMNITY_QUOTES_KEY, FINAL_EXPENSE_QUOTES_KEY, CANCER_INSURANCE_QUOTES_KEY, getMedigapStorageKey, SELECTED_CATEGORIES_KEY, QUOTE_FORM_DATA_KEY } from '@/components/medicare-shop/shared/storage';
 // New storage abstractions for sandbox parity
 import { flattenPlanQuotes, loadAllStoredPlanQuotes, savePlanQuotes } from '@/lib/medigap/planStorage';
 import { loadCategoryQuotes, type NonMedigapCategory } from '@/lib/storage/categoryStorage';
@@ -257,6 +257,40 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
   const [preferredOnly, setPreferredOnly] = useState(true);
   // Client-only derived UI badge for Final Expense header (avoid SSR hydration mismatch)
   const [finalExpenseBadge, setFinalExpenseBadge] = useState<string | null>(null);
+  // Restored quote form state (seed for sidebar form inputs)
+  const [restoredFormData, setRestoredFormData] = useState<any | null>(null);
+
+  // Session restoration (categories + form data) – lightweight version of MedicareShopContent
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      // Restore form data
+      (async () => {
+        try {
+          const data = await loadFromStorage(QUOTE_FORM_DATA_KEY, null);
+          if (data && typeof data === 'object') setRestoredFormData(data);
+        } catch {/* ignore form load errors */}
+      })();
+      // Restore previously selected categories (if any)
+      const rawCats = localStorage.getItem(SELECTED_CATEGORIES_KEY);
+      if (rawCats) {
+        try {
+          const parsed = JSON.parse(rawCats);
+          if (Array.isArray(parsed) && parsed.length) {
+            // Normalize any legacy 'hospital-indemnity' to internal 'hospital' alias for activeCategory state
+            const normalized = parsed.map((c:string) => c === 'hospital-indemnity' ? 'hospital' : c);
+            // If current activeCategory not in restored list, switch to first restored category for immediate hydration
+            if (!normalized.includes(activeCategory)) {
+              setActiveCategory(normalized[0]);
+            }
+            // Fire an event so SidebarShowcase can update immediately if it mounted earlier
+            try { window.dispatchEvent(new CustomEvent('selectedCategories:updated')); } catch {}
+          }
+        } catch {/* ignore parse errors */}
+      }
+    } catch {/* silent */}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync activeCategory into URL query string (shallow) without full reload.
   // NOTE: Removed searchParams from dependency list & added guard ref to prevent rapid oscillation
@@ -1132,6 +1166,7 @@ export default function CardsSandboxPage({ initialCategory }: CardsSandboxProps)
             onTogglePreferred={setPreferredOnly}
             applyDiscounts={applyDiscounts}
             onToggleApplyDiscounts={setApplyDiscounts}
+            initialFormData={restoredFormData || undefined}
             onGenerateQuotes={async (category, formData: any, plansList) => {
               try {
                 // Immediately show skeletons for target category

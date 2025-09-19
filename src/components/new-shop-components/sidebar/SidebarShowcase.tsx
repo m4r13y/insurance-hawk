@@ -85,6 +85,8 @@ interface SidebarShowcaseProps {
   onGenerateQuotes?: (category: string, formData: QuoteFormData, plansList?: string[]) => Promise<void> | void;
   loadingCategories?: string[];
   completedQuoteTypes?: string[];
+  // New: allow parent to provide restored form data snapshot
+  initialFormData?: Partial<QuoteFormData>;
 }
 
 const quoteCategories = ['medigap','advantage','cancer','hospital','final-expense','drug-plan','dental'];
@@ -104,7 +106,8 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   onToggleApplyDiscounts,
   onGenerateQuotes,
   loadingCategories = [],
-  completedQuoteTypes = []
+  completedQuoteTypes = [],
+  initialFormData
 }) => {
   // State: active detail tab, active nav item
   const [activeTab, setActiveTab] = React.useState<string | null>(null);
@@ -328,6 +331,24 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     benefitAmount: '',
     state: ''
   });
+  // One-time seeding of form inputs from restored parent snapshot (if provided)
+  const seededRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!seededRef.current && initialFormData && typeof window !== 'undefined') {
+      setFormInputs(prev => ({
+        ...prev,
+        ...initialFormData,
+        // Ensure correct types for core fields
+        age: (initialFormData.age as any) ?? prev.age,
+        zipCode: (initialFormData.zipCode as any) ?? prev.zipCode,
+        gender: (initialFormData.gender as any) ?? prev.gender,
+        tobaccoUse: (initialFormData.tobaccoUse as any) ?? prev.tobaccoUse,
+        finalExpenseQuoteMode: (initialFormData.finalExpenseQuoteMode as any) || prev.finalExpenseQuoteMode,
+        finalExpenseBenefitType: (initialFormData.finalExpenseBenefitType as any) || prev.finalExpenseBenefitType,
+      }));
+      seededRef.current = true;
+    }
+  }, [initialFormData]);
   // Ref & focus restoration helpers for inline form to mitigate any parent re-mounts
   const inlineFormRef = React.useRef<HTMLDivElement | null>(null);
   const lastActiveFieldNameRef = React.useRef<string | null>(null);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
@@ -61,13 +61,37 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
     }
   }, [quotes, carrierName]);
 
-  const sorted = [...quotes].sort((a,b)=> (a.pricing?.monthly ?? 0) - (b.pricing?.monthly ?? 0));
-  const [builderOpen, setBuilderOpen] = useState(false);
+  // We still sort for consistent transformation ordering although we no longer render a variants table
+  const sorted = useMemo(()=>[...quotes].sort((a,b)=> (a.pricing?.monthly ?? 0) - (b.pricing?.monthly ?? 0)), [quotes]);
   const [builderResult, setBuilderResult] = useState<any | null>(null);
   const handlePlanBuilt = useCallback((config: any) => {
     setBuilderResult(config);
     try { console.debug('[hospital builder] plan built', config); } catch {}
   }, []);
+
+  // Ensure the embedded builder starts in configuration mode for this carrier by injecting ?company= param
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!carrierName) return;
+    try {
+      const current = new URL(window.location.href);
+      const existingCompany = current.searchParams.get('company');
+      // Only modify if different to avoid unnecessary history entries
+      if (existingCompany !== carrierName) {
+        current.searchParams.set('company', carrierName);
+        // Use replaceState to avoid polluting history stack
+        window.history.replaceState({}, '', current.toString());
+      }
+    } catch (e) {
+      // Fallback: minimal mutation
+      try {
+        if (!window.location.search.includes('company=')) {
+          const sep = window.location.search ? '&' : '?';
+          window.history.replaceState({}, '', window.location.pathname + window.location.search + sep + 'company=' + encodeURIComponent(carrierName));
+        }
+      } catch {}
+    }
+  }, [carrierName]);
 
   // Shape quotes into simplified builder expected model where feasible (if builder needs original quotes we just passthrough)
   const optimizedLike = useMemo(() => sorted.map(q => ({
@@ -90,77 +114,105 @@ const HospitalIndemnityDetailsShowcase: React.FC<HospitalIndemnityDetailsShowcas
   // Log sample optimized quote for diagnostics
   try { if (optimizedQuotes.length) console.debug('[hospital details] first optimizedQuote', optimizedQuotes[0]); } catch {}
   return (
-    <div className="space-y-8">
+  <div className="space-y-8 relative z-0">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-xl font-semibold tracking-tight">{carrierName} Hospital Indemnity</h2>
         <Button size="sm" variant="outline" onClick={onClose}>Back</Button>
       </div>
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Plan Variants</CardTitle></CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="text-left text-slate-500 dark:text-slate-400">
-                <th className="py-1 pr-4 font-medium">Plan</th>
-                <th className="py-1 pr-4 font-medium">Monthly</th>
-                <th className="py-1 pr-4 font-medium">Daily Benefit</th>
-                <th className="py-1 pr-4 font-medium">Days</th>
-                <th className="py-1 pr-4 font-medium">Ambulance</th>
-                <th className="py-1 pr-4 font-medium">ICU Upgrade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(q => (
-                <tr key={q.id} className="border-t border-slate-200 dark:border-slate-700/50">
-                  <td className="py-2 pr-4 font-medium text-slate-700 dark:text-slate-200 max-w-[14rem] truncate" title={q.plan?.display}>{q.plan?.display}</td>
-                  <td className="py-2 pr-4 tabular-nums">{q.pricing?.monthly != null ? `$${q.pricing.monthly.toFixed(2)}` : '—'}</td>
-                  <td className="py-2 pr-4 tabular-nums">{q.metadata?.dailyBenefit != null ? `$${q.metadata.dailyBenefit}` : '—'}</td>
-                  <td className="py-2 pr-4 tabular-nums">{q.metadata?.daysCovered != null ? q.metadata.daysCovered : '—'}</td>
-                  <td className="py-2 pr-4 tabular-nums">{q.metadata?.ambulance != null ? `$${q.metadata.ambulance}` : '—'}</td>
-                  <td className="py-2 pr-4">{q.metadata?.icuUpgrade ? 'Yes' : 'No'}</td>
-                </tr>
-              ))}
-              {!sorted.length && (<tr><td colSpan={6} className="py-4 text-center text-slate-500">No variants</td></tr>)}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60">
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Highlights</CardTitle></CardHeader>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60 order-last lg:order-first">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Builder Guide</CardTitle></CardHeader>
           <CardContent className="text-xs space-y-2 text-slate-600 dark:text-slate-300">
-            <p>Daily benefit × covered days = core inpatient coverage. Ambulance & ICU indicators reflect common rider enhancements.</p>
-            <p className="text-[11px] opacity-70">Future: add observation & surgical benefit parsing.</p>
+            <p>Use the interactive builder to configure daily benefit, covered days and rider set. Variant rows are no longer listed separately—they're expressed as selectable options inside the builder itself.</p>
+            <p className="text-[11px] opacity-70">Future enhancements: observation/surgical benefits & rate deltas.</p>
             <div className="flex flex-wrap gap-2 pt-1">
               <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-field-mapping','_blank'); } catch { location.href='/hospital-indemnity-field-mapping'; } }}>Field Mapping</Button>
-              <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-plan-builder','_blank'); } catch { location.href='/hospital-indemnity-plan-builder'; } }}>Standalone Builder</Button>
+              <Button size="sm" variant="outline" onClick={()=>{ try { window.open('/hospital-indemnity-plan-builder','_blank'); } catch { location.href='/hospital-indemnity-plan-builder'; } }}>Standalone Page</Button>
+              {builderResult && <Button size="sm" variant="outline" onClick={copyLastBuild}>Copy JSON</Button>}
             </div>
+            {builderResult && (
+              <div className="rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-800/40 text-[10px] space-y-1">
+                <div className="font-medium">Last Build Snapshot</div>
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(builderResult, null, 2)}</pre>
+              </div>
+            )}
           </CardContent>
         </Card>
-        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60 col-span-full">
+        <Card className="bg-card/60 border-slate-200 dark:border-slate-700/60 lg:col-span-2 overflow-visible">
           <CardHeader className="pb-2 flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">Interactive Builder</CardTitle>
-            <div className="flex items-center gap-2">
-              {builderResult && <Button size="sm" variant="outline" onClick={copyLastBuild}>Copy JSON</Button>}
-              <Button variant="outline" size="sm" onClick={()=> setBuilderOpen(o=>!o)} aria-expanded={builderOpen} aria-controls="hospital-builder-panel">
-                {builderOpen ? 'Hide Builder' : 'Customize'}
-              </Button>
-            </div>
+            <CardTitle className="text-sm flex items-center gap-2">Interactive Plan Builder</CardTitle>
           </CardHeader>
-          <CardContent id="hospital-builder-panel" className="pt-2">
-            {builderOpen ? (
-              <div className="space-y-4">
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure variant mix & rider set. Uses simplified hospital indemnity builder.</p>
+          <CardContent className="pt-2 overflow-visible">
+            {!optimizedQuotes.length && (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">No quotes available to build from.</p>
+            )}
+            {optimizedQuotes.length > 0 && (
+              <div className="space-y-6 overflow-visible [&_*]:overflow-visible">
                 <SimplifiedHospitalIndemnityPlanBuilder quotes={optimizedQuotes as any} onPlanBuilt={handlePlanBuilt} />
                 {builderResult && (
-                  <div className="rounded-md border border-slate-300 dark:border-slate-700 p-3 text-[11px] space-y-1 bg-slate-50 dark:bg-slate-800/40">
-                    <div className="font-medium text-slate-700 dark:text-slate-200">Last Build Result</div>
-                    <pre className="whitespace-pre-wrap break-all text-[10px] max-h-48 overflow-auto">{JSON.stringify(builderResult, null, 2)}</pre>
+                  <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 space-y-3 text-[12px]">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">Configuration Summary</h3>
+                      <Button size="sm" variant="outline" onClick={copyLastBuild}>Copy JSON</Button>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Company</div>
+                        <div className="font-medium text-slate-800 dark:text-slate-100">{builderResult.quote?.companyName}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Plan</div>
+                        <div className="font-medium text-slate-800 dark:text-slate-100">{builderResult.quote?.planName}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Daily Benefit</div>
+                        <div className="font-medium">{builderResult.dailyBenefit ? `$${builderResult.dailyBenefit}` : '—'}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Benefit Days</div>
+                        <div className="font-medium">{builderResult.benefitDays || '—'}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Automatic Benefit Increase</div>
+                        <div className="font-medium">{builderResult.automaticBenefitIncrease ? 'Yes' : 'No'}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">GPO Rider</div>
+                        <div className="font-medium">{builderResult.gpoRider ? 'Included' : 'Not Included'}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Selected Plan Tier</div>
+                        <div className="font-medium">{builderResult.planTier || '—'}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase font-medium text-slate-500">Total Monthly Premium</div>
+                        <div className="font-semibold text-emerald-600 dark:text-emerald-400">{builderResult.totalPremium != null ? `$${builderResult.totalPremium.toFixed(2)}` : '—'}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-medium text-slate-500">Riders</div>
+                      {builderResult.riders && builderResult.riders.length > 0 ? (
+                        <ul className="list-disc pl-4 space-y-0.5">
+                          {builderResult.riders.map((r: any, i: number) => (
+                            <li key={i} className="text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2">
+                              <span className="truncate" title={r.riderName}>{r.riderName}</span>
+                              {r.selectedOption && r.selectedOption.amount && (
+                                <span className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">{r.selectedOption.amount}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-slate-500 text-[11px]">No riders selected</div>
+                      )}
+                    </div>
+                    <details className="group border-t border-slate-200 dark:border-slate-700 pt-2">
+                      <summary className="cursor-pointer text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 select-none">Raw JSON (debug)</summary>
+                      <pre className="mt-2 whitespace-pre-wrap break-all text-[10px] max-h-64 overflow-auto">{JSON.stringify(builderResult, null, 2)}</pre>
+                    </details>
                   </div>
                 )}
               </div>
-            ) : (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Open the builder to tailor a hospital indemnity configuration for {carrierName}.</p>
             )}
           </CardContent>
         </Card>
