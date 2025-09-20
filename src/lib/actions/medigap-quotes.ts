@@ -194,19 +194,86 @@ export async function getMedigapQuotes(params: MedigapQuoteParams): Promise<{ qu
       }
     }
     
-    // Enhance all quotes with carrier information using name-based matching
+    // Enhance all quotes with carrier information using STRICT matching only.
+    // We preserve the original API-provided carrier fields so later strict logic can still operate on raw values.
+    // Diagnostic: Log a sample of raw carrier fields BEFORE enhancement
+    try {
+      const sampleForLogging = allQuotes.slice(0, 30).map((q, idx) => {
+        const rawCarrier = typeof q.carrier === 'object' ? q.carrier : { name: q.carrier } as any
+        return {
+          idx,
+          plan: q.plan,
+            raw: {
+              name: rawCarrier?.name,
+              full_name: rawCarrier?.full_name,
+              company: q.company,
+              company_base: {
+                name: q.company_base?.name,
+                full_name: q.company_base?.full_name
+              }
+            }
+        }
+      })
+      console.log('🧪 MEDIGAP_ENHANCE_PRE_SAMPLE', sampleForLogging)
+    } catch {}
+
     const enhancedQuotes = allQuotes.map(quote => {
-      // Use enhanced carrier info to get proper display names from preferred carriers
       const enhancedCarrierInfo = getEnhancedCarrierInfo(quote, 'medicare-supplement')
-      
-      // Enhance the carrier information with preferred carrier data
+
+      // Keep a copy of the original raw carrier name for debugging / future strict passes
+      const originalName = typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name
+      const originalFullName = typeof quote.carrier === 'object' ? quote.carrier?.full_name : undefined
+
+      // Only override display name & logo when we have a strict match (strictMatch === true)
+      if (enhancedCarrierInfo.strictMatch) {
+        console.log('🏷️ MEDIGAP_ENHANCE_APPLY', {
+          reason: 'strict-match',
+          originalName,
+          originalFullName,
+          appliedDisplay: enhancedCarrierInfo.displayName,
+          logo: enhancedCarrierInfo.logoUrl,
+          preferred: enhancedCarrierInfo.isPreferred
+        })
+        return {
+          ...quote,
+          carrier: {
+            ...quote.carrier,
+            name: enhancedCarrierInfo.displayName || originalName,
+            full_name: originalFullName || quote.company || enhancedCarrierInfo.displayName || originalName,
+            logo_url: enhancedCarrierInfo.logoUrl,
+            // Attach marker fields for downstream components (non-breaking if they ignore them)
+            _enhanced: true,
+            _preferred: enhancedCarrierInfo.isPreferred,
+            _strict: true,
+            _original_name: originalName,
+            _original_full_name: originalFullName
+          }
+        }
+      }
+
+      // No strict match: DO NOT assign another carrier's branding. Provide placeholder logo only if we have none.
+      // Flag anomaly: rawName seems generic (e.g., 'Aetna') but full_name belongs to a different carrier
+      if (originalName && originalFullName && !originalFullName.toLowerCase().includes(originalName.toLowerCase())) {
+        console.warn('⚠️ MEDIGAP_CARRIER_NAME_MISMATCH', {
+          originalName,
+          originalFullName,
+          plan: quote.plan,
+          id: quote.id
+        })
+      }
+
       return {
         ...quote,
         carrier: {
           ...quote.carrier,
-          name: enhancedCarrierInfo.displayName,
-          full_name: quote.carrier?.full_name || quote.company || enhancedCarrierInfo.displayName,
-          logo_url: enhancedCarrierInfo.logoUrl
+          name: originalName || enhancedCarrierInfo.displayName, // fallback to whatever raw we had
+          full_name: originalFullName || quote.company || originalName || enhancedCarrierInfo.displayName,
+          logo_url: quote.carrier?.logo_url || '/images/carrier-placeholder.svg',
+          _enhanced: false,
+          _preferred: false,
+          _strict: false,
+          _original_name: originalName,
+          _original_full_name: originalFullName
         }
       }
     })

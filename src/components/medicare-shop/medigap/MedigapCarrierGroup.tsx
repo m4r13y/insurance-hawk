@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { consolidateQuoteVariations } from "@/lib/plan-consolidation";
 import { processOptionsForDisplay } from '@/lib/medigap-utils';
+import { getCarrierDisplayNameStrict } from '@/lib/carrier-system';
 
 interface MedigapCarrierGroupProps {
   carrierGroup: any;
   selectedQuotePlans: string[];
   paymentMode: 'monthly' | 'quarterly' | 'annually';
   getCachedLogoUrl: (carrierName: string, carrierId: string) => string;
-  getCarrierDisplayName: (carrierName: string, carrierId: string) => string;
   calculateDiscountedPrice: (quote: any) => number;
   convertPriceByPaymentMode: (price: number) => number;
   getPaymentLabel: () => string;
@@ -27,7 +27,6 @@ export default function MedigapCarrierGroup({
   selectedQuotePlans,
   paymentMode,
   getCachedLogoUrl,
-  getCarrierDisplayName,
   calculateDiscountedPrice,
   convertPriceByPaymentMode,
   getPaymentLabel,
@@ -70,7 +69,7 @@ export default function MedigapCarrierGroup({
       max: Math.max(...baseRates)
     };
   };
-  
+  const displayName = getCarrierDisplayNameStrict(carrierGroup.carrierName);
   // Helper function to calculate price range including discounts
   const calculateDiscountedRange = (quotes: any[]) => {
     const discountedRates = quotes.map(calculateDiscountedPrice);
@@ -107,8 +106,7 @@ export default function MedigapCarrierGroup({
     return 'N/A';
   };
 
-  // Get the proper display name from NAIC data
-  const displayName = getCarrierDisplayName(carrierGroup.carrierName, carrierGroup.carrierId);
+  // displayName already resolved strictly above
   
   // Create filtered carrier group
   const filteredCarrierGroup = {

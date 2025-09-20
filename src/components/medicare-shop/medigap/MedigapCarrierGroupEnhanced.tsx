@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { consolidateQuoteVariations, ConsolidatedPlan } from "@/lib/plan-consolidation";
-import { getCarrierDisplayName, getCarrierLogoUrl } from "@/lib/carrier-system";
+import { getCarrierDisplayNameStrict, getCarrierLogoUrl } from "@/lib/carrier-system";
 
 interface MedigapCarrierGroupEnhancedProps {
   carrierGroup: any;
@@ -45,7 +45,7 @@ export default function MedigapCarrierGroupEnhanced({
   
   // Get carrier display info
   const originalCarrierName = carrierGroup.originalCarrierName || carrierGroup.carrierName;
-  const displayName = getCarrierDisplayName(originalCarrierName);
+    const displayName = getCarrierDisplayNameStrict(originalCarrierName);
   const logoUrl = getCarrierLogoUrl(originalCarrierName);
   
   // Helper functions for display

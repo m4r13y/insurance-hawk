@@ -127,7 +127,8 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
   normalize(raw: RawDrugPlanQuote, ctx: NormalizeContext) {
     const rate = normalizeMonthly(raw);
     if (!rate) return null;
-    const carrierName = chooseCarrierName(raw);
+    const originalCarrierRaw = chooseCarrierName(raw);
+    const carrierName = originalCarrierRaw; // no canonicalization here
     const planId = raw.plan_id || 'unknown';
     const contract = raw.contract_id || 'X';
     const segment = raw.segment_id || '000';
@@ -157,6 +158,7 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
         starRating: raw.overall_star_rating,
         effectiveDate: raw.effective_date,
         state: raw.state,
+        originalCarrierRaw,
         drugTiers,
         // Rich rows for carousel UI (optional)
         // @ts-ignore
@@ -168,11 +170,14 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
     if (!quotes.length) return [];
     // Group by carrier; track all plan premiums + capture lowest-premium plan name/deductible/star rating for display.
     const map = new Map<string, { carrierName: string; prices: number[]; minPlanName?: string; minDeductible?: number; star?: number }>();
+    const collisionMap: Record<string, Set<string>> = {};
     quotes.forEach(q => {
       const id = q.carrier.id;
       let bucket = map.get(id);
       if (!bucket) { bucket = { carrierName: q.carrier.name, prices: [] }; map.set(id, bucket); }
       bucket.prices.push(q.pricing.monthly);
+      const orig = (q.metadata as any)?.originalCarrierRaw || q.carrier.name;
+      (collisionMap[id] ||= new Set()).add(orig);
       const ded = typeof q.metadata?.deductible === 'number' ? q.metadata?.deductible : undefined;
       const star = typeof q.metadata?.starRating === 'number' ? q.metadata?.starRating : undefined;
       const price = q.pricing.monthly;
@@ -200,6 +205,12 @@ export const drugPlanAdapter: CategoryAdapter<RawDrugPlanQuote, NormalizedQuoteB
       } as any;
     });
     summaries.sort((a,b) => (a.plans.PDP ?? Infinity) - (b.plans.PDP ?? Infinity));
+    if (process.env.NODE_ENV !== 'production') {
+      Object.entries(collisionMap).forEach(([carrierId, set]) => { if (set.size > 1) {
+        // eslint-disable-next-line no-console
+        console.warn('CARRIER_COLLISION_DETECTED', { adapter: 'drug-plan', carrierId, distinctRawNames: Array.from(set.values()) });
+      }});
+    }
     return summaries;
   }
 };

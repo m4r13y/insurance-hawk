@@ -92,7 +92,8 @@ export const medigapAdapter: CategoryAdapter<RawMedigapQuote, NormalizedQuoteBas
     const viewTypes = coerceViewType(raw.view_type);
     const rateInfo = normalizeRate(raw);
     if (!rateInfo) return null; // drop un-priced quotes
-    const carrierName = raw.carrier?.name || raw.company || 'Unknown Carrier';
+    const originalCarrierRaw = raw.carrier?.name || raw.company || 'Unknown Carrier';
+    const carrierName = originalCarrierRaw; // no canonicalization performed here (strict identity)
     const carrierId = raw.carrier_id || carrierName; // prefer explicit id if present
 
     // Classify discount facet (independent of current toggle)
@@ -127,6 +128,7 @@ export const medigapAdapter: CategoryAdapter<RawMedigapQuote, NormalizedQuoteBas
         effectiveDate: raw.effective_date,
         viewTypeTags: viewTypes,
         discountFacet,
+        originalCarrierRaw,
       },
       __raw: raw, // retain minimally so downstream consumers (details) can recalc if needed
     };
@@ -156,6 +158,11 @@ export const medigapAdapter: CategoryAdapter<RawMedigapQuote, NormalizedQuoteBas
       const planKey = q.plan?.key?.toUpperCase();
       if (!planKeys.includes(planKey)) continue;
       const carrierId = q.carrier.id;
+      // Track potential carrier collisions (different original raw names mapping to same id)
+      const original = (q.metadata as any)?.originalCarrierRaw || q.carrier.name;
+      const collisionKey = `__collision__${carrierId}`;
+      (map as any)[collisionKey] = (map as any)[collisionKey] || new Set<string>();
+      (map as any)[collisionKey].add(original);
       let agg = map.get(carrierId);
       if (!agg) {
         agg = { carrierName: q.carrier.name, logo: q.carrier.logoUrl, rating: q.carrier.amBestRating, prices: {}, discounted: {}, ranges: {}, facetPrices: {} };
@@ -307,6 +314,16 @@ export const medigapAdapter: CategoryAdapter<RawMedigapQuote, NormalizedQuoteBas
       if (aMin === bMin) return a.carrierName.localeCompare(b.carrierName);
       return aMin - bMin;
     });
+    if (process.env.NODE_ENV !== 'production') {
+      // Emit collision warnings
+      for (const [carrierId] of map.entries()) {
+        const set: Set<string> | undefined = (map as any)[`__collision__${carrierId}`];
+        if (set && set.size > 1) {
+          // eslint-disable-next-line no-console
+            console.warn('CARRIER_COLLISION_DETECTED', { adapter: 'medigap', carrierId, distinctRawNames: Array.from(set.values()) });
+        }
+      }
+    }
     return summaries;
   }
 };

@@ -28,6 +28,7 @@ import { cancelAllRequests } from "@/lib/services/temporary-storage";
 import { 
   getCarrierLogoUrl as getProperLogoUrl, 
   getCarrierDisplayName as getCarrierDisplayNameFromSystem,
+  getCarrierDisplayNameStrict,
   getEnhancedCarrierInfo,
   filterPreferredCarriers,
   mapUICategoryToProductCategory,
@@ -359,25 +360,44 @@ function MedicareShopContent() {
         // Migrate legacy localStorage data if it exists
         await migrateLegacyStorage();
         
-        // Check for existing quote session on page refresh
-        const hasMedicareFormData = localStorage.getItem('medicare_quote_form_data');
-        const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
-        const hasActiveCategory = localStorage.getItem('medicare_current_flow_step');
+  // Check for existing quote session on page refresh (robust multi-key strategy)
+  const hasMedicareFormData = localStorage.getItem('medicare_quote_form_data');
+  const hasMedicareFormCompleted = localStorage.getItem('medicare_quote_form_completed');
+  const hasMedicareCategories = localStorage.getItem('medicare_selected_categories');
+  const hasActiveCategory = localStorage.getItem('medicare_current_flow_step');
+  const planF = localStorage.getItem('medicare_real_quotes_plan_f');
+  const planG = localStorage.getItem('medicare_real_quotes_plan_g');
+  const planN = localStorage.getItem('medicare_real_quotes_plan_n');
+  const anyPlanQuotes = [planF, planG, planN].some(Boolean);
+  const advantageQuotes = localStorage.getItem('medicare_advantage_quotes');
+  const drugQuotes = localStorage.getItem('medicare_drug_plan_quotes');
+  const dentalQuotesLS = localStorage.getItem('medicare_dental_quotes');
+  const hiQuotes = localStorage.getItem('medicare_hospital_indemnity_quotes');
+  const feQuotes = localStorage.getItem('medicare_final_expense_quotes');
+  const cancerQuotes = localStorage.getItem('medicare_cancer_insurance_quotes');
+  const anyCategoryQuotes = [advantageQuotes, drugQuotes, dentalQuotesLS, hiQuotes, feQuotes, cancerQuotes].some(Boolean);
+  // Previously we relied solely on form data existing. Now treat any plan quote presence OR form completed as session.
+  const inferredExistingQuotes = hasMedicareFormData || hasMedicareFormCompleted || anyPlanQuotes || anyCategoryQuotes;
         
         // OPTIMIZATION: Fast check using medicare_quote_form_data only!
         // medicare_quote_form_data is only created when quotes are generated, so it's a reliable indicator
         // This avoids expensive Firestore calls during page load
-        const hasExistingQuotes = !!hasMedicareFormData;
+  const hasExistingQuotes = !!inferredExistingQuotes;
         
         // Simple session detection based on visitor_id presence (much faster!)
         const isExistingSession = hasExistingQuotes && hasMedicareCategories;
         const hasExistingQuoteSession = isExistingSession;
         
         const sessionDetectionTime = performance.now() - startTime;
-        console.log('� Fast session detection completed in:', sessionDetectionTime.toFixed(2) + 'ms', {
+        console.log('🧪 Session detection snapshot:', {
+          ms: sessionDetectionTime.toFixed(2),
           hasMedicareFormData: !!hasMedicareFormData,
-          hasMedicareCategories: !!hasMedicareCategories, 
-          hasActiveCategory: !!hasActiveCategory,
+          hasMedicareFormCompleted: !!hasMedicareFormCompleted,
+          hasMedicareCategories: !!hasMedicareCategories,
+            hasActiveCategory: !!hasActiveCategory,
+          anyPlanQuotes,
+          anyCategoryQuotes,
+          inferredExistingQuotes: !!inferredExistingQuotes,
           hasExistingQuotes,
           isExistingSession,
           hasExistingQuoteSession
@@ -402,7 +422,9 @@ function MedicareShopContent() {
         // MEDICARE_QUOTE_FORM_DATA is the source of truth for existing quotes
         // Move ALL quote loading logic here instead of checking savedFormData
         if (hasExistingQuotes) {
-          console.log('🔍 medicare_quote_form_data found - loading quotes from Firestore for existing session');
+          console.log('🔍 Existing session detected (form or plan/category quote keys) - loading quotes.');
+          // Persist a simple flag for faster future detection
+          try { localStorage.setItem('medicare_quote_session_active', 'true'); } catch {}
           
           // Set recovery mode and form completed state FIRST
           setIsRecoveringSession(true);
@@ -462,7 +484,8 @@ function MedicareShopContent() {
           
         } else {
           // NEW USER - no medicare_quote_form_data means no quotes exist
-          console.log('🆕 New user - no medicare_quote_form_data found, setting up fresh session');
+          console.log('🆕 New user - no form data or quote keys found, setting up fresh session');
+          try { localStorage.removeItem('medicare_quote_session_active'); } catch {}
           
           // Set up initial category
           setActiveCategory(initialCategory);
@@ -1768,7 +1791,7 @@ function MedicareShopContent() {
   };
 
   const getCachedLogoUrl = (carrierName: string, carrierId: string): string => {
-    console.log(`🔍 getCachedLogoUrl called with carrierName: "${carrierName}", carrierId: "${carrierId}"`);
+    // console.log(`🔍 getCachedLogoUrl called with carrierName: "${carrierName}", carrierId: "${carrierId}"`);
     
     // Use carrierName as the key since we're no longer using NAIC codes
     const carrierKey = carrierName;
@@ -1782,10 +1805,10 @@ function MedicareShopContent() {
       const isBadNaicUrl = /https:\/\/logo\.clearbit\.com\/\d{5}\.com$/i.test(cachedUrl);
       
       if (!isBadNaicUrl) {
-        console.log(`✅ Using cached logo for ${carrierKey}:`, cachedUrl);
+  // console.log(`✅ Using cached logo for ${carrierKey}:`, cachedUrl);
         return cachedUrl;
       } else {
-        console.log(`❌ Ignoring bad cached NAIC-based logo URL for ${carrierKey}:`, cachedUrl);
+  // console.log(`❌ Ignoring bad cached NAIC-based logo URL for ${carrierKey}:`, cachedUrl);
         // Remove the bad cached URL
         delete carrierLogos[carrierKey];
       }
@@ -1802,11 +1825,17 @@ function MedicareShopContent() {
       : selectedCategory === 'drug-plan' ? 'drug-plan'
       : 'medicare-supplement';
     
-    console.log(`🎯 Looking up carrier "${carrierName}" for category "${productCategory}"`);
     const enhancedInfo = getEnhancedCarrierInfo(mockQuote, productCategory);
     const logoUrl = enhancedInfo.logoUrl;
-    console.log(`📸 Enhanced logo URL for carrier "${carrierName}":`, logoUrl);
-    console.log(`📋 Enhanced info:`, enhancedInfo);
+    console.log('🖼️ CARRIER_LOGO_RESOLUTION', {
+      inputCarrierName: carrierName,
+      category: productCategory,
+      usedCached: false,
+      reason: enhancedInfo.strictMatch ? 'strict-match-logo' : 'no-strict-match-placeholder',
+      strictMatch: enhancedInfo.strictMatch,
+      preferred: enhancedInfo.isPreferred,
+      finalLogo: logoUrl
+    });
     
     // Don't update state during render - this will be cached by the preloadCarrierLogos function instead
     
@@ -1825,7 +1854,20 @@ function MedicareShopContent() {
       : selectedCategory === 'drug-plan' ? 'drug-plan'
       : 'medicare-supplement';
     
-    return getCarrierDisplayNameFromSystem(carrierName, productCategory);
+    const raw = carrierName;
+    const display = getCarrierDisplayNameFromSystem(carrierName, productCategory);
+    // Only log if display differs OR strict match flags exist on any sample quote referencing this name in planQuotes
+    try {
+      if (display !== raw) {
+        console.log('🏷️ CARRIER_NAME_RESOLUTION', {
+          raw,
+          display,
+          category: productCategory,
+          reason: display !== raw ? 'enhanced-different-from-raw' : 'same-as-raw'
+        });
+      }
+    } catch {}
+    return display;
   };
 
   const openPlanModal = (carrierGroup: any) => {
@@ -2346,13 +2388,73 @@ function MedicareShopContent() {
       }
       
       // Group by carrier for medigap - simplified filtering like test-multi-plan
-      const filteredQuotes = quotesToProcess.filter(quote => {        
+      // --- Contamination Repair Layer ---
+      // Detect scenario where a single carrier.name (e.g., 'Aetna') is applied to quotes whose underlying full/company names
+      // clearly belong to unrelated carriers (Transamerica, Guarantee Trust Life, etc.). This occurs when an upstream mutation
+      // overwrites carrier.name across shared object references. We repair by restoring a best-effort original name per quote.
+      function sanitizeCarrierContamination(quotes: any[]) {
+        const groups: Record<string, { quotes: any[]; mismatched: number; total: number; sampleNames: string[] }> = {};
+        for (const q of quotes) {
+          const name = q?.carrier?.name || q?.company || q?.company_base?.name || 'Unknown Carrier';
+          const full = q?._original_full_name || q?.carrier?._original_full_name || q?.carrier?.full_name || q?.company_base?.full_name || q?.company_base?.name || q?.company || '';
+          const key = (name || '').trim();
+            if (!groups[key]) groups[key] = { quotes: [], mismatched: 0, total: 0, sampleNames: [] };
+          groups[key].quotes.push(q);
+          groups[key].total++;
+          if (full) {
+            const lcName = key.toLowerCase();
+            const lcFull = full.toLowerCase();
+            // Count mismatch if full name does NOT include the tokenized carrier name (ignoring generic words)
+            const cleanedCarrierToken = lcName.replace(/\b(insurance|company|co|inc|life|health|holdings|group|grp|corp|corporation)\b/g,'').trim();
+            if (cleanedCarrierToken && !lcFull.includes(cleanedCarrierToken)) {
+              groups[key].mismatched++;
+              if (groups[key].sampleNames.length < 5) groups[key].sampleNames.push(full);
+            }
+          }
+        }
+        const repaired: any[] = [];
+        const repairsSummary: any[] = [];
+        for (const [carrierName, g] of Object.entries(groups)) {
+          const ratio = g.mismatched / Math.max(1, g.total);
+          // Heuristic: if > 0.5 mismatched OR >=2 distinct mismatches on small groups, treat as contaminated
+          const contaminated = ratio > 0.5 && g.mismatched >= 2;
+          if (!contaminated) {
+            repaired.push(...g.quotes);
+            continue;
+          }
+          repairsSummary.push({ carrierName, total: g.total, mismatched: g.mismatched, samples: g.sampleNames });
+          for (const q of g.quotes) {
+            const restored = q._original_full_name || q._original_name || q?.carrier?._original_full_name || q?.carrier?._original_name || q?.company_base?.full_name || q?.company_base?.name || q?.company || q?.carrier?.full_name || q?.carrier?.name || 'Unknown Carrier';
+            if (q?.carrier) {
+              repaired.push({
+                ...q,
+                carrier: {
+                  ...q.carrier,
+                  name: restored,
+                  _sanitized: true,
+                  _sanitized_reason: 'mass_contamination_repair',
+                  _previous_contaminated_name: carrierName
+                }
+              });
+            } else {
+              repaired.push(q);
+            }
+          }
+        }
+        if (repairsSummary.length) {
+          console.warn('🛠️ CARRIER_CONTAMINATION_REPAIRS', repairsSummary);
+        }
+        return repaired;
+      }
+      const contaminationChecked = sanitizeCarrierContamination(quotesToProcess);
+
+      const filteredQuotes = contaminationChecked.filter(quote => {        
         if (searchQuery) {
           const carrierName = quote?.carrier?.name || 
                              quote?.company_base?.name ||
                              quote?.company ||
                              'Unknown Carrier';
-          const displayName = getCarrierDisplayName(carrierName, '');
+          const displayName = getCarrierDisplayNameStrict(carrierName);
           
           // Search against both original name and short name
           return carrierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -2381,10 +2483,37 @@ function MedicareShopContent() {
         return groups;
       }, {});
 
-      console.log('🏗️ Created carrier groups:', Object.keys(groupedByCarrier).length, 'carriers');
+      // console.log('🏗️ Created carrier groups:', Object.keys(groupedByCarrier).length, 'carriers');
+      // New diagnostic: summarize carrier grouping with raw vs enhanced mapping rationale
+      try {
+        const carrierGroupDiagnostics = Object.values(groupedByCarrier).slice(0, 50).map((g: any) => {
+          const sampleQuote = g.quotes[0];
+          // Pull raw fields BEFORE any UI overrides
+          const rawName = sampleQuote?.carrier?._original_name || sampleQuote?.carrier?.name || sampleQuote?.company || sampleQuote?.company_base?.name;
+          const rawFull = sampleQuote?.carrier?._original_full_name || sampleQuote?.carrier?.full_name;
+          const enhancedFlags = {
+            _enhanced: sampleQuote?.carrier?._enhanced || false,
+            _preferred: sampleQuote?.carrier?._preferred || false,
+            _strict: sampleQuote?.carrier?._strict || false
+          };
+          return {
+            key: g.carrierId,
+            shownCarrierName: g.carrierName,
+            rawName,
+            rawFull,
+            quoteCount: g.quotes.length,
+            flags: enhancedFlags,
+            // If strict flag present we also expose any applied logo source
+            logo: sampleQuote?.carrier?.logo_url
+          };
+        });
+        console.log('🧪 CARRIER_GROUP_BUILD summary', carrierGroupDiagnostics);
+      } catch (e) {
+        console.warn('Carrier group diagnostic failed:', e);
+      }
 
       // Sort carrier groups by lowest price - simplified approach
-      console.log('🎯 Calculating min rates for sorting (applyDiscounts=' + applyDiscounts + ')...');
+  // console.log('🎯 Calculating min rates for sorting (applyDiscounts=' + applyDiscounts + ')...');
       
       // Helper function to process options for display - exact copy from test-multi-plan
       const processOptionsForDisplay = (plan: any) => {
@@ -2420,15 +2549,15 @@ function MedicareShopContent() {
 
       // Calculate min rate for each carrier once
       const carriersWithMinRates = Object.values(groupedByCarrier).map((carrierGroup: any) => {
-        console.log('🔍 Processing carrier:', carrierGroup.carrierName, '- quotes:', carrierGroup.quotes?.length || 0);
+  // console.log('🔍 Processing carrier:', carrierGroup.carrierName, '- quotes:', carrierGroup.quotes?.length || 0);
         const plans = consolidateQuoteVariations(carrierGroup.quotes || []);
         console.log('  📋 Consolidated plans:', plans.length);
         let minRate = Infinity;
         
         plans.forEach((plan, planIndex) => {
-          console.log('    📋 Plan', planIndex, 'for', carrierGroup.carrierName, '- type:', plan.plan);
+          // console.log('    📋 Plan', planIndex, 'for', carrierGroup.carrierName, '- type:', plan.plan);
           const displayOptions = processOptionsForDisplay(plan);
-          console.log('    📊 Found', displayOptions.length, 'valid options for', carrierGroup.carrierName);
+          // console.log('    📊 Found', displayOptions.length, 'valid options for', carrierGroup.carrierName);
           
           displayOptions.forEach((opt: any, optIndex: number) => {
             const rate = opt.rate?.month || 0;
@@ -2436,14 +2565,14 @@ function MedicareShopContent() {
             const displayRate = rate > 1000 ? rate / 100 : rate;
             console.log('      � Option', optIndex, '- raw rate:', rate, 'display rate:', displayRate, 'view_type:', opt.view_type, 'type:', opt.type);
             if (displayRate > 0 && displayRate < minRate) {
-              console.log('        🎯 NEW MIN for', carrierGroup.carrierName, ':', displayRate);
+              // console.log('        🎯 NEW MIN for', carrierGroup.carrierName, ':', displayRate);
               minRate = displayRate;
             }
           });
         });
         
         const finalMinRate = minRate === Infinity ? 0 : minRate;
-        console.log('💰', carrierGroup.carrierName, 'sorting with min rate:', finalMinRate);
+  // console.log('💰', carrierGroup.carrierName, 'sorting with min rate:', finalMinRate);
         
         return {
           ...carrierGroup,
@@ -2454,7 +2583,7 @@ function MedicareShopContent() {
       // Sort by minimum rate
       const sortedCarrierGroups = carriersWithMinRates.sort((a, b) => a.minRate - b.minRate);
       
-      console.log('📋 Final sorted order:', sortedCarrierGroups.map(c => `${c.carrierName} ($${c.minRate})`));
+  // console.log('📋 Final sorted order:', sortedCarrierGroups.map(c => `${c.carrierName} ($${c.minRate})`));
 
       return {
         type: 'grouped' as const,
@@ -2847,7 +2976,6 @@ function MedicareShopContent() {
                                   selectedQuotePlans={Array.from(actualPlanTypesShowing) as string[]}
                                   paymentMode={paymentMode}
                                   getCachedLogoUrl={getCachedLogoUrl}
-                                  getCarrierDisplayName={getCarrierDisplayName}
                                   calculateDiscountedPrice={calculateDiscountedPrice}
                                   convertPriceByPaymentMode={convertPriceByPaymentMode}
                                   getPaymentLabel={getPaymentLabel}

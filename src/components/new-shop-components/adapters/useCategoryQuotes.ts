@@ -65,6 +65,22 @@ export function useCategoryQuotes<Raw, N extends NormalizedQuoteBase = Normalize
     if (result.normalized.length && onAfterNormalize) {
       try { onAfterNormalize(result.normalized); } catch {/* noop */}
     }
+    // Cross-adapter collision audit (development only)
+    if (process.env.NODE_ENV !== 'production' && result.normalized.length) {
+      try {
+        const byCarrier: Record<string, Set<string>> = {};
+        result.normalized.forEach(q => {
+          const orig = (q.metadata as any)?.originalCarrierRaw || q.carrier.name;
+          (byCarrier[q.carrier.id] ||= new Set()).add(orig);
+        });
+        Object.entries(byCarrier).forEach(([carrierId,set]) => {
+          if (set.size > 1) {
+            // eslint-disable-next-line no-console
+            console.warn('CARRIER_COLLISION_DETECTED_BATCH', { category, carrierId, distinctRawNames: Array.from(set.values()), count: result.normalized.length });
+          }
+        });
+      } catch {/* ignore audit errors */}
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.normalized]);
 

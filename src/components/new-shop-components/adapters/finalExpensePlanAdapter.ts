@@ -71,7 +71,8 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
       }
     }
     // Canonicalize: collapse whitespace, remove corporate suffix clutter for better preferred matching later
-    const carrier = (rawCarrier || 'Unknown')
+    const originalCarrierRaw = rawCarrier || 'Unknown';
+    const carrier = (originalCarrierRaw)
       .replace(/\b(insurance|ins|company|co\.?|corp\.?|corporation|life|inc\.?|national|natl)\b/gi,'')
       .replace(/\s{2,}/g,' ')
       .trim() || 'Unknown';
@@ -83,6 +84,8 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
       plan: { key: raw.id, display: raw.plan_name || raw.planName || 'Final Expense Plan' },
       adapter: { category: 'final-expense', version: 1 },
       metadata: {
+        originalCarrierRaw,
+        canonicalization: carrier !== originalCarrierRaw ? 'stripped-suffixes' : 'raw',
         faceAmount: raw.face_amount,
         faceAmountMin: raw.face_amount_min,
         faceAmountMax: raw.face_amount_max,
@@ -103,6 +106,7 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
   derivePricingSummary(quotes){
     if(!quotes.length) return [];
     const map = new Map<string,{carrierName:string; prices:number[]}>();
+    const collisionMap: Record<string, Set<string>> = {};
     quotes.forEach(q=>{ 
       // Exclude single-pay and limited-pay from monthly carrier summary comparisons
       const mode = (q.metadata as any)?.paymentMode;
@@ -111,8 +115,17 @@ export const finalExpensePlanAdapter: CategoryAdapter<RawFinalExpenseQuote, Norm
       let b=map.get(q.carrier.id); 
       if(!b){b={carrierName:q.carrier.name, prices:[]}; map.set(q.carrier.id,b);} 
       if(typeof price==='number') b.prices.push(price); 
+      const orig = (q.metadata as any)?.originalCarrierRaw || q.carrier.name;
+      (collisionMap[q.carrier.id] ||= new Set()).add(orig);
     });
-    return Array.from(map.entries()).map(([carrierId,agg])=>{const min=Math.min(...agg.prices); const max=Math.max(...agg.prices); return { carrierId, carrierName: agg.carrierName, plans:{ FE: min }, planRanges:{ FE:{ min,max,count:agg.prices.length } } } as PricingSummary;}).sort((a,b)=> (a.plans.FE??Infinity)-(b.plans.FE??Infinity));
+    const summaries = Array.from(map.entries()).map(([carrierId,agg])=>{const min=Math.min(...agg.prices); const max=Math.max(...agg.prices); return { carrierId, carrierName: agg.carrierName, plans:{ FE: min }, planRanges:{ FE:{ min,max,count:agg.prices.length } } } as PricingSummary;}).sort((a,b)=> (a.plans.FE??Infinity)-(b.plans.FE??Infinity));
+    if(process.env.NODE_ENV !== 'production'){
+      Object.entries(collisionMap).forEach(([carrierId,set])=>{ if(set.size>1){
+        // eslint-disable-next-line no-console
+        console.warn('CARRIER_COLLISION_DETECTED', { adapter: 'final-expense', carrierId, distinctRawNames: Array.from(set.values()) });
+      }});
+    }
+    return summaries;
   }
 };
 

@@ -490,7 +490,6 @@ export default function TestMultiPlanPage() {
                       selectedQuotePlans={selectedPlanTypes}
                       paymentMode="monthly"
                       getCachedLogoUrl={(carrierName: string, carrierId: string) => getCarrierLogoUrl(carrierName)}
-                      getCarrierDisplayName={(carrierName: string, carrierId: string) => getCarrierDisplayName(carrierName)}
                       calculateDiscountedPrice={(quote: any) => {
                         // Check if this quote has pre-calculated discounts
                         const hasWithHHD = quote.view_type?.includes('with_hhd');

@@ -85,6 +85,7 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
     }
     if (monthlyBase == null) return null
     const carrierName = chooseCarrierName(raw)
+  const originalCarrierRaw = carrierName;
     const planKey = `${raw.contract_id || 'X'}-${raw.plan_id}-${raw.segment_id}`
     const id = `advantage:${planKey}`
     // Reuse legacy parsing helpers (ensures consistency with benefits-overview & other legacy UI)
@@ -104,6 +105,7 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
       plan: { key: planKey, display: raw.plan_name },
       adapter: { category: 'advantage', version: 1 },
       metadata: {
+        originalCarrierRaw,
         starRating: raw.overall_star_rating,
         medicalDeductible: medicalDed,
         drugDeductible: drugDed,
@@ -127,11 +129,14 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
   derivePricingSummary(quotes) {
     if (!quotes.length) return []
     const map = new Map<string, { carrierName: string; prices: number[]; star?: number }>()
+    const collisionMap: Record<string, Set<string>> = {}
     quotes.forEach(q => {
       const id = q.carrier.id
       let bucket = map.get(id)
       if (!bucket) { bucket = { carrierName: q.carrier.name, prices: [] }; map.set(id, bucket) }
       bucket.prices.push(q.pricing.monthly)
+      const orig = (q.metadata as any)?.originalCarrierRaw || q.carrier.name
+      ;(collisionMap[id] ||= new Set()).add(orig)
       const star = typeof q.metadata?.starRating === 'number' ? q.metadata.starRating : undefined
       if (star && !bucket.star) bucket.star = star
     })
@@ -147,6 +152,12 @@ export const advantagePlanAdapter: CategoryAdapter<RawAdvantageQuote, Normalized
       } as any
     })
     summaries.sort((a,b) => (a.plans.MA ?? Infinity) - (b.plans.MA ?? Infinity))
+    if (process.env.NODE_ENV !== 'production') {
+      Object.entries(collisionMap).forEach(([carrierId, set]) => { if (set.size > 1) {
+        // eslint-disable-next-line no-console
+        console.warn('CARRIER_COLLISION_DETECTED', { adapter: 'advantage', carrierId, distinctRawNames: Array.from(set.values()) })
+      }})
+    }
     return summaries
   }
 }

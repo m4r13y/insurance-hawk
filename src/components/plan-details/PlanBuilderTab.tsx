@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { getAmBestRatingText } from '@/utils/amBestRating';
 import { CheckIcon, Pencil1Icon, InfoCircledIcon, ResetIcon, DotsHorizontalIcon, UpdateIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
-import { getCarrierLogoUrl, getCarrierDisplayName } from "@/lib/carrier-system";
+import { getCarrierLogoUrl, getCarrierDisplayName, getCarrierDisplayNameStrict } from "@/lib/carrier-system";
 import { getMedigapQuotes } from "@/lib/actions/medigap-quotes";
 import { getDrugPlanQuotes } from "@/lib/actions/drug-plan-quotes";
 import { getDentalQuotes } from "@/lib/actions/dental-quotes";
@@ -582,11 +582,11 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
           }
           if (existingPlanBuilder.selectedPlans.medigapPlanOption) {
             console.log('📋 Checking saved medigap plan option:', existingPlanBuilder.selectedPlans.medigapPlanOption);
-            console.log('📋 Current quote data:', { plan: quoteData.plan, carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '') });
+            console.log('📋 Current quote data:', { plan: quoteData.plan, carrier: getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || '') });
             
             // Check if the saved plan matches the current quote (same carrier and plan type)
             const savedCarrier = existingPlanBuilder.medigapPlan?.carrier;
-            const currentCarrier = getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '');
+            const currentCarrier = getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || '');
             const savedPlan = existingPlanBuilder.medigapPlan?.plan;
             const currentPlan = quoteData.plan;
             
@@ -1119,7 +1119,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
       const planBuilderData: PlanBuilderData = {
         medigapPlan: {
           plan: quoteData.plan,
-          carrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
+          carrier: getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || ''),
           monthlyRate: currentRate,
           selected: true
         },
@@ -1313,7 +1313,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                             onClick={() => {
                               console.log('🎯 User selected new plan option:', {
                                 option,
-                                currentCarrier: getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || ''),
+                                currentCarrier: getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || ''),
                                 currentPlan: quoteData.plan
                               });
                               setSelectedPlanOption(option);
@@ -1452,7 +1452,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                           <div className="flex items-center justify-between">
                             <div className='text-md'>
                               <h4 className="font-semibold">
-                                {getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}
+                                {getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || '')}
                               </h4>
                               <p className="text-xs mt-1">
                                 Plan {quoteData.plan}
@@ -2009,7 +2009,7 @@ export const PlanBuilderTab: React.FC<PlanBuilderTabProps> = ({
                   <div className="flex justify-between items-center p-2 border border-blue-200 rounded-md">
                     <div>
                       <div className="text-sm font-medium">Plan {quoteData.plan}</div>
-                      <div className="text-xs text-gray-600">{getCarrierDisplayName(quoteData.company_base?.name || quoteData.company || '')}</div>
+                      <div className="text-xs text-gray-600">{getCarrierDisplayNameStrict(quoteData.company_base?.name || quoteData.company || '')}</div>
                     </div>
                     <span className="font-medium">
                       {(() => {
