@@ -127,6 +127,8 @@ const abbreviateRiderName = (riderName: string): string => {
 interface SimplifiedHospitalIndemnityPlanBuilderProps {
   quotes: OptimizedHospitalIndemnityQuote[];
   onPlanBuilt: (config: any) => void;
+  /** Hide the internal header (carrier title + Change button) when an outer container supplies its own */
+  hideHeader?: boolean;
 }
 
 interface RiderSelection {
@@ -139,7 +141,8 @@ interface RiderSelection {
 
 export function SimplifiedHospitalIndemnityPlanBuilder({ 
   quotes, 
-  onPlanBuilt 
+  onPlanBuilt,
+  hideHeader = false
 }: SimplifiedHospitalIndemnityPlanBuilderProps) {
   // URL parameter handling
   const searchParams = useSearchParams();
@@ -164,11 +167,47 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
   const [selectedPlanTier, setSelectedPlanTier] = useState<string>('');
   const [finalQuote, setFinalQuote] = useState<OptimizedHospitalIndemnityQuote | null>(null);
 
-  // Effect to handle URL parameter changes
+  // Precompute primitive company param value so dependency array size stays constant
+  const companyParam = searchParams.get('company') || '';
+
+  // Effect to handle URL parameter changes (with fuzzy brand->legal name resolution)
   useEffect(() => {
-    const company = searchParams.get('company');
-    if (company && company !== selectedCompany) {
-      setSelectedCompany(company);
+    const raw = companyParam || null;
+    if (!raw) {
+      if (selectedCompany) {
+        setSelectedCompany('');
+        setCurrentView('carriers');
+        setSelectedPlanOption('');
+        setSelectedBenefitDays(null);
+        setSelectedDailyBenefit(null);
+        setSelectedRiders([]);
+        setGroupedRiderSelections({});
+        setAutomaticBenefitIncrease(false);
+        setGpoRider(false);
+        setSelectedPlanTier('');
+        setFinalQuote(null);
+      }
+      return;
+    }
+
+    // Try to resolve short brand (e.g. "Aetna") to the internal grouped company key
+    const resolveCompany = (value: string): string | null => {
+      // availableCompanies is defined later; we can derive from quotes here instead (lightweight pass)
+      const candidates = new Set<string>();
+      quotes.forEach(q => { const full = q.companyFullName || q.companyName; if (full) candidates.add(normalizeCompany(full) || full); });
+      const lowerValue = value.toLowerCase();
+      // Direct match first
+      for (const c of candidates) { if (c === value) return c; }
+      // Brand display name match
+      for (const c of candidates) { try { const display = getCarrierDisplayNameFromSystem(c, 'hospital-indemnity'); if (display === value) return c; } catch {} }
+      // Substring / parenthetical match: if full legal contains (Brand) or starts/ends with brand
+      for (const c of candidates) { const lc = c.toLowerCase(); if (lc.includes('(' + lowerValue + ')') || lc.endsWith(' ' + lowerValue) || lc.startsWith(lowerValue + ' ')) return c; }
+      return null;
+    };
+
+    const resolved = resolveCompany(raw) || raw;
+    if (resolved !== selectedCompany) {
+      setSelectedCompany(resolved);
       setCurrentView('configuration');
       // Reset other selections when company changes
       setSelectedPlanOption('');
@@ -180,21 +219,9 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
       setGpoRider(false);
       setSelectedPlanTier('');
       setFinalQuote(null);
-    } else if (!company && selectedCompany) {
-      // Company was removed from URL, go back to carriers
-      setSelectedCompany('');
-      setCurrentView('carriers');
-      setSelectedPlanOption('');
-      setSelectedBenefitDays(null);
-      setSelectedDailyBenefit(null);
-      setSelectedRiders([]);
-      setGroupedRiderSelections({});
-      setAutomaticBenefitIncrease(false);
-      setGpoRider(false);
-      setSelectedPlanTier('');
-      setFinalQuote(null);
     }
-  }, [searchParams, selectedCompany]);
+  // Dependencies use only primitives to avoid dynamic dependency list length changes
+  }, [companyParam, selectedCompany, quotes]);
 
   // Effect to handle plan configuration changes (checkboxes and tier selection)
   useEffect(() => {
@@ -823,7 +850,7 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
           border-radius: 50% !important;
         }
       `}</style>
-      <div className="max-w-6xl mx-auto p-6">
+  <div className="space-y-8">
       {currentView === 'carriers' ? (
         // Carrier Selection View
         <CarrierSelectionView
@@ -847,26 +874,24 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
               {/* Plan Option Selection */}
               {selectedCompany && (
                 <div>
-                <div className='flex justify-between items-start'>
-              <h2 className="text-xl font-bold">
-              {selectedCompany}
-            </h2>
-             {/* Back Button */}
-          <div>
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Remove company parameter from URL to go back to carriers
-                const params = new URLSearchParams(searchParams);
-                params.delete('company');
-                router.push(`?${params.toString()}`);
-              }}
-              className="mb-4"
-            >
-              Change
-            </Button>
-          </div>
-            </div>
+                  {!hideHeader && (
+                    <div className='flex justify-between items-start'>
+                      <h2 className="text-xl font-bold">{selectedCompany}</h2>
+                      <div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const params = new URLSearchParams(searchParams);
+                            params.delete('company');
+                            router.push(`?${params.toString()}`);
+                          }}
+                          className="mb-4"
+                        >
+                          Change
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <label className="text-sm font-medium mb-2 block">Select Plan Option</label>
                   <Select value={selectedPlanOption} onValueChange={handlePlanOptionChange}>
                     <SelectTrigger>
@@ -881,8 +906,6 @@ export function SimplifiedHospitalIndemnityPlanBuilder({
                     </SelectContent>
                   </Select>
                 </div>
-                
-               
               )}
 
               {/* Automatic Benefit Increase Rider Checkbox */}

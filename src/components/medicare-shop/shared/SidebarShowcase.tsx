@@ -203,6 +203,14 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   const toggleCancerCardsMode = React.useCallback(() => {
     setCancerCardsMode(m => (m === 'legacy' ? 'new' : 'legacy'));
   }, []);
+  // Hospital Indemnity cards style toggle
+  const [hospitalCardsMode, setHospitalCardsMode] = React.useState<'legacy'|'new'>(() => {
+    if (typeof window === 'undefined') return 'legacy';
+    try { return (localStorage.getItem('hospitalCardsMode') as 'legacy'|'new') || 'legacy'; } catch { return 'legacy'; }
+  });
+  const toggleHospitalCardsMode = React.useCallback(() => {
+    setHospitalCardsMode(m => (m === 'legacy' ? 'new' : 'legacy'));
+  }, []);
   // Persist & broadcast AFTER render commit to avoid setState during another component's render
   React.useEffect(() => {
     try {
@@ -221,6 +229,14 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       });
     } catch {}
   }, [cancerCardsMode]);
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('hospitalCardsMode', hospitalCardsMode);
+      Promise.resolve().then(() => {
+        try { window.dispatchEvent(new CustomEvent('hospitalCardsMode:change', { detail: { mode: hospitalCardsMode } })); } catch {}
+      });
+    } catch {}
+  }, [hospitalCardsMode]);
   // Selected quote categories removed
 
   // Persist active nav
@@ -578,6 +594,20 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                     title={cancerCardsMode === 'new' ? 'New Cancer Cards (click for Original)' : 'Original Cancer Cards (click for New)'}
                   >
                     {cancerCardsMode === 'new' ? 'New' : 'Original'}
+                  </button>
+                </div>
+              )}
+              {item.label === 'Filters' && activeCategory === 'hospital-indemnity' && (
+                <div className="mt-1 ml-4 flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Hospital Card Style</span>
+                  <button
+                    type="button"
+                    onClick={(e)=>{ e.stopPropagation(); toggleHospitalCardsMode(); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md border bg-white/80 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600/60 transition"
+                    aria-label={hospitalCardsMode === 'new' ? 'Showing New Hospital Cards. Switch to Original.' : 'Showing Original Hospital Cards. Switch to New.'}
+                    title={hospitalCardsMode === 'new' ? 'New Hospital Cards (click for Original)' : 'Original Hospital Cards (click for New)'}
+                  >
+                    {hospitalCardsMode === 'new' ? 'New' : 'Original'}
                   </button>
                 </div>
               )}
