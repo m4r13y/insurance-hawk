@@ -98,6 +98,9 @@ import {
   FinalExpenseSidebar
 } from "@/components/medicare-shop/final-expense";
 
+// Use direct relative import to guarantee we load the medicare-shop version (avoid accidental barrel shadowing)
+import FinalExpenseDetailsShowcase from "@/components/medicare-shop/plan-details/core/FinalExpenseDetailsShowcase";
+
 import {
   DrugPlanShopContent,
   DrugPlanSidebar
@@ -110,6 +113,9 @@ import { useLazyQuoteLoading } from "@/hooks/medicare/useLazyQuoteLoading";
 // Import extracted components
 import MedicareLoadingStates from './MedicareLoadingStates';
 import QuoteResultsSection from './QuoteResultsSection';
+import { SavedPlanChips } from '@/components/medicare-shop/quote-cards/SavedPlanChips';
+import { useSavedPlans } from '@/contexts/SavedPlansContext';
+import { SavedPlansProvider } from '@/contexts/SavedPlansContext';
 
 function MedicareShopContent() {
   // Core navigation hooks
@@ -143,6 +149,38 @@ function MedicareShopContent() {
     // State field for cancer insurance
     state: ''
   });
+
+  // Final Expense Details showcase activation (query-driven)
+  const companyParam = searchParams?.get('company') || '';
+  const feDetailsActive = medicareState.selectedCategory === 'final-expense' && !!companyParam;
+  const decodedCompany = companyParam ? decodeURIComponent(companyParam) : '';
+  const finalExpenseCarrierQuotes = React.useMemo(() => {
+    if (!feDetailsActive || !(medicareState.finalExpenseQuotes || []).length) return [];
+    return (medicareState.finalExpenseQuotes || []).filter((q:any) => {
+      const name = (q.company_name || q.company || q.carrier?.name || '').trim();
+      if (!name) return false;
+      return decodedCompany.toLowerCase() === name.toLowerCase();
+    });
+  }, [feDetailsActive, decodedCompany, medicareState.finalExpenseQuotes]);
+  const handleCloseFinalExpenseDetails = React.useCallback(() => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.delete('company');
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
+
+  // Centralized Final Expense plan select handler (replaces per-card navigation logic)
+  const handleFinalExpenseSelect = React.useCallback((quote: any) => {
+    if (!quote) return;
+    // Derive a consistent carrier name
+    const carrierName = (quote.company_name || quote.company || quote.carrier?.name || '').trim();
+    if (!carrierName) return;
+    const encoded = encodeURIComponent(carrierName);
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set('section', 'shop');
+    params.set('category', 'final-expense');
+    params.set('company', encoded);
+    router.push(`/medicare?${params.toString()}`);
+  }, [searchParams, router]);
 
   // Destructure what we need from medicareState for easier access
   const {
@@ -295,6 +333,16 @@ function MedicareShopContent() {
       plans: finalExpenseQuotes || []
     }
   ], [realQuotes, advantageQuotes, drugPlanQuotes, dentalQuotes, cancerInsuranceQuotes, hospitalIndemnityQuotes, finalExpenseQuotes]);
+
+  // Handler for when user clicks a saved chip: jump to category & optionally focus carrier (basic version)
+  const handleOpenSavedCarrier = React.useCallback((category:string, carrierName:string) => {
+    // Switch category if different
+    if (category && category !== selectedCategory) {
+      handleManualCategoryToggle(category as any);
+    }
+    // Dispatch a custom event other components could listen to for focusing a carrier list
+    try { window.dispatchEvent(new CustomEvent('savedCarrier:focus', { detail: { category, carrierName } })); } catch {}
+  }, [selectedCategory, handleManualCategoryToggle]);
 
   // Preload carrier logos
   const preloadCarrierLogos = useCallback(async (quotes: any[]) => {
@@ -940,6 +988,8 @@ function MedicareShopContent() {
       setLastSaveTimestamp(prev => ({ ...prev, [key]: Date.now() }));
     }
   }, [shouldSaveQuotes]);
+
+  // ...existing code...
 
   // Check if all expected quotes are ready
   useEffect(() => {
@@ -2704,7 +2754,74 @@ function MedicareShopContent() {
     return loading;
   }, [isCategoryLoading]);
 
+  // No longer listening for FE header info events; title restored to global top layout.
+
+  // Local component to render chips bar above results column only (not global)
+  const SavedPlansChipsBar: React.FC<{ selectedCategory: string; onOpen:(category:string, carrierName:string)=>void; }> = ({ onOpen }) => {
+    const { savedPlans } = useSavedPlans();
+    if (!savedPlans.length) return null;
+    return (
+      <div className="mb-6 px-4 lg:px-0">
+        <SavedPlanChips onOpen={onOpen} />
+      </div>
+    );
+  };
+
+  // Reusable category header placed in sidebar; consistent spacing
+  const CategorySidebarHeader: React.FC<{ category: string }> = ({ category }) => {
+    if (!hasQuotes()) return null;
+    let title = '';
+    let count = 0;
+    let carrierCount = 0;
+    switch (category) {
+      case 'medigap':
+        title = 'Medicare Supplement';
+        count = realQuotes.length;
+        carrierCount = new Set(realQuotes.map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'advantage':
+        title = 'Medicare Advantage';
+        count = (advantageQuotes||[]).length;
+        carrierCount = new Set((advantageQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'drug-plan':
+        title = 'Drug Plans';
+        count = (drugPlanQuotes||[]).length;
+        carrierCount = new Set((drugPlanQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'dental':
+        title = 'Dental Insurance';
+        count = (dentalQuotes||[]).length;
+        carrierCount = new Set((dentalQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'cancer':
+        title = 'Cancer Insurance';
+        count = (cancerInsuranceQuotes||[]).length;
+        carrierCount = new Set((cancerInsuranceQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'hospital-indemnity':
+        title = 'Hospital Indemnity';
+        count = (hospitalIndemnityQuotes||[]).length;
+        carrierCount = new Set((hospitalIndemnityQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+        break;
+      case 'final-expense':
+        title = 'Final Expense Life Insurance';
+        count = (finalExpenseQuotes||[]).length;
+        carrierCount = new Set((finalExpenseQuotes||[]).map((q:any)=> q.company_key || q.carrier?.id || q.carrier?.name)).size;
+        break;
+      default:
+        title = 'Plans';
+    }
+    return (
+      <div className="mb-8 pr-4 lg:pr-0">
+        <h2 className="text-3xl font-bold leading-tight tracking-tight mb-2">{title}</h2>
+        <p className="text-sm text-muted-foreground">Showing {count} plan{count===1?'':'s'}{carrierCount?` from ${carrierCount} carrier${carrierCount===1?'':'s'}`:''}</p>
+      </div>
+    );
+  };
+
   return (
+    <SavedPlansProvider>
     <MedicareShopLayout
       hasQuotes={hasQuotes()}
       cartCount={cart.length}
@@ -2742,6 +2859,55 @@ function MedicareShopContent() {
       {/* Content conditionally rendered when not loading */}
       {!isInitializing && !showQuoteLoading && (
         <>
+          {/* Category Header (moved back into content, above sidebar) */}
+          {hasQuotes() && (
+            (() => {
+              let title = '';
+              let count = 0;
+              let carrierCount = 0;
+              switch (selectedCategory) {
+                case 'medigap':
+                  title = 'Medicare Supplement';
+                  count = realQuotes.length;
+                  carrierCount = new Set(realQuotes.map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'advantage':
+                  title = 'Medicare Advantage';
+                  count = (advantageQuotes||[]).length;
+                  carrierCount = new Set((advantageQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'drug-plan':
+                  title = 'Drug Plans';
+                  count = (drugPlanQuotes||[]).length;
+                  carrierCount = new Set((drugPlanQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'dental':
+                  title = 'Dental Insurance';
+                  count = (dentalQuotes||[]).length;
+                  carrierCount = new Set((dentalQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'cancer':
+                  title = 'Cancer Insurance';
+                  count = (cancerInsuranceQuotes||[]).length;
+                  carrierCount = new Set((cancerInsuranceQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'hospital-indemnity':
+                  title = 'Hospital Indemnity';
+                  count = (hospitalIndemnityQuotes||[]).length;
+                  carrierCount = new Set((hospitalIndemnityQuotes||[]).map((q:any)=> q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                case 'final-expense':
+                  title = 'Final Expense Life Insurance';
+                  count = (finalExpenseQuotes||[]).length;
+                  carrierCount = new Set((finalExpenseQuotes||[]).map((q:any)=> q.company_key || q.carrier?.id || q.carrier?.name)).size;
+                  break;
+                default:
+                  title = 'Plans';
+              }
+             
+            })()
+          )}
+          {/* FE header moved to topSlot; chips removed from this region */}
           {selectedCategory === 'advantage' || activeCategory === 'advantage' ? (
             /* Advantage view with unified sidebar */
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
@@ -2828,46 +2994,8 @@ function MedicareShopContent() {
               return (
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
                   {/* Enhanced Sidebar with Combined Filters */}
-                  <MedicareShopSidebar
-                      searchQuery={searchQuery}
-                      setSearchQuery={setSearchQuery}
-                      priceRange={priceRange}
-                      setPriceRange={setPriceRange}
-                      selectedCoverageLevel={selectedCoverageLevel}
-                      setSelectedCoverageLevel={setSelectedCoverageLevel}
-                      selectedCategory={selectedCategory}
-                      selectedQuotePlans={selectedQuotePlans}
-                      setSelectedQuotePlans={handlePlanSelection}
-                      applyDiscounts={applyDiscounts}
-                      setApplyDiscounts={setApplyDiscounts}
-                      paymentMode={paymentMode}
-                      setPaymentMode={setPaymentMode}
-                      quoteFormData={quoteFormData}
-                      realQuotes={getCurrentCategoryQuotes()}
-                      onClearFilters={clearFilters}
-                      showPreferredOnly={showPreferredOnly}
-                      setShowPreferredOnly={setShowPreferredOnly}
-                />
-
-              {/* Main Product Grid */}
-              <main className="lg:col-span-3">
-                {/* Quote Error Display */}
-                {quotesError && (
-                  <Card className="mb-6 border-red-200 bg-red-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 text-red-800">
-                        <CrossCircledIcon className="w-5 h-5" />
-                        <span className="font-medium">Quote Error</span>
-                      </div>
-                      <p className="text-sm text-red-700 mt-1">{quotesError}</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                <div className="space-y-6">
-                  {/* Results Header with Pagination Info */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
+                  <div>
+                    <div className="mb-6 mt-4">
                       <h2 className="text-xl font-bold">
                         {selectedCategory === 'medigap' ? 'Medigap (Supplement)' : 
                          selectedCategory === 'advantage' ? 'Medicare Advantage' : 
@@ -2890,6 +3018,47 @@ function MedicareShopContent() {
                         paginationInfo={paginationInfo}
                       />
                     </div>
+                  
+                  <MedicareShopSidebar
+                      searchQuery={searchQuery}
+                      setSearchQuery={setSearchQuery}
+                      priceRange={priceRange}
+                      setPriceRange={setPriceRange}
+                      selectedCoverageLevel={selectedCoverageLevel}
+                      setSelectedCoverageLevel={setSelectedCoverageLevel}
+                      selectedCategory={selectedCategory}
+                      selectedQuotePlans={selectedQuotePlans}
+                      setSelectedQuotePlans={handlePlanSelection}
+                      applyDiscounts={applyDiscounts}
+                      setApplyDiscounts={setApplyDiscounts}
+                      paymentMode={paymentMode}
+                      setPaymentMode={setPaymentMode}
+                      quoteFormData={quoteFormData}
+                      realQuotes={getCurrentCategoryQuotes()}
+                      onClearFilters={clearFilters}
+                      showPreferredOnly={showPreferredOnly}
+                      setShowPreferredOnly={setShowPreferredOnly}
+                />
+                </div>
+              {/* Main Product Grid */}
+              <main className="lg:col-span-3">
+                {/* Quote Error Display */}
+                {quotesError && (
+                  <Card className="mb-6 border-red-200 bg-red-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 text-red-800">
+                        <CrossCircledIcon className="w-5 h-5" />
+                        <span className="font-medium">Quote Error</span>
+                      </div>
+                      <p className="text-sm text-red-700 mt-1">{quotesError}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="space-y-6">
+                  {/* Results Header with Pagination Info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
 
                     {/* Plan Types Checkboxes/Buttons for Medigap */}
                     {selectedCategory === 'medigap' && realQuotes.length > 0 && (
@@ -2902,7 +3071,8 @@ function MedicareShopContent() {
                       />
                     )}
                   </div>
-
+                        {/* Saved Plans Chips Bar above results cards */}
+          <SavedPlansChipsBar selectedCategory={selectedCategory} onOpen={handleOpenSavedCarrier} />
                     {/* Product Grid - Show loading or display plans based on category */}
                     {selectedCategory === 'medigap' && (
                       // Only show loading screen for full category loads (Supplement Plans), not individual plan loads
@@ -2980,11 +3150,22 @@ function MedicareShopContent() {
                       /* Skeleton for Final Expense */
                       <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />
                     ) : selectedCategory === 'final-expense' && filteredCategoryQuotes.finalExpense.length > 0 ? (
-                      /* Display Final Expense Plans */
-                      <FinalExpenseShopContent 
-                        quotes={filteredCategoryQuotes.finalExpense} 
-                        isLoading={false} 
-                      />
+                      /* Final Expense: either show card list or inline details */
+                      feDetailsActive && finalExpenseCarrierQuotes.length > 0 ? (
+                        <div className="space-y-6" data-fe-inline="true">
+                          <FinalExpenseDetailsShowcase
+                            carrierName={decodedCompany}
+                            quotes={finalExpenseCarrierQuotes}
+                            onClose={handleCloseFinalExpenseDetails}
+                          />
+                        </div>
+                      ) : (
+                        <FinalExpenseShopContent
+                          quotes={filteredCategoryQuotes.finalExpense}
+                          isLoading={false}
+                          onSelectPlan={handleFinalExpenseSelect}
+                        />
+                      )
                     ) : (
                       /* Display Medigap Plans */
                       (() => {
@@ -3127,8 +3308,9 @@ function MedicareShopContent() {
       />
 
       {/* Medicare Disclaimer */}
-      <MedicareDisclaimer />
+      <MedicareDisclaimer className=" mt-52 mb-12"/>
     </MedicareShopLayout>
+    </SavedPlansProvider>
   );
 }
 

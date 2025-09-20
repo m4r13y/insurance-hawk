@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookmarkIcon, BookmarkFilledIcon } from '@radix-ui/react-icons';
 import { FaFilter, FaPuzzlePiece, FaBalanceScale, FaBookmark, FaChevronRight } from 'react-icons/fa';
 import { SavedPlanRecord } from '@/lib/savedPlans';
+import { SavedPlanChips } from '@/components/medicare-shop/quote-cards/SavedPlanChips';
 import Image from 'next/image';
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
 import { MinimalRateChips, CarrierSummaryMinimal } from '@/components/new-shop-components/quote-cards/MinimalRateChips';
@@ -186,6 +187,40 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   // so we don't keep stealing focus back to the close button (causing apparent input blur).
   const userFocusedInsideRef = React.useRef(false);
   const { savedPlans } = useSavedPlans();
+  // FE Cards style toggle state (persisted globally via localStorage + custom event)
+  const [feCardsMode, setFeCardsMode] = React.useState<'legacy'|'new'>(() => {
+    if (typeof window === 'undefined') return 'legacy';
+    try { return (localStorage.getItem('feCardsMode') as 'legacy'|'new') || 'legacy'; } catch { return 'legacy'; }
+  });
+  const toggleFeCardsMode = React.useCallback(() => {
+    setFeCardsMode(m => (m === 'legacy' ? 'new' : 'legacy'));
+  }, []);
+  // Cancer cards style toggle mirrors FE pattern
+  const [cancerCardsMode, setCancerCardsMode] = React.useState<'legacy'|'new'>(() => {
+    if (typeof window === 'undefined') return 'legacy';
+    try { return (localStorage.getItem('cancerCardsMode') as 'legacy'|'new') || 'legacy'; } catch { return 'legacy'; }
+  });
+  const toggleCancerCardsMode = React.useCallback(() => {
+    setCancerCardsMode(m => (m === 'legacy' ? 'new' : 'legacy'));
+  }, []);
+  // Persist & broadcast AFTER render commit to avoid setState during another component's render
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('feCardsMode', feCardsMode);
+      // Defer dispatch to microtask to ensure all state commits settle
+      Promise.resolve().then(() => {
+        try { window.dispatchEvent(new CustomEvent('feCardsMode:change', { detail: { mode: feCardsMode } })); } catch {}
+      });
+    } catch {}
+  }, [feCardsMode]);
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('cancerCardsMode', cancerCardsMode);
+      Promise.resolve().then(() => {
+        try { window.dispatchEvent(new CustomEvent('cancerCardsMode:change', { detail: { mode: cancerCardsMode } })); } catch {}
+      });
+    } catch {}
+  }, [cancerCardsMode]);
   // Selected quote categories removed
 
   // Persist active nav
@@ -411,62 +446,21 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
             </div>
           </div>
         ) : activeNav === 'Saved' ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {savedPlans.length === 0 && (
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">No saved plans yet. Use the bookmark icon on any plan card to save it here.</p>
             )}
             {savedPlans.length > 0 && (
-              (() => {
-                // Group by category then list each saved record (single plan type badge only)
-                const byCategory: Record<string, SavedPlanRecord[]> = {};
-                savedPlans.forEach(p => { (byCategory[p.category] ||= []).push(p); });
-                const categories = Object.keys(byCategory).sort();
-                return (
-                  <div className="space-y-5">
-                    {categories.map(cat => {
-                      const records = byCategory[cat];
-                      // Aggregate carriers for range display using provided structure (single plan per record)
-                      return (
-                        <div key={cat} className="space-y-2">
-                          <h5 className="text-[10px] font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">{cat.replace(/-/g,' ')}</h5>
-                          <div className="flex flex-col gap-3">
-                            {records.map(r => (
-                              <div key={r.key} className="flex items-center justify-between gap-3 rounded-xl border bg-white/80 dark:bg-slate-800/60 px-3 py-2 shadow-sm hover:shadow transition text-slate-800 dark:text-slate-100">
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-8 h-8 rounded-full border bg-white dark:bg-slate-700/40 flex items-center justify-center overflow-hidden relative">
-                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                                      {r.carrierName.charAt(0)}
-                                    </span>
-                                    {r.logo && (
-                                      <Image src={r.logo} alt={r.carrierName} width={32} height={32} className="object-contain relative z-10" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} />
-                                    )}
-                                  </div>
-                                  <span className="text-sm font-medium break-words whitespace-normal max-w-[220px]">{r.carrierName}</span>
-                                  {r.planType && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/80 text-white dark:bg-slate-600/70 dark:text-slate-100 tracking-wide">
-                                      {r.planType}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-right flex flex-col leading-tight">
-                                  {r.price !== undefined ? (
-                                    <span className="text-sm font-semibold">${r.price.toFixed(0)}</span>
-                                  ) : (
-                                    <span className="text-sm font-semibold">{r.min !== undefined ? `$${r.min.toFixed(0)}` : '—'}</span>
-                                  )}
-                                  {r.max !== undefined && r.max !== r.min && (
-                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">to ${r.max.toFixed(0)}</span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()
+              <div className="-m-1">
+                {/* Reuse shared chip component */}
+                <SavedPlanChips
+                  onOpen={(category, carrierName) => {
+                    try { window.dispatchEvent(new CustomEvent('savedCarrier:focus', { detail: { category, carrierName } })); } catch {}
+                    onSelectCategory?.(category);
+                  }}
+                  className="px-1"
+                />
+              </div>
             )}
           </div>
         ) : (
@@ -515,7 +509,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
 
 
   return (
-  <div className="flex gap-4 mt-2 lg:mt-2 relative">
+  <div className="flex gap-4 mt-2 lg:mt-2 relative z-[120]">
       {/* Backdrop Overlay */}
       {activeTab && (
         <div
@@ -558,6 +552,35 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                   <FaChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition" aria-hidden="true" />
                 )}
               </button>
+              {/* Inject FE card style toggle when Filters nav is active and category is final-expense */}
+              {item.label === 'Filters' && activeCategory === 'final-expense' && (
+                <div className="mt-1 ml-4 flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">FE Card Style</span>
+                  <button
+                    type="button"
+                    onClick={(e)=>{ e.stopPropagation(); toggleFeCardsMode(); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md border bg-white/80 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600/60 transition"
+                    aria-label={feCardsMode === 'new' ? 'Showing New FE Cards. Switch to Original.' : 'Showing Original FE Cards. Switch to New.'}
+                    title={feCardsMode === 'new' ? 'New FE Cards (click for Original)' : 'Original FE Cards (click for New)'}
+                  >
+                    {feCardsMode === 'new' ? 'New' : 'Original'}
+                  </button>
+                </div>
+              )}
+              {item.label === 'Filters' && activeCategory === 'cancer' && (
+                <div className="mt-1 ml-4 flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Cancer Card Style</span>
+                  <button
+                    type="button"
+                    onClick={(e)=>{ e.stopPropagation(); toggleCancerCardsMode(); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md border bg-white/80 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600/60 transition"
+                    aria-label={cancerCardsMode === 'new' ? 'Showing New Cancer Cards. Switch to Original.' : 'Showing Original Cancer Cards. Switch to New.'}
+                    title={cancerCardsMode === 'new' ? 'New Cancer Cards (click for Original)' : 'Original Cancer Cards (click for New)'}
+                  >
+                    {cancerCardsMode === 'new' ? 'New' : 'Original'}
+                  </button>
+                </div>
+              )}
               {/* Sidebar sub-tabs (Preferred & Discounts) injected directly after Filters and before Quotes */}
               {item.label === 'Filters' && (
                 <div className="mt-1 flex flex-col gap-1.5">
@@ -602,10 +625,10 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
           id={tabPanelId}
           role="tabpanel"
           aria-hidden={activeTab == null}
-          className={`absolute top-0 left-full ml-3 w-[25rem] sm:w-[28rem] transform-gpu transition-opacity duration-250 ease-out ${activeTab ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-2'} z-60`}
+          className={`absolute top-0 left-full ml-3 w-[25rem] sm:w-[28rem] transform-gpu transition-opacity duration-250 ease-out ${activeTab ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-2'} z-[130]`}
           data-active={!!activeTab}
         >
-          <div ref={panelRef} className="rounded-2xl border bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 shadow-md relative overflow-hidden">
+          <div ref={panelRef} className="rounded-2xl border bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 shadow-2xl relative overflow-hidden isolate z-[135]">
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_85%_18%,hsl(var(--blue-primary)/0.15),transparent_60%)]" />
             <div className="relative">
               <div className="flex items-center justify-between mb-4">

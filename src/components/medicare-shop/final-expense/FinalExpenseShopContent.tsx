@@ -17,15 +17,18 @@ import {
   GroupedFinalExpenseQuotes
 } from "@/types/final-expense";
 import { getEnhancedCarrierInfo, getCarrierDisplayName } from '@/lib/carrier-system';
-import FinalExpensePlanCardsLegacy, { FinalExpenseCarrierSummary as LegacyCarrierSummary } from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards.legacy';
-import FinalExpensePlanCardsNew from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards';
+// NEW enriched design now exported from former .legacy file (kept filename to minimize diff churn)
+import FinalExpensePlanCards, { FinalExpenseCarrierSummary as EnrichedCarrierSummary } from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards.legacy';
+// LEGACY simpler design now lives in the plain filename export renamed to FinalExpensePlanCardsLegacy
+import FinalExpensePlanCardsLegacy from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards';
+import { SavedPlanChips } from '@/components/medicare-shop/quote-cards/SavedPlanChips';
 
 export default function FinalExpenseShopContent({ 
   quotes, 
   isLoading = false, 
   onSelectPlan 
 }: FinalExpenseShopContentProps) {
-  // Toggle between original (legacy) arrow/bookmark style and new tall fee-chip style for visual QA
+  // Card mode persistence ("new" = enriched tall design, "legacy" = simpler earlier layout)
   const [useNewCards, setUseNewCards] = React.useState<boolean>(() => {
     if (typeof window === 'undefined') return false; // default to original for comparison
     try {
@@ -35,13 +38,7 @@ export default function FinalExpenseShopContent({
     } catch {}
     return false;
   });
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem('feCardsMode', useNewCards ? 'new' : 'legacy');
-      window.dispatchEvent(new CustomEvent('feCardsMode:change', { detail: { mode: useNewCards ? 'new' : 'legacy' } }));
-    } catch {}
-  }, [useNewCards]);
+  // Content no longer persists/broadcasts mode; sidebar owns source of truth.
   if (isLoading) {
     return <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />;
   }
@@ -104,9 +101,12 @@ export default function FinalExpenseShopContent({
     return enhancedInfo.logoUrl || '/images/carrier-placeholder.svg';
   };
 
-  // Derive legacy/original carrier summaries for original card style
-  const carrierSummaries: LegacyCarrierSummary[] = React.useMemo(() => {
-    return groupFinalExpenseQuotesByCompany(quotes).map(g => ({
+  // Build grouped data once for both variants
+  const feGroups = React.useMemo(() => groupFinalExpenseQuotesByCompany(quotes), [quotes]);
+
+  // Carrier summaries consumed by the (actually new) design in `.legacy` file
+  const carrierSummaries: EnrichedCarrierSummary[] = React.useMemo(() => {
+    return feGroups.map(g => ({
       id: g.company_key || (g.quotes[0] as any)?.policy_id || (g.quotes[0] as any)?.id || Math.random().toString(36).slice(2),
       name: getCarrierDisplayNameForQuote(g.quotes[0]),
       logo: getCarrierLogoUrl(g.quotes[0]),
@@ -123,25 +123,47 @@ export default function FinalExpenseShopContent({
       immediate: (g.quotes.some(q => (q as any)?.immediate)) || false,
       accidental: (g.quotes.some(q => (q as any)?.accidental)) || false
     }));
-  }, [quotes]);
+  }, [feGroups]);
+
+  // Map carrier display name -> first quote (for deep link selection when using the enriched design)
+  const carrierFirstQuoteMap = React.useMemo(() => {
+    const m = new Map<string, FinalExpenseQuote>();
+    feGroups.forEach(g => {
+      const name = getCarrierDisplayNameForQuote(g.quotes[0]);
+      if (!m.has(name)) m.set(name, g.quotes[0]);
+    });
+    return m;
+  }, [feGroups]);
+
+  // Listen for external toggle events dispatched from sidebar
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.mode) setUseNewCards(detail.mode === 'new');
+    };
+    window.addEventListener('feCardsMode:change', handler as EventListener);
+    return () => window.removeEventListener('feCardsMode:change', handler as EventListener);
+  }, []);
+
+  // We no longer emit a header event; chips now occupy the old heading position directly here.
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setUseNewCards(v => !v)}
-          className="text-[11px] px-3 py-1.5 rounded-md border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-          aria-label={useNewCards ? 'Currently viewing New FE Cards. Click to show Original style.' : 'Currently viewing Original FE Cards. Click to show New style.'}
-          title={useNewCards ? 'Viewing New FE Cards (click for Original)' : 'Viewing Original FE Cards (click for New)'}
-        >
-          {useNewCards ? 'New FE Cards (Active)' : 'Original FE Cards (Active)'}
-        </button>
+      {/* Saved plan chips moved here per updated requirement (replacing old title position) */}
+      <div className="mb-2">
       </div>
       {useNewCards ? (
-        <FinalExpensePlanCardsNew quotes={quotes} loading={false} onSelectPlan={onSelectPlan} />
+        <FinalExpensePlanCards
+          carriers={carrierSummaries}
+          loading={false}
+          onOpenCarrierDetails={(c) => {
+            if (!onSelectPlan) return;
+            const q = carrierFirstQuoteMap.get(c.name);
+            if (q) onSelectPlan(q); else onSelectPlan(quotes[0]);
+          }}
+        />
       ) : (
-        <FinalExpensePlanCardsLegacy carriers={carrierSummaries} loading={false} />
+        <FinalExpensePlanCardsLegacy quotes={quotes} loading={false} onSelectPlan={onSelectPlan} />
       )}
     </div>
   );

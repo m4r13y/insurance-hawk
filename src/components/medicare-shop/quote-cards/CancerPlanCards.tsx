@@ -26,8 +26,8 @@ const CancerPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDeta
               <Skeleton className="h-4 w-40" />
               <div className="mt-auto space-y-2"><Skeleton className="h-8 w-32" /><Skeleton className="h-9 w-11 rounded-md" /></div>
             </div>
-            <div className={`relative z-10 flex flex-col h-full transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="relative z-10 flex items-start gap-3 mb-3">
+            <div className={`relative flex flex-col h-full transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="relative flex items-start gap-3 mb-3">
                 <SaveToggleButton saved={saved} onToggle={()=> toggle({ carrierId:c.id, carrierName:c.name, logo:c.logo, rating:'N/A', category:'cancer', planType:'CANCER', price:c.min, min:c.planRange?.min, max:c.planRange?.max })} />
                 <CarrierLogoBlock name={c.name} logo={c.logo} />
                 <div className="flex-1 min-w-0 pr-1">
@@ -35,7 +35,7 @@ const CancerPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDeta
                   <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 tracking-wide font-medium">{c.planName && <span className="truncate max-w-[12rem]" title={c.planName}>{c.planName}</span>}</div>
                 </div>
               </div>
-              <div className="relative z-10 flex items-end justify-between mt-auto">
+              <div className="relative flex items-end justify-between mt-auto">
                 <div className="flex flex-col">
                   <PlanPriceBlock price={c.min} range={c.planRange as any} showRange={showRange} />
                   {c.lumpSum != null && <div className="text-[11px] text-slate-400 mt-1">Lump Sum ${c.lumpSum}</div>}

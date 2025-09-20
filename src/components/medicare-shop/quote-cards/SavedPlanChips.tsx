@@ -54,7 +54,7 @@ const SavedPlanChip: React.FC<{ item:ChipItemData; onOpen:(category:string, carr
               alt={item.carrierName}
               width={28}
               height={28}
-              className="object-contain relative z-10"
+              className="object-contain relative"
               onError={()=>setErrored(true)}
             />
           )}

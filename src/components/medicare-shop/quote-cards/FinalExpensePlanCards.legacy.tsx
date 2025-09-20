@@ -9,7 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 export interface FinalExpenseCarrierSummary { id:string; name:string; logo:string; min?:number; max?:number; fullMin?:number; fullMax?:number; requestedFace?:number; planRange?:{min:number;max:number;count:number}; planName?:string; faceAmount?:number; faceAmountMin?:number; faceAmountMax?:number; graded?:boolean; immediate?:boolean; accidental?:boolean; underwritingType?:string; count:number; }
 interface Props { carriers: FinalExpenseCarrierSummary[]; loading:boolean; onOpenCarrierDetails?: (c:FinalExpenseCarrierSummary)=>void; }
 
-const FinalExpensePlanCardsLegacy: React.FC<Props> = ({ carriers, loading, onOpenCarrierDetails }) => {
+// NOTE: This file previously suffixed as `.legacy` but it actually represents the NEW (tall, enriched) design.
+// Renaming intent: keep export name generic `FinalExpensePlanCards` so consuming code can treat this as canonical new version.
+const FinalExpensePlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDetails }) => {
   // Defensive: legacy view might be rendered outside provider during experimentation
   let isSaved: (id:string, planType:string, category:string)=>boolean = () => false;
   let toggle: (args:any)=>void = () => {};
@@ -107,4 +109,4 @@ const FinalExpensePlanCardsLegacy: React.FC<Props> = ({ carriers, loading, onOpe
   );
 };
 
-export default FinalExpensePlanCardsLegacy;
+export default FinalExpensePlanCards;

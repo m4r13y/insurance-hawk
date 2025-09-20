@@ -178,7 +178,8 @@ export const CARRIERS: CarrierInfo[] = [
       'Continental Life Insurance Company', 
       'Continental Life Ins Co',
       'Continental Life Ins Co Brentwood',
-      'Accendo Ins Co'
+      'Accendo Ins Co',
+      'Continental Life Insurance Company of Brentwood, Tennessee (Aetna)'
     ],
     phone: '800-872-3862',
     website: 'https://www.aetna.com',
