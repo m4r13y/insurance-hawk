@@ -16,13 +16,32 @@ import {
   groupFinalExpenseQuotesByCompany,
   GroupedFinalExpenseQuotes
 } from "@/types/final-expense";
-import { getEnhancedCarrierInfo, getCarrierDisplayName } from "@/lib/carrier-system";
+import { getEnhancedCarrierInfo, getCarrierDisplayName } from '@/lib/carrier-system';
+import FinalExpensePlanCardsLegacy, { FinalExpenseCarrierSummary as LegacyCarrierSummary } from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards.legacy';
+import FinalExpensePlanCardsNew from '@/components/medicare-shop/quote-cards/FinalExpensePlanCards';
 
 export default function FinalExpenseShopContent({ 
   quotes, 
   isLoading = false, 
   onSelectPlan 
 }: FinalExpenseShopContentProps) {
+  // Toggle between original (legacy) arrow/bookmark style and new tall fee-chip style for visual QA
+  const [useNewCards, setUseNewCards] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false; // default to original for comparison
+    try {
+      const stored = localStorage.getItem('feCardsMode');
+      if (stored === 'new') return true;
+      if (stored === 'legacy') return false;
+    } catch {}
+    return false;
+  });
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('feCardsMode', useNewCards ? 'new' : 'legacy');
+      window.dispatchEvent(new CustomEvent('feCardsMode:change', { detail: { mode: useNewCards ? 'new' : 'legacy' } }));
+    } catch {}
+  }, [useNewCards]);
   if (isLoading) {
     return <PlanCardsSkeleton count={5} title="Final Expense Life Insurance" />;
   }
@@ -85,91 +104,45 @@ export default function FinalExpenseShopContent({
     return enhancedInfo.logoUrl || '/images/carrier-placeholder.svg';
   };
 
-  // Group quotes by company for price range display
-  const groupedQuotes = groupFinalExpenseQuotesByCompany(quotes);
+  // Derive legacy/original carrier summaries for original card style
+  const carrierSummaries: LegacyCarrierSummary[] = React.useMemo(() => {
+    return groupFinalExpenseQuotesByCompany(quotes).map(g => ({
+      id: g.company_key || (g.quotes[0] as any)?.policy_id || (g.quotes[0] as any)?.id || Math.random().toString(36).slice(2),
+      name: getCarrierDisplayNameForQuote(g.quotes[0]),
+      logo: getCarrierLogoUrl(g.quotes[0]),
+      min: g.price_range.min,
+      max: g.price_range.max,
+      planRange: { min: g.price_range.min, max: g.price_range.max, count: g.plan_count },
+      count: g.plan_count,
+      planName: (g.quotes[0] as any)?.plan_name || (g.quotes[0] as any)?.product_name || undefined,
+      faceAmount: (g.quotes[0] as any)?.desired_face_value || undefined,
+      faceAmountMin: undefined,
+      faceAmountMax: undefined,
+      underwritingType: (g.quotes[0] as any)?.underwriting_type || undefined,
+      graded: (g.quotes.some(q => (q as any)?.graded)) || false,
+      immediate: (g.quotes.some(q => (q as any)?.immediate)) || false,
+      accidental: (g.quotes.some(q => (q as any)?.accidental)) || false
+    }));
+  }, [quotes]);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {groupedQuotes.map((group, index) => (
-          <Card key={group.company_key || index} className="hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
-            {/* Header with Logo and Company */}
-            <div className="flex items-center justify-between p-4 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                  <Image
-                    src={getCarrierLogoUrl(group.quotes[0])}
-                    alt={`${getCarrierDisplayNameForQuote(group.quotes[0])} logo`}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-contain"
-                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                      const target = e.currentTarget;
-                      const parent = target.parentElement;
-                      if (parent) {
-                        target.style.display = 'none';
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-base">
-                    {getCarrierDisplayNameForQuote(group.quotes[0])}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {group.plan_count} option{group.plan_count !== 1 ? 's' : ''} available
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-4 pb-4">
-              {/* Price Range */}
-              <div className="mb-4">
-                <div className="text-3xl font-bold text-gray-900 mb-1">
-                  {group.price_range.min === group.price_range.max 
-                    ? `$${formatCurrency(group.price_range.min)}`
-                    : `$${formatCurrency(group.price_range.min)} - $${formatCurrency(group.price_range.max)}`
-                  } <span className="text-base font-normal text-gray-600">/month</span>
-                </div>
-              </div>
-
-              {/* Plan Description */}
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-900">Final Expense Life Insurance</h4>
-                <p className="text-sm text-gray-600">
-                  Multiple coverage amounts available
-                </p>
-              </div>
-
-              {/* Fee Badges - Clear Display */}
-              {(group.quotes.some(q => q.monthly_fee) || group.quotes.some(q => q.annual_fee)) && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {group.quotes.some(q => q.monthly_fee) && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                      ${formatFee(group.quotes.find(q => q.monthly_fee)?.monthly_fee || 0)} monthly policy fee
-                    </span>
-                  )}
-                  {group.quotes.some(q => q.annual_fee) && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                      ${formatFee(group.quotes.find(q => q.annual_fee)?.annual_fee || 0)} annual policy fee
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Select Button */}
-              <Button 
-                onClick={() => onSelectPlan?.(group.quotes[0])}
-                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3"
-                size="lg"
-              >
-                Select Plan
-              </Button>
-            </div>
-          </Card>
-        ))}
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => setUseNewCards(v => !v)}
+          className="text-[11px] px-3 py-1.5 rounded-md border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+          aria-label={useNewCards ? 'Currently viewing New FE Cards. Click to show Original style.' : 'Currently viewing Original FE Cards. Click to show New style.'}
+          title={useNewCards ? 'Viewing New FE Cards (click for Original)' : 'Viewing Original FE Cards (click for New)'}
+        >
+          {useNewCards ? 'New FE Cards (Active)' : 'Original FE Cards (Active)'}
+        </button>
       </div>
+      {useNewCards ? (
+        <FinalExpensePlanCardsNew quotes={quotes} loading={false} onSelectPlan={onSelectPlan} />
+      ) : (
+        <FinalExpensePlanCardsLegacy carriers={carrierSummaries} loading={false} />
+      )}
     </div>
   );
 }
