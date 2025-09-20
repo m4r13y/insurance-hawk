@@ -51,6 +51,10 @@ const getCarrierDisplayName = (carrierName: string): string => {
 interface AdaptiveDentalPlanBuilderProps {
   quotes: OptimizedDentalQuote[];
   onPlanBuilt: (selectedQuote: OptimizedDentalQuote, configuration: any) => void;
+  /** When provided, the builder will skip the carrier selection step and immediately analyze quotes for this company */
+  preselectedCompany?: string | null;
+  /** When true, hides the internal carrier header (parent can render its own header/back button) */
+  hideCarrierHeader?: boolean;
 }
 
 interface PlanConfiguration {
@@ -62,7 +66,7 @@ interface PlanConfiguration {
   [key: string]: any;
 }
 
-export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDentalPlanBuilderProps) {
+export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt, preselectedCompany, hideCarrierHeader }: AdaptiveDentalPlanBuilderProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [selectedAnnualMax, setSelectedAnnualMax] = useState<number | null>(null);
@@ -75,6 +79,43 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
   // Group quotes by company
   const companiesList = Array.from(new Set(quotes.map(q => q.companyName)))
     .sort();
+
+  // Preselect company if prop provided (initial mount or when it changes)
+  useEffect(() => {
+    if (!preselectedCompany) return; // nothing to do
+
+    // If we've already resolved to a company whose display name matches the param, skip
+    try {
+      if (selectedCompany) {
+        const displayOfSelected = getCarrierDisplayName(selectedCompany);
+        if (displayOfSelected === preselectedCompany || selectedCompany === preselectedCompany) return;
+      }
+    } catch {}
+
+    // Only resolve if selectedCompany is empty or clearly different brand (not matching by display)
+    if (!selectedCompany || selectedCompany !== preselectedCompany) {
+      const lower = preselectedCompany.toLowerCase();
+      const candidates = new Set<string>();
+      quotes.forEach(q => { if (q.companyName) candidates.add(q.companyName); if ((q as any).companyFullName) candidates.add((q as any).companyFullName); });
+      let resolved: string | null = null;
+      for (const c of candidates) { if (c === preselectedCompany) { resolved = c; break; } }
+      if (!resolved) {
+        for (const c of candidates) {
+          try { const display = getCarrierDisplayName(c); if (display === preselectedCompany) { resolved = c; break; } } catch {}
+        }
+      }
+      if (!resolved) {
+        for (const c of candidates) {
+          const lc = c.toLowerCase();
+          if (lc.includes('(' + lower + ')') || lc.endsWith(' ' + lower) || lc.startsWith(lower + ' ')) { resolved = c; break; }
+          if (!resolved && lc.includes(lower) && lower.length > 3) { resolved = c; }
+        }
+      }
+      if (resolved && resolved === selectedCompany) return; // no change
+      setSelectedCompany(resolved || preselectedCompany);
+      setCurrentStep(2);
+    }
+  }, [preselectedCompany, quotes, selectedCompany]);
 
   // Analyze pattern when company is selected
   useEffect(() => {
@@ -2552,8 +2593,8 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
 
   return (
     <div>
-      {/* Carrier Header - Show when carrier is selected */}
-      {selectedCompany && (
+      {/* Carrier Header - Show when carrier is selected (unless parent hides) */}
+      {selectedCompany && !hideCarrierHeader && (
         <div className="flex items-center justify-between mb-6 p-4 bg-blue-50 rounded-lg border">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -2603,9 +2644,9 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
 
       {/* Single Unified Container */}
       <div className="space-y-6">
-          {/* Step 1: Company Selection */}
+          {/* Step 1: Company Selection (skipped when preselectedCompany provided) */}
+          {!preselectedCompany && !selectedCompany && (
           <div className={`${currentStep > 1 ? 'pl-4' : ''}`}>
-            
             {!selectedCompany && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {companiesList.map((company) => {
@@ -2695,6 +2736,7 @@ export function AdaptiveDentalPlanBuilder({ quotes, onPlanBuilt }: AdaptiveDenta
               </div>
             )}
           </div>
+          )}
 
           {/* Configuration: Annual Maximum Selection with Plan Features */}
           {selectedCompany && patternAnalysis && !finalQuote && (

@@ -205,8 +205,11 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   }, []);
   // Hospital Indemnity cards style toggle
   const [hospitalCardsMode, setHospitalCardsMode] = React.useState<'legacy'|'new'>(() => {
-    if (typeof window === 'undefined') return 'legacy';
     try { return (localStorage.getItem('hospitalCardsMode') as 'legacy'|'new') || 'legacy'; } catch { return 'legacy'; }
+  });
+  // Add dental cards mode state
+  const [dentalCardsMode, setDentalCardsMode] = React.useState<'legacy'|'new'>(() => {
+    try { return (localStorage.getItem('dentalCardsMode') as 'legacy'|'new') || 'legacy'; } catch { return 'legacy'; }
   });
   const toggleHospitalCardsMode = React.useCallback(() => {
     setHospitalCardsMode(m => (m === 'legacy' ? 'new' : 'legacy'));
@@ -237,6 +240,11 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       });
     } catch {}
   }, [hospitalCardsMode]);
+  // persist & dispatch dental mode
+  React.useEffect(()=>{
+    try { localStorage.setItem('dentalCardsMode', dentalCardsMode); } catch {}
+    try { window.dispatchEvent(new CustomEvent('dentalCardsMode:change', { detail: { mode: dentalCardsMode } })); } catch {}
+  }, [dentalCardsMode]);
   // Selected quote categories removed
 
   // Persist active nav
@@ -608,6 +616,20 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                     title={hospitalCardsMode === 'new' ? 'New Hospital Cards (click for Original)' : 'Original Hospital Cards (click for New)'}
                   >
                     {hospitalCardsMode === 'new' ? 'New' : 'Original'}
+                  </button>
+                </div>
+              )}
+              {item.label === 'Filters' && activeCategory === 'dental' && (
+                <div className="mt-1 ml-4 flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Dental Card Style</span>
+                  <button
+                    type="button"
+                    onClick={(e)=>{ e.stopPropagation(); setDentalCardsMode(m => m === 'legacy' ? 'new' : 'legacy'); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md border bg-white/80 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600/60 transition"
+                    aria-label={dentalCardsMode === 'new' ? 'Showing New Dental Cards. Switch to Original.' : 'Showing Original Dental Cards. Switch to New.'}
+                    title={dentalCardsMode === 'new' ? 'New Dental Cards (click for Original)' : 'Original Dental Cards (click for New)'}
+                  >
+                    {dentalCardsMode === 'new' ? 'New' : 'Original'}
                   </button>
                 </div>
               )}

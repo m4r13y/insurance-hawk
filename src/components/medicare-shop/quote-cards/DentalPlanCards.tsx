@@ -88,9 +88,19 @@ const DentalPlanCards: React.FC<Props> = ({ carriers, loading, onOpenCarrierDeta
                     </div>
                     <DetailsButton
                       onClick={() => {
-                        if (onOpenCarrierDetails) onOpenCarrierDetails(c); else {
-                          const params = new URLSearchParams({ carrier: c.name, view: 'plan-details', category: 'dental' });
-                          router.push(`/shop-components?${params.toString()}`);
+                        if (onOpenCarrierDetails) { onOpenCarrierDetails(c); return; }
+                        // Inline activation pattern: set ?company= param for dental
+                        try {
+                          const url = new URL(window.location.href);
+                          url.searchParams.set('company', c.name);
+                          url.searchParams.delete('view');
+                          url.searchParams.delete('carrier');
+                          window.history.pushState({}, '', url.toString());
+                          window.dispatchEvent(new CustomEvent('company:changed', { detail: { company: c.name, category: 'dental' } }));
+                        } catch {
+                          const sep = window.location.search ? '&' : '?';
+                          window.history.pushState({}, '', window.location.pathname + window.location.search + sep + 'company=' + encodeURIComponent(c.name));
+                          window.dispatchEvent(new CustomEvent('company:changed', { detail: { company: c.name, category: 'dental' } }));
                         }
                       }}
                       carrierName={c.name}

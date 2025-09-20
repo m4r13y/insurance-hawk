@@ -7,16 +7,53 @@ import { formatCurrency, hasDrugCoverage } from '@/utils/medicare-advantage-data
 import { getBenefitStatusDisplay } from '@/utils/benefit-status';
 import { PlanSelector } from '@/components/plan-selector';
 import { PlanCarousel } from '@/components/plan-carousel';
-import { BenefitsOverview } from '@/components/medicare-shop/advantage/benefits-overview';
+import { BenefitsOverview } from '@/components/medicare-shop/advantage/benefits-overview'; // legacy inline details (being replaced)
+import AdvantageDetailsShowcase from '@/components/medicare-shop/plan-details/core/AdvantageDetailsShowcase';
+
+// Local wrapper to augment AdvantageDetailsShowcase with summary banner until core component supports summaryInfo natively
+const AdvantageDetailsShowcaseWithSummary: React.FC<{
+  carrierName: string;
+  quotes: any[];
+  onClose: () => void;
+  summaryInfo: {
+    totalPlans: number;
+    startPlan: number;
+    endPlan: number;
+    currentPage: number;
+    totalPages: number;
+    location?: string;
+  };
+}> = ({ carrierName, quotes, onClose, summaryInfo }) => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <AdvantageDetailsShowcase carrierName={carrierName} quotes={quotes as any} onClose={onClose} />
+      </div>
+      <section className="max-w-7xl mx-auto px-6 -mt-10">
+        <div className="rounded-md border border-slate-800/60 bg-slate-900/40 p-4 flex flex-wrap gap-x-8 gap-y-3 text-[12px] leading-relaxed text-slate-300">
+          {summaryInfo.location && (
+            <div><span className="text-slate-500">Location:</span> {summaryInfo.location}</div>
+          )}
+          <div><span className="text-slate-500">Plans in Market:</span> {summaryInfo.totalPlans}</div>
+          <div><span className="text-slate-500">Carrier Variants:</span> {quotes.length}</div>
+          <div><span className="text-slate-500">Original Range:</span> {summaryInfo.startPlan}-{summaryInfo.endPlan}</div>
+          <div><span className="text-slate-500">Page:</span> {summaryInfo.currentPage}/{summaryInfo.totalPages}</div>
+        </div>
+      </section>
+    </div>
+  );
+};
 
 interface MedicareAdvantageShopContentProps {
   isExternallyLoading: boolean;
   externalQuotes: any[] | null;
+  initialPlanKey?: string; // optional pre-selected plan key when embedding
 }
 
 export function MedicareAdvantageShopContent({ 
   isExternallyLoading, 
-  externalQuotes 
+  externalQuotes,
+  initialPlanKey
 }: MedicareAdvantageShopContentProps) {
   const [plans, setPlans] = useState<MedicareAdvantageQuote[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<MedicareAdvantageQuote[]>([]);
@@ -24,7 +61,8 @@ export function MedicareAdvantageShopContent({
   const [currentPage, setCurrentPage] = useState(0);
   const plansPerPage = 5; // Show 5 plans at a time
   const [currentCarouselPage, setCurrentCarouselPage] = useState(0);
-  const [showDetailsView, setShowDetailsView] = useState(false);
+  // Inline details pattern: when a plan is selected and inline mode active, replace list with details
+  const [showInlineDetails, setShowInlineDetails] = useState(false);
 
   // Filter states (UI removed; retained for future sidebar integration)
   const [filters, setFilters] = useState({
@@ -52,9 +90,15 @@ export function MedicareAdvantageShopContent({
       console.log('📥 Using external Medicare Advantage quotes:', externalQuotes.length);
       setPlans(externalQuotes);
       setFilteredPlans(externalQuotes);
-      setSelectedPlan(externalQuotes[0]);
+      // Try to pre-select provided initial plan key if valid
+      let initial = externalQuotes[0];
+      if (initialPlanKey) {
+        const found = externalQuotes.find(p => p.key === initialPlanKey);
+        if (found) initial = found;
+      }
+      setSelectedPlan(initial);
     }
-  }, [externalQuotes]);
+  }, [externalQuotes, initialPlanKey]);
 
   // Filter plans when filters change
   useEffect(() => {
@@ -157,70 +201,96 @@ export function MedicareAdvantageShopContent({
             </CardContent>
           </Card>
         </div>
-      ) : showDetailsView ? (
-        /* Details View - Show only the benefits overview with back button */
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowDetailsView(false)}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium transition-colors"
-            >
-              ← Back to Overview
-            </button>
-            <h2 className="text-xl font-semibold">Plan Details - {selectedPlan?.plan_name}</h2>
-          </div>
-          {selectedPlan && <BenefitsOverview selectedPlan={selectedPlan} />}
-        </div>
-      ) : (
-        <React.Fragment>
-          {/* Inline filter controls removed - global sidebar now handles filtering (future integration) */}
-
-          {/* Desktop Layout: Plan selector and carousel side by side */}
+      ) : showInlineDetails && selectedPlan ? (
+            (() => {
+              const carrierName = selectedPlan.organization_name;
+              const source = (filteredPlans.length ? filteredPlans : plans).filter(p => p.organization_name === carrierName);
+              const normalized = source.map(p => ({
+                id: p.key,
+                category: 'advantage',
+                carrier: { id: p.organization_name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), name: p.organization_name },
+                pricing: { monthly: p.month_rate / 100 },
+                plan: { key: p.key, display: p.plan_name },
+                metadata: {
+                  starRating: p.overall_star_rating,
+                  medicalDeductible: undefined,
+                  drugDeductible: undefined,
+                  primaryCare: undefined,
+                  specialist: undefined,
+                  otc: undefined,
+                  moop: p.in_network_moop,
+                  zeroPremiumLIS: p.zero_premium_with_full_low_income_subsidy,
+                  partBReduction: undefined,
+                  drugBenefitType: p.drug_benefit_type,
+                  effectiveDate: p.effective_date || p.contract_year,
+                  county: p.county,
+                  state: p.state,
+                  gapCoverage: p.additional_coverage_offered_in_the_gap,
+                  benefits: p.benefits
+                }
+              }));
+              const totalPlans = (filteredPlans.length ? filteredPlans : plans).length;
+              const totalPages = Math.ceil(totalPlans / plansPerPage);
+              const startPlan = totalPlans > 0 ? currentPage * plansPerPage + 1 : 0;
+              const endPlan = Math.min((currentPage + 1) * plansPerPage, totalPlans);
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <button
+                      onClick={() => { setShowInlineDetails(false); setSelectedPlan(null); }}
+                      className="mb-2 text-xs px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    >
+                      ← Back to Plans
+                    </button>
+                  </div>
+                  <AdvantageDetailsShowcaseWithSummary
+                    carrierName={carrierName}
+                    quotes={normalized as any}
+                    onClose={() => { setShowInlineDetails(false); setSelectedPlan(null); }}
+                    summaryInfo={{
+                      totalPlans,
+                      startPlan,
+                      endPlan,
+                      currentPage: currentPage + 1,
+                      totalPages,
+                      location: `${selectedPlan.county}, ${selectedPlan.state}`
+                    }}
+                  />
+                </div>
+              );
+            })()
+          ) : (
+        <div className="space-y-6">
+          {/* Single-column selector that triggers details replacement */}
+          <PlanSelector
+            plans={filteredPlans}
+            selectedPlan={selectedPlan}
+            onSelectPlan={(plan) => {
+              setSelectedPlan(plan);
+              // Immediately show inline details on plan selection (remove extra click step)
+              setShowInlineDetails(true);
+            }}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            plansPerPage={plansPerPage}
+            currentCarouselPage={currentCarouselPage}
+            setCurrentCarouselPage={setCurrentCarouselPage}
+            carouselPages={carouselPages}
+            onViewDetails={() => setShowInlineDetails(true)}
+            showMobileCarousel={true}
+            // NOTE: PlanSelector already handles responsive layout; forcing single column here
+          />
+          {/* Desktop supplemental carousel: show only when not in inline details */}
           <div className="hidden xl:block">
-            <div className="grid grid-cols-2 gap-6">
-              <PlanSelector
-                plans={filteredPlans}
-                selectedPlan={selectedPlan}
-                onSelectPlan={(plan) => {
-                  setSelectedPlan(plan);
-                  setShowDetailsView(false); // Reset details view when selecting a new plan
-                }}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                plansPerPage={plansPerPage}
-              />
-
-              {/* Carousel Results */}
-              <PlanCarousel
-                selectedPlan={selectedPlan}
-                currentCarouselPage={currentCarouselPage}
-                setCurrentCarouselPage={setCurrentCarouselPage}
-                carouselPages={carouselPages}
-                onViewDetails={() => setShowDetailsView(true)}
-              />
-            </div>
-          </div>
-
-          {/* Mobile Layout: Plan selector with integrated carousel */}
-          <div className="xl:hidden space-y-6">
-            <PlanSelector
-              plans={filteredPlans}
+            <PlanCarousel
               selectedPlan={selectedPlan}
-              onSelectPlan={(plan) => {
-                setSelectedPlan(plan);
-                setShowDetailsView(false); // Reset details view when selecting a new plan
-              }}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              plansPerPage={plansPerPage}
               currentCarouselPage={currentCarouselPage}
               setCurrentCarouselPage={setCurrentCarouselPage}
               carouselPages={carouselPages}
-              onViewDetails={() => setShowDetailsView(true)}
-              showMobileCarousel={true}
+              onViewDetails={() => setShowInlineDetails(true)}
             />
           </div>
-        </React.Fragment>
+        </div>
       )}
     </div>
   );
