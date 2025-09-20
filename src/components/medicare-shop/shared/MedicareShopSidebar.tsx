@@ -6,7 +6,8 @@
 // currently unused by the new global sidebar.
 
 import React from "react";
-import SidebarShowcase from "@/components/new-shop-components/sidebar/SidebarShowcase";
+// Use the locally copied SidebarShowcase (kept separate from new-shop-components version)
+import { SidebarShowcase } from "./SidebarShowcase";
 import { SavedPlansProvider } from "@/contexts/SavedPlansContext";
 import { type QuoteFormData } from "./types";
 

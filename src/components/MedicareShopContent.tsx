@@ -2743,14 +2743,62 @@ function MedicareShopContent() {
       {!isInitializing && !showQuoteLoading && (
         <>
           {selectedCategory === 'advantage' || activeCategory === 'advantage' ? (
-            /* Route to dedicated Medicare Advantage component */
-            <MedicareAdvantageShopContent 
-              isExternallyLoading={false}
-              externalQuotes={advantageQuotes}
-            />
+            /* Advantage view with unified sidebar */
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+              <MedicareShopSidebar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                selectedCoverageLevel={selectedCoverageLevel}
+                setSelectedCoverageLevel={setSelectedCoverageLevel}
+                selectedCategory={selectedCategory}
+                selectedQuotePlans={selectedQuotePlans}
+                setSelectedQuotePlans={handlePlanSelection}
+                applyDiscounts={applyDiscounts}
+                setApplyDiscounts={setApplyDiscounts}
+                paymentMode={paymentMode}
+                setPaymentMode={setPaymentMode}
+                quoteFormData={quoteFormData}
+                realQuotes={advantageQuotes || []}
+                onClearFilters={clearFilters}
+                showPreferredOnly={showPreferredOnly}
+                setShowPreferredOnly={setShowPreferredOnly}
+              />
+              <main className="lg:col-span-3">
+                <MedicareAdvantageShopContent 
+                  isExternallyLoading={false}
+                  externalQuotes={advantageQuotes}
+                />
+              </main>
+            </div>
           ) : selectedCategory === 'drug-plan' || activeCategory === 'drug-plan' ? (
-            /* Route to dedicated Drug Plan component */
-            <DrugPlanShopContent />
+            /* Drug Plan view with unified sidebar */
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+              <MedicareShopSidebar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                selectedCoverageLevel={selectedCoverageLevel}
+                setSelectedCoverageLevel={setSelectedCoverageLevel}
+                selectedCategory={selectedCategory}
+                selectedQuotePlans={selectedQuotePlans}
+                setSelectedQuotePlans={handlePlanSelection}
+                applyDiscounts={applyDiscounts}
+                setApplyDiscounts={setApplyDiscounts}
+                paymentMode={paymentMode}
+                setPaymentMode={setPaymentMode}
+                quoteFormData={quoteFormData}
+                realQuotes={drugPlanQuotes || []}
+                onClearFilters={clearFilters}
+                showPreferredOnly={showPreferredOnly}
+                setShowPreferredOnly={setShowPreferredOnly}
+              />
+              <main className="lg:col-span-3">
+                <DrugPlanShopContent />
+              </main>
+            </div>
           ) : (
             <>
               {/* Show content based on form completion and flow state */}

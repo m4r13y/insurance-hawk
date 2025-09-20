@@ -1242,7 +1242,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
   return (
   <div className="flex gap-4 mt-2 lg:mt-2">
       {/* Compact Rail (unchanged baseline) */}
-      <div className="flex flex-col w-52 rounded-xl border bg-white/70 dark:bg-slate-800/60 backdrop-blur p-3 gap-2 shadow-sm relative">
+      <div className="flex flex-col rounded-xl border bg-white/70 dark:bg-slate-800/60 backdrop-blur p-3 gap-2 shadow-sm relative">
   <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 px-1.5">Explorer</h3>
         {primaryNavSeed.map((item, index) => {
           const logicalActive = activeNav === item.label;

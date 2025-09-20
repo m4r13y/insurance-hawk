@@ -26,7 +26,7 @@ export function MedicareAdvantageShopContent({
   const [currentCarouselPage, setCurrentCarouselPage] = useState(0);
   const [showDetailsView, setShowDetailsView] = useState(false);
 
-  // Filter states
+  // Filter states (UI removed; retained for future sidebar integration)
   const [filters, setFilters] = useState({
     starRating: '',
     maxPremium: '',
@@ -60,19 +60,16 @@ export function MedicareAdvantageShopContent({
   useEffect(() => {
     let filtered = plans;
 
-    // Filter by star rating
     if (filters.starRating) {
       const minRating = parseInt(filters.starRating);
       filtered = filtered.filter(plan => plan.overall_star_rating >= minRating);
     }
 
-    // Filter by maximum premium
     if (filters.maxPremium) {
-      const maxPremium = parseFloat(filters.maxPremium) * 100; // Convert to cents
+      const maxPremium = parseFloat(filters.maxPremium) * 100; // cents
       filtered = filtered.filter(plan => plan.month_rate <= maxPremium);
     }
 
-    // Filter by dental coverage
     if (filters.hasDental) {
       filtered = filtered.filter(plan => 
         getBenefitStatusDisplay(plan, 'Comprehensive Dental Service').status === 'covered' ||
@@ -80,35 +77,28 @@ export function MedicareAdvantageShopContent({
       );
     }
 
-    // Filter by vision coverage
     if (filters.hasVision) {
       filtered = filtered.filter(plan => 
         getBenefitStatusDisplay(plan, 'Vision').status === 'covered'
       );
     }
 
-    // Filter by hearing coverage
     if (filters.hasHearing) {
       filtered = filtered.filter(plan => 
         getBenefitStatusDisplay(plan, 'Hearing services').status === 'covered'
       );
     }
 
-    // Filter by prescription coverage
     if (filters.hasPrescriptionCoverage) {
-      filtered = filtered.filter(plan => 
-        hasDrugCoverage(plan)
-      );
+      filtered = filtered.filter(plan => hasDrugCoverage(plan));
     }
 
-    // Filter by carrier
     if (filters.carrier) {
       filtered = filtered.filter(plan => 
         plan.organization_name.toLowerCase().includes(filters.carrier.toLowerCase())
       );
     }
 
-    // Filter by plan type
     if (filters.planType) {
       filtered = filtered.filter(plan => 
         plan.plan_type.toLowerCase().includes(filters.planType.toLowerCase())
@@ -116,15 +106,13 @@ export function MedicareAdvantageShopContent({
     }
 
     setFilteredPlans(filtered);
-    setCurrentPage(0); // Reset to first page when filters change
-    
-    // Reset selected plan if it's not in filtered results
+    setCurrentPage(0);
     if (selectedPlan && !filtered.some(plan => plan.key === selectedPlan.key)) {
       setSelectedPlan(filtered.length > 0 ? filtered[0] : null);
     }
   }, [plans, filters, selectedPlan]);
 
-  // Clear all filters
+  // Clear all filters (currently unused after UI removal)
   const clearFilters = () => {
     setFilters({
       starRating: '',
@@ -159,115 +147,7 @@ export function MedicareAdvantageShopContent({
         </Card>
       ) : filteredPlans.length === 0 ? (
         <div className="space-y-4">
-          {/* Filter Controls */}
-          <div className="bg-gray-50 border rounded-lg p-3">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Filters:</span>
-                  
-                  {/* Star Rating */}
-                  <select
-                    value={filters.starRating}
-                    onChange={(e) => setFilters(prev => ({ ...prev, starRating: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Rating</option>
-                    <option value="3">3+ ⭐</option>
-                    <option value="4">4+ ⭐</option>
-                    <option value="5">5 ⭐</option>
-                  </select>
-
-                  {/* Max Premium */}
-                  <select
-                    value={filters.maxPremium}
-                    onChange={(e) => setFilters(prev => ({ ...prev, maxPremium: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Price</option>
-                    <option value="0">Free</option>
-                    <option value="25">Under $25</option>
-                    <option value="50">Under $50</option>
-                  </select>
-
-                  {/* Carrier Filter */}
-                  <select
-                    value={filters.carrier}
-                    onChange={(e) => setFilters(prev => ({ ...prev, carrier: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Carrier</option>
-                    {Array.from(new Set(plans.map(plan => plan.organization_name))).sort().map(carrier => (
-                      <option key={carrier} value={carrier}>{carrier}</option>
-                    ))}
-                  </select>
-
-                  {/* Plan Type Filter */}
-                  <select
-                    value={filters.planType}
-                    onChange={(e) => setFilters(prev => ({ ...prev, planType: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Type</option>
-                    {Array.from(new Set(plans.map(plan => plan.plan_type))).sort().map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-
-                  {/* Benefits Checkboxes */}
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasDental}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasDental: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Dental
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasVision}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasVision: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Vision
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasHearing}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasHearing: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Hearing
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasPrescriptionCoverage}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasPrescriptionCoverage: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Prescriptions
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Clear Filters Button - moved to bottom */}
-              <div className="flex justify-end">
-                <button
-                  onClick={clearFilters}
-                  className="text-sm px-3 py-1 text-blue-600 hover:text-blue-800 underline"
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-          </div>
-
+          {/* Inline filter controls removed - global sidebar now handles filtering (future integration) */}
           <Card>
             <CardContent className="p-6">
               <div className="text-center text-muted-foreground">
@@ -293,117 +173,7 @@ export function MedicareAdvantageShopContent({
         </div>
       ) : (
         <React.Fragment>
-          {/* Filter Controls */}
-          <div className="bg-gray-50 border rounded-lg p-3">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Filters:</span>
-                  
-                  {/* Star Rating */}
-                  <select
-                    value={filters.starRating}
-                    onChange={(e) => setFilters(prev => ({ ...prev, starRating: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Rating</option>
-                    <option value="3">3+ ⭐</option>
-                    <option value="4">4+ ⭐</option>
-                    <option value="5">5 ⭐</option>
-                  </select>
-
-                  {/* Max Premium */}
-                  <select
-                    value={filters.maxPremium}
-                    onChange={(e) => setFilters(prev => ({ ...prev, maxPremium: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Price</option>
-                    <option value="0">Free</option>
-                    <option value="25">Under $25</option>
-                    <option value="50">Under $50</option>
-                  </select>
-
-                  {/* Carrier Filter */}
-                  <select
-                    value={filters.carrier}
-                    onChange={(e) => setFilters(prev => ({ ...prev, carrier: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Carrier</option>
-                    {Array.from(new Set(plans.map(plan => plan.organization_name))).sort().map(carrier => (
-                      <option key={carrier} value={carrier}>{carrier}</option>
-                    ))}
-                  </select>
-
-                  {/* Plan Type Filter */}
-                  <select
-                    value={filters.planType}
-                    onChange={(e) => setFilters(prev => ({ ...prev, planType: e.target.value }))}
-                    className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Any Type</option>
-                    {Array.from(new Set(plans.map(plan => plan.plan_type))).sort().map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-
-                  {/* Benefits Checkboxes */}
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasDental}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasDental: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Dental
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasVision}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasVision: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Vision
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasHearing}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasHearing: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Hearing
-                    </label>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasPrescriptionCoverage}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hasPrescriptionCoverage: e.target.checked }))}
-                        className="mr-1 w-3 h-3"
-                      />
-                      Prescriptions
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Results count and Clear Filters Button */}
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-600">
-                  Showing {filteredPlans.length} of {plans.length} plans
-                </div>
-                <button
-                  onClick={clearFilters}
-                  className="text-sm px-3 py-1 text-blue-600 hover:text-blue-800 underline"
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Inline filter controls removed - global sidebar now handles filtering (future integration) */}
 
           {/* Desktop Layout: Plan selector and carousel side by side */}
           <div className="hidden xl:block">
