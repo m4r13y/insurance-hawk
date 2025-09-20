@@ -14,12 +14,12 @@ interface Props {
   loading: boolean;
   planBadges: PlanBadges;
   availablePlans: ('F'|'G'|'N')[];
-  selectedPlan: 'F'|'G'|'N';
-  onSelectPlan: (p:'F'|'G'|'N') => void;
+  selectedPlans: ('F'|'G'|'N')[]; // multi-select support
+  onTogglePlan: (p:'F'|'G'|'N') => void; // toggles inclusion/exclusion
   onOpenPlanDetails?: (carrier: CarrierSummaryLight) => void; // optional callback to open plan details via URL params
 }
 
-export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadges, availablePlans, selectedPlan, onSelectPlan, onOpenPlanDetails }) => {
+export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadges, availablePlans, selectedPlans, onTogglePlan, onOpenPlanDetails }) => {
   // (Replaced custom multi-element observer with per-card hook via CardShell)
   const { isSaved: isCarrierPlanSaved, toggle: toggleSaved } = useSavedPlans();
   const handleToggleSave = (carrier: CarrierSummaryLight, planType: string | undefined, activePrice?: number, range?: {min:number; max:number}) => {
@@ -50,12 +50,12 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
           <div>
             <div className="mt-3 inline-flex gap-2 rounded-full bg-white/80 dark:bg-slate-800/60 p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
               {activePlanTypes.map(p => {
-                const active = selectedPlan === p;
+                const active = selectedPlans.includes(p);
                 return (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => onSelectPlan(p)}
+                    onClick={() => onTogglePlan(p)}
                     className={`px-3.5 py-1.5 text-[13px] font-medium rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800 tracking-wide
                       ${active ? 'btn-brand shadow-inner' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-600/60'}`}
                     aria-pressed={active}
@@ -74,10 +74,28 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
             <Skeleton key={i} className="h-72 rounded-xl" />
           ))}
         {carriers.map(carrier => {
-          const activePrice = carrier.plans?.[selectedPlan];
-          const range = carrier.planRanges?.[selectedPlan];
-          const showRange = range && range.count > 1 && range.max !== range.min;
-          const saved = isCarrierPlanSaved(carrier.id, selectedPlan);
+          // For multi-select, show the lowest price among selected plans (or among all available if none selected)
+          const plansToConsider = selectedPlans.length ? selectedPlans : availablePlans;
+          let activePrice: number | undefined = undefined;
+          let aggregateRange: {min:number; max:number; count:number} | undefined = undefined;
+          plansToConsider.forEach(pl => {
+            const pVal = carrier.plans?.[pl];
+            const pr = carrier.planRanges?.[pl] as {min:number; max:number; count:number} | undefined;
+            if (pVal != null) {
+              if (activePrice == null || pVal < activePrice) activePrice = pVal;
+            }
+            if (pr) {
+              if (!aggregateRange) aggregateRange = { ...pr };
+              else {
+                aggregateRange.min = Math.min(aggregateRange.min, pr.min);
+                aggregateRange.max = Math.max(aggregateRange.max, pr.max);
+                aggregateRange.count += pr.count;
+              }
+            }
+          });
+          const range = aggregateRange as {min:number; max:number; count:number} | undefined;
+          const showRange = !!(range && range.count > 1 && range.max !== range.min);
+          const saved = plansToConsider.some(pl => isCarrierPlanSaved(carrier.id, pl));
           // Removed quote count display per design update
           const CardInner: React.FC = () => {
             const { ref, visible } = useCardVisibility(undefined, undefined, carrier.id);
@@ -100,7 +118,7 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
               <div className="relative z-10 flex items-start gap-3 mb-3">
                 <SaveToggleButton
                   saved={saved}
-                  onToggle={() => handleToggleSave(carrier, selectedPlan, activePrice, range ? {min: range.min, max: range.max} : undefined)}
+                  onToggle={() => handleToggleSave(carrier, selectedPlans[0], activePrice, range ? {min: range!.min, max: range!.max} : undefined)}
                 />
                 <CarrierLogoBlock name={carrier.name} logo={carrier.logo} />
                 <div className="flex-1 min-w-0 pr-1">
@@ -118,12 +136,12 @@ export const LightInverseCards: React.FC<Props> = ({ carriers, loading, planBadg
               {/* Plan pills */}
               <div className="relative z-10 flex gap-2 mb-4 flex-wrap">
                 {(['F','G','N'] as const).filter(p => !!carrier.planRanges?.[p]?.count || (carrier.plans && carrier.plans[p] != null)).map(p => {
-                  const active = selectedPlan === p;
+                  const active = selectedPlans.includes(p);
                   return (
                     <button
                       key={p}
                       type="button"
-                      onClick={() => onSelectPlan(p)}
+                      onClick={() => onTogglePlan(p)}
                       className={`px-4 py-1 rounded-full text-[12px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60
                         ${active ? 'bg-blue-600/10 text-blue-700 dark:text-white border-blue-300 dark:border-blue-400 shadow-sm' : 'bg-white/60 dark:bg-transparent text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-500 hover:bg-blue-50 dark:hover:border-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
                       aria-pressed={active}

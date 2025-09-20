@@ -76,6 +76,9 @@ import {
   PlanComparisonModal
 } from "@/components/medicare-shop/medigap";
 import MedigapCarrierSkeleton from "@/components/MedigapCarrierSkeleton";
+// New card set replacing legacy MedigapCarrierGroup grid
+import { LightInverseCards } from '@/components/medicare-shop/quote-cards/PrimaryCards';
+// TODO: After verifying new LightInverseCards in production, remove MedigapCarrierGroup import & related skeleton logic if unused elsewhere.
 
 import {
   DentalShopContent,
@@ -100,6 +103,7 @@ import {
 
 // Use direct relative import to guarantee we load the medicare-shop version (avoid accidental barrel shadowing)
 import FinalExpenseDetailsShowcase from "@/components/medicare-shop/plan-details/core/FinalExpenseDetailsShowcase";
+import PlanDetailsShowcase from "@/components/medicare-shop/plan-details/PlanDetailsShowcase";
 
 import {
   DrugPlanShopContent,
@@ -149,6 +153,12 @@ function MedicareShopContent() {
     // State field for cancer insurance
     state: ''
   });
+
+  // Medigap inline details state (replaces external plan-details page navigation)
+  const [medigapDetailsActive, setMedigapDetailsActive] = useState(false);
+  const [medigapDetailsCarrierId, setMedigapDetailsCarrierId] = useState<string>('');
+  const [medigapDetailsPlan, setMedigapDetailsPlan] = useState<string | undefined>(undefined);
+  const [medigapDetailsQuotes, setMedigapDetailsQuotes] = useState<any[]>([]);
 
   // Final Expense Details showcase activation (query-driven)
   const companyParam = searchParams?.get('company') || '';
@@ -3167,53 +3177,116 @@ function MedicareShopContent() {
                         />
                       )
                     ) : (
-                      /* Display Medigap Plans */
+                      /* Display Medigap Plans (Replaced with LightInverseCards) */
                       (() => {
-                        // Count actual unique plan types being displayed - this is bulletproof logic
-                        const actualPlanTypesShowing = new Set();
-                        paginatedData.forEach((carrierGroup: any) => {
-                          carrierGroup.quotes?.forEach((quote: any) => {
-                            if (quote.plan) {
-                              actualPlanTypesShowing.add(quote.plan);
-                            }
+                        // Derive carrier summaries for PrimaryCards (LightInverseCards)
+                        // Each carrierGroup contains quotes (array) with plan letters and rates.
+                        const loading = isPlanLoading; // reuse existing flag
+
+                        // Determine available plan letters across current dataset (restrict to F/G/N)
+                        const planLetters: ('F'|'G'|'N')[] = ['F','G','N'].filter(letter => {
+                          return paginatedData.some((carrierGroup: any) =>
+                            carrierGroup.quotes?.some((q: any) => (q.plan || q.planLetter) === letter)
+                          );
+                        }) as ('F'|'G'|'N')[];
+
+                        // Active selected plans (multi-select now). Filter only F/G/N present.
+                        const activePlans = selectedQuotePlans.filter(p => ['F','G','N'].includes(p)) as ('F'|'G'|'N')[];
+                        const effectiveSelectedPlans: ('F'|'G'|'N')[] = activePlans.length ? activePlans : (planLetters.length ? [planLetters[0]] : []);
+
+                        // Build carrier summaries used by LightInverseCards
+                        const carriers = paginatedData.map((carrierGroup: any) => {
+                          // Quotes might include rating class variations. We'll compute min for each plan letter.
+                          const planPriceMap: Record<string, number|undefined> = {};
+                          const planRanges: Record<string, {min:number; max:number; count:number}|undefined> = {};
+                          ['F','G','N'].forEach(letter => {
+                            const matching = carrierGroup.quotes?.filter((q: any) => (q.plan || q.planLetter) === letter) || [];
+                            if (!matching.length) return;
+                            const monthlyValues = matching.map((q: any) => {
+                              // Support both legacy rate.month (cents sometimes) and normalized pricing.monthly
+                              if (q.rate?.month != null) {
+                                const v = q.rate.month;
+                                return v >= 1000 ? v/100 : (v >= 100 ? v/100 : v); // heuristic: if stored in cents
+                              }
+                              if (q.pricing?.monthly != null) return q.pricing.monthly;
+                              return q.monthly_premium || q.premium || 0;
+                            }).filter((v:number) => v>0);
+                            if (!monthlyValues.length) return;
+                            const min = Math.min(...monthlyValues);
+                            const max = Math.max(...monthlyValues);
+                            planPriceMap[letter] = min; // single representative price (min)
+                            planRanges[letter] = { min, max, count: monthlyValues.length };
                           });
+                          return {
+                            id: carrierGroup.carrierId || carrierGroup.carrier_id || carrierGroup.carrier || carrierGroup.carrierName,
+                            name: getCarrierDisplayNameStrict(carrierGroup.carrierName || carrierGroup.carrier || carrierGroup.company || 'Carrier'),
+                            logo: getCachedLogoUrl(carrierGroup.carrierName || carrierGroup.carrier || carrierGroup.company || '' , carrierGroup.carrierId || carrierGroup.carrier_id || ''),
+                            rating: carrierGroup.amBestRating || carrierGroup.rating || 'NR',
+                            plans: planPriceMap,
+                            planRanges
+                          } as any;
                         });
-                        const actualPlanCount = actualPlanTypesShowing.size;
-                        
-                        console.log('🎯 LAYOUT DEBUG - Actual plan types showing:', Array.from(actualPlanTypesShowing), 'Count:', actualPlanCount);
-                        
+
+                        // Plan badges (labels & potential colors) - simple mapping for F/G/N
+                        const planBadges = {
+                          F: { label: 'Plan F', color: 'blue' },
+                          G: { label: 'Plan G', color: 'green' },
+                          N: { label: 'Plan N', color: 'purple' }
+                        } as const;
+
+                        const handleTogglePlan = (p: 'F'|'G'|'N') => {
+                          // Toggle presence while preserving at least one selection
+                          const set = new Set(effectiveSelectedPlans);
+                          if (set.has(p)) {
+                            set.delete(p);
+                          } else {
+                            set.add(p);
+                          }
+                          const result = Array.from(set);
+                          handlePlanSelection(result.length ? result : [p]);
+                        };
+
+                        const handleOpenPlanDetails = (carrier: any) => {
+                          // Collect all quotes for this carrier from original dataset (paginatedData has carrierGroup.quotes)
+                          const carrierGroup = paginatedData.find((cg: any) => (cg.carrierId || cg.carrier_id || cg.carrier || cg.carrierName) === carrier.id);
+                          const quotes = carrierGroup?.quotes || [];
+                          setMedigapDetailsCarrierId(carrier.id);
+                          setMedigapDetailsPlan(effectiveSelectedPlans[0]);
+                          setMedigapDetailsQuotes(quotes);
+                          setMedigapDetailsActive(true);
+                          // Optionally scroll to top for detail focus
+                          try { window.scrollTo({ top: 0, behavior: 'smooth'}); } catch {}
+                        };
+
+                        if (medigapDetailsActive) {
+                          return (
+                            <div className="space-y-6" data-medigap-inline-details>
+                              <div className="flex items-center gap-4">
+                                <Button variant="outline" size="sm" onClick={() => { setMedigapDetailsActive(false); }}>
+                                  Back to Plans
+                                </Button>
+                                <h3 className="text-lg font-semibold">Medigap Plan Details</h3>
+                              </div>
+                              <PlanDetailsShowcase
+                                carrierId={medigapDetailsCarrierId}
+                                quotes={medigapDetailsQuotes}
+                                plan={medigapDetailsPlan}
+                                onClose={() => setMedigapDetailsActive(false)}
+                              />
+                            </div>
+                          );
+                        }
                         return (
-                          <div className={`grid gap-6 ${
-                            actualPlanCount === 1 
-                              ? 'grid-cols-1 sm:grid-cols-2' 
-                              : 'grid-cols-1'
-                          }`}>
-                            {isPlanLoading ? (
-                              // Show skeleton loading state during plan changes
-                              Array.from({ length: Math.min(paginatedData.length, 3) }).map((_, index) => (
-                                <MedigapCarrierSkeleton 
-                                  key={`skeleton-${index}`}
-                                  planCount={actualPlanCount}
-                                />
-                              ))
-                            ) : displayData.type === 'grouped' && (
-                              // Use the dedicated MedigapCarrierGroup component with dynamic layout
-                              paginatedData.map((carrierGroup: any) => (
-                                <MedigapCarrierGroup
-                                  key={`${carrierGroup.carrierId}-${Array.from(actualPlanTypesShowing).sort().join('-')}`}
-                                  carrierGroup={carrierGroup}
-                                  selectedQuotePlans={Array.from(actualPlanTypesShowing) as string[]}
-                                  paymentMode={paymentMode}
-                                  getCachedLogoUrl={getCachedLogoUrl}
-                                  calculateDiscountedPrice={calculateDiscountedPrice}
-                                  convertPriceByPaymentMode={convertPriceByPaymentMode}
-                                  getPaymentLabel={getPaymentLabel}
-                                  setShowPlanDifferencesModal={setShowPlanDifferencesModal}
-                                  openPlanModal={openPlanModal}
-                                  applyDiscounts={applyDiscounts}
-                                />
-                              ))
-                            )}
+                          <div className="space-y-6" data-medigap-inline-list>
+                            <LightInverseCards
+                              carriers={carriers}
+                              loading={loading}
+                              planBadges={planBadges as any}
+                              availablePlans={planLetters}
+                              selectedPlans={effectiveSelectedPlans}
+                              onTogglePlan={handleTogglePlan}
+                              onOpenPlanDetails={handleOpenPlanDetails}
+                            />
                           </div>
                         );
                       })()
