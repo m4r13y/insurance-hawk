@@ -483,6 +483,32 @@ export function strictlyMatchCarrier(rawFields: Array<string | undefined | null>
   return undefined;
 }
 
+// ===== STRICT PREFERRED MATCHING =====
+// Build a PreferredCarrier object ONLY when a strict carrier identity exists AND that carrier declares preferred config for the category.
+// This avoids fuzzy cross-brand leakage (e.g. LifeShield mapping to Cigna) when user toggles preferred-only filtering.
+export function strictPreferredCarrierMatch(quote: any, category: ProductCategory): PreferredCarrier | null {
+  const rawFields = [
+    typeof quote?.carrier === 'string' ? quote.carrier : quote?.carrier?.name,
+    typeof quote?.carrier === 'object' ? quote?.carrier?.full_name : undefined,
+    quote?.company_base?.name,
+    quote?.company_base?.name_full,
+    quote?.company?.name,
+    quote?.carrier_name,
+    quote?.companyName,
+    quote?.company,
+  ];
+  const strict = strictlyMatchCarrier(rawFields);
+  if (!strict) return null;
+  const prefMeta = strict.preferred?.[category];
+  if (!prefMeta || prefMeta.active === false) return null;
+  return {
+    carrierId: strict.id,
+    category,
+    priority: prefMeta.priority,
+    isActive: true,
+  };
+}
+
 /**
  * Get proper logo URL for a carrier
  */
@@ -586,6 +612,15 @@ export function findPreferredCarrierByParams(
 }
 
 export function findPreferredCarrier(quote: any, category: ProductCategory): PreferredCarrier | null {
+  // First attempt strict deterministic preferred match; if found, skip all fuzzy paths.
+  const strictPref = strictPreferredCarrierMatch(quote, category);
+  if (strictPref) return strictPref;
+
+  // Allow disabling fuzzy preferred resolution entirely (recommended) via env flag.
+  if (process.env.NEXT_PUBLIC_DISABLE_FUZZY_PREFERRED === '1') {
+    return null;
+  }
+
   const carrierNameRaw = (typeof quote.carrier === 'string' ? quote.carrier : quote.carrier?.name)
     || quote.company_base?.name
     || quote.company?.name
@@ -624,6 +659,10 @@ export function findPreferredCarrier(quote: any, category: ProductCategory): Pre
     return { carrierId, category, isActive: true, priority: (getPreferredCarriers(category).find(p=>p.carrierId===carrierId)?.priority) || 999 };
   }
   // RELAXED FALLBACK: broader token match ignoring generic stop words & allowing partial pattern match.
+  // NOTE: This fallback is a major source of false positives; keep behind explicit fuzzy allowance
+  if (process.env.NEXT_PUBLIC_DISABLE_FUZZY_PREFERRED === '1') {
+    return null;
+  }
   try {
     const STOP = new Set(['life','insurance','ins','company','co','inc','grp','group','health','assurance','national','america','american']);
     const rawTokens = carrierNameRaw
@@ -673,59 +712,24 @@ export function findPreferredCarrier(quote: any, category: ProductCategory): Pre
  * Check if a quote is from a preferred carrier
  */
 export function isPreferredCarrier(quote: any, category: ProductCategory): boolean {
-  const preferredCarrier = findPreferredCarrier(quote, category);
-  return preferredCarrier !== null;
+  return !!strictPreferredCarrierMatch(quote, category);
 }
 
 /**
  * Filter quotes to only include preferred carriers
  */
 export function filterPreferredCarriers(quotes: any[], category: ProductCategory): any[] {
-  // Debug logging for non-medigap categories
-  if (category !== 'medicare-supplement') {
-    const sampleQuote = quotes[0];
-    const sampleCarrierName = sampleQuote ? (
-      (typeof sampleQuote.carrier === 'string' ? sampleQuote.carrier : sampleQuote.carrier?.name) ||
-      sampleQuote.company_base?.name || 
-      sampleQuote.company?.name ||
-      sampleQuote.carrier_name ||
-      sampleQuote.companyName ||
-      sampleQuote.company ||
-      'No name found'
-    ) : 'No quotes';
-    
-    console.log(`🔄 [${category}] filterPreferredCarriers called:`, {
+  const filteredQuotes = quotes.filter(q => isPreferredCarrier(q, category));
+  if (process.env.NODE_ENV !== 'production') {
+    const unmatchedExample = quotes.find(q => !filteredQuotes.includes(q));
+    // eslint-disable-next-line no-console
+    console.debug('PREFERRED_FILTER_APPLIED', {
       category,
-      totalQuotes: quotes.length,
-      sampleQuote: sampleQuote ? {
-        hasCarrier: !!sampleQuote.carrier,
-        carrierType: typeof sampleQuote.carrier,
-        hasCompanyBase: !!sampleQuote.company_base,
-        hasCompany: !!sampleQuote.company,
-        sampleCarrierName,
-        allQuoteKeys: Object.keys(sampleQuote)
-      } : 'No quotes'
+      total: quotes.length,
+      preferredCount: filteredQuotes.length,
+      sampleNonPreferred: unmatchedExample ? (typeof unmatchedExample.carrier === 'string' ? unmatchedExample.carrier : unmatchedExample.carrier?.name) : undefined,
     });
   }
-  
-  const filteredQuotes = quotes.filter(quote => isPreferredCarrier(quote, category));
-  
-  if (category !== 'medicare-supplement') {
-    console.log(`✅ [${category}] filterPreferredCarriers result:`, {
-      originalCount: quotes.length,
-      filteredCount: filteredQuotes.length,
-      matchedCarriers: filteredQuotes.map(q => 
-        (typeof q.carrier === 'string' ? q.carrier : q.carrier?.name) ||
-        q.company_base?.name || 
-        q.company?.name ||
-        q.carrier_name ||
-        q.companyName ||
-        q.company ||
-        'Unknown'
-      )
-    });
-  }
-  
   return filteredQuotes;
 }
 
@@ -734,8 +738,8 @@ export function filterPreferredCarriers(quotes: any[], category: ProductCategory
  */
 export function sortByPreferredCarrierPriority(quotes: any[], category: ProductCategory): any[] {
   return quotes.sort((a, b) => {
-    const carrierA = findPreferredCarrier(a, category);
-    const carrierB = findPreferredCarrier(b, category);
+    const carrierA = strictPreferredCarrierMatch(a, category);
+    const carrierB = strictPreferredCarrierMatch(b, category);
     
     // Preferred carriers first
     if (carrierA && !carrierB) return -1;

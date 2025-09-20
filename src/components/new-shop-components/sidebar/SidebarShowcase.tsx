@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookmarkIcon, BookmarkFilledIcon } from '@radix-ui/react-icons';
-import { FaFilter, FaClipboardList, FaPuzzlePiece, FaBalanceScale, FaBookmark, FaChevronRight } from 'react-icons/fa';
+import { FaFilter, FaPuzzlePiece, FaBalanceScale, FaBookmark, FaChevronRight } from 'react-icons/fa';
 import { SavedPlanRecord } from '@/lib/savedPlans';
 import Image from 'next/image';
 import { useSavedPlans } from '@/contexts/SavedPlansContext';
@@ -25,10 +25,9 @@ interface NavItem {
   disabled?: boolean;
 }
 
-// Base nav items; Preferred & Discounts now inline toggles (not standalone panels)
+// Base nav items (Quotes tab removed; quotes handled at top-level now)
 const baseNav: NavItem[] = [
   { label: 'Filters', active: true, icon: <FaFilter className="w-3.5 h-3.5" /> },
-  { label: 'Quotes', icon: <FaClipboardList className="w-3.5 h-3.5" /> },
   { label: 'Plan Builder', icon: <FaPuzzlePiece className="w-3.5 h-3.5" /> },
   { label: 'Compare', icon: <FaBalanceScale className="w-3.5 h-3.5" /> },
   { label: 'Saved', icon: <FaBookmark className="w-3.5 h-3.5" /> },
@@ -209,10 +208,15 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('shopSidebar.activeNav') : null;
       if (stored && stored !== activeNav) {
-        setActiveNav(stored === 'Overview' ? 'Filters' : stored);
+        // Map deprecated or removed nav labels to current ones
+        if (stored === 'Overview' || stored === 'Quotes') {
+          setActiveNav('Filters');
+        } else {
+          setActiveNav(stored);
+        }
       }
     } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Generated quote categories (for potential category-specific filters or future use)
@@ -965,9 +969,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
       id: 'nav',
       label: 'Navigation',
       content: (
-        activeNav === 'Quotes' ? (
-          <QuotesPanel activeCategory={activeCategory} onSelectCategory={onSelectCategory} />
-        ) : activeNav === 'Plan Builder' ? (
+        activeNav === 'Plan Builder' ? (
           <div className="space-y-6">
             <div className="space-y-4">
               {/* Original Medicare Section */}
@@ -1275,7 +1277,7 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                 )}
               </button>
               {/* Sidebar sub-tabs (Preferred & Discounts) injected directly after Filters and before Quotes */}
-              {item.label === 'Filters' && primaryNavSeed[index + 1]?.label === 'Quotes' && (
+              {item.label === 'Filters' && (
                 <div className="mt-1 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between gap-2 ml-4 px-2 py-1.5 rounded-md border bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600/60">
                     <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Preferred</span>
@@ -1303,50 +1305,12 @@ export const SidebarShowcase: React.FC<SidebarShowcaseProps> = ({
                   </div>
                 </div>
               )}
-              {item.label === 'Quotes' && selectedCategories.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-2 pr-1 pl-2">
-                  {selectedCategories.map(cat => {
-                    const cLabel = cat.replace(/-/g,' ').replace(/\b\w/g, m => m.toUpperCase());
-                    const selected = activeCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        /* Selecting a quote category from the rail should NOT open the slideout panel. Only clicking the 'Quotes' nav item opens it. */
-                        onClick={(e) => { e.stopPropagation(); onSelectCategory?.(cat); setActiveNav('Quotes'); /* intentionally omit openTab */ }}
-                        className={`px-3 h-7 inline-flex items-center rounded-md text-[11px] font-medium border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 ${selected ? 'bg-blue-primary text-white border-blue-primary shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
-                        aria-pressed={selected}
-                      >{cLabel}</button>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Quotes category chips removed with Quotes tab */}
             </div>
           );
         })}
         <Separator className="my-1" />
-        <div className="flex gap-2 px-1.5">
-          <Button
-            size="sm"
-            className="h-8 text-xs flex-1 btn-brand"
-            onClick={() => {
-              // Open the Quotes panel and start a fresh inline form immediately for fast UX feedback
-              setActiveNav('Quotes');
-              if (activeTab !== 'nav') {
-                openTab('nav');
-              }
-              // Default to Medigap (most common) if no existing selection; surface its required fields
-              const defaultCat = 'medigap';
-              setSelectedCategoryForQuote(defaultCat);
-              const stored = loadStoredFormData();
-              const merged = { ...stored };
-              setFormInputs(merged);
-              const validation = validateRequiredData(defaultCat, merged);
-              setMissingFields(validation.missing);
-              setFormMode('new');
-              setShowInlineQuoteForm(true);
-            }}
-          >New Quote</Button>
-        </div>
+        {/* New Quote button removed (quotes handled at top-level now) */}
 
         {/* Collapsible Tab Panel (slides out) */}
         <div
